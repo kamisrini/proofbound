@@ -262,7 +262,8 @@ func (g *IDGenerator) NewEvent(p NewEventParams) (Event, error) {
 	if err != nil {
 		return Event{}, err
 	}
-	sha, _ := ContentSHA(payload)
+	hash := sha256.Sum256(payload)
+	sha := hex.EncodeToString(hash[:])
 	e := Event{ID: id, Source: p.Source, NativeID: p.NativeID, Kind: p.Kind, OccurredAt: p.OccurredAt.UTC().Truncate(time.Microsecond), RecordedAt: g.now().UTC().Truncate(time.Microsecond), Payload: payload, ContentSHA: sha, ConnectorVersion: p.ConnectorVersion}
 	if err := e.Validate(); err != nil {
 		return Event{}, err
@@ -286,7 +287,7 @@ func (e Event) Validate() error {
 	if !e.Source.WellFormed() {
 		es = append(es, invalid("source", "malformed"))
 	}
-	if e.NativeID == "" || len(e.NativeID) > 512 || !utf8.ValidString(e.NativeID) || strings.TrimSpace(e.NativeID) != e.NativeID {
+	if e.NativeID == "" || len(e.NativeID) > 512 || !utf8.ValidString(e.NativeID) || strings.TrimSpace(e.NativeID) != e.NativeID || strings.IndexFunc(e.NativeID, func(r rune) bool { return r < 32 || r == 127 }) >= 0 {
 		es = append(es, invalid("native_id", "malformed"))
 	}
 	if e.Kind == "" || !e.Kind.Registered() {

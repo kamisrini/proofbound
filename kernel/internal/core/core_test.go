@@ -80,6 +80,13 @@ func TestNewEvent_CanonicalPayloadAndValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestValidate_RejectsNativeIDControlCharacters(t *testing.T) {
+	e := Event{ID: EventID{1}, Source: SourceGit, NativeID: "a\x00b", Kind: KindCommitRecorded, OccurredAt: time.Now(), RecordedAt: time.Now(), Payload: json.RawMessage(`{"ok":true}`), ContentSHA: strings.Repeat("a", 64), ConnectorVersion: "v1"}
+	if !errors.Is(e.Validate(), ErrInvalidEvent) {
+		t.Fatal("control character accepted")
+	}
+}
 func TestIdempotencyKey_RevisionSemantics(t *testing.T) {
 	a := IdempotencyKey{SourceGit, "x", "a"}
 	b := IdempotencyKey{SourceGit, "x", "b"}
