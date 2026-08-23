@@ -79,6 +79,11 @@ func Canonicalize(raw json.RawMessage) ([]byte, error) {
 func inspectJSON(raw []byte) error {
 	dec := json.NewDecoder(strings.NewReader(string(raw)))
 	dec.UseNumber()
+	if err := rejectDuplicateKeys(dec); err != nil {
+		return fmt.Errorf("%w: %v", ErrCanonicalJSON, err)
+	}
+	dec = json.NewDecoder(strings.NewReader(string(raw)))
+	dec.UseNumber()
 	var v any
 	if err := dec.Decode(&v); err != nil {
 		return fmt.Errorf("%w: %v", ErrCanonicalJSON, err)
@@ -88,6 +93,52 @@ func inspectJSON(raw []byte) error {
 		return ErrCanonicalJSON
 	}
 	return inspectValue(v)
+}
+
+func rejectDuplicateKeys(dec *json.Decoder) error {
+	return walkJSON(dec)
+}
+
+func walkJSON(dec *json.Decoder) error {
+	tok, err := dec.Token()
+	if err != nil {
+		return err
+	}
+	switch t := tok.(type) {
+	case json.Delim:
+		switch t {
+		case '{':
+			seen := map[string]struct{}{}
+			for dec.More() {
+				key, err := dec.Token()
+				if err != nil {
+					return err
+				}
+				name, ok := key.(string)
+				if !ok {
+					return errors.New("object key is not a string")
+				}
+				if _, exists := seen[name]; exists {
+					return fmt.Errorf("duplicate object key %q", name)
+				}
+				seen[name] = struct{}{}
+				if err := walkJSON(dec); err != nil {
+					return err
+				}
+			}
+			_, err = dec.Token()
+			return err
+		case '[':
+			for dec.More() {
+				if err := walkJSON(dec); err != nil {
+					return err
+				}
+			}
+			_, err = dec.Token()
+			return err
+		}
+	}
+	return nil
 }
 func inspectValue(v any) error {
 	switch x := v.(type) {

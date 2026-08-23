@@ -28,6 +28,13 @@ func TestCanonicalize_RejectsUnsafeNumbers(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestCanonicalize_RejectsDuplicateKeys(t *testing.T) {
+	_, err := Canonicalize(json.RawMessage(`{"a":1,"a":2}`))
+	if !errors.Is(err, ErrCanonicalJSON) {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
 func TestContentSHA_Shape(t *testing.T) {
 	s, err := ContentSHA(json.RawMessage(`{"ok":true}`))
 	if err != nil || len(s) != ContentSHALen || strings.ToLower(s) != s {
