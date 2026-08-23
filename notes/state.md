@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-14 (session: retro institutionalized; round-3 verdict landed; genesis prompt as-built; FULL PENDING VALIDATION done — plan Position section + ROADMAP acceptance bar added)
+**As of:** 2026-08-23 (session: GitHub repository connected; Task 1 kernel module scaffold added; `make check` wired to Go build/test/lint)
 
 ## Resume Prompt
 
