@@ -4,22 +4,24 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: store survivor triage added nil/closed/config and ledger-write guard tests; `make check` green; mutation rerun remains)
+**As of:** 2026-08-23 (wrap: store defensive and integration tests committed; `make check` green; DB-aware mutation rerun remains)
 
 ## Resume Prompt
 
-Copy this verbatim into a fresh session started with `cd ~/vera-core && claude`:
+Copy this verbatim into a fresh session started in this repository:
 
 ```
-Read notes/state.md FIRST, then notes/journal/2026-08-14.md (the retrospective), then 08-13 and 08-12. Do not start
-work until you have.
+Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-23.md`. Do not start work until you have.
 
 Load-bearing facts:
-- Task 4 (git connector) is BUILT, heavily remediated, and NOT YET ACCEPTED. Rounds 1 and 2
-  both returned NEEDS_WORK (15 findings, then 21 against the remediation). Every HIGH and
-  every MED from both rounds is now closed. Round 3 is owed and is the gate to acceptance.
-- Nothing ships. gitcmd has no production caller and cmd/vera does not wire it, so every
-  finding is latent. That bounds urgency; it does not bound the SPEC-truth question.
+- The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
+- The P1 Go scaffold/core/store work is committed. Store supports migrations, embedded/external DB
+  configuration, append/read, transactions, and Docker-backed integration tests.
+- The mutation harness is calibrated and supports `MUTANT_TEST_TAGS=integration` with `DATABASE_URL`.
+- The last DB-aware store sweep before the latest defensive tests found 113 candidates, 55 killed,
+  0 invalid, and 58 survivors. It must be rerun after `dc94712`; store acceptance is still open.
+- Do not start the Git connector path until store survivors are triaged and the acceptance decision
+  is recorded.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -51,18 +53,16 @@ Load-bearing facts:
 
 Pre-flight: `make check` BARE — expect GREEN. Then `make backup`.
 
-Start by asking which: (A) round-3 verdict actions — if the verdict landed, work its fix
-list and fire the three queued items in Blockers #1; if it was lost AGAIN, salvage from the
-run journal as before; (B) mutation-gate the other packages (git, core, store — none swept);
-(C) Task 5, the witness emitter, citing VD-verification-asymmetry-2dyjnd for its design
-premises; (D) the owed comment-claims detector (see the 08-14 journal, claim-outruns-evidence).
+Start with the store mutation rerun using the disposable PostgreSQL procedure in the journal.
+Triage and resolve survivors, refresh the allowed-survivor ledger if needed, run `make check`,
+commit, and push. Then proceed to the next unaccepted core task.
 ```
 
 ## Worktree
 
 - **Branch:** `main`
 - **HEAD:** see `make state` — this note is committed alongside the work it describes
-- **Remote:** NONE — the working tree and `~/Backups` bundles are the only copies. `make backup` after a session.
+- **Remote:** `origin` → `git@github.com:kamisrini/proofbound.git`; push after each coherent commit and keep a local bundle backup.
 - **Uncommitted:** none expected; commit cadence is enforced at 90m
 
 ## What this session shipped
@@ -86,8 +86,8 @@ own self-test caught first:**
 - `link-lint` — gained the `VD-fixture-` namespace and its first self-test. It has now refused an
   id-shaped test fixture of mine four times in one session.
 
-**Connector work:** both round-2 HIGH fabrication defects closed (paths, citations); all nine MED
-items closed; two provably-dead guards deleted; the survivor triage taken to a green mutation gate.
+**Store work:** append/read and transaction paths are implemented; integration and defensive tests
+were added in the latest session. Mutation survivor triage is still open pending the next DB-aware sweep.
 
 ## Where Task 4 stands
 
@@ -100,7 +100,7 @@ and six gates — none of which an independent verifier has seen. **Round 3 deci
 
 ## Blockers / open, in priority order
 
-1. **Round 3 landed: NEEDS_WORK — 2 HIGH, 5 MED. Closure 28 of 36, skip count 0, trend
+1. **Git connector remains unaccepted: Round 3 landed NEEDS_WORK — 2 HIGH, 5 MED. Closure 28 of 36, skip count 0, trend
    converging (R1: 15 found; R2: 21; R3: 12, most of them narrower).** The verdict is committed
    verbatim at `docs/verification/verdicts/round3-adjudication.md` (rounds 1–2 sit beside it,
    salvaged). Its fix list, in priority order:
@@ -136,9 +136,7 @@ and six gates — none of which an independent verifier has seen. **Round 3 deci
    (placeholders verified — no check-witnessed target, no spool schema anywhere) · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry), ~5 weeks out — Task 4 must close this week.
    Task 5's design inputs are written: VD-verification-asymmetry-2dyjnd + VD-verdicts-are-artifacts-rl0rab.
-3. **Retroactive mutation sweeps: `git`, `core`, `store`** (only gitcmd is gated). The store sweep
-   inherits the `rows.Err()` survivor-candidate its own SPEC records as owed-not-accepted —
-   validated real: the guard exists at read.go:120, nothing kills its deletion.
+3. **Retroactive mutation sweeps:** store is the active next gate; `git` and `core` remain queued.
 4. **Owed mechanisms, validated and ranked:** (a) the comment-claims detector — cannot/never/always
    in code comments has no witness, and claim-outruns-evidence is OVER Law 7's threshold under the
    honest taxonomy (4+ instances); (b) cleanroom-lint staged-content mode — it scans tracked
@@ -163,4 +161,4 @@ and six gates — none of which an independent verifier has seen. **Round 3 deci
 - `docs/allowed-survivors.txt` keys are `line#ordinal` and MOVE whenever the package changes.
   Re-sweep and refresh after any edit; a stale entry licenses a different site than its reason
   describes.
-- No remote. `make backup` is the only off-machine copy.
+- Keep the pushed GitHub repository and a dated `git bundle` as the two recovery copies.
