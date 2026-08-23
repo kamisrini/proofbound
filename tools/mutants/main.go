@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -9,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type mutant struct {
@@ -18,10 +20,14 @@ type mutant struct {
 	line, pos     int
 }
 
+var testTags string
+
 func main() {
 	pkg := flag.String("pkg", "", "kernel package directory, e.g. internal/store")
 	rootFlag := flag.String("root", "", "repository root")
+	tags := flag.String("tags", "", "go test build tags")
 	flag.Parse()
+	testTags = *tags
 	if *pkg == "" {
 		fail("-pkg is required")
 	}
@@ -116,12 +122,22 @@ func runMutant(root string, m mutant) string {
 	if err := os.WriteFile(path, b, 0o644); err != nil {
 		return "invalid"
 	}
-	cmd := exec.Command("go", "test", "./...")
+	args := []string{"test"}
+	if testTags != "" {
+		args = append(args, "-tags", testTags)
+	}
+	args = append(args, "./...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = tmp
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/vera-mutant-cache")
 	err = cmd.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		return "killed"
+	}
 	if err == nil {
 		return "survived"
 	}
@@ -175,13 +191,24 @@ func calibrate(root string) error {
 	return nil
 }
 func runTests(dir string) string {
-	cmd := exec.Command("go", "test", "./...")
+	args := []string{"test"}
+	if testTags != "" {
+		args = append(args, "-tags", testTags)
+	}
+	args = append(args, "./...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = dir
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stderr
 	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/vera-mutant-cache")
-	if err := cmd.Run(); err == nil {
+	err := cmd.Run()
+	if ctx.Err() == context.DeadlineExceeded {
+		return "killed"
+	}
+	if err == nil {
 		return "survived"
 	}
 	if bytes.Contains(stderr.Bytes(), []byte("undefined")) || bytes.Contains(stderr.Bytes(), []byte("syntax error")) {
