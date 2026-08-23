@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: mutation harness supports integration tags, DATABASE_URL inheritance, and timeout-kills; calibration passes; full DB-aware store sweep remains a long acceptance run)
+**As of:** 2026-08-23 (session: full DB-aware store mutation sweep completed; 113 candidates, 55 killed, 0 invalid, 58 survivors; survivor triage is open)
 
 ## Resume Prompt
 
