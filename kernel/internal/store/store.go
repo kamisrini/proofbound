@@ -156,6 +156,7 @@ func (sy *Sync) Append(ctx context.Context, e core.Event) (Record, bool, error) 
 	if err := e.Validate(); err != nil {
 		return Record{}, false, err
 	}
+	requestedKind := e.Kind
 	var r Record
 	err := sy.store.pool.QueryRow(ctx, `INSERT INTO events(event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(source,native_id,content_sha) DO NOTHING RETURNING seq`, e.ID.String(), e.Source, e.NativeID, e.Kind, e.OccurredAt, e.RecordedAt, e.Payload, e.ContentSHA, e.ConnectorVersion).Scan(&r.Seq)
 	inserted := err == nil
@@ -171,6 +172,9 @@ func (sy *Sync) Append(ctx context.Context, e core.Event) (Record, bool, error) 
 		e.ID, err = core.ParseEventID(id)
 		if err != nil {
 			return Record{}, false, err
+		}
+		if requestedKind != e.Kind {
+			return Record{}, false, ErrKindConflict
 		}
 	} else {
 		r.Event = e
