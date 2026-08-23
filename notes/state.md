@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: GitHub repository connected; Task 1 kernel module scaffold added; core primitives implemented from the Task 2 SPEC baseline; `make check` green)
+**As of:** 2026-08-23 (session: store configuration/lock and initial pgx ledger API implemented; `make check` green; DB integration tests and embedded lifecycle remain next)
 
 ## Resume Prompt
 
