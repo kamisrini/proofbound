@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: Dockerized PostgreSQL 16 store suite passes append/duplicate, revision, kind conflict, filters, transactions, early stop, and lock coverage; next = mutation acceptance and Git connector)
+**As of:** 2026-08-23 (session: initial stdlib mutation harness rebuilt; store sweep reports 113 killed/0 survivors; calibration controls and full operator set remain before treating mutation acceptance as complete)
 
 ## Resume Prompt
 
