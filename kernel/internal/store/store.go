@@ -2,11 +2,13 @@ package store
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
+	"github.com/fergusstrange/embedded-postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
@@ -23,11 +25,16 @@ type Record struct {
 	Seq   int64
 	Event core.Event
 }
+
+//go:embed migrations/001_ledger.sql
+var ledgerMigration embed.FS
+
 type Store struct {
-	pool   *pgxpool.Pool
-	lock   *ledgerLock
-	cfg    Config
-	closed bool
+	pool     *pgxpool.Pool
+	lock     *ledgerLock
+	embedded *embeddedpostgres.EmbeddedPostgres
+	cfg      Config
+	closed   bool
 }
 type Sync struct {
 	store    *Store
@@ -41,32 +48,55 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg.DatabaseURL == "" {
-		return nil, fmt.Errorf("%w: embedded postgres is not wired yet; set DatabaseURL", ErrConfig)
-	}
 	lock, err := acquireLock(cfg)
 	if err != nil {
 		return nil, err
 	}
+	var server *embeddedpostgres.EmbeddedPostgres
+	if cfg.DatabaseURL == "" {
+		port := cfg.Port
+		if port == 0 {
+			port = 55432
+		}
+		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username("vera").Password("vera").Database("vera"))
+		if err = server.Start(); err != nil {
+			_ = lock.close()
+			return nil, fmt.Errorf("%w: embedded postgres: %v", ErrMigrate, err)
+		}
+		cfg.DatabaseURL = fmt.Sprintf("postgres://vera:vera@127.0.0.1:%d/vera?sslmode=disable", port)
+	}
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
+		if server != nil {
+			_ = server.Stop()
+		}
 		_ = lock.close()
 		return nil, err
 	}
 	if err = pool.Ping(ctx); err != nil {
 		pool.Close()
+		if server != nil {
+			_ = server.Stop()
+		}
 		_ = lock.close()
 		return nil, err
 	}
 	if err = migrate(ctx, pool); err != nil {
 		pool.Close()
+		if server != nil {
+			_ = server.Stop()
+		}
 		_ = lock.close()
 		return nil, fmt.Errorf("%w: %v", ErrMigrate, err)
 	}
-	return &Store{pool: pool, lock: lock, cfg: cfg}, nil
+	return &Store{pool: pool, lock: lock, cfg: cfg, embedded: server}, nil
 }
 func migrate(ctx context.Context, pool *pgxpool.Pool) error {
-	_, err := pool.Exec(ctx, `CREATE TABLE IF NOT EXISTS events (seq BIGSERIAL PRIMARY KEY,event_id TEXT NOT NULL UNIQUE,source TEXT NOT NULL,native_id TEXT NOT NULL,kind TEXT NOT NULL,occurred_at TIMESTAMPTZ NOT NULL,recorded_at TIMESTAMPTZ NOT NULL,payload JSON NOT NULL,content_sha TEXT NOT NULL,connector_version TEXT NOT NULL); CREATE UNIQUE INDEX IF NOT EXISTS events_idempotency ON events(source,native_id,content_sha); CREATE TABLE IF NOT EXISTS sync_runs (id BIGSERIAL PRIMARY KEY,connector TEXT NOT NULL,cursor_json JSON,started_at TIMESTAMPTZ NOT NULL,finished_at TIMESTAMPTZ,events_appended BIGINT NOT NULL DEFAULT 0,error TEXT)`)
+	sql, err := ledgerMigration.ReadFile("migrations/001_ledger.sql")
+	if err != nil {
+		return err
+	}
+	_, err = pool.Exec(ctx, string(sql))
 	return err
 }
 func (s *Store) usable() error {
@@ -84,7 +114,12 @@ func (s *Store) Close() error {
 	}
 	s.closed = true
 	s.pool.Close()
-	return s.lock.close()
+	return errors.Join(s.lock.close(), func() error {
+		if s.embedded != nil {
+			return s.embedded.Stop()
+		}
+		return nil
+	}())
 }
 func (s *Store) Lock() LockInfo {
 	if s == nil || s.lock == nil || s.closed {

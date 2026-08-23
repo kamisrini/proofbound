@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: store configuration/lock and initial pgx ledger API implemented; `make check` green; DB integration tests and embedded lifecycle remain next)
+**As of:** 2026-08-23 (session: store migration file and embedded-Postgres lifecycle added; `make check` green; DB integration tests and transaction surface remain next)
 
 ## Resume Prompt
 
