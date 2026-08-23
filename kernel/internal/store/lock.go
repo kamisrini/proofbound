@@ -95,6 +95,16 @@ type lockRecord struct {
 	PID        int   `json:"pid"`
 	AcquiredAt int64 `json:"acquired_at"`
 }
+
+type LockedError struct {
+	Path  string
+	PID   int
+	Since time.Time
+}
+
+func (e *LockedError) Error() string { return fmt.Sprintf("%v: %s (pid %d)", ErrLocked, e.Path, e.PID) }
+func (e *LockedError) Unwrap() error { return ErrLocked }
+
 type ledgerLock struct {
 	file *os.File
 	path string
@@ -112,7 +122,7 @@ func acquireLock(c Config) (*ledgerLock, error) {
 	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = f.Close()
 		if errors.Is(err, syscall.EWOULDBLOCK) {
-			return nil, fmt.Errorf("%w: %d", ErrLocked, os.Getpid())
+			return nil, &LockedError{Path: c.LockPath}
 		}
 		return nil, err
 	}
