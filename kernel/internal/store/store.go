@@ -163,7 +163,12 @@ func (sy *Sync) Append(ctx context.Context, e core.Event) (Record, bool, error) 
 		return Record{}, false, err
 	}
 	if !inserted {
-		err = sy.store.pool.QueryRow(ctx, `SELECT seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version FROM events WHERE source=$1 AND native_id=$2 AND content_sha=$3`, e.Source, e.NativeID, e.ContentSHA).Scan(&r.Seq, &e.ID, &e.Source, &e.NativeID, &e.Kind, &e.OccurredAt, &e.RecordedAt, &e.Payload, &e.ContentSHA, &e.ConnectorVersion)
+		var id string
+		err = sy.store.pool.QueryRow(ctx, `SELECT seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version FROM events WHERE source=$1 AND native_id=$2 AND content_sha=$3`, e.Source, e.NativeID, e.ContentSHA).Scan(&r.Seq, &id, &e.Source, &e.NativeID, &e.Kind, &e.OccurredAt, &e.RecordedAt, &e.Payload, &e.ContentSHA, &e.ConnectorVersion)
+		if err != nil {
+			return Record{}, false, err
+		}
+		e.ID, err = core.ParseEventID(id)
 		if err != nil {
 			return Record{}, false, err
 		}

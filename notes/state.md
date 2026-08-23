@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: store migration, embedded lifecycle, and transaction surface added; compile/lint gates green; embedded integration test blocked because this environment reports all candidate ports as occupied)
+**As of:** 2026-08-23 (session: Dockerized PostgreSQL 16 integration path verified; store migration, append/duplicate, finish, and ordered read test passes; revision/filter/transaction coverage remains)
 
 ## Resume Prompt
 
