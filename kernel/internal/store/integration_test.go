@@ -106,6 +106,16 @@ func TestStoreWithTxCommitRollbackAndStop(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
+		for _, q := range []string{"update events set source='x'", "delete from events", "truncate events"} {
+			if _, err := tx.Exec(ctx, q); !errors.Is(err, ErrLedgerWrite) {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
 	sentinel := errors.New("stop")
 	if err := s.WithTx(context.Background(), func(context.Context, *Tx) error { return sentinel }); !errors.Is(err, sentinel) {
 		t.Fatalf("rollback error=%v", err)

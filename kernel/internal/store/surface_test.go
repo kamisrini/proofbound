@@ -19,6 +19,10 @@ func TestSurface_NilAndClosedHandles(t *testing.T) {
 	if got := (*Store)(nil).Lock(); got != (LockInfo{}) {
 		t.Fatalf("lock=%+v", got)
 	}
+	var noLockStore = &Store{}
+	if got := noLockStore.Lock(); got != (LockInfo{}) {
+		t.Fatalf("no-lock=%+v", got)
+	}
 	if _, _, err := (*Sync)(nil).Append(ctx, validSurfaceEvent(t)); !errors.Is(err, ErrClosed) {
 		t.Fatal(err)
 	}
@@ -42,6 +46,10 @@ func TestSurface_NilAndClosedHandles(t *testing.T) {
 		t.Fatal("nil rows")
 	}
 	rows.Close()
+	var noFile *ledgerLock
+	if err := noFile.close(); err != nil {
+		t.Fatal(err)
+	}
 	var row *Row
 	if !errors.Is(row.Scan(), ErrClosed) {
 		t.Fatal("nil row")
@@ -58,6 +66,17 @@ func TestConfig_DefaultsAndLockAssertion(t *testing.T) {
 	}
 	if _, err := (Config{Root: t.TempDir(), LockPath: "/wrong"}).normalized(); !errors.Is(err, ErrConfig) {
 		t.Fatal(err)
+	}
+	root := t.TempDir()
+	data := root + "/data"
+	run := root + "/run"
+	bin := root + "/bin"
+	c, err = (Config{Root: root, DataDir: data, RuntimeDir: run, BinariesDir: bin}).normalized()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.DataDir != data || c.RuntimeDir != run || c.BinariesDir != bin {
+		t.Fatalf("paths=%+v", c)
 	}
 }
 

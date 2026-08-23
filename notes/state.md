@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: full DB-aware store sweep found 58 survivors; defensive nil/closed/config surface tests added and `make check` green; rerun and triage remains)
+**As of:** 2026-08-23 (session: store survivor triage added nil/closed/config and ledger-write guard tests; `make check` green; mutation rerun remains)
 
 ## Resume Prompt
 
