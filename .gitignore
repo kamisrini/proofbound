@@ -18,3 +18,5 @@ Thumbs.db
 # Local backup bundles
 Backups/
 
+# Local, working FAQ draft (not part of the repository yet)
+docs/FAQ.md
