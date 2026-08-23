@@ -1,0 +1,8 @@
+# VD-no-graph-2aa4vz: no knowledge graph during bootstrap — files + git are the record
+
+**Status:** Accepted
+**Date:** 2026-08-07
+**Context:** A knowledge graph maintained *beside* the repo is a dual-write system: two writable copies of one truth, with parity depending on someone remembering to sync. Dual-write systems diverge whenever sync depends on discipline rather than derivation — that is a structural property, not a claim about any particular tool. Once they diverge, people route around the stale copy and the tool's own premise inverts. The temptation to "set up a graph to keep context" while building VERA is exactly that trap.
+**Decision:** No graph, no graph server, no external knowledge-base integration for the VERA build. The record is: files (one home per datum, CLAUDE.md table), git history, and grep. Derived indexes only (`make index` → `docs/decisions/INDEX.md`, `@generated`, never hand-edited). Context is carried by `notes/state.md` (single resume note), `notes/journal/` (append-only history), decision records, and agent auto-memory.
+**Consequences:** Zero sync burden, zero drift surface, zero graph maintenance tax. Queries are grep-shaped, which is sufficient at this scale. From P1, the kernel itself ingests this repo (commits, check-runs, agent sessions) — **VERA becomes its own record**, which is the self-hosting milestone and the correct kind of graph: derived from events, never hand-written.
+**Revisit when:** the kernel's own ledger can answer "what happened and why" better than the journal — then the journal's factual half retires (the reflective half stays human).

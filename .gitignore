@@ -1,0 +1,20 @@
+# Local/runtime state
+.vera/
+notes/tmp/
+
+# Go/build output
+bin/
+dist/
+*.exe
+*.test
+*.out
+
+# Windows/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local backup bundles
+Backups/
+

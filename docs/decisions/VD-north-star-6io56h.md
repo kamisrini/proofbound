@@ -1,0 +1,8 @@
+# VD-north-star-6io56h: The 100x magic-wand vision is VERA's ratified north star
+
+**Status:** Accepted
+**Date:** 2026-08-07
+**Context:** The founder reviewed `vision-100x.md` and ratified it in these words: *"I love this. This is our north star, this is our greatness, this is our goal. This is our guiding principle till we are done. Aim high, go big go home."* The question this record settles: what governs when ambition and pragmatism conflict?
+**Decision:** The 100x magic-wand vision (`vision-100x.md`) is VERA's **north star until we are done** — it sets DIRECTION. The 10x 2028 vision (`vision-2028.md`) sets PACE — it is what we build and defend next. Binding consequences: (1) every phase review asks two questions — *did we build what we planned?* AND *did we imagine hard enough?*; (2) the 100x direction MAY invalidate 10x decisions — through a recorded VD, joyfully, never defensively; (3) when a design feels like a reaction to how something failed before, stop and ask what a system with no memory of that failure would do; (4) only three things are sacred to persist: **intent, meaning, and memory** — everything else is scaffolding and may be regenerated or discarded.
+**Consequences:** Ambition is now a recorded constraint, not a mood — a reviewer can reject work for being insufficiently imagined, citing this record. Risk accepted: north-star gravity can pull scope; the counterweight is the existing scope discipline (plans' non-goals lists, `/vera-review`) which governs WHAT ships each phase, while this record governs what we aim AT.
+**Revisit when:** VERA is done (the fabric exists), or the founder explicitly re-ratifies a different star. Not before.

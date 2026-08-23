@@ -1,0 +1,56 @@
+# Mutation survivors that need no test, with the reason each one does not.
+#
+# Format: <file>:<line>#<ord>\t<op>\t<desc>  # why
+# Copy the SURVIVOR line from `bash scripts/mutants.sh <pkg>` verbatim, then two spaces and a reason.
+#
+# A survivor is a line no test defends: the mutation applied, the code compiled, the suite passed.
+# The only honest reasons to declare one instead of writing a test:
+#   - EQUIVALENT MUTANT: the mutation cannot change observable behaviour (e.g. a log string).
+#   - UNREACHABLE BY CONSTRUCTION: the branch cannot be entered, and something else proves that.
+#   - NO SEMANTIC CONTENT: a literal that carries no meaning to any caller.
+# "We will get to it" is not a reason — that is the defect this harness exists to stop shipping.
+#
+# The KEY INCLUDES THE ORDINAL (#n) because file+line+op+desc collide — one line with two `||`
+# operators produces two identical descriptions. An allowlist that cannot tell two sites apart
+# licenses the wrong one.
+#
+# Line numbers and ordinals MOVE. Re-run the sweep after any edit to the package and refresh these
+# entries; a stale entry silently licenses a DIFFERENT site than the one it was written for.
+#
+# ---------------------------------------------------------------------------------------------
+# internal/connector/git/gitcmd — REFRESHED 2026-08-13 against the sweep at commit c43108d+, after
+# the round-2 MED remediation moved most of these sites. 154 candidates: 120 killed, 17 survived,
+# 17 invalid.
+#
+# The refresh was not bookkeeping. Re-sweeping surfaced TWO survivors that did not exist before,
+# both in code written during that remediation, and one of them was a real gap: `tips["HEAD"]` could
+# be mutated to `tips[""]` because the test asserted tip VALUES and not KEYS. That is now tested and
+# killed, which is why 17 rather than 18 remain.
+
+# --- Error-message content. The message is not a contract; the error's IDENTITY is, and that is
+# --- asserted with errors.Is / a named substring wherever it matters.
+internal/connector/git/gitcmd/gitcmd.go:41#12	string	string literal "gitcmd: repository is shallow" -> ""  # EQUIVALENT: ErrShallow is matched by errors.Is (TestNew_RefusesAShallowRepository, TestCommits_RefusesARepoThatBecameShallowAfterNew); its text is cosmetic
+internal/connector/git/gitcmd/gitcmd.go:80#36	string	string literal "a grafted commit's whole tree as its ch… -> ""  # EQUIVALENT: message text inside the ErrShallow wrap
+internal/connector/git/gitcmd/gitcmd.go:81#37	string	string literal "take that back" -> ""  # EQUIVALENT: message text inside the ErrShallow wrap
+internal/connector/git/gitcmd/gitcmd.go:226#78	string	string literal "output framing is not what this parser … -> ""  # EQUIVALENT: message text; TestParseLog_RejectsAMisframedStreamLoudly asserts the error exists, not its prose
+internal/connector/git/gitcmd/gitcmd.go:424#145	string	string literal " " -> ""  # EQUIVALENT: the strings.Join separator in run()'s error message — cosmetic
+internal/connector/git/gitcmd/gitcmd.go:220#72	int	int literal 0 -> 1  # EQUIVALENT: chunks[0] -> chunks[1] inside an ERROR MESSAGE argument; the parse itself is unaffected
+internal/connector/git/gitcmd/gitcmd.go:255#90	int	int literal 5 -> 6  # EQUIVALENT: f[5] -> f[6] inside the date-parse ERROR MESSAGE; the parse uses f[5] and is asserted by TestParseLog_RejectsAMisframedStreamLoudly/unparseable date
+
+# --- truncate() exists only to shorten strings inside error messages. Every mutation of it changes
+# --- how a message reads and nothing else.
+internal/connector/git/gitcmd/gitcmd.go:442#150	int	int literal 60 -> 61  # EQUIVALENT: truncate()'s cutoff, used only in error messages
+internal/connector/git/gitcmd/gitcmd.go:443#152	binary	<= -> <  # EQUIVALENT: truncate()'s boundary, used only in error messages
+internal/connector/git/gitcmd/gitcmd.go:446#153	string	string literal "…" -> ""  # EQUIVALENT: truncate()'s ellipsis, used only in error messages
+
+# --- Provably equivalent by analysis, not by convenience.
+internal/connector/git/gitcmd/gitcmd.go:312#102	binary	|| -> &&  # EQUIVALENT, precedence: && binds tighter, so this RESHAPES the unquotePath shape guard rather than bypassing it. In every reachable case the fallback (strconv.Unquote fails -> return p verbatim) gives the same answer as the early return. No input distinguishes them, because Unquote can only succeed when BOTH ends match — and then the original condition is false too. (I predicted a backquoted path would kill this; it does not, for exactly this reason.)
+internal/connector/git/gitcmd/gitcmd.go:312#103	binary	|| -> &&  # EQUIVALENT: same precedence argument as #102, on the second || of the same guard
+internal/connector/git/gitcmd/gitcmd.go:332#112	int	int literal 1 -> 2  # EQUIVALENT: FindAllString(body, -1) -> -2; any negative n means "all matches" in regexp
+internal/connector/git/gitcmd/gitcmd.go:430#146	cond-false	if condition -> false (branch never taken)  # EQUIVALENT at the payload: sortedKeys returns an empty non-nil slice instead of nil, and git.go's normalize() collapses empty to nil before marshalling — normalize is the enforcing layer, and ITS mutant dies (TestPayload_EmptySlicesArePinnedToNull). Defence in depth, not a gap.
+internal/connector/git/gitcmd/gitcmd.go:55#18	cond-false	if condition -> false (branch never taken)  # EQUIVALENT outcome: skipping the rev-parse error check in New falls through to the next check, which sees empty output, fails `!= "true"`, and returns a not-a-work-tree error. Different message, same refusal — TestNew_RefusesANonRepository and TestNew_RefusesABareRepository pass or fail together either way.
+
+# --- Unreachable error paths. Both are real branches with no fixture that can enter them; each says
+# --- what it would take, so a future reader can build one rather than trust this note.
+internal/connector/git/gitcmd/gitcmd.go:396#136	cond-false	if condition -> false (branch never taken)  # UNREACHABLE in any fixture: this is `rev-parse HEAD` FAILING inside the detached-HEAD branch. Reaching it needs a HEAD that symbolic-ref reports as detached AND that rev-parse cannot resolve — i.e. a corrupt .git/HEAD naming a nonexistent object. Every fixture that corrupts HEAD makes symbolic-ref fail differently and never enters this branch. Declared rather than faked: a test that constructs a repository git itself calls broken proves little about this line.
+internal/connector/git/gitcmd/gitcmd.go:75#29	cond-false	if condition -> false (branch never taken)  # NEARLY unreachable, and this one is a JUDGEMENT rather than a proof. Skipping refuseIfShallow's error check means a failing `rev-parse --is-shallow-repository` is read as "not shallow", so the repo is ACCEPTED without a shallow check. Both probes are rev-parse on the same repository, so the second cannot normally fail while the first succeeds — EXCEPT on git older than 2.15, which does not know the flag. On such a git the shallow refusal would silently not apply. Not tested because the fixture needs an ancient git binary; recorded as a real, bounded risk rather than dismissed. If a minimum-git-version check is ever added this becomes provably unreachable and the entry should be re-stated as such.

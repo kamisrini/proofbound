@@ -1,0 +1,10 @@
+# Tests that may legitimately skip.
+#
+# Format: <TestName>  # why
+#
+# A declaration must name an ENVIRONMENT condition a machine may genuinely lack (no git, no
+# network, no docker). "Skips when the fixture does not reproduce the case" is the failure
+# skip-lint exists to catch, not a reason to allow it — a fixture that cannot build its own
+# premise is broken, and the test should FATAL so someone fixes it.
+#
+# Empty today: every test in the suite runs on a machine with git installed.

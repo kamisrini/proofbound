@@ -1,0 +1,53 @@
+# LESSON tag registry — lesson-recurrence.sh REFUSES a tag not listed here.
+#
+# Why (2026-08-14 census): 18 tags coined in two days, every one a singleton — several were the
+# same class under fresh names, so the recurrence counter (which counts by tag) was being evaded
+# by vocabulary, unintentionally. Registering a new tag is one extra line in this file, and that
+# friction IS the mechanism: it forces "is this genuinely a new class?" at write time.
+#
+# NEW entries use the six parent classes. Legacy tags below them are grandfathered so history
+# still counts; do not reuse them for new lessons — fold into a parent instead.
+#
+# --- parent classes (2026-08-14 consolidation, notes/journal/2026-08-14.md) ---
+claim-outruns-evidence
+test-cannot-see-the-property
+detector-inert-or-scope-blind
+fix-the-example-not-the-invariant
+rule-without-detector-drifts
+identity-vs-position
+# --- grandfathered legacy tags (history preserved; do not reuse) ---
+careful-does-not-scale-mechanism-does
+claim-in-a-comment-reads-as-verified
+claim-outruns-evidence
+controls-not-independent
+correction-under-pressure-is-a-suspect
+derived-fact-in-prose
+detector-inert-or-scope-blind
+environment-dependent-verdict
+fake-proves-the-fake
+fix-the-case-not-the-invariant
+fix-the-example-not-the-invariant
+fixture-holds-the-variable-constant
+fixture-invalidates-proof
+gate-invocation
+gate-without-self-test
+guard-ordering
+knowing-a-rule-does-not-prevent-breaking-it
+patch-vs-rewrite
+product-input
+prose-vs-script
+reasoning-cannot-rank-guards
+reviewer-remedy-unverified
+scan-reach
+self-test-poisons-its-gate
+self-trust
+semantic-residual
+spec-asserts-more-than-code
+sweep-completeness
+thin-layer-is-self-fulfilling
+unproven-mechanism
+unstated-premise
+vacuous-assertion
+vector-covers-only-its-own-path
+verdict-harvest
+wrong-target
