@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fergusstrange/embedded-postgres"
@@ -201,6 +202,83 @@ type Filter struct {
 	SinceSeq      int64
 	OccurredAfter time.Time
 	Limit         int
+}
+
+type Tx struct{ tx pgx.Tx }
+type Rows struct{ rows pgx.Rows }
+type Row struct{ row pgx.Row }
+
+func (tx *Tx) Exec(ctx context.Context, sql string, args ...any) (int64, error) {
+	if tx == nil || tx.tx == nil {
+		return 0, ErrClosed
+	}
+	if strings.Contains(strings.ToUpper(sql), "UPDATE EVENTS") || strings.Contains(strings.ToUpper(sql), "DELETE FROM EVENTS") || strings.Contains(strings.ToUpper(sql), "TRUNCATE EVENTS") {
+		return 0, ErrLedgerWrite
+	}
+	tag, err := tx.tx.Exec(ctx, sql, args...)
+	return tag.RowsAffected(), err
+}
+func (tx *Tx) Query(ctx context.Context, sql string, args ...any) (*Rows, error) {
+	if tx == nil || tx.tx == nil {
+		return nil, ErrClosed
+	}
+	rows, err := tx.tx.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return &Rows{rows: rows}, nil
+}
+func (tx *Tx) QueryRow(ctx context.Context, sql string, args ...any) *Row {
+	if tx == nil || tx.tx == nil {
+		return &Row{}
+	}
+	return &Row{row: tx.tx.QueryRow(ctx, sql, args...)}
+}
+func (r *Rows) Next() bool { return r != nil && r.rows != nil && r.rows.Next() }
+func (r *Rows) Scan(dest ...any) error {
+	if r == nil || r.rows == nil {
+		return ErrClosed
+	}
+	return r.rows.Scan(dest...)
+}
+func (r *Rows) Err() error {
+	if r == nil || r.rows == nil {
+		return ErrClosed
+	}
+	return r.rows.Err()
+}
+func (r *Rows) Close() {
+	if r != nil && r.rows != nil {
+		r.rows.Close()
+	}
+}
+func (r *Row) Scan(dest ...any) error {
+	if r == nil || r.row == nil {
+		return ErrClosed
+	}
+	return r.row.Scan(dest...)
+}
+func (s *Store) WithTx(ctx context.Context, fn func(context.Context, *Tx) error) (err error) {
+	if err = s.usable(); err != nil {
+		return err
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	wrapper := &Tx{tx: tx}
+	defer func() {
+		if v := recover(); v != nil {
+			_ = tx.Rollback(ctx)
+			panic(v)
+		}
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			return
+		}
+		err = tx.Commit(ctx)
+	}()
+	return fn(ctx, wrapper)
 }
 
 func (s *Store) ReadEvents(ctx context.Context, f Filter, yield func(Record) error) error {
