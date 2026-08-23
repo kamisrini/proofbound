@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (session: initial stdlib mutation harness rebuilt; store sweep reports 113 killed/0 survivors; calibration controls and full operator set remain before treating mutation acceptance as complete)
+**As of:** 2026-08-23 (session: mutation harness calibration controls pass; corrected store sweep reports 22 killed/91 survivors because tagged DB integration tests are not run by the harness; mutation acceptance remains open)
 
 ## Resume Prompt
 
