@@ -1,2 +1,2 @@
-// Package core will own the pure Flight Recorder envelope primitives.
+// Package core owns the pure Flight Recorder envelope primitives.
 package core
