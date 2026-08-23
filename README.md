@@ -1,39 +1,111 @@
-# VERA — Verified Delivery Organism
+# Proofbound
 
-> ★ **THE NORTH STAR** (ratified, VD-north-star-6io56h): *software stops being an artifact you possess and becomes a promise the world keeps.* Only intent, meaning, and memory persist. The 100x vision sets direction; the 10x vision sets pace; every phase review asks **"did we imagine hard enough?"** — Aim high. Go big.
+Proofbound is a warranty layer for software delivery.
 
-**Product vision:** a 2028-era, category-creating software delivery system. The product is the *warranty*: machine-checkable proof of what software does, who verified it, and who answers when it fails.
+It helps teams answer questions that ordinary build logs and test dashboards do not preserve well:
 
-## The elevator pitch
+- What was this software change supposed to do?
+- What evidence shows that it does it?
+- Which exact commit was verified?
+- Who performed or owns the verification?
+- What remains unverified if something fails later?
 
-> By 2028, AI writes the world's software — and no one can prove any of it is safe. VERA is the trust layer for that world: it records what agents actually did, simulates every change before reality touches it, and ships every system with a machine-checkable warranty. Code became free; we sell certainty.
+The result is durable, machine-readable proof bound to the software it describes—not just a
+temporary “tests passed” message.
 
-**Mission:** make trusting software a fact, not a faith. **North star (2030):** no software ships without its warranty.
+## Why Proofbound?
 
-## Contents
+Software is increasingly produced and changed by automated systems. That makes it important to
+preserve more than source code and a green pipeline. Proofbound is designed to make intent,
+verification evidence, verdicts, provenance, and accountability travel with each meaningful change.
 
-| File | What it is |
-|---|---|
-| [GENESIS-PROMPT.md](GENESIS-PROMPT.md) | **The master bootstrap prompt** — paste into a fresh Claude session on any machine to recreate this project, verified to the same bar. Doubles as disaster recovery |
-| [vision-2028.md](vision-2028.md) | **The vision (10x — build now)** — the Eight Laws, the kernel + four organs architecture, a day-in-2028 narrative, the 10x table, moats, ten hard problems, build order |
-| [vision-100x.md](vision-100x.md) | **The magic-wand document (100x — steer by)** — software as verified promises; the five wonders; the affirmative axioms; what dies; why P1 serves both rungs |
-| [vision-plain-english.md](vision-plain-english.md) | The same vision in everyday words |
-| [CLAUDE.md](CLAUDE.md) | **The Build Constitution** — the Nine Build Laws, one-home table, session protocol. Read first |
-| [ROADMAP.md](ROADMAP.md) | Phases P0–P4, each with a mechanical Definition of Done |
-| [docs/plans/P1-flight-recorder-plan.md](docs/plans/P1-flight-recorder-plan.md) | The verified P1 execution plan — self-contained for a cold session |
-| [docs/design/architecture-2028.html](docs/design/architecture-2028.html) | The 2028 architecture diagram with build-phase tags |
-| [docs/design/continuity-chain.md](docs/design/continuity-chain.md) | How intent stays bound to code — traceability by derivation, not citation |
-| [docs/gates.md](docs/gates.md) | The gate registry — every check, its tier, its self-test, its expiry |
-| [docs/decisions/](docs/decisions/) | Decision records (`VD-*`) — the why behind every structural choice |
+Proofbound complements CI/CD and test runners. Those systems execute builds and checks; Proofbound
+records what was claimed, what was checked, what the evidence supports, and where the responsibility
+for the result lies.
 
-## Working in this repo
+## How it works
 
-Read [CLAUDE.md](CLAUDE.md) first. On Windows, run `./setup-windows.ps1 -InstallTools` in PowerShell, then `./check-windows.ps1`. Prereqs: Git, Bash, jq (Go ≥1.26 + golangci-lint from P1). The current migration is text-only; the executable scaffold is regenerated from the carried specs before `make check` becomes available. Sessions start from this directory; orient with `/vera-next`, end with `/vera-wrap`.
+At a high level, a delivery workflow will:
 
-## Build order (each stage is a standalone business)
+1. State the behavior or invariant a change is expected to preserve.
+2. Run the relevant tests, checks, and verification procedures.
+3. Bind the evidence and verdict to the exact commit and project context.
+4. Preserve the result as an auditable artifact.
+5. Make proven, failed, and unverified behavior distinguishable.
 
-1. **The Flight Recorder** — witness substrate + claim ledger + gates-as-data ("what did our agents actually do — prove it")
-2. Behavior locks + witnessed regeneration (code-as-cattle)
-3. Ephemeral replay universes + prediction ledger (the twin, calibration-scored)
-4. Autonomy ratchet + decision inbox (the governor)
-5. Verifier marketplace + portable warranties (the category move)
+Proofbound can be introduced alongside a new project or used to assess an existing product. An
+existing product starts with a baseline: it can document what is already tested and verified, but
+it cannot retroactively prove behavior for which no evidence exists.
+
+## Project status
+
+This repository is an early-stage working scaffold, not yet a finished end-user product.
+
+Currently implemented:
+
+- Go kernel and core event primitives
+- Durable store foundations with migrations and append/read operations
+- Transaction handling and embedded/external database configuration
+- PostgreSQL-backed integration tests
+- Verification and mutation-testing infrastructure
+
+Still in progress:
+
+- Completing store mutation acceptance
+- End-to-end Git repository integration
+- Production witness and verdict emission
+- The complete user-facing delivery workflow
+
+Interfaces and behavior may change while these foundations are being completed.
+
+## Quick start
+
+### Prerequisites
+
+- Git
+- Go 1.26 or newer
+- Bash
+- `golangci-lint` (required by the full check)
+- Docker, if running PostgreSQL integration or mutation tests
+
+### Build and test
+
+From the repository root:
+
+```bash
+make check
+```
+
+The full gate runs repository checks, link and documentation checks, builds the Go packages, runs
+the unit tests, and runs linting. For a faster inner loop:
+
+```bash
+make short
+```
+
+The current command-line entry point is a scaffold while the product workflow is being built. The
+working implementation and tests live under [`kernel/`](kernel/).
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| [`kernel/`](kernel/) | Go implementation and package tests |
+| [`docs/`](docs/) | Specifications, decisions, and verification documentation |
+| [`scripts/`](scripts/) | Repository checks and development tooling |
+| [`ROADMAP.md`](ROADMAP.md) | Project phases and completion criteria |
+
+## Contributing
+
+The project is being developed specification-first. Before changing implementation behavior, read
+the relevant package `SPEC.md` and run the checks that cover it. Please open an issue describing the
+behavior, evidence, or workflow problem before proposing a larger change.
+
+Maintainers and automated build agents can find the internal operating rules in
+[`CLAUDE.md`](CLAUDE.md), the current resume state in [`notes/state.md`](notes/state.md), and the
+long-form product context in [`vision-plain-english.md`](vision-plain-english.md). Those documents
+are intentionally separate from this end-user overview.
+
+## License
+
+See [`LICENSE`](LICENSE).
