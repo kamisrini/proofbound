@@ -21,11 +21,10 @@ Load-bearing facts:
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
   0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
 - Store mutation acceptance is recorded in `notes/journal/2026-08-24.md` and pushed at `89cfa30`.
-- Task 4 Round 3 received a committed `NEEDS_WORK` verdict. Its repository-environment, gitlink
-  configuration, and immediate detached-HEAD routes are remediated author-side; gitcmd is 77/77
-  killed and the combined connector sweep is 95/95 killed, with no invalids or survivors. It is NOT
-  accepted until a non-author verifies the frozen remediation and returns an ACCEPTABLE verdict
-  committed under `docs/verification/verdicts/`.
+- Task 4 is ACCEPTED under Law 9. The Round 4 verdict independently accepted frozen `d794ff7` with
+  no HIGH, MED, or LOW findings and is committed verbatim at
+  `docs/verification/verdicts/task4-current-round4.md`. Author evidence is gitcmd 77/77 killed and
+  combined parent/child 95/95 killed, with no invalids or survivors.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -95,17 +94,16 @@ configuration-dependent gitlink paths, and an annotated-tag object accepted as d
 routes now have code/spec remedies and real-adapter tests. G-INV-19 through G-INV-21 were appended.
 gitcmd is 77/77 killed; combined parent+child is 95/95 killed. No survivor was declared.
 
-None of that is acceptance. The frozen remediation still needs the non-author Round 4 verdict.
+Round 4 independently closed the full route classes and returned ACCEPTABLE. Task 4 is complete.
 
 ## Blockers / open, in priority order
 
-1. **Git connector remains unaccepted:** current Round 3 is committed as `NEEDS_WORK`; its routes
-   are remediated and author gates are green, but a non-author must review the frozen remediation
-   and commit the Round 4 ACCEPTABLE or NEEDS_WORK verdict.
+1. **P1 forward path:** Task 4 is accepted. Task 5 is the next unaccepted task and must begin from
+   its citable design inputs (`VD-verification-asymmetry-2dyjnd` and
+   `VD-verdicts-are-artifacts-rl0rab`) with a SPEC before code.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–3 DONE · Task 4 = implemented, blocker #1 is its independent acceptance gate;
-   the amended bar: mutants green + non-author ACCEPTABLE verdict) · Tasks 5–9 NOT STARTED
+   Tasks 0–3 DONE · Task 4 DONE (mutants green + non-author ACCEPTABLE verdict) · Tasks 5–9 NOT STARTED
    (placeholders verified — no check-witnessed target, no spool schema anywhere) · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry), ~5 weeks out — Task 4 must close this week.
    Task 5's design inputs are written: VD-verification-asymmetry-2dyjnd + VD-verdicts-are-artifacts-rl0rab.
