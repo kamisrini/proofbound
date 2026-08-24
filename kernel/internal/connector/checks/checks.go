@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
@@ -163,6 +164,9 @@ func readWitness(path string) (Witness, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return Witness{}, err
+	}
+	if !utf8.Valid(data) {
+		return Witness{}, errors.New("witness is not valid UTF-8")
 	}
 	if _, err := core.Canonicalize(data); err != nil {
 		return Witness{}, fmt.Errorf("canonical JSON: %w", err)

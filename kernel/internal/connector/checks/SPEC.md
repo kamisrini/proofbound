@@ -80,8 +80,9 @@ validated filename list for observability only and is never read as a seen-set.
 
 ## 4. Invariants
 
-1. **C-INV-1 — The v1 schema is exact and strict.** Unknown/missing/duplicate/null fields, trailing JSON, invalid
-   ranges, malformed hashes, timestamps, tool versions, or ULIDs are refused.
+1. **C-INV-1 — The v1 schema is exact and strict.** Unknown/missing/duplicate/null fields, invalid
+   UTF-8, trailing JSON, invalid ranges, malformed hashes, timestamps, tool versions, or ULIDs are
+   refused.
 2. **C-INV-2 — One witness mints one check event keyed by run id.** Source is `checks`, kind is
    `check.run`, native id is `run_id`, occurred_at is `started_at`, and version is `checks/1`.
 3. **C-INV-3 — Evidence identity binds to content.** The full validated witness is the payload;
@@ -118,6 +119,11 @@ validated filename list for observability only and is never read as a seen-set.
     refused even when the spool is empty or absent.
 19. **C-INV-19 — Emitted JSON escapes tool control characters.** Legal command-output controls in
     version strings are represented with JSON escapes and round-trip through the strict reader.
+20. **C-INV-20 — The gate process inherits the sanitized repository environment.** A real Git-using
+    gate under hostile selectors observes the same repository SHA recorded by the wrapper.
+21. **C-INV-21 — Inadmissible evidence bytes fail before identity.** NUL or invalid UTF-8 in a tool
+    observation prevents the gate and witness; independently supplied invalid UTF-8 is refused
+    before decoding, so distinct invalid bytes cannot collapse into one content identity.
 
 ## 5. Invariant table
 
@@ -142,6 +148,8 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-17 | Real Make target works with a non-executable script | emitter_test.go::TestEmitter_FreshCheckoutMakeTarget |
 | C-INV-18 | Typed-nil appender is rejected before listing | checks_test.go::TestSync_RejectsTypedNilAppenderBeforeListing |
 | C-INV-19 | Tool-version controls remain valid JSON | emitter_test.go::TestEmitter_EscapesToolVersionControlCharacters |
+| C-INV-20 | Real Git-using gate receives the sanitized environment | emitter_test.go::TestEmitter_GateGitUsesSanitizedRepository |
+| C-INV-21 | NUL and invalid UTF-8 fail before evidence identity | emitter_test.go::TestEmitter_RejectsInadmissibleToolBytesBeforeGate |
 
 ## 6. Non-goals and recovery
 

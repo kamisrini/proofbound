@@ -20,6 +20,8 @@ kernel/internal/connector/checks/SPEC.md	C-INV-16	Repository observation fails b
 kernel/internal/connector/checks/SPEC.md	C-INV-17	The committed Make target does not require executable script mode.
 kernel/internal/connector/checks/SPEC.md	C-INV-18	Runtime dependencies are valid before evidence listing.
 kernel/internal/connector/checks/SPEC.md	C-INV-19	Emitted JSON escapes tool control characters.
+kernel/internal/connector/checks/SPEC.md	C-INV-20	The gate process inherits the sanitized repository environment.
+kernel/internal/connector/checks/SPEC.md	C-INV-21	Inadmissible evidence bytes fail before identity.
 kernel/internal/connector/git/SPEC.md	INV-1	One event per commit, keyed by SHA.
 kernel/internal/connector/git/SPEC.md	INV-2	A second Sync over unchanged history appends ZERO.
 kernel/internal/connector/git/SPEC.md	INV-3	`Result` counts are exact and partition the listing.

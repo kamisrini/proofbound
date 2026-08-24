@@ -42,12 +42,28 @@ new_ulid() {
 }
 
 first_line() {
-  local output line
-  if ! output=$("$@" 2>/dev/null); then
+  local output_file line_file line byte
+  output_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-output.XXXXXX")
+  line_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-line.XXXXXX")
+  if ! "$@" >"$output_file" 2>/dev/null; then
+    rm -f "$output_file" "$line_file"
     printf 'unavailable'
     return
   fi
-  IFS= read -r line <<<"$output"
+  sed -n '1p' "$output_file" >"$line_file"
+  rm -f "$output_file"
+  for byte in $(od -An -v -tu1 "$line_file"); do
+    if [[ $byte == 0 ]]; then
+      rm -f "$line_file"
+      return 1
+    fi
+  done
+  if ! command -v iconv >/dev/null 2>&1 || ! iconv -f UTF-8 -t UTF-8 "$line_file" >/dev/null 2>&1; then
+    rm -f "$line_file"
+    return 1
+  fi
+  line=$(<"$line_file")
+  rm -f "$line_file"
   if [[ -z $line ]]; then
     printf 'unavailable'
   else
@@ -92,6 +108,10 @@ git_dirty=false
 if [[ -n $git_status ]]; then
   git_dirty=true
 fi
+if ! go_version=$(first_line go version) || ! lint_version=$(first_line golangci-lint version) || ! make_version=$(first_line make --version); then
+  printf 'check-witness: tool version contains inadmissible bytes\n' >&2
+  exit 1
+fi
 
 started_ms=$(now_ms)
 started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -100,7 +120,7 @@ output_file=$(mktemp "${TMPDIR:-/tmp}/vera-check-output.XXXXXX")
 json_tmp=$(mktemp "$spool_dir/.witness.XXXXXX")
 trap 'rm -f "$output_file" "$json_tmp"' EXIT
 
-if (cd "$repo_root" && make check) >"$output_file" 2>&1; then
+if (cd "$repo_root" && env "${git_env_args[@]}" make check) >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?
@@ -115,10 +135,6 @@ if command -v sha256sum >/dev/null 2>&1; then
 else
   read -r output_sha256 _ < <(shasum -a 256 "$output_file")
 fi
-
-go_version=$(first_line go version)
-lint_version=$(first_line golangci-lint version)
-make_version=$(first_line make --version)
 
 printf '{"schema":"vera.witness.v1","run_id":"%s","command":"make check","exit_code":%d,"started_at":"%s","finished_at":"%s","duration_ms":%d,"output_sha256":"%s","git_sha":"%s","git_dirty":%s,"tool_versions":{"go":"%s","golangci_lint":"%s","make":"%s"}}\n' \
   "$run_id" "$exit_code" "$started_at" "$finished_at" "$duration_ms" "$output_sha256" \
