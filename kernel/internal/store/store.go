@@ -30,6 +30,14 @@ type Record struct {
 //go:embed migrations/001_ledger.sql
 var ledgerMigration embed.FS
 
+var ledgerSQL = func() []byte {
+	sql, err := ledgerMigration.ReadFile("migrations/001_ledger.sql")
+	if err != nil {
+		panic(err)
+	}
+	return sql
+}()
+
 type Store struct {
 	pool     *pgxpool.Pool
 	lock     *ledgerLock
@@ -54,50 +62,45 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 		return nil, err
 	}
 	var server *embeddedpostgres.EmbeddedPostgres
+	stopServer := func() {}
 	if cfg.DatabaseURL == "" {
-		port := cfg.Port
-		if port == 0 {
-			port = 55432
-		}
+		port := embeddedPort(cfg.Port)
 		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username("vera").Password("vera").Database("vera"))
 		if err = server.Start(); err != nil {
 			_ = lock.close()
 			return nil, fmt.Errorf("%w: embedded postgres: %v", ErrMigrate, err)
 		}
+		stopServer = func() { _ = server.Stop() }
 		cfg.DatabaseURL = fmt.Sprintf("postgres://vera:vera@127.0.0.1:%d/vera?sslmode=disable", port)
 	}
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
-		if server != nil {
-			_ = server.Stop()
-		}
+		stopServer()
 		_ = lock.close()
 		return nil, err
 	}
 	if err = pool.Ping(ctx); err != nil {
 		pool.Close()
-		if server != nil {
-			_ = server.Stop()
-		}
+		stopServer()
 		_ = lock.close()
 		return nil, err
 	}
 	if err = migrate(ctx, pool); err != nil {
 		pool.Close()
-		if server != nil {
-			_ = server.Stop()
-		}
+		stopServer()
 		_ = lock.close()
 		return nil, fmt.Errorf("%w: %v", ErrMigrate, err)
 	}
 	return &Store{pool: pool, lock: lock, cfg: cfg, embedded: server}, nil
 }
-func migrate(ctx context.Context, pool *pgxpool.Pool) error {
-	sql, err := ledgerMigration.ReadFile("migrations/001_ledger.sql")
-	if err != nil {
-		return err
+func embeddedPort(port uint16) uint16 {
+	if port == 0 {
+		return 55432
 	}
-	_, err = pool.Exec(ctx, string(sql))
+	return port
+}
+func migrate(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := pool.Exec(ctx, string(ledgerSQL))
 	return err
 }
 func (s *Store) usable() error {

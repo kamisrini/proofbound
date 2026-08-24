@@ -4,24 +4,24 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > `make state` prints the derived half; the judgement half below is hand-written.
 
-**As of:** 2026-08-23 (EOD audit: clean worktree; `make check` green; no new process change; DB-aware mutation rerun remains)
+**As of:** 2026-08-24 (store mutation acceptance: 107/107 killed with database-aware calibration; no declared survivors; final gate/commit/push pending)
 
 ## Resume Prompt
 
 Copy this verbatim into a fresh session started in this repository:
 
 ```
-Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-23.md`. Do not start work until you have.
+Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-24.md`. Do not start work until you have.
 
 Load-bearing facts:
 - The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
 - The P1 Go scaffold/core/store work is committed. Store supports migrations, embedded/external DB
   configuration, append/read, transactions, and Docker-backed integration tests.
 - The mutation harness is calibrated and supports `MUTANT_TEST_TAGS=integration` with `DATABASE_URL`.
-- The last DB-aware store sweep before the latest defensive tests found 113 candidates, 55 killed,
-  0 invalid, and 58 survivors. It must be rerun after `dc94712`; store acceptance is still open.
-- Do not start the Git connector path until store survivors are triaged and the acceptance decision
-  is recorded.
+- The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
+  0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
+- Store mutation acceptance is recorded in `notes/journal/2026-08-24.md`. The Git connector path
+  may resume after this change passes `make check`, is committed, and is pushed.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -47,15 +47,17 @@ Load-bearing facts:
   not position).
 - LESSON tags now use the six parent classes consolidated in the 08-14 journal — 18 singleton
   tags in two days had quietly defeated the recurrence counter.
-- make short is the inner loop; make check is the gate and never takes -short.
+- `make short` is intended to be the inner loop, but currently runs no Go tests; do not rely on it
+  until its target and self-test are repaired. `make check` is the gate and never takes `-short`.
 - macOS trap: t.TempDir() is a SYMLINK. Path-guard mutations under TMPDIR=/private/tmp/vkreal.
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
-Pre-flight: `make check` BARE — expect GREEN. Then `make backup`.
+Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
+`git bundle --all` until the target and its self-test are restored.
 
-Start with the store mutation rerun using the disposable PostgreSQL procedure in the journal.
-Triage and resolve survivors, refresh the allowed-survivor ledger if needed, run `make check`,
-commit, and push. Then proceed to the next unaccepted core task.
+Run `make check` bare, commit and push the store acceptance change, then proceed to the next
+unaccepted core task. Resolve the missing `make backup` mechanism and the misleading `make short`
+target before relying on either command as evidence.
 ```
 
 ## Worktree
@@ -86,8 +88,10 @@ own self-test caught first:**
 - `link-lint` — gained the `VD-fixture-` namespace and its first self-test. It has now refused an
   id-shaped test fixture of mine four times in one session.
 
-**Store work:** append/read and transaction paths are implemented; integration and defensive tests
-were added in the latest session. Mutation survivor triage is still open pending the next DB-aware sweep.
+**Store work:** append/read and transaction paths are implemented. The post-`dc94712` database-aware
+mutation sweep is accepted at 107 candidates, 107 killed, 0 invalid, and 0 survivors; calibration
+passed and the allowed-survivor ledger needed no store entry. Full reasoning and routes are in
+`notes/journal/2026-08-24.md`.
 
 ## Where Task 4 stands
 
@@ -136,7 +140,7 @@ and six gates — none of which an independent verifier has seen. **Round 3 deci
    (placeholders verified — no check-witnessed target, no spool schema anywhere) · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry), ~5 weeks out — Task 4 must close this week.
    Task 5's design inputs are written: VD-verification-asymmetry-2dyjnd + VD-verdicts-are-artifacts-rl0rab.
-3. **Retroactive mutation sweeps:** store is the active next gate; `git` and `core` remain queued.
+3. **Retroactive mutation sweeps:** store is accepted; `git` and `core` remain queued.
 4. **Owed mechanisms, validated and ranked:** (a) the comment-claims detector — cannot/never/always
    in code comments has no witness, and claim-outruns-evidence is OVER Law 7's threshold under the
    honest taxonomy (4+ instances); (b) cleanroom-lint staged-content mode — it scans tracked

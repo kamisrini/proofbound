@@ -46,29 +46,16 @@ func (c Config) normalized() (Config, error) {
 	if c.BinariesDir == "" {
 		c.BinariesDir = filepath.Join(root, "pgbin")
 	}
-	for name, p := range map[string]string{"DataDir": c.DataDir, "RuntimeDir": c.RuntimeDir, "BinariesDir": c.BinariesDir} {
-		abs, e := filepath.Abs(p)
-		if e != nil {
+	for name, path := range map[string]*string{"DataDir": &c.DataDir, "RuntimeDir": &c.RuntimeDir, "BinariesDir": &c.BinariesDir} {
+		abs, err := filepath.Abs(*path)
+		if err != nil {
 			return Config{}, fmt.Errorf("%w: %s", ErrConfig, name)
 		}
-		if name != "BinariesDir" {
-			cErr := nested(abs, func() string {
-				if name == "DataDir" {
-					return c.RuntimeDir
-				}
-				return c.DataDir
-			}())
-			if cErr {
-				return Config{}, fmt.Errorf("%w: DataDir and RuntimeDir overlap", ErrConfig)
-			}
-		}
+		*path = abs
 	}
-	data, _ := filepath.Abs(c.DataDir)
-	c.DataDir = data
-	run, _ := filepath.Abs(c.RuntimeDir)
-	c.RuntimeDir = run
-	bin, _ := filepath.Abs(c.BinariesDir)
-	c.BinariesDir = bin
+	if nested(c.DataDir, c.RuntimeDir) {
+		return Config{}, fmt.Errorf("%w: DataDir and RuntimeDir overlap", ErrConfig)
+	}
 	want := c.DataDir + ".lock"
 	if c.LockPath != "" {
 		got, e := filepath.Abs(c.LockPath)
@@ -127,20 +114,21 @@ func acquireLock(c Config) (*ledgerLock, error) {
 		return nil, err
 	}
 	l := &ledgerLock{file: f, path: c.LockPath, info: lockRecord{PID: os.Getpid(), AcquiredAt: c.Now().Unix()}}
-	if err := f.Truncate(0); err == nil {
-		_, err = f.Seek(0, 0)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if err == nil {
-		err = json.NewEncoder(f).Encode(l.info)
-	}
-	if err != nil {
+	if err = writeLockRecord(f, l.info); err != nil {
 		_ = f.Close()
 		return nil, err
 	}
 	return l, nil
+}
+
+func writeLockRecord(f *os.File, info lockRecord) error {
+	if err := f.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		return err
+	}
+	return json.NewEncoder(f).Encode(info)
 }
 func (l *ledgerLock) ownsPath() error {
 	st, err := l.file.Stat()

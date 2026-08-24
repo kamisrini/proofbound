@@ -7,6 +7,7 @@ import (
 	crand "crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -109,7 +110,7 @@ func TestStoreWithTxCommitRollbackAndStop(t *testing.T) {
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
 		for _, q := range []string{"update events set source='x'", "delete from events", "truncate events"} {
 			if _, err := tx.Exec(ctx, q); !errors.Is(err, ErrLedgerWrite) {
-				return err
+				return fmt.Errorf("%q: expected ErrLedgerWrite, got %v", q, err)
 			}
 		}
 		return nil
@@ -122,6 +123,40 @@ func TestStoreWithTxCommitRollbackAndStop(t *testing.T) {
 	}
 	if err := s.ReadEvents(context.Background(), Filter{Limit: 1}, func(Record) error { return ErrStopIteration }); err != nil {
 		t.Fatalf("stop iteration=%v", err)
+	}
+}
+
+func TestStoreTransactionWrappersUseAndCloseLiveRows(t *testing.T) {
+	s := integrationStore(t)
+	defer s.Close()
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
+		row := tx.QueryRow(ctx, "SELECT 42")
+		var answer int
+		if err := row.Scan(&answer); err != nil || answer != 42 {
+			return fmt.Errorf("row scan: answer=%d error=%v", answer, err)
+		}
+
+		rows, err := tx.Query(ctx, "SELECT generate_series(1, 3)")
+		if err != nil {
+			return err
+		}
+		if !rows.Next() {
+			return fmt.Errorf("expected first row: %v", rows.Err())
+		}
+		var first int
+		if err := rows.Scan(&first); err != nil || first != 1 {
+			return fmt.Errorf("rows scan: first=%d error=%v", first, err)
+		}
+		if err := rows.Err(); err != nil {
+			return fmt.Errorf("rows error before close: %v", err)
+		}
+		rows.Close()
+		if rows.Next() {
+			return errors.New("rows remained open")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 }
 
