@@ -67,6 +67,7 @@ new_ulid() {
   if ! bytes=$(od -An -N16 -tu1 /dev/urandom); then
     return 1
   fi
+  [[ -n $bytes ]] || return 1
   for byte in $bytes; do
     encoded+="${alphabet:byte%32:1}"
   done
@@ -101,6 +102,7 @@ first_line() {
     rm -f "$line_file"
     return 1
   fi
+  [[ -n $bytes ]] || { rm -f "$line_file"; return 1; }
   for byte in $bytes; do
     if [[ $byte == 0 ]]; then
       rm -f "$line_file"
@@ -177,7 +179,7 @@ if ! started_ms=$(now_ms) || ! [[ $started_ms =~ ^[0-9]{13}$ ]]; then
   printf 'check-witness: cannot observe start time\n' >&2
   exit 1
 fi
-if ! started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); then
+if ! started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || [[ ! $started_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
   printf 'check-witness: cannot observe start timestamp\n' >&2
   exit 1
 fi
@@ -208,7 +210,7 @@ if ! finished_ms=$(now_ms) || ! [[ $finished_ms =~ ^[0-9]{13}$ ]]; then
   printf 'check-witness: cannot observe finish time\n' >&2
   exit 1
 fi
-if ! finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); then
+if ! finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || [[ ! $finished_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
   printf 'check-witness: cannot observe finish timestamp\n' >&2
   exit 1
 fi

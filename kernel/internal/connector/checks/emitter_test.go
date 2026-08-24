@@ -355,6 +355,27 @@ func TestEmitter_HelperFailuresAreLoud(t *testing.T) {
 	}
 }
 
+func TestEmitter_EmptyHelperOutputIsLoud(t *testing.T) {
+	for name, environment := range map[string]string{
+		"empty od":   "FAKE_OD_EMPTY=1",
+		"empty date": "FAKE_DATE_EMPTY=1",
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture := newEmitterFixture(t)
+			cmd := fixture.command(0)
+			cmd.Env = append(cmd.Env, environment)
+			output, err := cmd.CombinedOutput()
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 {
+				t.Fatalf("output=%q error=%v", output, err)
+			}
+			if files := witnessFiles(t, fixture.root); len(files) != 0 {
+				t.Fatalf("witness files=%v", files)
+			}
+		})
+	}
+}
+
 func newEmitterFixture(t *testing.T) emitterFixture {
 	t.Helper()
 	root := t.TempDir()
@@ -378,8 +399,8 @@ func newEmitterFixture(t *testing.T) emitterFixture {
 	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nfor variable in $(compgen -e); do if [[ $variable == GIT_* ]]; then printf '"+strings.Repeat("b", 40)+"\\n'; exit 0; fi; done\nif [[ ${3:-} == rev-parse ]]; then if [[ ${FAKE_GIT_HEAD_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_HEAD_EXIT\"; fi; printf '%s\\n' \"${FAKE_GIT_HEAD_VALUE:-"+strings.Repeat("a", 40)+"}\"; exit 0; fi\nif [[ ${3:-} == status ]]; then if [[ ${FAKE_GIT_STATUS_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_STATUS_EXIT\"; fi; printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
 	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_BLOCK:-} ]]; then while true; do sleep 1; done; elif [[ -n ${FAKE_GO_NUL:-} ]]; then printf 'go\\000version fixture\\n'; elif [[ -n ${FAKE_GO_INVALID:-} ]]; then printf 'go\\377version fixture\\n'; elif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
 	writeExecutable(t, filepath.Join(binDir, "golangci-lint"), "#!/usr/bin/env bash\nprintf 'golangci-lint fixture\\n'\n")
-	writeExecutable(t, filepath.Join(binDir, "od"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_OD_FAIL:-} ]]; then exit 23; fi\nexec /usr/bin/od \"$@\"\n")
-	writeExecutable(t, filepath.Join(binDir, "date"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_DATE_FAIL:-} ]]; then exit 23; fi\nexec /usr/bin/date \"$@\"\n")
+	writeExecutable(t, filepath.Join(binDir, "od"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_OD_FAIL:-} ]]; then exit 23; fi\nif [[ -n ${FAKE_OD_EMPTY:-} ]]; then exit 0; fi\nexec /usr/bin/od \"$@\"\n")
+	writeExecutable(t, filepath.Join(binDir, "date"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_DATE_FAIL:-} ]]; then exit 23; fi\nif [[ -n ${FAKE_DATE_EMPTY:-} ]]; then exit 0; fi\nexec /usr/bin/date \"$@\"\n")
 	writeExecutable(t, filepath.Join(binDir, "sha256sum"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_SHA_FAIL:-} ]]; then exit 23; fi\nexec /usr/bin/sha256sum \"$@\"\n")
 	caller := filepath.Join(root, "caller")
 	if err := os.Mkdir(caller, 0o755); err != nil {

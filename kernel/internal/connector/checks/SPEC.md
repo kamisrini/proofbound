@@ -130,6 +130,8 @@ validated filename list for observability only and is never read as a seen-set.
 23. **C-INV-23 — Helper observation failure is never reported as a witnessed gate.** Failed byte
     scans, clocks, or run-id generation return non-zero and leave no ingestible witness; interrupted
     helper children and their temporary files are cleaned.
+24. **C-INV-24 — Successful-empty helper output is never treated as observation.** Empty byte scans,
+    timestamps, or entropy cannot produce a witness or a relabeled tool observation.
 
 ## 5. Invariant table
 
@@ -158,6 +160,7 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-21 | NUL and invalid UTF-8 fail before evidence identity | emitter_test.go::TestEmitter_RejectsInadmissibleToolBytesBeforeGate |
 | C-INV-22 | Publication failures are loud and capture temps are cleaned | emitter_test.go::TestEmitter_PublicationFailuresAreLoud |
 | C-INV-23 | Helper observation failures fail closed without publishing a witness | emitter_test.go::TestEmitter_HelperFailuresAreLoud |
+| C-INV-24 | Successful-empty helper output fails closed without publishing a witness | emitter_test.go::TestEmitter_EmptyHelperOutputIsLoud |
 
 ## 6. Non-goals and recovery
 

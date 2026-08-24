@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-24 (Tasks 3–4 accepted; Task 5 Round 4 remediated with connector 37/37 and DB-aware CLI 17/17 mutants killed; Round 5 verdict pending)
+**As of:** 2026-08-24 (Tasks 3–4 accepted; Task 5 Round 5 remediated with connector 37/37 and DB-aware CLI 17/17 mutants killed; Round 6 verdict pending)
 
 ## Resume Prompt
 
@@ -25,7 +25,7 @@ Load-bearing facts:
   no HIGH, MED, or LOW findings and is committed verbatim at
   `docs/verification/verdicts/task4-current-round4.md`. Author evidence is gitcmd 77/77 killed and
   combined parent/child 95/95 killed, with no invalids or survivors.
-- Task 5 Rounds 1–4 returned NEEDS_WORK and are committed verbatim under
+- Task 5 Rounds 1–5 returned NEEDS_WORK and are committed verbatim under
   `docs/verification/verdicts/task5-current-round{1,2,3}.md`. Round 1 remediation rejects null evidence and
   typed-nil appenders, binds gate/Git to one root, strips all `GIT_*`, fails repository observation
   before the gate, exercises the real Make target at mode 0644, and JSON-escapes control bytes.
@@ -35,7 +35,7 @@ Load-bearing facts:
   `make check-witnessed` emits strict
   `vera.witness.v1` evidence without invoking VERA; `vera sync checks` ingests and deduplicates it.
   Post-remediation connector mutation is 37/37 killed; DB-aware CLI mutation is 17/17 killed, with
-  no invalids or survivors. Task 5 is NOT accepted until a Round 5 non-author verdict is committed.
+  no invalids or survivors. Task 5 is NOT accepted until a Round 6 non-author verdict is committed.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -72,7 +72,7 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Run Round 5 non-author adversarial review of Task 5 against the frozen remediation, all Task 5
+Run Round 6 non-author adversarial review of Task 5 against the frozen remediation, all Task 5
 harm/route sections, and both committed verdicts. Commit the verdict
 verbatim on receipt. Fix findings, re-sweep, and repeat until ACCEPTABLE. Do not start Task 6.
 ```
@@ -117,7 +117,7 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–4 DONE · Task 5 ROUND-4 REMEDIATED, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
+   Tasks 0–4 DONE · Task 5 ROUND-5 REMEDIATED, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
    cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
