@@ -26,7 +26,7 @@ Load-bearing facts:
   `docs/verification/verdicts/task4-current-round4.md`. Author evidence is gitcmd 77/77 killed and
   combined parent/child 95/95 killed, with no invalids or survivors.
 - Task 5 Rounds 1–6 returned NEEDS_WORK and are committed verbatim under
-  `docs/verification/verdicts/task5-current-round{1,2,3}.md`. Round 1 remediation rejects null evidence and
+  `docs/verification/verdicts/task5-current-round{1,2,3,4,5,6}.md`. Round 1 remediation rejects null evidence and
   typed-nil appenders, binds gate/Git to one root, strips all `GIT_*`, fails repository observation
   before the gate, exercises the real Make target at mode 0644, and JSON-escapes control bytes.
   Round 2 remediation passes the sanitized environment into a real Git-using gate and refuses NUL
@@ -115,8 +115,8 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 Round 3 is remediated and mechanically green, but Law 9 acceptance is
-   open pending the Round 4 non-author verdict. Commit it verbatim on receipt; do not start Task 6
+1. **P1 forward path:** Task 5 Round 6 is recorded as NEEDS_WORK and mechanically green, but Law 9 acceptance is
+   open pending remediation and a fresh non-author verdict. Commit each verdict verbatim on receipt; do not start Task 6
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
