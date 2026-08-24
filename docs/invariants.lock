@@ -15,6 +15,11 @@ kernel/internal/connector/checks/SPEC.md	C-INV-11	Output digest covers the full 
 kernel/internal/connector/checks/SPEC.md	C-INV-12	Witness emission does not depend on VERA.
 kernel/internal/connector/checks/SPEC.md	C-INV-13	Emitted identity is self-consistent and sortable.
 kernel/internal/connector/checks/SPEC.md	C-INV-14	Repository and tool observations are present.
+kernel/internal/connector/checks/SPEC.md	C-INV-15	Gate output and repository identity share one root.
+kernel/internal/connector/checks/SPEC.md	C-INV-16	Repository observation fails before the gate.
+kernel/internal/connector/checks/SPEC.md	C-INV-17	The committed Make target does not require executable script mode.
+kernel/internal/connector/checks/SPEC.md	C-INV-18	Runtime dependencies are valid before evidence listing.
+kernel/internal/connector/checks/SPEC.md	C-INV-19	Emitted JSON escapes tool control characters.
 kernel/internal/connector/git/SPEC.md	INV-1	One event per commit, keyed by SHA.
 kernel/internal/connector/git/SPEC.md	INV-2	A second Sync over unchanged history appends ZERO.
 kernel/internal/connector/git/SPEC.md	INV-3	`Result` counts are exact and partition the listing.

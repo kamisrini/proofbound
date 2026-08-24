@@ -244,5 +244,10 @@ func copyTree(src, dst string) {
 		}
 		return nil
 	})
+	if filepath.Base(src) == "kernel" {
+		if data, err := os.ReadFile(filepath.Join(filepath.Dir(src), "Makefile")); err == nil {
+			_ = os.WriteFile(filepath.Join(dst, "Makefile"), data, 0o644)
+		}
+	}
 }
 func fail(s string) { fmt.Fprintln(os.Stderr, s); os.Exit(2) }

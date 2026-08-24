@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -24,5 +26,22 @@ func TestTestArgsSerializesTaggedIntegrationPackages(t *testing.T) {
 	}
 	if got := testTimeout(); got != 30*time.Second {
 		t.Fatalf("tagged timeout=%s", got)
+	}
+}
+
+func TestCopyTreeIncludesRepositoryMakefile(t *testing.T) {
+	repository := t.TempDir()
+	kernel := filepath.Join(repository, "kernel")
+	if err := os.Mkdir(kernel, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repository, "Makefile"), []byte("check-witnessed:\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	destination := t.TempDir()
+	copyTree(kernel, destination)
+	data, err := os.ReadFile(filepath.Join(destination, "Makefile"))
+	if err != nil || string(data) != "check-witnessed:\n" {
+		t.Fatalf("makefile=%q error=%v", data, err)
 	}
 }

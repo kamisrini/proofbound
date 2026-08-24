@@ -16,6 +16,7 @@ type emitterFixture struct {
 	root   string
 	script string
 	binDir string
+	caller string
 }
 
 func TestEmitter_RecordsSuccessAndFailure(t *testing.T) {
@@ -95,6 +96,112 @@ func TestEmitter_RecordsRepositoryAndTools(t *testing.T) {
 	}
 }
 
+func TestEmitter_BindsGateAndGitToRepository(t *testing.T) {
+	fixture := newEmitterFixture(t)
+	for _, variable := range []string{
+		"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+		"GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE", "GIT_INDEX_FILE",
+		"GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_COUNT",
+	} {
+		t.Setenv(variable, t.TempDir())
+	}
+	witness, output, err := fixture.run(t, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if witness.GitSHA != strings.Repeat("a", 40) || string(output) != "gate stdout\ngate stderr\n" {
+		t.Fatalf("witness=%+v output=%q", witness, output)
+	}
+}
+
+func TestEmitter_RepositoryObservationFailsBeforeGate(t *testing.T) {
+	for name, environment := range map[string][]string{
+		"head failure":   {"FAKE_GIT_HEAD_EXIT=2"},
+		"malformed head": {"FAKE_GIT_HEAD_VALUE=not-a-hash"},
+		"status failure": {"FAKE_GIT_STATUS_EXIT=2"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture := newEmitterFixture(t)
+			marker := filepath.Join(fixture.root, "make-was-invoked")
+			before := witnessFiles(t, fixture.root)
+			cmd := fixture.command(0)
+			cmd.Env = append(cmd.Env, append(environment, "MAKE_MARKER="+marker)...)
+			output, err := cmd.CombinedOutput()
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 || !strings.Contains(string(output), "cannot observe repository") {
+				t.Fatalf("output=%q error=%v", output, err)
+			}
+			if after := witnessFiles(t, fixture.root); len(after) != len(before) {
+				t.Fatalf("before=%v after=%v", before, after)
+			}
+			if _, err := os.Stat(marker); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("make invocation marker error=%v", err)
+			}
+		})
+	}
+}
+
+func TestEmitter_FreshCheckoutMakeTarget(t *testing.T) {
+	fixture := newEmitterFixture(t)
+	makefile, err := os.ReadFile(findRepositoryMakefile(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(fixture.root, "Makefile"), makefile, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(fixture.script, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	actualMake, err := exec.LookPath("make")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(actualMake, "-C", fixture.root, "check-witnessed")
+	cmd.Env = append(os.Environ(), "PATH="+fixture.binDir+string(os.PathListSeparator)+os.Getenv("PATH"), "EXPECTED_REPO_ROOT="+fixture.root, "TMPDIR="+fixture.root)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("output=%q error=%v", output, err)
+	}
+	files := witnessFiles(t, fixture.root)
+	if len(files) != 1 {
+		t.Fatalf("witness files=%v", files)
+	}
+	if _, err := readWitness(filepath.Join(fixture.root, ".vera", "spool", files[0])); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func findRepositoryMakefile(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for {
+		candidate := filepath.Join(dir, "Makefile")
+		if data, readErr := os.ReadFile(candidate); readErr == nil && strings.Contains(string(data), "check-witnessed:") {
+			return candidate
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("repository Makefile not found")
+		}
+		dir = parent
+	}
+}
+
+func TestEmitter_EscapesToolVersionControlCharacters(t *testing.T) {
+	fixture := newEmitterFixture(t)
+	t.Setenv("FAKE_GO_CONTROL", "1")
+	witness, _, err := fixture.run(t, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if witness.ToolVersions.Go != "go\b\ffixture\t\r\x01\x1f" {
+		t.Fatalf("go version=%q", witness.ToolVersions.Go)
+	}
+}
+
 func newEmitterFixture(t *testing.T) emitterFixture {
 	t.Helper()
 	root := t.TempDir()
@@ -107,29 +214,28 @@ func newEmitterFixture(t *testing.T) emitterFixture {
 		t.Fatal(err)
 	}
 	script := filepath.Join(scriptDir, "check-witness.sh")
-	if err := os.WriteFile(script, source, 0o755); err != nil {
+	if err := os.WriteFile(script, source, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	binDir := filepath.Join(root, "bin")
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
-	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nif [[ ${3:-} == rev-parse ]]; then printf '"+strings.Repeat("a", 40)+"\\n'; exit 0; fi\nif [[ ${3:-} == status ]]; then printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
-	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nprintf 'go version fixture\\n'\n")
+	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
+	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nfor variable in $(compgen -e); do if [[ $variable == GIT_* ]]; then printf '"+strings.Repeat("b", 40)+"\\n'; exit 0; fi; done\nif [[ ${3:-} == rev-parse ]]; then if [[ ${FAKE_GIT_HEAD_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_HEAD_EXIT\"; fi; printf '%s\\n' \"${FAKE_GIT_HEAD_VALUE:-"+strings.Repeat("a", 40)+"}\"; exit 0; fi\nif [[ ${3:-} == status ]]; then if [[ ${FAKE_GIT_STATUS_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_STATUS_EXIT\"; fi; printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
+	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
 	writeExecutable(t, filepath.Join(binDir, "golangci-lint"), "#!/usr/bin/env bash\nprintf 'golangci-lint fixture\\n'\n")
-	return emitterFixture{root: root, script: script, binDir: binDir}
+	caller := filepath.Join(root, "caller")
+	if err := os.Mkdir(caller, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return emitterFixture{root: root, script: script, binDir: binDir, caller: caller}
 }
 
 func (f emitterFixture) run(t *testing.T, exitCode int) (Witness, []byte, error) {
 	t.Helper()
 	before := witnessFiles(t, f.root)
-	cmd := exec.Command("bash", f.script)
-	cmd.Env = append(os.Environ(),
-		"PATH="+f.binDir+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"FAKE_MAKE_EXIT="+strconv.Itoa(exitCode),
-		"TMPDIR="+f.root,
-	)
+	cmd := f.command(exitCode)
 	output, runErr := cmd.CombinedOutput()
 	after := witnessFiles(t, f.root)
 	if len(after) != len(before)+1 {
@@ -153,6 +259,18 @@ func (f emitterFixture) run(t *testing.T, exitCode int) (Witness, []byte, error)
 		t.Fatalf("filename=%s run_id=%s", created, witness.RunID)
 	}
 	return witness, output, runErr
+}
+
+func (f emitterFixture) command(exitCode int) *exec.Cmd {
+	cmd := exec.Command("bash", f.script)
+	cmd.Dir = f.caller
+	cmd.Env = append(os.Environ(),
+		"PATH="+f.binDir+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"FAKE_MAKE_EXIT="+strconv.Itoa(exitCode),
+		"EXPECTED_REPO_ROOT="+f.root,
+		"TMPDIR="+f.root,
+	)
+	return cmd
 }
 
 func witnessFiles(t *testing.T, root string) []string {

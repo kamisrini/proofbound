@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -95,7 +96,7 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	if c == nil || c.ids == nil || c.spoolDir == "" {
 		return result, errors.New("checks connector: connector is not initialized")
 	}
-	if appender == nil {
+	if appender == nil || isNilAppender(appender) {
 		return result, errors.New("checks connector: appender is required")
 	}
 	entries, err := os.ReadDir(c.spoolDir)
@@ -178,8 +179,12 @@ func readWitness(path string) (Witness, error) {
 		return Witness{}, errors.New("witness must contain exactly the v1 fields")
 	}
 	for _, name := range required {
-		if _, ok := fields[name]; !ok {
+		value, ok := fields[name]
+		if !ok {
 			return Witness{}, fmt.Errorf("missing field %q", name)
+		}
+		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+			return Witness{}, fmt.Errorf("field %q must not be null", name)
 		}
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
@@ -198,6 +203,16 @@ func readWitness(path string) (Witness, error) {
 		return Witness{}, err
 	}
 	return witness, nil
+}
+
+func isNilAppender(appender Appender) bool {
+	value := reflect.ValueOf(appender)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
 }
 
 func (w Witness) validate() error {

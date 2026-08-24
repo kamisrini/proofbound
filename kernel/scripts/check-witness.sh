@@ -5,6 +5,17 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 spool_dir="$repo_root/.vera/spool"
 mkdir -p "$spool_dir"
 
+git_env_args=()
+while IFS= read -r variable; do
+  if [[ $variable == GIT_* ]]; then
+    git_env_args+=(-u "$variable")
+  fi
+done < <(compgen -e)
+
+git_repo() {
+  env "${git_env_args[@]}" git -C "$repo_root" "$@"
+}
+
 now_ms() {
   local value
   value=$(date +%s%3N 2>/dev/null || true)
@@ -46,10 +57,41 @@ first_line() {
 
 json_escape() {
   local value=$1
-  value=${value//\\/\\\\}
-  value=${value//\"/\\\"}
-  printf '%s' "$value"
+  local character code index
+  for ((index = 0; index < ${#value}; index++)); do
+    character=${value:index:1}
+    case $character in
+      '"') printf '\\"' ;;
+      '\\') printf '\\\\' ;;
+      $'\b') printf '\\b' ;;
+      $'\f') printf '\\f' ;;
+      $'\n') printf '\\n' ;;
+      $'\r') printf '\\r' ;;
+      $'\t') printf '\\t' ;;
+      *)
+        printf -v code '%d' "'$character"
+        if ((code < 32)); then
+          printf '\\u%04x' "$code"
+        else
+          printf '%s' "$character"
+        fi
+        ;;
+    esac
+  done
 }
+
+if ! git_sha=$(git_repo rev-parse HEAD 2>/dev/null) || [[ ! $git_sha =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]]; then
+  printf 'check-witness: cannot observe repository HEAD\n' >&2
+  exit 1
+fi
+if ! git_status=$(git_repo status --porcelain --untracked-files=normal 2>/dev/null); then
+  printf 'check-witness: cannot observe repository dirty state\n' >&2
+  exit 1
+fi
+git_dirty=false
+if [[ -n $git_status ]]; then
+  git_dirty=true
+fi
 
 started_ms=$(now_ms)
 started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -58,7 +100,7 @@ output_file=$(mktemp "${TMPDIR:-/tmp}/vera-check-output.XXXXXX")
 json_tmp=$(mktemp "$spool_dir/.witness.XXXXXX")
 trap 'rm -f "$output_file" "$json_tmp"' EXIT
 
-if make check >"$output_file" 2>&1; then
+if (cd "$repo_root" && make check) >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?
@@ -74,11 +116,6 @@ else
   read -r output_sha256 _ < <(shasum -a 256 "$output_file")
 fi
 
-git_sha=$(git -C "$repo_root" rev-parse HEAD 2>/dev/null || printf 'unavailable')
-git_dirty=false
-if [[ -n $(git -C "$repo_root" status --porcelain --untracked-files=normal 2>/dev/null) ]]; then
-  git_dirty=true
-fi
 go_version=$(first_line go version)
 lint_version=$(first_line golangci-lint version)
 make_version=$(first_line make --version)

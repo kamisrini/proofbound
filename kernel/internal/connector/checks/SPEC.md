@@ -41,7 +41,7 @@ The exact JSON object is:
 }
 ```
 
-Unknown, missing, or duplicate fields are errors. `exit_code` is 0–255; timestamps are non-zero and
+Unknown, missing, duplicate, or present-null fields are errors. `exit_code` is 0–255; timestamps are non-zero and
 `finished_at >= started_at`; `duration_ms >= 0`. The filename is `<run_id>.json` and must match the
 body. ULIDs use uppercase Crockford Base32, exclude I/L/O/U, and have a first character 0–7.
 
@@ -80,7 +80,7 @@ validated filename list for observability only and is never read as a seen-set.
 
 ## 4. Invariants
 
-1. **C-INV-1 — The v1 schema is exact and strict.** Unknown/missing/duplicate fields, trailing JSON, invalid
+1. **C-INV-1 — The v1 schema is exact and strict.** Unknown/missing/duplicate/null fields, trailing JSON, invalid
    ranges, malformed hashes, timestamps, tool versions, or ULIDs are refused.
 2. **C-INV-2 — One witness mints one check event keyed by run id.** Source is `checks`, kind is
    `check.run`, native id is `run_id`, occurred_at is `started_at`, and version is `checks/1`.
@@ -108,6 +108,16 @@ validated filename list for observability only and is never read as a seen-set.
     same newly minted ULID; two runs produce distinct ids.
 14. **C-INV-14 — Repository and tool observations are present.** HEAD, dirty state, and non-empty
     Go/golangci-lint/make version strings are recorded even when a tool reports `unavailable`.
+15. **C-INV-15 — Gate output and repository identity share one root.** The wrapper runs the gate at
+    its derived repository root and removes every inherited `GIT_*` selector before Git observation.
+16. **C-INV-16 — Repository observation fails before the gate.** An unavailable or malformed HEAD
+    or failed dirty-state inspection emits no witness and never invokes `make check`.
+17. **C-INV-17 — The committed Make target does not require executable script mode.** A 0644 script
+    copied with the real Makefile runs through the explicit Bash recipe and emits valid evidence.
+18. **C-INV-18 — Runtime dependencies are valid before evidence listing.** A typed-nil appender is
+    refused even when the spool is empty or absent.
+19. **C-INV-19 — Emitted JSON escapes tool control characters.** Legal command-output controls in
+    version strings are represented with JSON escapes and round-trip through the strict reader.
 
 ## 5. Invariant table
 
@@ -127,6 +137,11 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-12 | Wrapper never invokes vera or requires its binary | emitter_test.go::TestEmitter_WorksWithoutVeraBinary |
 | C-INV-13 | Wrapper emits distinct self-consistent ULIDs | emitter_test.go::TestEmitter_RunIDIsUniqueAndSelfConsistent |
 | C-INV-14 | Wrapper records repository and tool observations | emitter_test.go::TestEmitter_RecordsRepositoryAndTools |
+| C-INV-15 | Gate and Git observations bind to the script repository | emitter_test.go::TestEmitter_BindsGateAndGitToRepository |
+| C-INV-16 | Failed repository observation prevents gate execution | emitter_test.go::TestEmitter_RepositoryObservationFailsBeforeGate |
+| C-INV-17 | Real Make target works with a non-executable script | emitter_test.go::TestEmitter_FreshCheckoutMakeTarget |
+| C-INV-18 | Typed-nil appender is rejected before listing | checks_test.go::TestSync_RejectsTypedNilAppenderBeforeListing |
+| C-INV-19 | Tool-version controls remain valid JSON | emitter_test.go::TestEmitter_EscapesToolVersionControlCharacters |
 
 ## 6. Non-goals and recovery
 

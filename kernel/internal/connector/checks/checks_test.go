@@ -102,6 +102,19 @@ func TestWitness_StrictValidation(t *testing.T) {
 			}
 		})
 	}
+	for name := range fields {
+		t.Run("null "+name, func(t *testing.T) {
+			copy := make(map[string]json.RawMessage, len(fields))
+			for key, value := range fields {
+				copy[key] = value
+			}
+			copy[name] = json.RawMessage("null")
+			writeRaw(t, path, mustJSON(t, copy))
+			if _, err := readWitness(path); err == nil {
+				t.Fatalf("accepted null %s", name)
+			}
+		})
+	}
 }
 
 func TestSync_MintsCheckRunEvent(t *testing.T) {
@@ -223,6 +236,16 @@ func TestSync_RejectsEveryUninitializedRoute(t *testing.T) {
 				t.Fatal("accepted uninitialized connector")
 			}
 		})
+	}
+}
+
+func TestSync_RejectsTypedNilAppenderBeforeListing(t *testing.T) {
+	var appender *memoryAppender
+	for _, spoolDir := range []string{t.TempDir(), filepath.Join(t.TempDir(), "absent")} {
+		result, err := testConnector(t, spoolDir).Sync(context.Background(), appender)
+		if err == nil || result.Listed != 0 || result.Appended != 0 || result.Existing != 0 || result.Cursor != nil {
+			t.Fatalf("spool=%s result=%+v error=%v", spoolDir, result, err)
+		}
 	}
 }
 
