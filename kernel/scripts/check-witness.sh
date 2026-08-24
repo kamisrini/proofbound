@@ -7,8 +7,13 @@ output_file=''
 json_tmp=''
 version_files=()
 FIRST_LINE_VALUE=''
+child_pid=''
 
 cleanup() {
+  if [[ -n $child_pid ]]; then
+    kill "$child_pid" 2>/dev/null || true
+    child_pid=''
+  fi
   [[ -z $output_file ]] || rm -f "$output_file"
   [[ -z $json_tmp ]] || rm -f "$json_tmp"
   local file
@@ -39,11 +44,13 @@ git_repo() {
 
 now_ms() {
   local value
-  value=$(date +%s%3N 2>/dev/null || true)
+  if ! value=$(date +%s%3N 2>/dev/null); then
+    return 1
+  fi
   if [[ $value =~ ^[0-9]{13}$ ]]; then
     printf '%s' "$value"
   else
-    printf '%s000' "$(date +%s)"
+    return 1
   fi
 }
 
@@ -56,7 +63,11 @@ new_ulid() {
     encoded="${alphabet:value%32:1}$encoded"
     value=$((value / 32))
   done
-  for byte in $(od -An -N16 -tu1 /dev/urandom); do
+  local bytes
+  if ! bytes=$(od -An -N16 -tu1 /dev/urandom); then
+    return 1
+  fi
+  for byte in $bytes; do
     encoded+="${alphabet:byte%32:1}"
   done
   printf '%s' "$encoded"
@@ -72,16 +83,25 @@ first_line() {
     return 1
   fi
   version_files+=("$line_file")
-  if ! "$@" >"$output_file" 2>/dev/null; then
+  "$@" >"$output_file" 2>/dev/null &
+  child_pid=$!
+  if ! wait "$child_pid"; then
+    child_pid=''
     rm -f "$output_file" "$line_file"
     FIRST_LINE_VALUE='unavailable'
     return
   fi
+  child_pid=''
   if ! sed -n '1p' "$output_file" >"$line_file"; then
     return 1
   fi
   rm -f "$output_file"
-  for byte in $(od -An -v -tu1 "$line_file"); do
+  local bytes
+  if ! bytes=$(od -An -v -tu1 "$line_file"); then
+    rm -f "$line_file"
+    return 1
+  fi
+  for byte in $bytes; do
     if [[ $byte == 0 ]]; then
       rm -f "$line_file"
       return 1
@@ -153,9 +173,18 @@ if ! first_line make --version; then
 fi
 make_version=$FIRST_LINE_VALUE
 
-started_ms=$(now_ms)
-started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-run_id=$(new_ulid "$started_ms")
+if ! started_ms=$(now_ms) || ! [[ $started_ms =~ ^[0-9]{13}$ ]]; then
+  printf 'check-witness: cannot observe start time\n' >&2
+  exit 1
+fi
+if ! started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); then
+  printf 'check-witness: cannot observe start timestamp\n' >&2
+  exit 1
+fi
+if ! run_id=$(new_ulid "$started_ms"); then
+  printf 'check-witness: cannot generate run id\n' >&2
+  exit 1
+fi
 if ! output_file=$(mktemp "${TMPDIR:-/tmp}/vera-check-output.XXXXXX"); then
   printf 'check-witness: cannot create output capture\n' >&2
   exit 1
@@ -175,8 +204,14 @@ if ! cat "$output_file"; then
   exit 1
 fi
 
-finished_ms=$(now_ms)
-finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+if ! finished_ms=$(now_ms) || ! [[ $finished_ms =~ ^[0-9]{13}$ ]]; then
+  printf 'check-witness: cannot observe finish time\n' >&2
+  exit 1
+fi
+if ! finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ'); then
+  printf 'check-witness: cannot observe finish timestamp\n' >&2
+  exit 1
+fi
 duration_ms=$((finished_ms - started_ms))
 if command -v sha256sum >/dev/null 2>&1; then
   if ! hash_line=$(sha256sum "$output_file"); then

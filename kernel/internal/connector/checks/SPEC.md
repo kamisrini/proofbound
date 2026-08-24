@@ -127,6 +127,9 @@ validated filename list for observability only and is never read as a seen-set.
 22. **C-INV-22 — Publication failure is never reported as a witnessed gate.** Capture, hashing,
     serialization, and atomic publication failures return non-zero and leave no ingestible witness;
     interruption during pre-gate capture cleans all temporary files.
+23. **C-INV-23 — Helper observation failure is never reported as a witnessed gate.** Failed byte
+    scans, clocks, or run-id generation return non-zero and leave no ingestible witness; interrupted
+    helper children and their temporary files are cleaned.
 
 ## 5. Invariant table
 
@@ -154,6 +157,7 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-20 | Real Git-using gate receives the sanitized environment | emitter_test.go::TestEmitter_GateGitUsesSanitizedRepository |
 | C-INV-21 | NUL and invalid UTF-8 fail before evidence identity | emitter_test.go::TestEmitter_RejectsInadmissibleToolBytesBeforeGate |
 | C-INV-22 | Publication failures are loud and capture temps are cleaned | emitter_test.go::TestEmitter_PublicationFailuresAreLoud |
+| C-INV-23 | Helper observation failures fail closed without publishing a witness | emitter_test.go::TestEmitter_HelperFailuresAreLoud |
 
 ## 6. Non-goals and recovery
 

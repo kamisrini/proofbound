@@ -23,6 +23,7 @@ kernel/internal/connector/checks/SPEC.md	C-INV-19	Emitted JSON escapes tool cont
 kernel/internal/connector/checks/SPEC.md	C-INV-20	The gate process inherits the sanitized repository environment.
 kernel/internal/connector/checks/SPEC.md	C-INV-21	Inadmissible evidence bytes fail before identity.
 kernel/internal/connector/checks/SPEC.md	C-INV-22	Publication failure is never reported as a witnessed gate.
+kernel/internal/connector/checks/SPEC.md	C-INV-23	Helper observation failure is never reported as a witnessed gate.
 kernel/internal/connector/git/SPEC.md	INV-1	One event per commit, keyed by SHA.
 kernel/internal/connector/git/SPEC.md	INV-2	A second Sync over unchanged history appends ZERO.
 kernel/internal/connector/git/SPEC.md	INV-3	`Result` counts are exact and partition the listing.
