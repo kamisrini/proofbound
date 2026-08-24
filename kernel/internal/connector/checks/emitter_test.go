@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
 type emitterFixture struct {
@@ -296,6 +298,42 @@ func TestEmitter_RejectsInadmissibleToolBytesBeforeGate(t *testing.T) {
 	}
 }
 
+func TestEmitter_PublicationFailuresAreLoud(t *testing.T) {
+	for name, environment := range map[string]string{
+		"spool removed": "REMOVE_SPOOL=1",
+		"hash failure":  "FAKE_SHA_FAIL=1",
+	} {
+		t.Run(name, func(t *testing.T) {
+			fixture := newEmitterFixture(t)
+			cmd := fixture.command(0)
+			cmd.Env = append(cmd.Env, environment)
+			output, err := cmd.CombinedOutput()
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 {
+				t.Fatalf("output=%q error=%v", output, err)
+			}
+			if files := witnessFiles(t, fixture.root); len(files) != 0 {
+				t.Fatalf("witness files=%v", files)
+			}
+		})
+	}
+	fixture := newEmitterFixture(t)
+	cmd := fixture.command(0)
+	cmd.Env = append(cmd.Env, "FAKE_GO_BLOCK=1")
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(100 * time.Millisecond)
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil {
+		t.Fatal(err)
+	}
+	_ = cmd.Wait()
+	if matches, err := filepath.Glob(filepath.Join(fixture.root, "vera-version-*")); err != nil || len(matches) != 0 {
+		t.Fatalf("version temp matches=%v error=%v", matches, err)
+	}
+}
+
 func newEmitterFixture(t *testing.T) emitterFixture {
 	t.Helper()
 	root := t.TempDir()
@@ -315,10 +353,11 @@ func newEmitterFixture(t *testing.T) emitterFixture {
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
+	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nif [[ -n ${REMOVE_SPOOL:-} ]]; then rm -rf \"$EXPECTED_REPO_ROOT/.vera/spool\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
 	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nfor variable in $(compgen -e); do if [[ $variable == GIT_* ]]; then printf '"+strings.Repeat("b", 40)+"\\n'; exit 0; fi; done\nif [[ ${3:-} == rev-parse ]]; then if [[ ${FAKE_GIT_HEAD_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_HEAD_EXIT\"; fi; printf '%s\\n' \"${FAKE_GIT_HEAD_VALUE:-"+strings.Repeat("a", 40)+"}\"; exit 0; fi\nif [[ ${3:-} == status ]]; then if [[ ${FAKE_GIT_STATUS_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_STATUS_EXIT\"; fi; printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
-	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_NUL:-} ]]; then printf 'go\\000version fixture\\n'; elif [[ -n ${FAKE_GO_INVALID:-} ]]; then printf 'go\\377version fixture\\n'; elif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
+	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_BLOCK:-} ]]; then while true; do sleep 1; done; elif [[ -n ${FAKE_GO_NUL:-} ]]; then printf 'go\\000version fixture\\n'; elif [[ -n ${FAKE_GO_INVALID:-} ]]; then printf 'go\\377version fixture\\n'; elif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
 	writeExecutable(t, filepath.Join(binDir, "golangci-lint"), "#!/usr/bin/env bash\nprintf 'golangci-lint fixture\\n'\n")
+	writeExecutable(t, filepath.Join(binDir, "sha256sum"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_SHA_FAIL:-} ]]; then exit 23; fi\nexec /usr/bin/sha256sum \"$@\"\n")
 	caller := filepath.Join(root, "caller")
 	if err := os.Mkdir(caller, 0o755); err != nil {
 		t.Fatal(err)

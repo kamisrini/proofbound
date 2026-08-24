@@ -3,7 +3,28 @@ set -u
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 spool_dir="$repo_root/.vera/spool"
-mkdir -p "$spool_dir"
+output_file=''
+json_tmp=''
+version_files=()
+FIRST_LINE_VALUE=''
+
+cleanup() {
+  [[ -z $output_file ]] || rm -f "$output_file"
+  [[ -z $json_tmp ]] || rm -f "$json_tmp"
+  local file
+  for file in "${version_files[@]}"; do
+    rm -f "$file"
+  done
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
+if ! mkdir -p "$spool_dir"; then
+  printf 'check-witness: cannot create spool directory\n' >&2
+  exit 1
+fi
 
 git_env_args=()
 while IFS= read -r variable; do
@@ -43,14 +64,22 @@ new_ulid() {
 
 first_line() {
   local output_file line_file line byte
-  output_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-output.XXXXXX")
-  line_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-line.XXXXXX")
+  if ! output_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-output.XXXXXX"); then
+    return 1
+  fi
+  version_files+=("$output_file")
+  if ! line_file=$(mktemp "${TMPDIR:-/tmp}/vera-version-line.XXXXXX"); then
+    return 1
+  fi
+  version_files+=("$line_file")
   if ! "$@" >"$output_file" 2>/dev/null; then
     rm -f "$output_file" "$line_file"
-    printf 'unavailable'
+    FIRST_LINE_VALUE='unavailable'
     return
   fi
-  sed -n '1p' "$output_file" >"$line_file"
+  if ! sed -n '1p' "$output_file" >"$line_file"; then
+    return 1
+  fi
   rm -f "$output_file"
   for byte in $(od -An -v -tu1 "$line_file"); do
     if [[ $byte == 0 ]]; then
@@ -65,9 +94,9 @@ first_line() {
   line=$(<"$line_file")
   rm -f "$line_file"
   if [[ -z $line ]]; then
-    printf 'unavailable'
+    FIRST_LINE_VALUE='unavailable'
   else
-    printf '%s' "$line"
+    FIRST_LINE_VALUE=$line
   fi
 }
 
@@ -108,38 +137,79 @@ git_dirty=false
 if [[ -n $git_status ]]; then
   git_dirty=true
 fi
-if ! go_version=$(first_line go version) || ! lint_version=$(first_line golangci-lint version) || ! make_version=$(first_line make --version); then
+if ! first_line go version; then
   printf 'check-witness: tool version contains inadmissible bytes\n' >&2
   exit 1
 fi
+go_version=$FIRST_LINE_VALUE
+if ! first_line golangci-lint version; then
+  printf 'check-witness: tool version contains inadmissible bytes\n' >&2
+  exit 1
+fi
+lint_version=$FIRST_LINE_VALUE
+if ! first_line make --version; then
+  printf 'check-witness: tool version contains inadmissible bytes\n' >&2
+  exit 1
+fi
+make_version=$FIRST_LINE_VALUE
 
 started_ms=$(now_ms)
 started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 run_id=$(new_ulid "$started_ms")
-output_file=$(mktemp "${TMPDIR:-/tmp}/vera-check-output.XXXXXX")
-json_tmp=$(mktemp "$spool_dir/.witness.XXXXXX")
-trap 'rm -f "$output_file" "$json_tmp"' EXIT
+if ! output_file=$(mktemp "${TMPDIR:-/tmp}/vera-check-output.XXXXXX"); then
+  printf 'check-witness: cannot create output capture\n' >&2
+  exit 1
+fi
+if ! json_tmp=$(mktemp "$spool_dir/.witness.XXXXXX"); then
+  printf 'check-witness: cannot create witness temporary\n' >&2
+  exit 1
+fi
 
 if (cd "$repo_root" && env "${git_env_args[@]}" make check) >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?
 fi
-cat "$output_file"
+if ! cat "$output_file"; then
+  printf 'check-witness: cannot publish gate output\n' >&2
+  exit 1
+fi
 
 finished_ms=$(now_ms)
 finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 duration_ms=$((finished_ms - started_ms))
 if command -v sha256sum >/dev/null 2>&1; then
-  read -r output_sha256 _ < <(sha256sum "$output_file")
+  if ! hash_line=$(sha256sum "$output_file"); then
+    printf 'check-witness: cannot hash gate output\n' >&2
+    exit 1
+  fi
 else
-  read -r output_sha256 _ < <(shasum -a 256 "$output_file")
+  if ! hash_line=$(shasum -a 256 "$output_file"); then
+    printf 'check-witness: cannot hash gate output\n' >&2
+    exit 1
+  fi
 fi
+if [[ ! $hash_line =~ ^([0-9a-f]{64})[[:space:]] ]]; then
+  printf 'check-witness: hash output is malformed\n' >&2
+  exit 1
+fi
+output_sha256=${BASH_REMATCH[1]}
 
-printf '{"schema":"vera.witness.v1","run_id":"%s","command":"make check","exit_code":%d,"started_at":"%s","finished_at":"%s","duration_ms":%d,"output_sha256":"%s","git_sha":"%s","git_dirty":%s,"tool_versions":{"go":"%s","golangci_lint":"%s","make":"%s"}}\n' \
+if ! printf '{"schema":"vera.witness.v1","run_id":"%s","command":"make check","exit_code":%d,"started_at":"%s","finished_at":"%s","duration_ms":%d,"output_sha256":"%s","git_sha":"%s","git_dirty":%s,"tool_versions":{"go":"%s","golangci_lint":"%s","make":"%s"}}\n' \
   "$run_id" "$exit_code" "$started_at" "$finished_at" "$duration_ms" "$output_sha256" \
   "$(json_escape "$git_sha")" "$git_dirty" "$(json_escape "$go_version")" \
-  "$(json_escape "$lint_version")" "$(json_escape "$make_version")" >"$json_tmp"
-mv "$json_tmp" "$spool_dir/$run_id.json"
+  "$(json_escape "$lint_version")" "$(json_escape "$make_version")" >"$json_tmp"; then
+  printf 'check-witness: cannot serialize witness\n' >&2
+  exit 1
+fi
+if [[ ! -s $json_tmp ]]; then
+  printf 'check-witness: serialized witness is empty\n' >&2
+  exit 1
+fi
+if ! mv "$json_tmp" "$spool_dir/$run_id.json"; then
+  printf 'check-witness: cannot publish witness\n' >&2
+  exit 1
+fi
+json_tmp=''
 
 exit "$exit_code"

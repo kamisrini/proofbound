@@ -134,7 +134,7 @@ New make target `check-witnessed` calls the script; **plain `make check` stays u
 | 2 | core (JCS, ULIDs, envelope) | ✓ DONE — accepted after ONE adversarial round |
 | 3 | store (ledger, lock, migrations) | ✓ DONE — shipped after NINE rounds with an enumerated residual list (VD-fix-discipline-0e0tnz is that story); its `rows.Err()` survivor-candidate folds into the store mutation sweep below |
 | 4 | git connector | ✓ DONE — accepted under Law 9 in current Round 4; frozen `d794ff7` received an independent ACCEPTABLE verdict with no findings; final author evidence was gitcmd 77/77 and combined 95/95 killed |
-| 5 | witness emitter + checks connector | ◐ ROUND-2 REMEDIATED — spec-first implementation, real shell emission, DB-backed `vera sync checks` replay, connector 37/37 and CLI 17/17 killed; two `NEEDS_WORK` verdicts are committed and a Round 3 verdict is required. The prescribed `.claude/commands/vera-wrap.md` does not exist in this checkout, so its step 3 cannot be amended here and remains explicit migration debt |
+| 5 | witness emitter + checks connector | ◐ ROUND-3 REMEDIATED — spec-first implementation, real shell emission, DB-backed `vera sync checks` replay, connector 37/37 and CLI 17/17 killed; three `NEEDS_WORK` verdicts are committed and a Round 4 verdict is required. The prescribed `.claude/commands/vera-wrap.md` does not exist in this checkout, so its step 3 cannot be amended here and remains explicit migration debt |
 | 6 | projections + `vera verify` | ○ NOT STARTED (placeholder). The `-short`/fixture-cluster decision owed here per the Risks table stands |
 | 7 | sessions connector | ○ NOT STARTED (placeholder) |
 | 8 | `vera report week` | ○ NOT STARTED |

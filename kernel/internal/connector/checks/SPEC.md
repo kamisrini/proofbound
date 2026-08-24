@@ -124,6 +124,9 @@ validated filename list for observability only and is never read as a seen-set.
 21. **C-INV-21 — Inadmissible evidence bytes fail before identity.** NUL or invalid UTF-8 in a tool
     observation prevents the gate and witness; independently supplied invalid UTF-8 is refused
     before decoding, so distinct invalid bytes cannot collapse into one content identity.
+22. **C-INV-22 — Publication failure is never reported as a witnessed gate.** Capture, hashing,
+    serialization, and atomic publication failures return non-zero and leave no ingestible witness;
+    interruption during pre-gate capture cleans all temporary files.
 
 ## 5. Invariant table
 
@@ -150,6 +153,7 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-19 | Tool-version controls remain valid JSON | emitter_test.go::TestEmitter_EscapesToolVersionControlCharacters |
 | C-INV-20 | Real Git-using gate receives the sanitized environment | emitter_test.go::TestEmitter_GateGitUsesSanitizedRepository |
 | C-INV-21 | NUL and invalid UTF-8 fail before evidence identity | emitter_test.go::TestEmitter_RejectsInadmissibleToolBytesBeforeGate |
+| C-INV-22 | Publication failures are loud and capture temps are cleaned | emitter_test.go::TestEmitter_PublicationFailuresAreLoud |
 
 ## 6. Non-goals and recovery
 
