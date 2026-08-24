@@ -164,9 +164,9 @@ func (r *Repo) files(ctx context.Context, sha string) ([]string, error) {
 	parents := strings.Fields(string(parentsOut))
 	var out []byte
 	if len(parents) == 0 {
-		out, err = r.run(ctx, "diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-z", sha)
+		out, err = r.run(ctx, "diff-tree", "--root", "--ignore-submodules=none", "--no-commit-id", "--name-only", "-r", "-z", sha)
 	} else {
-		out, err = r.run(ctx, "diff", "--name-only", "-z", parents[0], sha)
+		out, err = r.run(ctx, "diff", "--ignore-submodules=none", "--name-only", "-z", parents[0], sha)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gitcmd: list files for %q: %w", sha, err)
@@ -282,8 +282,16 @@ func (r *Repo) validateRefs(ctx context.Context) error {
 		}
 	}
 	if _, symbolicErr := r.run(ctx, "symbolic-ref", "-q", "HEAD"); symbolicErr != nil {
-		if _, headErr := r.peelCommit(ctx, "HEAD"); headErr != nil {
+		headOut, headErr := r.run(ctx, "rev-parse", "--verify", "HEAD^{object}")
+		if headErr != nil {
 			return fmt.Errorf("gitcmd: validate detached HEAD: %w", headErr)
+		}
+		typeOut, typeErr := r.run(ctx, "cat-file", "-t", strings.TrimSpace(string(headOut)))
+		if typeErr != nil {
+			return fmt.Errorf("gitcmd: validate detached HEAD type: %w", typeErr)
+		}
+		if strings.TrimSpace(string(typeOut)) != "commit" {
+			return errors.New("gitcmd: detached HEAD does not name a commit object")
 		}
 	}
 	if _, err := r.run(ctx, "show-ref"); err == nil {
@@ -324,8 +332,9 @@ func (r *Repo) tipCommit(ctx context.Context, ref string) (string, bool, error) 
 }
 
 func (r *Repo) run(ctx context.Context, args ...string) ([]byte, error) {
-	base := []string{"--no-replace-objects", "-c", "core.quotepath=true", "-c", "diff.renames=false", "-C", r.root}
+	base := []string{"--no-replace-objects", "-c", "core.quotepath=true", "-c", "diff.renames=false", "-c", "diff.ignoreSubmodules=none", "-C", r.root}
 	cmd := exec.CommandContext(ctx, "git", append(base, args...)...)
+	cmd.Env = gitEnvironment(os.Environ())
 	out, err := cmd.Output()
 	if err == nil {
 		return out, nil
@@ -335,6 +344,18 @@ func (r *Repo) run(ctx context.Context, args ...string) ([]byte, error) {
 		return nil, fmt.Errorf("git %s: %s", strings.Join(args, " "), strings.TrimSpace(string(exitErr.Stderr)))
 	}
 	return nil, err
+}
+
+func gitEnvironment(environment []string) []string {
+	clean := make([]string, 0, len(environment))
+	for _, entry := range environment {
+		name, _, _ := strings.Cut(entry, "=")
+		if len(name) >= len("GIT_") && strings.EqualFold(name[:len("GIT_")], "GIT_") {
+			continue
+		}
+		clean = append(clean, entry)
+	}
+	return clean
 }
 
 func nulUTF8Strings(data []byte) ([]string, error) {

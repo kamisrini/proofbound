@@ -299,6 +299,26 @@ func TestRepo_MissingObjectRoutesAreErrors(t *testing.T) {
 			t.Fatal("Tips accepted detached HEAD at a non-commit object")
 		}
 	})
+	t.Run("detached HEAD at annotated tag", func(t *testing.T) {
+		fixture := newFixture(t)
+		fixture.write("a", "a")
+		fixture.commit("one", "")
+		fixture.git("tag", "-a", "tagged", "-m", "tagged")
+		tagObject := strings.TrimSpace(fixture.git("rev-parse", "refs/tags/tagged"))
+		if err := os.WriteFile(filepath.Join(fixture.root, ".git", "HEAD"), []byte(tagObject+"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Commits(context.Background()); err == nil {
+			t.Fatal("Commits accepted detached HEAD at an annotated-tag object")
+		}
+		if _, err := repo.Tips(context.Background()); err == nil {
+			t.Fatal("Tips accepted detached HEAD at an annotated-tag object")
+		}
+	})
 	t.Run("annotated tag referent", func(t *testing.T) {
 		fixture := newFixture(t)
 		fixture.write("a", "a")
@@ -364,6 +384,95 @@ func TestCommits_RenamePayloadIgnoresLocalConfig(t *testing.T) {
 	want := []string{"new-name", "old-name"}
 	if disabled.SHA != enabled.SHA || !reflect.DeepEqual(disabled.FilesTouched, want) || !reflect.DeepEqual(enabled.FilesTouched, want) {
 		t.Fatalf("disabled=%+v enabled=%+v", disabled, enabled)
+	}
+}
+
+func TestRepo_RootCannotBeRedirectedByGitEnvironment(t *testing.T) {
+	wanted := newFixture(t)
+	wanted.write("wanted", "wanted")
+	wanted.commit("wanted", "")
+	wantedSHA := wanted.head()
+	other := newFixture(t)
+	other.write("other", "other")
+	other.commit("other", "")
+	linked := filepath.Join(t.TempDir(), "linked")
+	wanted.git("worktree", "add", "-q", "-b", "linked", linked)
+	t.Setenv("GIT_DIR", filepath.Join(other.root, ".git"))
+	t.Setenv("GIT_WORK_TREE", wanted.root)
+	repo, err := New(wanted.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commits, err := repo.Commits(context.Background())
+	if err != nil || len(commits) != 1 || commits[0].SHA != wantedSHA || !reflect.DeepEqual(commits[0].FilesTouched, []string{"wanted"}) {
+		t.Fatalf("commits=%+v error=%v", commits, err)
+	}
+
+	linkedRepo, err := New(linked)
+	if err != nil {
+		t.Fatal(err)
+	}
+	linkedCommits, err := linkedRepo.Commits(context.Background())
+	if err != nil || len(linkedCommits) == 0 || linkedCommits[len(linkedCommits)-1].SHA != wantedSHA {
+		t.Fatalf("linked commits=%+v error=%v", linkedCommits, err)
+	}
+}
+
+func TestGitEnvironment_RemovesEveryGitSelector(t *testing.T) {
+	input := []string{"PATH=/bin", "GIT_DIR=/other", "git_work_tree=/wrong", "GIT_COMMON_DIR=/common", "HOME=/home"}
+	want := []string{"PATH=/bin", "HOME=/home"}
+	if got := gitEnvironment(input); !reflect.DeepEqual(got, want) {
+		t.Fatalf("environment=%v want=%v", got, want)
+	}
+}
+
+func TestCommits_GitlinkPayloadIgnoresSubmoduleConfig(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("one", "one")
+	fixture.commit("one", "")
+	firstTarget := fixture.head()
+	fixture.write("two", "two")
+	fixture.commit("two", "")
+	secondTarget := fixture.head()
+	fixture.git("checkout", "-q", "--orphan", "links")
+	fixture.git("rm", "-q", "-rf", ".")
+	fixture.git("update-index", "--add", "--cacheinfo", "160000", firstTarget, "sub")
+	fixture.git("commit", "-q", "-m", "gitlink root")
+	rootSHA := fixture.head()
+	fixture.git("update-index", "--cacheinfo", "160000", secondTarget, "sub")
+	fixture.git("commit", "-q", "-m", "gitlink changed")
+	tipSHA := fixture.head()
+
+	read := func() map[string][]string {
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		commits, err := repo.Commits(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := make(map[string][]string)
+		for _, commit := range commits {
+			result[commit.SHA] = commit.FilesTouched
+		}
+		return result
+	}
+	fixture.git("config", "diff.ignoreSubmodules", "all")
+	localAll := read()
+	fixture.git("config", "diff.ignoreSubmodules", "none")
+	localNone := read()
+	home := t.TempDir()
+	if err := os.WriteFile(filepath.Join(home, ".gitconfig"), []byte("[diff]\n\tignoreSubmodules = all\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fixture.git("config", "--unset", "diff.ignoreSubmodules")
+	t.Setenv("HOME", home)
+	globalAll := read()
+	for _, got := range []map[string][]string{localAll, localNone, globalAll} {
+		if !reflect.DeepEqual(got[rootSHA], []string{"sub"}) || !reflect.DeepEqual(got[tipSHA], []string{"sub"}) {
+			t.Fatalf("root=%q tip=%q", got[rootSHA], got[tipSHA])
+		}
 	}
 }
 

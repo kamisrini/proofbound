@@ -23,7 +23,10 @@ cannot become partial after construction.
 ## 2. Git protocol
 
 - Commands run with `--no-replace-objects`, `-c core.quotepath=true`, and
-  `-c diff.renames=false`; repository and user configuration cannot alter payload semantics.
+  `-c diff.renames=false`, and `-c diff.ignoreSubmodules=none`; repository and user configuration
+  cannot alter rename or gitlink payload semantics. Inherited `GIT_*` variables are removed from
+  child processes so they cannot redirect the repository selected by `New(root)`; normal and linked
+  worktrees are discovered from `root` itself.
 - History starts from `--all`, excluding exactly `refs/stash`, `refs/notes/*`, and
   `refs/replace/*`. HEAD remains included, including detached HEAD.
 - Commit scalar fields are emitted by distinct placeholders with NUL separators. A root commit's
@@ -74,6 +77,13 @@ cannot become partial after construction.
 18. **G-INV-18 — Ref validation follows annotated-tag referents.** A tag object whose referent is
     absent is a broken repository for both commit listing and tips; valid non-commit refs remain
     outside history without becoming errors.
+19. **G-INV-19 — The requested root selects the repository.** Inherited `GIT_*` environment cannot
+    redirect commands to another Git dir, work tree, common dir, object store, namespace, or index;
+    linked worktrees continue to resolve through their own `.git` file.
+20. **G-INV-20 — Gitlink deltas are configuration-independent.** Root and non-root gitlink changes
+    are included even when repository or user configuration says to ignore submodules.
+21. **G-INV-21 — Detached HEAD immediately names a commit object.** Missing, blob, tree, and tag
+    objects are refused even when an annotated tag could peel to a valid commit.
 
 Legacy graft refusal is a route to G-INV-5's harm: grafts make a boundary commit appear to change
 its whole tree, producing contradictory payloads for one SHA. Both `New` and `Commits` therefore
@@ -108,6 +118,9 @@ refuse a non-empty `.git/info/grafts` with `ErrShallow`.
 | G-INV-16 | Local rename configuration cannot change one SHA's paths | gitcmd_test.go::TestCommits_RenamePayloadIgnoresLocalConfig |
 | G-INV-17 | Invalid UTF-8 scalar bytes are refused before payload construction | gitcmd_test.go::TestCommits_RefusesInvalidUTF8Scalars |
 | G-INV-18 | Missing annotated-tag referents are errors while valid non-commit refs are skipped | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
+| G-INV-19 | Git environment cannot redirect the requested root and linked worktrees still work | gitcmd_test.go::TestRepo_RootCannotBeRedirectedByGitEnvironment |
+| G-INV-20 | Repository and user submodule-ignore config cannot change root/non-root gitlink paths | gitcmd_test.go::TestCommits_GitlinkPayloadIgnoresSubmoduleConfig |
+| G-INV-21 | Detached HEAD rejects every immediate non-commit object including annotated tags | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
 
 ## 6. Dependencies
 

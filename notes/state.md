@@ -21,11 +21,11 @@ Load-bearing facts:
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
   0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
 - Store mutation acceptance is recorded in `notes/journal/2026-08-24.md` and pushed at `89cfa30`.
-- Task 4 Round 2 received a committed `NEEDS_WORK` verdict. Its rename-config, scalar-encoding,
-  tag-referent, proving-mechanism, plan, and dependency routes are remediated author-side; gitcmd is
-  74/74 killed and the combined connector sweep is 92/92 killed, with no invalids or survivors. It
-  is NOT accepted until a non-author verifies the frozen remediation and returns an ACCEPTABLE
-  verdict committed under `docs/verification/verdicts/`.
+- Task 4 Round 3 received a committed `NEEDS_WORK` verdict. Its repository-environment, gitlink
+  configuration, and immediate detached-HEAD routes are remediated author-side; gitcmd is 77/77
+  killed and the combined connector sweep is 95/95 killed, with no invalids or survivors. It is NOT
+  accepted until a non-author verifies the frozen remediation and returns an ACCEPTABLE verdict
+  committed under `docs/verification/verdicts/`.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -89,19 +89,19 @@ passed and the allowed-survivor ledger needed no store entry. Full reasoning and
 
 ## Where Task 4 stands
 
-The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Round 1's
-six findings are closed. Round 2 found configuration-dependent rename payloads, invalid scalar UTF-8
-rewriting, transitive tag breakage, and proving-mechanism/spec drift; those routes now have code/spec
-remedies and real-adapter tests. G-INV-15 through G-INV-18 were appended with the restored lock
-mechanism. gitcmd is 74/74 killed; combined parent+child is 92/92 killed. No survivor was declared.
+The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Rounds
+1–2 are closed. Round 3 found wrong-repository ingestion through inherited Git environment,
+configuration-dependent gitlink paths, and an annotated-tag object accepted as detached HEAD; those
+routes now have code/spec remedies and real-adapter tests. G-INV-19 through G-INV-21 were appended.
+gitcmd is 77/77 killed; combined parent+child is 95/95 killed. No survivor was declared.
 
-None of that is acceptance. The frozen remediation still needs the non-author Round 3 verdict.
+None of that is acceptance. The frozen remediation still needs the non-author Round 4 verdict.
 
 ## Blockers / open, in priority order
 
-1. **Git connector remains unaccepted:** current Round 2 is committed as `NEEDS_WORK`; its routes
+1. **Git connector remains unaccepted:** current Round 3 is committed as `NEEDS_WORK`; its routes
    are remediated and author gates are green, but a non-author must review the frozen remediation
-   and commit the Round 3 ACCEPTABLE or NEEDS_WORK verdict.
+   and commit the Round 4 ACCEPTABLE or NEEDS_WORK verdict.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
    Tasks 0–3 DONE · Task 4 = implemented, blocker #1 is its independent acceptance gate;

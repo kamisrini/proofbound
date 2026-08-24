@@ -46,6 +46,9 @@ kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-15	Merge paths are the first-
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-16	Rename reporting is configuration-independent.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-17	Invalid UTF-8 scalar bytes are refused.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-18	Ref validation follows annotated-tag referents.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-19	The requested root selects the repository.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-20	Gitlink deltas are configuration-independent.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-21	Detached HEAD immediately names a commit object.
 kernel/internal/core/SPEC.md	INV-1	Order and whitespace independence.
 kernel/internal/core/SPEC.md	INV-2	Idempotence.
 kernel/internal/core/SPEC.md	INV-3	Unicode fidelity.
