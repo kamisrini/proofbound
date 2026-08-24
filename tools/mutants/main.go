@@ -122,12 +122,8 @@ func runMutant(root string, m mutant) string {
 	if err := os.WriteFile(path, b, 0o644); err != nil {
 		return "invalid"
 	}
-	args := []string{"test"}
-	if testTags != "" {
-		args = append(args, "-tags", testTags)
-	}
-	args = append(args, "./...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	args := testArgs("./...")
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = tmp
@@ -191,12 +187,8 @@ func calibrate(root string) error {
 	return nil
 }
 func runTests(dir string) string {
-	args := []string{"test"}
-	if testTags != "" {
-		args = append(args, "-tags", testTags)
-	}
-	args = append(args, "./...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	args := testArgs("./...")
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = dir
@@ -216,6 +208,23 @@ func runTests(dir string) string {
 	}
 	_ = os.WriteFile("/tmp/vera-mutant-last.log", stderr.Bytes(), 0o644)
 	return "killed"
+}
+
+func testArgs(pattern string) []string {
+	args := []string{"test"}
+	if testTags != "" {
+		// Integration packages share the configured disposable database. Running them
+		// concurrently makes one package's rows invalidate another package's assertions.
+		args = append(args, "-p=1", "-tags", testTags)
+	}
+	return append(args, pattern)
+}
+
+func testTimeout() time.Duration {
+	if testTags != "" {
+		return 30 * time.Second
+	}
+	return 10 * time.Second
 }
 
 func copyTree(src, dst string) {

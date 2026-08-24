@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-24 (store accepted and pushed; Task 4 Git connector implemented with 77/77 combined mutants killed; independent non-author verdict still required)
+**As of:** 2026-08-24 (Tasks 3–4 accepted; Task 5 author-complete with connector 36/36 and DB-aware CLI 17/17 mutants killed; independent verdict pending)
 
 ## Resume Prompt
 
@@ -25,6 +25,13 @@ Load-bearing facts:
   no HIGH, MED, or LOW findings and is committed verbatim at
   `docs/verification/verdicts/task4-current-round4.md`. Author evidence is gitcmd 77/77 killed and
   combined parent/child 95/95 killed, with no invalids or survivors.
+- Task 5 is author-complete from a spec written before code. `make check-witnessed` emits strict
+  `vera.witness.v1` evidence without invoking VERA; `vera sync checks` ingests and deduplicates it.
+  Connector mutation is 36/36 killed; DB-aware CLI mutation is 17/17 killed, with no invalids or
+  survivors. Task 5 is NOT accepted until a non-author verdict is committed on receipt.
+- The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
+  ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
+  ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -33,8 +40,8 @@ Load-bearing facts:
   spec-numbering-lint and other gates that are absent from this checkout. Current `make check`
   runs only the scripts actually present plus kernel build/test/lint. Do not cite historical gate
   claims as current enforcement.
-- Current author sweeps are GREEN: gitcmd 60/60 killed; combined connector target 77/77 killed,
-  with no invalids or survivors. Do NOT read that as "git is proven": the operator set is small,
+- Accepted Task 4 author sweeps are GREEN: gitcmd 77/77 killed; combined connector target 95/95
+  killed, with no invalids or survivors. Do NOT read that as "git is proven": the operator set is small,
   never mutates `_test.go`, and says nothing about whether a test asserts the RIGHT thing.
 - Fixing the REPRODUCTION is not fixing the INVARIANT. Before closing anything: write the
   HARM in the finding's own words, then enumerate ROUTES to it.
@@ -58,10 +65,9 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Run a non-author adversarial review of Task 4 against both connector SPECs and the harm/routes in
-`notes/journal/2026-08-24.md`. Commit the verdict on receipt. Fix findings, re-sweep, and repeat until
-ACCEPTABLE. Resolve the missing `make backup` mechanism and misleading `make short` target before
-relying on either command as evidence.
+Run a non-author adversarial review of Task 5 against `internal/connector/checks/SPEC.md`, the CLI
+wiring, emitter, and harm/routes in `notes/journal/2026-08-24.md`. Commit the verdict verbatim on
+receipt. Fix findings, re-sweep, and repeat until ACCEPTABLE. Do not start Task 6 before that.
 ```
 
 ## Worktree
@@ -73,11 +79,12 @@ relying on either command as evidence.
 
 ## What this session shipped
 
-This repository migration began from a documentation corpus. Store is now accepted; the Git
-connector implementation is author-complete and awaits independent verification.
+This repository migration began from a documentation corpus. Store and Git are accepted. The
+witness emitter, checks connector, and `vera sync checks` composition are author-complete and await
+independent verification.
 
 **Migration warning:** the imported docs describe a richer enforcement suite than this repository
-currently contains. Present mechanisms are the scripts visible under `scripts/`, their three
+currently contains. Present mechanisms are the scripts visible under `scripts/`, their visible
 self-tests, kernel build/test/lint, and the calibrated mutation harness. Missing targets/scripts are
 mechanism debt, not silently inherited evidence.
 
@@ -98,15 +105,14 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 4 is accepted. Task 5 is the next unaccepted task and must begin from
-   its citable design inputs (`VD-verification-asymmetry-2dyjnd` and
-   `VD-verdicts-are-artifacts-rl0rab`) with a SPEC before code.
+1. **P1 forward path:** Task 5 is author-complete and mechanically green, but Law 9 acceptance is
+   open pending a non-author verdict. Commit that verdict verbatim on receipt; do not start Task 6
+   before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–3 DONE · Task 4 DONE (mutants green + non-author ACCEPTABLE verdict) · Tasks 5–9 NOT STARTED
-   (placeholders verified — no check-witnessed target, no spool schema anywhere) · Task 9 hard
-   deadline 2026-09-18 (spec-first advisory expiry), ~5 weeks out — Task 4 must close this week.
-   Task 5's design inputs are written: VD-verification-asymmetry-2dyjnd + VD-verdicts-are-artifacts-rl0rab.
+   Tasks 0–4 DONE · Task 5 AUTHOR-COMPLETE, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
+   deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
+   cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
    author-side; `core` remains queued.
 4. **Owed mechanisms, validated and ranked:** restore the mechanisms the imported constitution and

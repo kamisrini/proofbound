@@ -11,7 +11,7 @@ while IFS= read -r -d '' spec; do
     id=${id%"${id##*[![:space:]]}"}
     citation=${citation#"${citation%%[![:space:]]*}"}
     citation=${citation%"${citation##*[![:space:]]}"}
-    [[ $id =~ ^((G-)?INV-[0-9]+[a-z]?|F[0-9]+)$ ]] || continue
+    [[ $id =~ ^(([A-Z]+-)?INV-[0-9]+[a-z]?|F[0-9]+)$ ]] || continue
     [ "$citation" = '—' ] && continue
     if [[ ! $citation =~ ^[A-Za-z0-9_]+_test\.go::Test[A-Za-z0-9_]+$ ]]; then
       echo "$spec: invariant $id has malformed proving-test citation: $citation" >&2

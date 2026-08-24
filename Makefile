@@ -1,6 +1,8 @@
 SHELL := /usr/bin/env bash
-.PHONY: check short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint
+.PHONY: check check-witnessed short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint
 check: hooks-test link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint kernel-check
+check-witnessed:
+	@kernel/scripts/check-witness.sh
 short: hooks-test
 hooks-test:
 	@for f in scripts/tests/*.test.sh; do bash "$$f"; done

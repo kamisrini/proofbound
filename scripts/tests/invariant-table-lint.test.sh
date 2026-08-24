@@ -14,6 +14,9 @@ lint() {
 printf '%s\n' '| INV-1 | claim | pkg_test.go::TestProof |' > "$tmp/kernel/pkg/SPEC.md"
 lint
 
+printf '%s\n' '| C-INV-1 | claim | pkg_test.go::TestProof |' > "$tmp/kernel/pkg/SPEC.md"
+lint
+
 printf '%s\n' '| INV-1 | claim | pkg_test.go::TestProof, TestOther |' > "$tmp/kernel/pkg/SPEC.md"
 if lint 2>/dev/null; then
   echo 'multiple citations in one cell passed' >&2

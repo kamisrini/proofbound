@@ -133,8 +133,8 @@ New make target `check-witnessed` calls the script; **plain `make check` stays u
 | 1 | Go module scaffold | ✓ DONE |
 | 2 | core (JCS, ULIDs, envelope) | ✓ DONE — accepted after ONE adversarial round |
 | 3 | store (ledger, lock, migrations) | ✓ DONE — shipped after NINE rounds with an enumerated residual list (VD-fix-discipline-0e0tnz is that story); its `rows.Err()` survivor-candidate folds into the store mutation sweep below |
-| 4 | git connector | ◐ IN FINAL REMEDIATION — built; three adversarial rounds (15 → 21 → 12 findings, closure 28/36, converging); the round-3 fix list is the live queue in `notes/state.md`, its verdict verbatim at `docs/verification/verdicts/round3-adjudication.md`. Founder-ruled: `cited_decisions` resolves candidates against the COMMIT'S OWN TREE (no regex disambiguates; 36/36 corpus-verified) |
-| 5 | witness emitter + checks connector | ○ NOT STARTED (placeholder doc.go only; no `check-witnessed` target, no spool schema). Design inputs are now WRITTEN, not remembered: VD-verification-asymmetry-2dyjnd (witnesses bind to content_sha never position; claims are harms; calibration evidence first-class) and VD-verdicts-are-artifacts-rl0rab |
+| 4 | git connector | ✓ DONE — accepted under Law 9 in current Round 4; frozen `d794ff7` received an independent ACCEPTABLE verdict with no findings; final author evidence was gitcmd 77/77 and combined 95/95 killed |
+| 5 | witness emitter + checks connector | ◐ AUTHOR-COMPLETE — spec-first implementation, real shell emission, DB-backed `vera sync checks` replay, connector 36/36 and CLI 17/17 killed; independent Law 9 verdict still required. The prescribed `.claude/commands/vera-wrap.md` does not exist in this checkout, so its step 3 cannot be amended here and remains explicit migration debt |
 | 6 | projections + `vera verify` | ○ NOT STARTED (placeholder). The `-short`/fixture-cluster decision owed here per the Risks table stands |
 | 7 | sessions connector | ○ NOT STARTED (placeholder) |
 | 8 | `vera report week` | ○ NOT STARTED |
