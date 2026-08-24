@@ -114,13 +114,26 @@ func TestCommits_PreservesHostilePaths(t *testing.T) {
 	}
 }
 
+func TestNULUTF8Strings_RejectsNonUTF8PathIdentity(t *testing.T) {
+	for _, data := range [][]byte{{0xfe, 0}, {0xff, 0}, {'a', 0xfe, 0}} {
+		if paths, err := nulUTF8Strings(data); err == nil || paths != nil {
+			t.Fatalf("data=%x paths=%q error=%v", data, paths, err)
+		}
+	}
+	paths, err := nulUTF8Strings([]byte("snowman-\xe2\x98\x83\x00"))
+	if err != nil || !reflect.DeepEqual(paths, []string{"snowman-☃"}) {
+		t.Fatalf("paths=%q error=%v", paths, err)
+	}
+}
+
 func TestCommits_ResolvesCitationsAgainstTheCommitTree(t *testing.T) {
 	fixture := newFixture(t)
 	fixture.write("docs/decisions/VD-local-only-backup-mjic4a.md", "decision")
 	fixture.write("docs/decisions/VD-short-abcdef.md", "decision")
 	fixture.write("docs/decisions/VD-no-extension", "not a decision")
 	fixture.write("docs/decisions/not-vd.md", "not a decision")
-	fixture.commit("cite", "VD-short-abcdef VD-local-only-backup VD-fiction-aaaaaa VD-local-only-backup-mjic4a VD-short-abcdef VD-no-extension not-vd")
+	fixture.write("docs/decisions/archive/VD-nested-abcdef.md", "not a direct decision")
+	fixture.commit("cite", "VD-short-abcdef VD-local-only-backup VD-fiction-aaaaaa VD-local-only-backup-mjic4a VD-short-abcdef VD-no-extension VD-nested-abcdef not-vd")
 	commit := onlyCommit(t, fixture)
 	want := []string{"VD-local-only-backup-mjic4a", "VD-short-abcdef"}
 	if !reflect.DeepEqual(commit.CitedDecisions, want) {
@@ -180,6 +193,89 @@ func TestCommits_BrokenRepositoryIsAnError(t *testing.T) {
 	if _, err := repo.Commits(context.Background()); err == nil {
 		t.Fatal("broken ref was treated as an empty repository")
 	}
+}
+
+func TestRepo_MissingObjectRefIsAnError(t *testing.T) {
+	for _, packed := range []bool{false, true} {
+		name := "loose"
+		if packed {
+			name = "packed"
+		}
+		t.Run(name, func(t *testing.T) {
+			fixture := newFixture(t)
+			fixture.write("a", "a")
+			fixture.commit("one", "")
+			repo, err := New(fixture.root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			missing := strings.Repeat("a", 40)
+			if packed {
+				content := "# pack-refs with: peeled fully-peeled sorted\n" + missing + " refs/heads/missing\n"
+				if err := os.WriteFile(filepath.Join(fixture.root, ".git", "packed-refs"), []byte(content), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := os.WriteFile(filepath.Join(fixture.root, ".git", "refs", "heads", "missing"), []byte(missing+"\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := repo.Commits(context.Background()); err == nil {
+				t.Fatal("Commits accepted a ref whose target object is absent")
+			}
+			if _, err := repo.Tips(context.Background()); err == nil {
+				t.Fatal("Tips accepted a ref whose target object is absent")
+			}
+		})
+	}
+}
+
+func TestRepo_MissingDetachedHEADObjectIsAnError(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("a", "a")
+	fixture.commit("one", "")
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(fixture.root, ".git", "HEAD"), []byte(strings.Repeat("a", 40)+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.Commits(context.Background()); err == nil {
+		t.Fatal("Commits accepted detached HEAD whose target object is absent")
+	}
+	if _, err := repo.Tips(context.Background()); err == nil {
+		t.Fatal("Tips accepted detached HEAD whose target object is absent")
+	}
+}
+
+func TestCommits_MergeFilesAreFirstParentDelta(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("base", "base")
+	fixture.commit("base", "")
+	fixture.git("checkout", "-q", "-b", "feature")
+	fixture.write("feature", "feature")
+	fixture.commit("feature", "")
+	fixture.git("checkout", "-q", "master")
+	fixture.write("main", "main")
+	fixture.commit("main", "")
+	fixture.git("merge", "--no-ff", "-q", "feature", "-m", "merge")
+	mergeSHA := fixture.head()
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commits, err := repo.Commits(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, commit := range commits {
+		if commit.SHA == mergeSHA {
+			if !reflect.DeepEqual(commit.FilesTouched, []string{"feature"}) {
+				t.Fatalf("merge files=%q", commit.FilesTouched)
+			}
+			return
+		}
+	}
+	t.Fatalf("merge %s absent", mergeSHA)
 }
 
 func TestCommits_IncludesEveryHistoryRoute(t *testing.T) {

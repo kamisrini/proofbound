@@ -21,10 +21,10 @@ Load-bearing facts:
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
   0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
 - Store mutation acceptance is recorded in `notes/journal/2026-08-24.md` and pushed at `89cfa30`.
-- Task 4 was implemented from the restored parent/child SPECs because the migration corpus contained
-  no recoverable connector code or verdict artifacts. Mechanical DoD is green; final combined
-  mutation sweep is 77 candidates, 77 killed, 0 invalid, 0 survivors. It is NOT accepted until a
-  non-author verifier returns an ACCEPTABLE verdict committed under `docs/verification/verdicts/`.
+- Task 4 Round 1 received a committed `NEEDS_WORK` verdict. All six reported routes are remediated
+  author-side; gitcmd is 70/70 killed and the combined connector sweep is 88/88 killed, with no
+  invalids or survivors. It is NOT accepted until a non-author verifies the frozen remediation and
+  returns an ACCEPTABLE verdict committed under `docs/verification/verdicts/`.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -88,19 +88,19 @@ passed and the allowed-survivor ledger needed no store entry. Full reasoning and
 
 ## Where Task 4 stands
 
-The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Real
-fixtures prove amend, two-commit rebase, branch-switch, tag/detached history, older commit dates,
-partial-history refusal, tree-resolved citations, hostile paths/content, ref scope, and corrupt-ref
-failure. gitcmd is 60/60 killed; combined parent+child is 77/77 killed. No survivor was declared.
+The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Round 1
+returned `NEEDS_WORK` for missing-object refs, non-UTF-8 path collapse, nested decision citations,
+empty merge file sets, overstated ordering prose, and typed-nil dependencies. Those routes now have
+code/spec remedies and discriminating tests. gitcmd is 70/70 killed; combined parent+child is 88/88
+killed. No survivor was declared.
 
-None of that is acceptance. This implementation has not received a non-author verdict (Law 9).
+None of that is acceptance. The frozen remediation still needs the non-author Round 2 verdict.
 
 ## Blockers / open, in priority order
 
-1. **Git connector remains unaccepted:** author implementation and mutation sweeps are green, but a
-   non-author must review the actual current code/SPECs and commit an ACCEPTABLE or NEEDS_WORK
-   verdict. Historical Round-1/2/3 claims in the imported state did not correspond to recoverable
-   artifacts in this repository and are not evidence about this implementation.
+1. **Git connector remains unaccepted:** current Round 1 is committed as `NEEDS_WORK`; its six routes
+   are remediated and author gates are green, but a non-author must review the frozen remediation
+   and commit the Round 2 ACCEPTABLE or NEEDS_WORK verdict.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
    Tasks 0–3 DONE · Task 4 = implemented, blocker #1 is its independent acceptance gate;

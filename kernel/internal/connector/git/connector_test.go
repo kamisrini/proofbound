@@ -208,11 +208,13 @@ func TestNew_RequiresEveryDependency(t *testing.T) {
 		t.Fatal(err)
 	}
 	valid := &Deps{Repo: &fakeRepo{}, IDs: ids, Logger: logger}
+	var typedNil *fakeRepo
 	for name, deps := range map[string]*Deps{
-		"deps": nil,
-		"repo": {IDs: ids, Logger: logger},
-		"ids":  {Repo: valid.Repo, Logger: logger},
-		"log":  {Repo: valid.Repo, IDs: ids},
+		"deps":      nil,
+		"repo":      {IDs: ids, Logger: logger},
+		"typed-nil": {Repo: typedNil, IDs: ids, Logger: logger},
+		"ids":       {Repo: valid.Repo, Logger: logger},
+		"log":       {Repo: valid.Repo, IDs: ids},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if connector, newErr := New(deps); newErr == nil || connector != nil {

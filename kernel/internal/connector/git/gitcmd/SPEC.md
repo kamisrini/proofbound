@@ -25,10 +25,12 @@ cannot become partial after construction.
 - Commands run with `--no-replace-objects` and `-c core.quotepath=true`.
 - History starts from `--all`, excluding exactly `refs/stash`, `refs/notes/*`, and
   `refs/replace/*`. HEAD remains included, including detached HEAD.
-- Commit scalar fields are emitted by distinct placeholders with NUL separators. The file block is
-  read from `git diff-tree --root --no-commit-id --name-only -r -z`, so filenames are raw bytes and
-  need no trimming or C-quote decoding.
-- Decision citations are resolved against the commit's own `docs/decisions/VD-*.md` tree. A token
+- Commit scalar fields are emitted by distinct placeholders with NUL separators. A root commit's
+  file block is its full tree; every other commit, including a merge, uses the tree delta from its
+  first parent. Filenames are NUL-delimited raw bytes and need no trimming or C-quote decoding;
+  non-UTF-8 paths are refused because JSON cannot represent their byte identity reversibly.
+- Decision citations are resolved against exact direct files in the commit's own
+  `docs/decisions/VD-*.md` directory; nested paths do not qualify. A token
   that is only a prefix of a real id, or merely looks id-shaped, is never emitted.
 - Tips are peeled commit ids for every ref/HEAD route admitted by `Commits`; excluded refs never
   appear. A failure from Git is always an error except the documented unborn-HEAD/empty-repository
@@ -43,7 +45,8 @@ cannot become partial after construction.
 3. **G-INV-3 — Stash and notes refs are not history.** Replace refs are excluded too.
 4. **G-INV-4 — A commit on a non-checked-out branch, reachable only from a tag, or sitting on a DETACHED HEAD, IS history.**
 5. **G-INV-5 — A shallow repository is refused, at construction AND at every listing.**
-6. **G-INV-6 — A broken repository is an error, never an empty one.**
+6. **G-INV-6 — A broken repository is an error, never an empty one.** Every loose ref, packed ref,
+   and detached HEAD target object must exist; a syntactically valid missing-object id is broken.
 7. **G-INV-7 — An empty repository is not an error.**
 8. **G-INV-8 — Every scalar comes from its own git placeholder.** Committer date, author fields,
    committer fields, subject, and body are not substituted for one another.
@@ -52,7 +55,8 @@ cannot become partial after construction.
 10. **G-INV-10 — Decision ids are sorted and de-duplicated.**
 11. **G-INV-11 — Ref tips are peeled, and cover EVERYTHING `Commits` ingests.**
 12. **G-INV-12 — Path bytes are significant; nothing is trimmed.** Leading/trailing whitespace
-    and newlines in a legal filename survive exactly.
+    and newlines in a legal UTF-8 filename survive exactly. Non-UTF-8 paths are refused rather than
+    collapsed through Unicode replacement characters. Merge paths are the first-parent tree delta.
 13. **G-INV-13 — A citation is never fabricated.** Citations must resolve to exact decision files
     in the observed commit tree.
 14. **G-INV-14 — Object replacement never rewrites what is recorded.** Every object-reading
@@ -78,13 +82,13 @@ refuse a non-empty `.git/info/grafts` with `ErrShallow`.
 | G-INV-3 | Stash, notes and replace refs are excluded | gitcmd_test.go::TestCommits_ExcludesNonHistoryRefs |
 | G-INV-4 | Branch, tag and detached HEAD commits are included | gitcmd_test.go::TestCommits_IncludesEveryHistoryRoute |
 | G-INV-5 | Shallow repositories and grafts are refused twice | gitcmd_test.go::TestRepo_RefusesPartialHistory |
-| G-INV-6 | Broken repositories are errors | gitcmd_test.go::TestCommits_BrokenRepositoryIsAnError |
+| G-INV-6 | Broken repositories and missing ref/HEAD objects are errors | gitcmd_test.go::TestCommits_BrokenRepositoryIsAnError, TestRepo_MissingObjectRefIsAnError, TestRepo_MissingDetachedHEADObjectIsAnError |
 | G-INV-7 | Empty repositories are accepted | gitcmd_test.go::TestCommits_EmptyRepositoryIsNotAnError |
 | G-INV-8 | Scalar placeholders are mapped exactly | gitcmd_test.go::TestCommits_MapsEveryScalar |
 | G-INV-9 | Quoted paths decode to raw names | gitcmd_test.go::TestCommits_PreservesHostilePaths |
 | G-INV-10 | Citations are sorted and unique | gitcmd_test.go::TestCommits_ResolvesCitationsAgainstTheCommitTree |
 | G-INV-11 | Tips cover the admitted history scope | gitcmd_test.go::TestTips_CoverCommitsAndPeelTags |
-| G-INV-12 | Path bytes are never trimmed | gitcmd_test.go::TestCommits_PreservesHostilePaths |
+| G-INV-12 | Valid UTF-8 paths survive exactly; invalid UTF-8 is refused; merges use first-parent deltas | gitcmd_test.go::TestCommits_PreservesHostilePaths, TestNULUTF8Strings_RejectsNonUTF8PathIdentity, TestCommits_MergeFilesAreFirstParentDelta |
 | G-INV-13 | Prefixes and id-shaped fiction are not citations | gitcmd_test.go::TestCommits_ResolvesCitationsAgainstTheCommitTree |
 | G-INV-14 | Replacement objects never alter payloads | gitcmd_test.go::TestCommits_IgnoresReplacementObjects |
 

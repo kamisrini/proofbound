@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"sort"
 	"time"
 
@@ -59,7 +60,7 @@ func New(d *Deps) (*Connector, error) {
 	if d == nil {
 		return nil, errors.New("git connector: dependencies are required")
 	}
-	if d.Repo == nil {
+	if isNilRepo(d.Repo) {
 		return nil, errors.New("git connector: Repo is required")
 	}
 	if d.IDs == nil {
@@ -69,6 +70,17 @@ func New(d *Deps) (*Connector, error) {
 		return nil, errors.New("git connector: Logger is required")
 	}
 	return &Connector{repo: d.Repo, ids: d.IDs, logger: d.Logger}, nil
+}
+
+func isNilRepo(repo Repo) bool {
+	if repo == nil {
+		return true
+	}
+	value := reflect.ValueOf(repo)
+	if value.Kind() == reflect.Pointer {
+		return value.IsNil()
+	}
+	return false
 }
 
 func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error) {

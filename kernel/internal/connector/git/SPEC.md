@@ -89,8 +89,9 @@ The complete exported surface of `package git`. Nothing else is exported.
 // supply a fake without a real repository, and so the package never grows a dependency on a
 // git library (Law 8: no new dependency without a decision record).
 type Repo interface {
-	// Commits returns every commit reachable from any ref, committer-date ordered, oldest
-	// first. Ordering is a convenience for readable ledgers, NOT a correctness property:
+	// Commits returns every commit reachable from any ref in reverse Git date-order, with
+	// parents before children. This is not a strict timestamp sort. Ordering is a convenience
+	// for readable ledgers, NOT a correctness property:
 	// dedupe is the ledger's index, so a reordered or repeated list changes nothing.
 	Commits(ctx context.Context) ([]Commit, error)
 	// Tips returns the current ref tips, for the observability cursor only.
@@ -145,6 +146,11 @@ type Result struct {
 // second Sync over unchanged history appends nothing (INV-2).
 func (c *Connector) Sync(ctx context.Context, a Appender) (Result, error)
 ```
+
+`FilesTouched` is the commit's tree delta from its first parent. For a root commit it is the full
+tree. This gives merges one deterministic meaning instead of Git's mode-dependent empty output.
+Paths that are not valid UTF-8 are refused because JSON strings cannot reversibly preserve their
+Git byte identity.
 
 **Not exported, deliberately:** the payload struct is marshalled from `Commit` itself, so
 there is no second shape to keep in step (Law 2 — one home per datum). A caller that wants
