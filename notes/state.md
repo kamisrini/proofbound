@@ -21,10 +21,11 @@ Load-bearing facts:
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
   0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
 - Store mutation acceptance is recorded in `notes/journal/2026-08-24.md` and pushed at `89cfa30`.
-- Task 4 Round 1 received a committed `NEEDS_WORK` verdict. All six reported routes are remediated
-  author-side; gitcmd is 70/70 killed and the combined connector sweep is 88/88 killed, with no
-  invalids or survivors. It is NOT accepted until a non-author verifies the frozen remediation and
-  returns an ACCEPTABLE verdict committed under `docs/verification/verdicts/`.
+- Task 4 Round 2 received a committed `NEEDS_WORK` verdict. Its rename-config, scalar-encoding,
+  tag-referent, proving-mechanism, plan, and dependency routes are remediated author-side; gitcmd is
+  74/74 killed and the combined connector sweep is 92/92 killed, with no invalids or survivors. It
+  is NOT accepted until a non-author verifies the frozen remediation and returns an ACCEPTABLE
+  verdict committed under `docs/verification/verdicts/`.
 - THE CENTRAL FINDING, which outranks any fix list: hand-iterating fixes does NOT converge.
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
@@ -41,9 +42,9 @@ Load-bearing facts:
 - A verified FINDING does not make its proposed FIX verified. Round 2's remedy for the
   citation defect would have broken a real decision id; check remedies against real data.
 - A "cannot/never/always" in a comment is a claim needing a test. Two of mine were false.
-- Law numbers and SPEC invariant numbers are PERMANENT: APPEND, never insert. The imported locks
-  exist, but `make invariants-lock` and its detector are absent in this checkout; restore the
-  generator+self-test before changing either namespace.
+- Law numbers and SPEC invariant numbers are PERMANENT: APPEND, never insert. `make invariants-lock`,
+  its blocking drift detector, and its self-test are restored. Proving-test cells now have a
+  blocking shape check, but historical file/test resolution remains migration debt.
 - Two product VDs landed 2026-08-14 and are the citable grounding for Task 5+ design:
   VD-verification-asymmetry-2dyjnd (mechanism beats care — measured) and
   VD-verdicts-are-artifacts-rl0rab (verdicts commit on receipt; evidence binds to content,
@@ -88,19 +89,19 @@ passed and the allowed-survivor ledger needed no store entry. Full reasoning and
 
 ## Where Task 4 stands
 
-The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Round 1
-returned `NEEDS_WORK` for missing-object refs, non-UTF-8 path collapse, nested decision citations,
-empty merge file sets, overstated ordering prose, and typed-nil dependencies. Those routes now have
-code/spec remedies and discriminating tests. gitcmd is 70/70 killed; combined parent+child is 88/88
-killed. No survivor was declared.
+The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Round 1's
+six findings are closed. Round 2 found configuration-dependent rename payloads, invalid scalar UTF-8
+rewriting, transitive tag breakage, and proving-mechanism/spec drift; those routes now have code/spec
+remedies and real-adapter tests. G-INV-15 through G-INV-18 were appended with the restored lock
+mechanism. gitcmd is 74/74 killed; combined parent+child is 92/92 killed. No survivor was declared.
 
-None of that is acceptance. The frozen remediation still needs the non-author Round 2 verdict.
+None of that is acceptance. The frozen remediation still needs the non-author Round 3 verdict.
 
 ## Blockers / open, in priority order
 
-1. **Git connector remains unaccepted:** current Round 1 is committed as `NEEDS_WORK`; its six routes
+1. **Git connector remains unaccepted:** current Round 2 is committed as `NEEDS_WORK`; its routes
    are remediated and author gates are green, but a non-author must review the frozen remediation
-   and commit the Round 2 ACCEPTABLE or NEEDS_WORK verdict.
+   and commit the Round 3 ACCEPTABLE or NEEDS_WORK verdict.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
    Tasks 0–3 DONE · Task 4 = implemented, blocker #1 is its independent acceptance gate;
@@ -112,9 +113,9 @@ None of that is acceptance. The frozen remediation still needs the non-author Ro
    author-side; `core` remains queued.
 4. **Owed mechanisms, validated and ranked:** restore the mechanisms the imported constitution and
    gates registry claim are live but this checkout lacks: `make backup` + self-test; a real
-   `make short`; state-freshness; invariant citation/numbering generators and self-tests; skip-lint;
-   prescription-lint. Then reassess the historical comment-claims and cleanroom-lint debts against
-   the code that actually exists here.
+   `make short`; state-freshness; full invariant citation resolution; skip-lint; prescription-lint.
+   Invariant numbering and proving-test-cell shape are now blocking and self-tested. Then reassess
+   the historical comment-claims and cleanroom-lint debts against the code that actually exists.
 5. **Calendar (none urgent):** spec-first advisory expires 2026-09-18 = Task 9's deadline;
    meta-tax + backup advisories 2026-10-16 (backup's graduation = mechanize bundle freshness or
    delete the row). No expired advisories; 0.6's stop-check bomb was defused by graduation 08-08.

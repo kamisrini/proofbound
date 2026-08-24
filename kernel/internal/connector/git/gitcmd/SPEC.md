@@ -22,13 +22,16 @@ cannot become partial after construction.
 
 ## 2. Git protocol
 
-- Commands run with `--no-replace-objects` and `-c core.quotepath=true`.
+- Commands run with `--no-replace-objects`, `-c core.quotepath=true`, and
+  `-c diff.renames=false`; repository and user configuration cannot alter payload semantics.
 - History starts from `--all`, excluding exactly `refs/stash`, `refs/notes/*`, and
   `refs/replace/*`. HEAD remains included, including detached HEAD.
 - Commit scalar fields are emitted by distinct placeholders with NUL separators. A root commit's
   file block is its full tree; every other commit, including a merge, uses the tree delta from its
   first parent. Filenames are NUL-delimited raw bytes and need no trimming or C-quote decoding;
   non-UTF-8 paths are refused because JSON cannot represent their byte identity reversibly.
+  Scalar fields are likewise refused unless they are valid UTF-8; JSON replacement characters
+  never stand in for observed Git bytes.
 - Decision citations are resolved against exact direct files in the commit's own
   `docs/decisions/VD-*.md` directory; nested paths do not qualify. A token
   that is only a prefix of a real id, or merely looks id-shaped, is never emitted.
@@ -56,11 +59,21 @@ cannot become partial after construction.
 11. **G-INV-11 — Ref tips are peeled, and cover EVERYTHING `Commits` ingests.**
 12. **G-INV-12 — Path bytes are significant; nothing is trimmed.** Leading/trailing whitespace
     and newlines in a legal UTF-8 filename survive exactly. Non-UTF-8 paths are refused rather than
-    collapsed through Unicode replacement characters. Merge paths are the first-parent tree delta.
+    collapsed through Unicode replacement characters.
 13. **G-INV-13 — A citation is never fabricated.** Citations must resolve to exact decision files
     in the observed commit tree.
 14. **G-INV-14 — Object replacement never rewrites what is recorded.** Every object-reading
     command uses `--no-replace-objects`; replace refs are not ingested as history.
+15. **G-INV-15 — Merge paths are the first-parent tree delta.** Root commits report the full tree;
+    every other commit compares its tree to its first parent, including merges.
+16. **G-INV-16 — Rename reporting is configuration-independent.** Rename detection is forced off,
+    so a pure rename records both the removed and added path for the same SHA under every local or
+    user `diff.renames` setting.
+17. **G-INV-17 — Invalid UTF-8 scalar bytes are refused.** SHA, author/committer names and emails,
+    date, subject, and body cannot reach JSON through Unicode replacement.
+18. **G-INV-18 — Ref validation follows annotated-tag referents.** A tag object whose referent is
+    absent is a broken repository for both commit listing and tips; valid non-commit refs remain
+    outside history without becoming errors.
 
 Legacy graft refusal is a route to G-INV-5's harm: grafts make a boundary commit appear to change
 its whole tree, producing contradictory payloads for one SHA. Both `New` and `Commits` therefore
@@ -82,15 +95,19 @@ refuse a non-empty `.git/info/grafts` with `ErrShallow`.
 | G-INV-3 | Stash, notes and replace refs are excluded | gitcmd_test.go::TestCommits_ExcludesNonHistoryRefs |
 | G-INV-4 | Branch, tag and detached HEAD commits are included | gitcmd_test.go::TestCommits_IncludesEveryHistoryRoute |
 | G-INV-5 | Shallow repositories and grafts are refused twice | gitcmd_test.go::TestRepo_RefusesPartialHistory |
-| G-INV-6 | Broken repositories and missing ref/HEAD objects are errors | gitcmd_test.go::TestCommits_BrokenRepositoryIsAnError, TestRepo_MissingObjectRefIsAnError, TestRepo_MissingDetachedHEADObjectIsAnError |
+| G-INV-6 | Broken repositories and missing ref/HEAD objects are errors | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
 | G-INV-7 | Empty repositories are accepted | gitcmd_test.go::TestCommits_EmptyRepositoryIsNotAnError |
 | G-INV-8 | Scalar placeholders are mapped exactly | gitcmd_test.go::TestCommits_MapsEveryScalar |
 | G-INV-9 | Quoted paths decode to raw names | gitcmd_test.go::TestCommits_PreservesHostilePaths |
 | G-INV-10 | Citations are sorted and unique | gitcmd_test.go::TestCommits_ResolvesCitationsAgainstTheCommitTree |
 | G-INV-11 | Tips cover the admitted history scope | gitcmd_test.go::TestTips_CoverCommitsAndPeelTags |
-| G-INV-12 | Valid UTF-8 paths survive exactly; invalid UTF-8 is refused; merges use first-parent deltas | gitcmd_test.go::TestCommits_PreservesHostilePaths, TestNULUTF8Strings_RejectsNonUTF8PathIdentity, TestCommits_MergeFilesAreFirstParentDelta |
+| G-INV-12 | Valid UTF-8 paths survive exactly and invalid UTF-8 paths are refused through the adapter | gitcmd_test.go::TestCommits_PathIdentityIsPreservedOrRefused |
 | G-INV-13 | Prefixes and id-shaped fiction are not citations | gitcmd_test.go::TestCommits_ResolvesCitationsAgainstTheCommitTree |
 | G-INV-14 | Replacement objects never alter payloads | gitcmd_test.go::TestCommits_IgnoresReplacementObjects |
+| G-INV-15 | Root and first-parent merge file semantics are deterministic | gitcmd_test.go::TestCommits_MergeFilesAreFirstParentDelta |
+| G-INV-16 | Local rename configuration cannot change one SHA's paths | gitcmd_test.go::TestCommits_RenamePayloadIgnoresLocalConfig |
+| G-INV-17 | Invalid UTF-8 scalar bytes are refused before payload construction | gitcmd_test.go::TestCommits_RefusesInvalidUTF8Scalars |
+| G-INV-18 | Missing annotated-tag referents are errors while valid non-commit refs are skipped | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
 
 ## 6. Dependencies
 

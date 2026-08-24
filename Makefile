@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
-.PHONY: check short hooks-test index index-check link-lint law-citation-lint
-check: hooks-test link-lint index-check law-citation-lint kernel-check
+.PHONY: check short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint
+check: hooks-test link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint kernel-check
 short: hooks-test
 hooks-test:
 	@for f in scripts/tests/*.test.sh; do bash "$$f"; done
@@ -8,6 +8,12 @@ index:
 	@scripts/gen-index.sh
 index-check:
 	@scripts/index-check.sh
+invariants-lock:
+	@scripts/gen-invariants-lock.sh
+invariant-table-lint:
+	@scripts/invariant-table-lint.sh
+spec-numbering-lint:
+	@scripts/spec-numbering-lint.sh
 link-lint:
 	@scripts/link-lint.sh
 law-citation-lint:

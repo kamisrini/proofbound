@@ -1,6 +1,7 @@
 package gitcmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -126,6 +127,41 @@ func TestNULUTF8Strings_RejectsNonUTF8PathIdentity(t *testing.T) {
 	}
 }
 
+func TestCommits_PathIdentityIsPreservedOrRefused(t *testing.T) {
+	t.Run("valid UTF-8 survives", func(t *testing.T) {
+		fixture := newFixture(t)
+		path := " leading-☃\n"
+		fixture.write(path, "content")
+		fixture.commit("valid", "")
+		if files := onlyCommit(t, fixture).FilesTouched; !reflect.DeepEqual(files, []string{path}) {
+			t.Fatalf("files=%q", files)
+		}
+	})
+	for _, nonRoot := range []bool{false, true} {
+		name := "root"
+		if nonRoot {
+			name = "non-root"
+		}
+		t.Run(name+" invalid UTF-8 is refused", func(t *testing.T) {
+			fixture := newFixture(t)
+			if nonRoot {
+				fixture.write("base", "base")
+				fixture.commit("base", "")
+			}
+			invalid := string([]byte{'p', 0xfe})
+			fixture.write(invalid, "content")
+			fixture.commit("invalid", "")
+			repo, err := New(fixture.root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := repo.Commits(context.Background()); err == nil {
+				t.Fatal("adapter accepted a path whose byte identity JSON cannot preserve")
+			}
+		})
+	}
+}
+
 func TestCommits_ResolvesCitationsAgainstTheCommitTree(t *testing.T) {
 	fixture := newFixture(t)
 	fixture.write("docs/decisions/VD-local-only-backup-mjic4a.md", "decision")
@@ -195,7 +231,7 @@ func TestCommits_BrokenRepositoryIsAnError(t *testing.T) {
 	}
 }
 
-func TestRepo_MissingObjectRefIsAnError(t *testing.T) {
+func TestRepo_MissingObjectRoutesAreErrors(t *testing.T) {
 	for _, packed := range []bool{false, true} {
 		name := "loose"
 		if packed {
@@ -226,24 +262,134 @@ func TestRepo_MissingObjectRefIsAnError(t *testing.T) {
 			}
 		})
 	}
+	t.Run("detached HEAD", func(t *testing.T) {
+		fixture := newFixture(t)
+		fixture.write("a", "a")
+		fixture.commit("one", "")
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(fixture.root, ".git", "HEAD"), []byte(strings.Repeat("a", 40)+"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Commits(context.Background()); err == nil {
+			t.Fatal("Commits accepted detached HEAD whose target object is absent")
+		}
+		if _, err := repo.Tips(context.Background()); err == nil {
+			t.Fatal("Tips accepted detached HEAD whose target object is absent")
+		}
+	})
+	t.Run("detached HEAD at non-commit", func(t *testing.T) {
+		fixture := newFixture(t)
+		fixture.write("a", "a")
+		fixture.commit("one", "")
+		blob := strings.TrimSpace(commandInput(t, fixture.root, nil, []byte("blob"), "git", "hash-object", "-w", "--stdin"))
+		if err := os.WriteFile(filepath.Join(fixture.root, ".git", "HEAD"), []byte(blob+"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Commits(context.Background()); err == nil {
+			t.Fatal("Commits accepted detached HEAD at a non-commit object")
+		}
+		if _, err := repo.Tips(context.Background()); err == nil {
+			t.Fatal("Tips accepted detached HEAD at a non-commit object")
+		}
+	})
+	t.Run("annotated tag referent", func(t *testing.T) {
+		fixture := newFixture(t)
+		fixture.write("a", "a")
+		fixture.commit("one", "")
+		missing := strings.Repeat("1", 40)
+		tag := "object " + missing + "\ntype commit\ntag broken\ntagger Fixture User <fixture@example.test> 1787520000 +0000\n\nbroken\n"
+		tagSHA := strings.TrimSpace(commandInput(t, fixture.root, nil, []byte(tag), "git", "hash-object", "-t", "tag", "-w", "--stdin"))
+		fixture.git("update-ref", "refs/tags/broken", tagSHA)
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Commits(context.Background()); err == nil {
+			t.Fatal("Commits accepted an annotated tag with a missing referent")
+		}
+		if _, err := repo.Tips(context.Background()); err == nil {
+			t.Fatal("Tips accepted an annotated tag with a missing referent")
+		}
+	})
+	t.Run("valid non-commit ref", func(t *testing.T) {
+		fixture := newFixture(t)
+		fixture.write("a", "a")
+		fixture.commit("one", "")
+		blob := strings.TrimSpace(commandInput(t, fixture.root, nil, []byte("blob"), "git", "hash-object", "-w", "--stdin"))
+		fixture.git("update-ref", "refs/data/blob", blob)
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := repo.Commits(context.Background()); err != nil {
+			t.Fatalf("valid non-commit ref broke Commits: %v", err)
+		}
+		tips, err := repo.Tips(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, exists := tips["refs/data/blob"]; exists {
+			t.Fatalf("non-commit ref appeared in tips: %v", tips)
+		}
+	})
 }
 
-func TestRepo_MissingDetachedHEADObjectIsAnError(t *testing.T) {
+func TestCommits_RenamePayloadIgnoresLocalConfig(t *testing.T) {
 	fixture := newFixture(t)
-	fixture.write("a", "a")
-	fixture.commit("one", "")
+	fixture.write("old-name", "same content")
+	fixture.commit("old", "")
+	fixture.git("mv", "old-name", "new-name")
+	fixture.commit("rename", "")
+	readTip := func(setting string) connectorgit.Commit {
+		fixture.git("config", "diff.renames", setting)
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		commits, err := repo.Commits(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return commits[len(commits)-1]
+	}
+	disabled := readTip("false")
+	enabled := readTip("true")
+	want := []string{"new-name", "old-name"}
+	if disabled.SHA != enabled.SHA || !reflect.DeepEqual(disabled.FilesTouched, want) || !reflect.DeepEqual(enabled.FilesTouched, want) {
+		t.Fatalf("disabled=%+v enabled=%+v", disabled, enabled)
+	}
+}
+
+func TestCommits_RefusesInvalidUTF8Scalars(t *testing.T) {
+	for index := 0; index < 8; index++ {
+		fields := [][]byte{[]byte("sha"), []byte("author"), []byte("author@example.test"), []byte("committer"), []byte("committer@example.test"), []byte("2026-08-24T00:00:00Z"), []byte("subject"), []byte("body"), nil}
+		fields[index] = append(fields[index], 0xff)
+		if _, err := parseScalars(bytes.Join(fields, []byte{0})); err == nil {
+			t.Fatalf("scalar field %d accepted invalid UTF-8", index)
+		}
+	}
+
+	fixture := newFixture(t)
+	fixture.write("file", "content")
+	fixture.git("add", "file")
+	tree := strings.TrimSpace(fixture.git("write-tree"))
+	raw := []byte("tree " + tree + "\nauthor Fixture User <fixture@example.test> 1787520000 +0000\ncommitter Fixture User <fixture@example.test> 1787520000 +0000\n\nbad-")
+	raw = append(raw, 0xff, '\n')
+	sha := strings.TrimSpace(commandInput(t, fixture.root, nil, raw, "git", "hash-object", "-t", "commit", "-w", "--stdin"))
+	fixture.git("update-ref", "refs/heads/master", sha)
 	repo, err := New(fixture.root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(fixture.root, ".git", "HEAD"), []byte(strings.Repeat("a", 40)+"\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	if _, err := repo.Commits(context.Background()); err == nil {
-		t.Fatal("Commits accepted detached HEAD whose target object is absent")
-	}
-	if _, err := repo.Tips(context.Background()); err == nil {
-		t.Fatal("Tips accepted detached HEAD whose target object is absent")
+		t.Fatal("adapter accepted invalid UTF-8 commit scalar content")
 	}
 }
 
@@ -424,12 +570,17 @@ func (f *fixtureRepo) gitEnv(env []string, args ...string) string {
 }
 
 func command(t *testing.T, dir string, env []string, name string, args ...string) string {
+	return commandInput(t, dir, env, nil, name, args...)
+}
+
+func commandInput(t *testing.T, dir string, env []string, input []byte, name string, args ...string) string {
 	t.Helper()
 	cmd := exec.Command(name, args...)
 	if dir != "" {
 		cmd.Dir = dir
 	}
 	cmd.Env = append(os.Environ(), env...)
+	cmd.Stdin = bytes.NewReader(input)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("%s %v: %v\n%s", name, args, err, out)

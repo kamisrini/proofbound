@@ -92,8 +92,11 @@ func (r *Repo) Tips(ctx context.Context) (map[string]string, error) {
 		if ref == "" || excludedRef(ref) {
 			continue
 		}
-		sha, resolveErr := r.peelCommit(ctx, ref)
+		sha, isCommit, resolveErr := r.tipCommit(ctx, ref)
 		if resolveErr != nil {
+			return nil, fmt.Errorf("gitcmd: resolve tip %s: %w", ref, resolveErr)
+		}
+		if !isCommit {
 			continue
 		}
 		tips[ref] = sha
@@ -144,6 +147,11 @@ func parseScalars(out []byte) ([][]byte, error) {
 	fields := bytes.Split(out, []byte{0})
 	if len(fields) != 9 || len(fields[8]) != 0 {
 		return nil, errors.New("output framing is invalid")
+	}
+	for _, field := range fields[:8] {
+		if !utf8.Valid(field) {
+			return nil, errors.New("scalar is not valid UTF-8")
+		}
 	}
 	return fields, nil
 }
@@ -269,9 +277,12 @@ func (r *Repo) validateRefs(ctx context.Context) error {
 		if _, objectErr := r.run(ctx, "cat-file", "-e", object+"^{object}"); objectErr != nil {
 			return fmt.Errorf("gitcmd: validate ref %s: %w", ref, objectErr)
 		}
+		if _, referentErr := r.run(ctx, "cat-file", "-e", ref+"^{}"); referentErr != nil {
+			return fmt.Errorf("gitcmd: validate ref referent %s: %w", ref, referentErr)
+		}
 	}
-	if _, headErr := r.run(ctx, "rev-parse", "--verify", "HEAD^{object}"); headErr != nil {
-		if _, symbolicErr := r.run(ctx, "symbolic-ref", "-q", "HEAD"); symbolicErr != nil {
+	if _, symbolicErr := r.run(ctx, "symbolic-ref", "-q", "HEAD"); symbolicErr != nil {
+		if _, headErr := r.peelCommit(ctx, "HEAD"); headErr != nil {
 			return fmt.Errorf("gitcmd: validate detached HEAD: %w", headErr)
 		}
 	}
@@ -290,14 +301,30 @@ func (r *Repo) peelCommit(ctx context.Context, ref string) (string, error) {
 		return "", err
 	}
 	sha := strings.TrimSpace(string(out))
-	if sha == "" {
-		return "", errors.New("gitcmd: empty peeled ref")
-	}
 	return sha, nil
 }
 
+func (r *Repo) tipCommit(ctx context.Context, ref string) (string, bool, error) {
+	out, err := r.run(ctx, "rev-parse", "--verify", ref+"^{}")
+	if err != nil {
+		return "", false, err
+	}
+	sha := strings.TrimSpace(string(out))
+	if sha == "" {
+		return "", false, errors.New("gitcmd: empty resolved ref")
+	}
+	typeOut, err := r.run(ctx, "cat-file", "-t", sha)
+	if err != nil {
+		return "", false, err
+	}
+	if strings.TrimSpace(string(typeOut)) != "commit" {
+		return "", false, nil
+	}
+	return sha, true, nil
+}
+
 func (r *Repo) run(ctx context.Context, args ...string) ([]byte, error) {
-	base := []string{"--no-replace-objects", "-c", "core.quotepath=true", "-C", r.root}
+	base := []string{"--no-replace-objects", "-c", "core.quotepath=true", "-c", "diff.renames=false", "-C", r.root}
 	cmd := exec.CommandContext(ctx, "git", append(base, args...)...)
 	out, err := cmd.Output()
 	if err == nil {

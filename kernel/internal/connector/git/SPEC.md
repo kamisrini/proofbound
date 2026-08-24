@@ -449,7 +449,8 @@ every commit that cites no decision, which is nearly all of them.
 
 - `internal/core` — event identity, canonical JSON, validation.
 - `internal/store` — the `store.Record` type only, via the `Appender` interface at the consumer.
-- Standard library: `context`, `encoding/json`, `errors`, `fmt`, `log/slog`, `sort`, `time`.
+- Standard library: `context`, `encoding/json`, `errors`, `fmt`, `log/slog`, `reflect`, `sort`,
+  `time`.
   (Corrected 2026-08-13 by reading the import block: this line listed `strings`, which the package
   does not import, and omitted `errors` and `fmt`, which it does. A dependency list written from
   memory is a claim like any other.)
