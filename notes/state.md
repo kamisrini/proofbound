@@ -17,6 +17,11 @@ Load-bearing facts:
 - The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
 - The P1 Go scaffold/core/store work is committed. Store supports migrations, embedded/external DB
   configuration, append/read, transactions, and Docker-backed integration tests.
+- PostgreSQL test infrastructure is available locally: Docker image `postgres:16-alpine` was used
+  successfully on 2026-08-25. Start a disposable container named `proofbound-task6-postgres` with
+  host port `55433` mapped to 5432 and use
+  `postgres://postgres:postgres@127.0.0.1:55433/vera?sslmode=disable`; Docker inspection/run may
+  require escalated host access. Check this image before claiming PostgreSQL is unavailable.
 - The mutation harness is calibrated and supports `MUTANT_TEST_TAGS=integration` with `DATABASE_URL`.
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
   0 invalid, and 0 survivors. Calibration passed and no store allowlist entries were needed.
