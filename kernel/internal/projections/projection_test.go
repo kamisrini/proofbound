@@ -188,6 +188,66 @@ func TestCommitValidationRejectsUnsafeArrays(t *testing.T) {
 	}
 }
 
+func TestCommitValidationRejectsEachScalar(t *testing.T) {
+	base := commitPayload{SHA: shaFor("scalar"), AuthorName: "Author", AuthorEmail: "author@example.test", CommitterName: "Committer", CommitterEmail: "committer@example.test", CommittedAt: time.Now(), Subject: "subject"}
+	cases := []struct {
+		name string
+		edit func(*commitPayload)
+	}{
+		{"sha", func(v *commitPayload) { v.SHA = "bad" }},
+		{"author name", func(v *commitPayload) { v.AuthorName = " " }},
+		{"author email", func(v *commitPayload) { v.AuthorEmail = "bad" }},
+		{"committer name", func(v *commitPayload) { v.CommitterName = " " }},
+		{"committer email", func(v *commitPayload) { v.CommitterEmail = "bad" }},
+		{"committed at", func(v *commitPayload) { v.CommittedAt = time.Time{} }},
+		{"subject", func(v *commitPayload) { v.Subject = " " }},
+	}
+	for _, tc := range cases {
+		v := base
+		tc.edit(&v)
+		if err := v.validate(); err == nil {
+			t.Errorf("%s accepted", tc.name)
+		}
+	}
+}
+
+func TestCheckValidationRejectsEachScalar(t *testing.T) {
+	base := checkPayload{Schema: "vera.witness.v1", RunID: "01ARZ3NDEKTSV4RRFFQ69G5FAV", Command: "make check", StartedAt: time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC), FinishedAt: time.Date(2026, 8, 25, 12, 0, 1, 0, time.UTC), DurationMS: 1000, OutputSHA256: strings.Repeat("a", 64), GitSHA: strings.Repeat("b", 40), ToolVersions: toolPayload{Go: "go", GolangCILint: "lint", Make: "make"}}
+	cases := []struct {
+		name string
+		edit func(*checkPayload)
+	}{
+		{"schema", func(v *checkPayload) { v.Schema = "bad" }}, {"run id", func(v *checkPayload) { v.RunID = "bad" }}, {"command", func(v *checkPayload) { v.Command = "bad" }},
+		{"exit code", func(v *checkPayload) { v.ExitCode = 256 }}, {"started", func(v *checkPayload) { v.StartedAt = time.Time{} }}, {"finished", func(v *checkPayload) { v.FinishedAt = time.Time{} }},
+		{"order", func(v *checkPayload) { v.FinishedAt = v.StartedAt.Add(-time.Second) }}, {"duration", func(v *checkPayload) { v.DurationMS = -1 }},
+		{"output hash", func(v *checkPayload) { v.OutputSHA256 = "bad" }}, {"git hash", func(v *checkPayload) { v.GitSHA = "bad" }}, {"go", func(v *checkPayload) { v.ToolVersions.Go = " " }},
+		{"lint", func(v *checkPayload) { v.ToolVersions.GolangCILint = " " }}, {"make", func(v *checkPayload) { v.ToolVersions.Make = " " }},
+	}
+	for _, tc := range cases {
+		v := base
+		tc.edit(&v)
+		if err := v.validate(); err == nil {
+			t.Errorf("%s accepted", tc.name)
+		}
+	}
+}
+
+func TestValidateSequence(t *testing.T) {
+	if err := validateSequence(3, nil, 4); err != nil {
+		t.Fatal(err)
+	}
+	if err := validateSequence(3, nil, 3); err == nil {
+		t.Fatal("checkpoint duplicate accepted")
+	}
+	records := []store.Record{{Seq: 5}}
+	if err := validateSequence(3, records, 5); err == nil {
+		t.Fatal("duplicate accepted")
+	}
+	if err := validateSequence(3, records, 4); err == nil {
+		t.Fatal("descending sequence accepted")
+	}
+}
+
 func TestJSONColumnMatrix(t *testing.T) {
 	for _, tc := range []struct {
 		table string

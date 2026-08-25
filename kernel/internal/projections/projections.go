@@ -81,8 +81,8 @@ func (p *Projector) Apply(ctx context.Context, s *store.Store) error {
 	}
 	var records []store.Record
 	if err := s.ReadEvents(ctx, store.Filter{SinceSeq: checkpoint}, func(r store.Record) error {
-		if r.Seq <= checkpoint || (len(records) > 0 && r.Seq <= records[len(records)-1].Seq) {
-			return fmt.Errorf("projections: non-increasing ledger sequence")
+		if err := validateSequence(checkpoint, records, r.Seq); err != nil {
+			return err
 		}
 		records = append(records, r)
 		return nil
@@ -101,6 +101,13 @@ func (p *Projector) Apply(ctx context.Context, s *store.Store) error {
 		_, err := tx.Exec(ctx, `UPDATE projection_meta SET last_seq=$1 WHERE projection_name='default' AND projection_version=1`, records[len(records)-1].Seq)
 		return err
 	})
+}
+
+func validateSequence(checkpoint int64, records []store.Record, seq int64) error {
+	if seq <= checkpoint || (len(records) > 0 && seq <= records[len(records)-1].Seq) {
+		return fmt.Errorf("projections: non-increasing ledger sequence")
+	}
+	return nil
 }
 
 func (p *Projector) Rebuild(ctx context.Context, s *store.Store) error {
