@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	crand "crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
@@ -233,12 +236,76 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	if err := projections.CompareSnapshots(before, after); err != nil {
 		return fmt.Errorf("verify: %w", err)
 	}
-	found := false
-	if err := ledger.ReadEvents(ctx, store.Filter{Source: core.SourceChecks, Kind: core.KindCheckRun}, func(store.Record) error { found = true; return nil }); err != nil {
+	witness, err := latestSpoolWitness(root)
+	if err != nil {
 		return err
 	}
-	if !found {
-		return errors.New("verify: no check.run event found")
+	latestLedgerRunID, err := latestLedgerCheckRunID(ctx, ledger)
+	if err != nil {
+		return err
+	}
+	if latestLedgerRunID != witness.RunID {
+		return fmt.Errorf("verify: latest spool witness %s is not the latest ledger check.run %s", witness.RunID, latestLedgerRunID)
 	}
 	return nil
+}
+
+// latestSpoolWitness selects the lexically greatest witness filename. The
+// witness script uses ULIDs, whose lexical order is chronological, and the
+// checks connector ingests the same filename set in this order.
+func latestSpoolWitness(root string) (checks.Witness, error) {
+	spoolDir := filepath.Join(root, ".vera", "spool")
+	entries, err := os.ReadDir(spoolDir)
+	if errors.Is(err, os.ErrNotExist) {
+		return checks.Witness{}, errors.New("verify: no make check witness found in spool")
+	}
+	if err != nil {
+		return checks.Witness{}, fmt.Errorf("verify: read witness spool: %w", err)
+	}
+	filenames := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".json" {
+			filenames = append(filenames, entry.Name())
+		}
+	}
+	sort.Strings(filenames)
+	if len(filenames) == 0 {
+		return checks.Witness{}, errors.New("verify: no make check witness found in spool")
+	}
+	filename := filenames[len(filenames)-1]
+	data, err := os.ReadFile(filepath.Join(spoolDir, filename))
+	if err != nil {
+		return checks.Witness{}, fmt.Errorf("verify: read latest witness %s: %w", filename, err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	var witness checks.Witness
+	if err := decoder.Decode(&witness); err != nil {
+		return checks.Witness{}, fmt.Errorf("verify: decode latest witness %s: %w", filename, err)
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return checks.Witness{}, fmt.Errorf("verify: latest witness %s contains trailing JSON", filename)
+		}
+		return checks.Witness{}, fmt.Errorf("verify: latest witness %s has invalid trailing data: %w", filename, err)
+	}
+	if filename != witness.RunID+".json" || witness.Schema != "vera.witness.v1" || witness.Command != "make check" || witness.RunID == "" {
+		return checks.Witness{}, fmt.Errorf("verify: latest spool file %s is not a valid make check witness", filename)
+	}
+	return witness, nil
+}
+
+func latestLedgerCheckRunID(ctx context.Context, ledger *store.Store) (string, error) {
+	var latest string
+	if err := ledger.ReadEvents(ctx, store.Filter{Source: core.SourceChecks, Kind: core.KindCheckRun}, func(record store.Record) error {
+		latest = record.Event.NativeID
+		return nil
+	}); err != nil {
+		return "", err
+	}
+	if latest == "" {
+		return "", errors.New("verify: no check.run event found")
+	}
+	return latest, nil
 }

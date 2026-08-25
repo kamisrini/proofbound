@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-25 (Tasks 3–5 accepted; Task 6 implementation in progress, DB-backed acceptance open)
+**As of:** 2026-08-25 (Tasks 3–5 accepted; Task 6 Round 1 remediation in progress, DB-backed acceptance open)
 
 ## Resume Prompt
 
@@ -116,7 +116,7 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 implementation is in progress; unit `make check` is green, but DB-backed integration/mutation evidence is blocked because this environment has no `DATABASE_URL`, Docker, or free embedded PostgreSQL port.
+1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 Round 1 findings are remediated locally; unit/race `make check` is green, but DB-backed integration/mutation evidence is blocked because this environment has no `DATABASE_URL`, Docker, or free embedded PostgreSQL port.
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**

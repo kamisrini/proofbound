@@ -3,10 +3,14 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 )
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
@@ -74,5 +78,41 @@ func TestRepositoryRootWalksUpward(t *testing.T) {
 func TestRepositoryRootRejectsOutsideRepository(t *testing.T) {
 	if got, err := repositoryRootFrom(string(filepath.Separator)); err == nil || got != "" || !strings.Contains(err.Error(), "not found") {
 		t.Fatalf("root=%q error=%v", got, err)
+	}
+}
+
+func TestLatestSpoolWitnessUsesLatestULIDAndRejectsTrailingJSON(t *testing.T) {
+	root := t.TempDir()
+	spool := filepath.Join(root, ".vera", "spool")
+	if err := os.MkdirAll(spool, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	makeWitness := func(runID string, startedAt time.Time) []byte {
+		data, err := json.Marshal(checks.Witness{
+			Schema: "vera.witness.v1", RunID: runID, Command: "make check",
+			StartedAt: startedAt, FinishedAt: startedAt.Add(time.Second),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+	oldID := "01K00000000000000000000000"
+	newID := "01K00000000000000000000001"
+	if err := os.WriteFile(filepath.Join(spool, oldID+".json"), makeWitness(oldID, time.Unix(1, 0)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(spool, newID+".json"), makeWitness(newID, time.Unix(2, 0)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	witness, err := latestSpoolWitness(root)
+	if err != nil || witness.RunID != newID {
+		t.Fatalf("witness=%+v error=%v", witness, err)
+	}
+	if err := os.WriteFile(filepath.Join(spool, newID+".json"), append(makeWitness(newID, time.Unix(2, 0)), []byte("garbage")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := latestSpoolWitness(root); err == nil || !strings.Contains(err.Error(), "trailing") {
+		t.Fatalf("expected trailing-data error, got %v", err)
 	}
 }

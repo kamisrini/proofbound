@@ -7,9 +7,11 @@ import (
 	crand "crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,7 +30,7 @@ func TestApply_UsesLedgerOrder(t *testing.T) {
 	}
 	var subject string
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
-		return tx.QueryRow(ctx, `SELECT subject FROM commits_view WHERE sha='order'`).Scan(&subject)
+		return tx.QueryRow(ctx, `SELECT subject FROM commits_view WHERE sha LIKE '%order'`).Scan(&subject)
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -48,13 +50,17 @@ func TestApply_MalformedPayloadRollsBack(t *testing.T) {
 		t.Fatal("malformed event accepted")
 	}
 	var count int
+	var checkpoint int64
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
-		return tx.QueryRow(ctx, `SELECT count(*) FROM commits_view`).Scan(&count)
+		if err := tx.QueryRow(ctx, `SELECT count(*) FROM commits_view`).Scan(&count); err != nil {
+			return err
+		}
+		return tx.QueryRow(ctx, `SELECT last_seq FROM projection_meta WHERE projection_name='default'`).Scan(&checkpoint)
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if count != 0 {
-		t.Fatalf("partial rows=%d", count)
+	if count != 0 || checkpoint != 0 {
+		t.Fatalf("partial state rows=%d checkpoint=%d", count, checkpoint)
 	}
 }
 
@@ -62,12 +68,12 @@ func TestRebuild_DoesNotModifyLedger(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
 	appendCommit(t, s, "keep", "keep", 1)
-	before := ledgerCount(t, s)
+	before := ledgerIdentity(t, s)
 	if err := New().Rebuild(context.Background(), s); err != nil {
 		t.Fatal(err)
 	}
-	if got := ledgerCount(t, s); got != before {
-		t.Fatalf("ledger count=%d want=%d", got, before)
+	if got := ledgerIdentity(t, s); !reflect.DeepEqual(got, before) {
+		t.Fatalf("ledger changed: got=%v want=%v", got, before)
 	}
 }
 
@@ -81,7 +87,7 @@ func TestRows_RetainProofIdentity(t *testing.T) {
 	var id string
 	var seq int64
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
-		return tx.QueryRow(ctx, `SELECT event_id,seq FROM commits_view WHERE sha='proof'`).Scan(&id, &seq)
+		return tx.QueryRow(ctx, `SELECT event_id,seq FROM commits_view WHERE sha LIKE '%proof'`).Scan(&id, &seq)
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -96,6 +102,53 @@ func TestApply_RejectsUnsupportedEvent(t *testing.T) {
 	appendRaw(t, s, core.Source("unknown"), core.Kind("unknown"), "x", []byte(`{}`), 1)
 	if err := New().Apply(context.Background(), s); err == nil {
 		t.Fatal("unsupported event accepted")
+	}
+}
+
+func TestApply_RejectsDeferredSessionAndReviewEvents(t *testing.T) {
+	for _, tc := range []struct {
+		source core.Source
+		kind   core.Kind
+	}{
+		{core.SourceSessions, core.KindSessionObserved},
+		{core.SourceReviews, core.KindReviewVerdict},
+	} {
+		t.Run(string(tc.source), func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			appendRaw(t, s, tc.source, tc.kind, "deferred", []byte(`{}`), 1)
+			if err := New().Apply(context.Background(), s); err == nil {
+				t.Fatal("deferred event accepted")
+			}
+		})
+	}
+}
+
+func TestDecode_RejectsTrailingGarbageAndInvalidPayloads(t *testing.T) {
+	valid := commitJSON("ignored", "subject")
+	var payload commitPayload
+	if err := decode(append(valid, []byte("garbage")...), &payload); err == nil {
+		t.Fatal("trailing garbage accepted")
+	}
+	if err := decode([]byte(`{"sha":"not-a-hash"}`), &payload); err == nil {
+		t.Fatal("incomplete commit accepted")
+	}
+}
+
+func TestEnsure_MetadataIsUniqueAndVersioned(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	if err := New().Ensure(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	var count, version int
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		return tx.QueryRow(ctx, `SELECT count(*), max(projection_version) FROM projection_meta WHERE projection_name='default'`).Scan(&count, &version)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 || version != 1 {
+		t.Fatalf("metadata=(%d,%d)", count, version)
 	}
 }
 
@@ -177,7 +230,7 @@ func testStore(t *testing.T) *store.Store {
 	return s
 }
 func appendCommit(t *testing.T, s *store.Store, sha, subject string, n int64) store.Record {
-	return appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, commitJSON(sha, subject), n)
+	return appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, commitJSON(shaFor(sha), subject), n)
 }
 func appendRaw(t *testing.T, s *store.Store, source core.Source, kind core.Kind, native string, payload []byte, _ int64) store.Record {
 	t.Helper()
@@ -206,6 +259,7 @@ func commitJSON(sha, subject string) []byte {
 	b, _ := json.Marshal(map[string]any{"sha": sha, "author_name": "a", "author_email": "a@e", "committer_name": "c", "committer_email": "c@e", "committed_at": time.Now().UTC(), "subject": subject, "files_touched": []string{}, "cited_decisions": []string{}})
 	return b
 }
+func shaFor(label string) string { return strings.Repeat("0", 40-len(label)) + label }
 func ledgerCount(t *testing.T, s *store.Store) int {
 	var n int
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
@@ -214,6 +268,31 @@ func ledgerCount(t *testing.T, s *store.Store) int {
 		t.Fatal(err)
 	}
 	return n
+}
+
+func ledgerIdentity(t *testing.T, s *store.Store) []string {
+	t.Helper()
+	var identity []string
+	err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		rows, err := tx.Query(ctx, `SELECT seq,event_id,source,native_id,kind,content_sha FROM events ORDER BY seq`)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var seq int64
+			var eventID, source, nativeID, kind, contentSHA string
+			if err := rows.Scan(&seq, &eventID, &source, &nativeID, &kind, &contentSHA); err != nil {
+				return err
+			}
+			identity = append(identity, fmt.Sprintf("%d|%s|%s|%s|%s|%s", seq, eventID, source, nativeID, kind, contentSHA))
+		}
+		return rows.Err()
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return identity
 }
 func stringsContainsFold(s, sub string) bool {
 	return len(s) >= len(sub) && reflect.ValueOf(s).String() != "" && containsFold(s, sub)

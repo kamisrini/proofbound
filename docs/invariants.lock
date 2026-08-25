@@ -114,6 +114,7 @@ kernel/internal/projections/SPEC.md	P-INV-7	Malformed or unsupported events fail
 kernel/internal/projections/SPEC.md	P-INV-8	Projection DDL is not ledger migration.
 kernel/internal/projections/SPEC.md	P-INV-9	Snapshots are natural-key canonical multisets.
 kernel/internal/projections/SPEC.md	P-INV-10	Empty future views are deterministic.
+kernel/internal/projections/SPEC.md	P-INV-11	Projection metadata is unique and versioned.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.
