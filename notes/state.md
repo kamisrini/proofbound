@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-25 (Tasks 3–6 accepted; Task 7 paused)
+**As of:** 2026-08-25 (Tasks 3–7 accepted; Task 8 paused)
 
 ## Resume Prompt
 
@@ -78,13 +78,13 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Next: Task 6 is complete under Law 9. Do not start Task 7 until explicitly directed.
+Next: Task 7 is complete under Law 9. Task 8 is next; do not start it until explicitly directed.
 ```
 
 ## Worktree
 
 - **Branch:** `main`
-- **HEAD:** `2326d3e docs: record Task 6 final verification evidence`; the imported `make state` target is absent
+- **HEAD:** use `git log -1 --oneline`; the imported `make state` target is absent
 - **Remote:** `origin` → `git@github.com:kamisrini/proofbound.git`; push after each coherent commit and keep a local bundle backup.
 - **Uncommitted:** none expected; commit cadence is enforced at 90m
 
@@ -116,10 +116,10 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Tasks 5 and 6 are accepted under Law 9. Task 6 final frozen state is `2326d3e`; its independent Round 6 verdict returned ACCEPTABLE and is committed verbatim at `docs/verification/verdicts/task6-current-round6.md`. Final evidence records 83/83 projection mutants killed, 0 invalid, 0 survivors, passing race/check gates, PostgreSQL integration, and fresh-schema `vera verify`. Do not start Task 7.
+1. **P1 forward path:** Tasks 5–7 are accepted under Law 9. Task 7 final frozen state is `448493d`; its independent Round 1 verdict returned ACCEPTABLE and is committed verbatim at `docs/verification/verdicts/task7-current-round1.md`. Final evidence records 62/62 sessions mutants and 99/99 projection mutants killed, 0 invalid, 0 survivors, passing race/check gates, PostgreSQL integration, and fresh-schema `vera verify`. Task 8 is next but paused.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–6 DONE · Tasks 7–9 NOT STARTED · Task 9 hard
+   Tasks 0–7 DONE · Tasks 8–9 NOT STARTED · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
    cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
