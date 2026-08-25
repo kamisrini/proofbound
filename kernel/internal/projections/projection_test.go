@@ -327,6 +327,56 @@ func TestSnapshotRowDigestPropagatesEncodingErrors(t *testing.T) {
 	}
 }
 
+type fakeSnapshotRows struct {
+	next    bool
+	scanErr error
+	rowsErr error
+	badJSON bool
+}
+
+func (r *fakeSnapshotRows) Next() bool { return r.next }
+func (r *fakeSnapshotRows) Scan(dest ...any) error {
+	if r.badJSON {
+		*(dest[9].(*any)) = json.RawMessage(`{"`)
+	}
+	r.next = false
+	return r.scanErr
+}
+func (r *fakeSnapshotRows) Err() error { return r.rowsErr }
+
+func TestReadSnapshotRowsPropagatesDriverErrors(t *testing.T) {
+	scanErr := errors.New("scan failed")
+	if _, err := readSnapshotRows("commits_view", &fakeSnapshotRows{next: true, scanErr: scanErr}); !errors.Is(err, scanErr) {
+		t.Fatalf("scan error=%v", err)
+	}
+	rowsErr := errors.New("rows failed")
+	if _, err := readSnapshotRows("commits_view", &fakeSnapshotRows{rowsErr: rowsErr}); !errors.Is(err, rowsErr) {
+		t.Fatalf("rows error=%v", err)
+	}
+	if _, err := readSnapshotRows("commits_view", &fakeSnapshotRows{next: true, badJSON: true}); err == nil {
+		t.Fatal("canonical JSON error suppressed")
+	}
+}
+
+func TestAppendSnapshotDigestsPropagatesDigestErrors(t *testing.T) {
+	if err := appendSnapshotDigests(map[string][]string{}, "commits_view", []map[string]any{{"bad": func() {}}}); err == nil {
+		t.Fatal("digest error suppressed")
+	}
+}
+
+func TestSnapshotPropagatesDigestFunctionError(t *testing.T) {
+	old := snapshotDigestRows
+	snapshotDigestRows = func(map[string][]string, string, []map[string]any) error {
+		return errors.New("digest rows failed")
+	}
+	defer func() { snapshotDigestRows = old }()
+	s := testStore(t)
+	defer s.Close()
+	if _, err := New().Snapshot(context.Background(), s); err == nil || !strings.Contains(err.Error(), "digest rows failed") {
+		t.Fatalf("digest function error=%v", err)
+	}
+}
+
 func TestDecode_RejectsTrailingGarbageAndInvalidPayloads(t *testing.T) {
 	valid := commitJSON("ignored", "subject")
 	var payload commitPayload
@@ -393,6 +443,29 @@ func TestEnsure_CreatesFutureViews(t *testing.T) {
 		if len(snap.Tables[name]) != 0 {
 			t.Fatalf("%s not empty", name)
 		}
+	}
+}
+
+func TestSnapshotPropagatesQueryError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	if err := New().Ensure(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE commits_view RENAME COLUMN sha TO sha_broken`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+			_, err := tx.Exec(ctx, `ALTER TABLE commits_view RENAME COLUMN sha_broken TO sha`)
+			return err
+		})
+	}()
+	if _, err := New().Snapshot(context.Background(), s); err == nil {
+		t.Fatal("query error suppressed")
 	}
 }
 

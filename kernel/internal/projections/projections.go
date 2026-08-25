@@ -35,6 +35,14 @@ type Projector struct{}
 // Snapshot contains one canonical digest multiset per derived table.
 type Snapshot struct{ Tables map[string][]string }
 
+type snapshotRows interface {
+	Next() bool
+	Scan(...any) error
+	Err() error
+}
+
+var snapshotDigestRows = appendSnapshotDigests
+
 func New() *Projector { return &Projector{} }
 
 const ddl = `
@@ -283,52 +291,65 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 				return err
 			}
 			defer rows.Close()
-			for rows.Next() {
-				var a []any
-				switch name {
-				case "commits_view":
-					a = make([]any, 11)
-				case "checks_view":
-					a = make([]any, 12)
-				case "sessions_view":
-					a = make([]any, 9)
-				default:
-					a = make([]any, 6)
-				}
-				ptr := make([]any, len(a))
-				for i := range a {
-					ptr[i] = &a[i]
-				}
-				if err := rows.Scan(ptr...); err != nil {
-					return err
-				}
-				m := map[string]any{}
-				for i, v := range a {
-					if isJSONColumn(name, i) {
-						canonical, err := canonicalJSONValue(v)
-						if err != nil {
-							return err
-						}
-						v = json.RawMessage(canonical)
-					}
-					m[fmt.Sprintf("c%d", i)] = v
-				}
-				rowsData = append(rowsData, m)
-			}
-			return rows.Err()
+			rowsData, err = readSnapshotRows(name, rows)
+			return err
 		}); err != nil {
 			return Snapshot{}, err
 		}
-		for _, row := range rowsData {
-			digest, err := snapshotRowDigest(row)
-			if err != nil {
-				return Snapshot{}, err
-			}
-			result.Tables[name] = append(result.Tables[name], digest)
+		if err := snapshotDigestRows(result.Tables, name, rowsData); err != nil {
+			return Snapshot{}, err
 		}
-		sort.Strings(result.Tables[name])
 	}
 	return result, nil
+}
+
+func appendSnapshotDigests(tables map[string][]string, name string, rowsData []map[string]any) error {
+	for _, row := range rowsData {
+		digest, err := snapshotRowDigest(row)
+		if err != nil {
+			return err
+		}
+		tables[name] = append(tables[name], digest)
+	}
+	sort.Strings(tables[name])
+	return nil
+}
+
+func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) {
+	var rowsData []map[string]any
+	for rows.Next() {
+		var a []any
+		switch name {
+		case "commits_view":
+			a = make([]any, 11)
+		case "checks_view":
+			a = make([]any, 12)
+		case "sessions_view":
+			a = make([]any, 9)
+		default:
+			a = make([]any, 6)
+		}
+		ptr := make([]any, len(a))
+		for i := range a {
+			ptr[i] = &a[i]
+		}
+		if err := rows.Scan(ptr...); err != nil {
+			return nil, err
+		}
+		m := map[string]any{}
+		for i, v := range a {
+			if isJSONColumn(name, i) {
+				canonical, err := canonicalJSONValue(v)
+				if err != nil {
+					return nil, err
+				}
+				v = json.RawMessage(canonical)
+			}
+			m[fmt.Sprintf("c%d", i)] = v
+		}
+		rowsData = append(rowsData, m)
+	}
+	return rowsData, rows.Err()
 }
 
 func snapshotRowDigest(row map[string]any) (string, error) {
