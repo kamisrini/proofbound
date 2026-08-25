@@ -172,6 +172,16 @@ func TestSupportedEventMatrix(t *testing.T) {
 		if got := supported(tc.source, tc.kind); got != tc.want {
 			t.Errorf("supported(%s,%s)=%v want %v", tc.source, tc.kind, got, tc.want)
 		}
+		wantRoute := routeUnsupported
+		if tc.source == core.SourceGit && tc.kind == core.KindCommitRecorded {
+			wantRoute = routeCommit
+		}
+		if tc.source == core.SourceChecks && tc.kind == core.KindCheckRun {
+			wantRoute = routeCheck
+		}
+		if got := eventRoute(tc.source, tc.kind); got != wantRoute {
+			t.Errorf("eventRoute(%s,%s)=%v want %v", tc.source, tc.kind, got, wantRoute)
+		}
 	}
 }
 
@@ -300,8 +310,20 @@ func TestRequireFieldsDistinguishesMissingAndNullableArrays(t *testing.T) {
 }
 
 func TestSnapshotPropagatesEnsureError(t *testing.T) {
-	if _, err := New().Snapshot(context.Background(), nil); err == nil {
+	if _, err := New().Snapshot(context.Background(), nil); err == nil || !strings.Contains(err.Error(), "snapshot ensure") {
 		t.Fatal("nil store accepted")
+	}
+}
+
+func TestSnapshotRowDigestPropagatesEncodingErrors(t *testing.T) {
+	if _, err := snapshotRowDigest(map[string]any{"bad": func() {}}); err == nil {
+		t.Fatal("marshal error suppressed")
+	}
+	if _, err := snapshotRowDigest(map[string]any{"bad": json.RawMessage(`{"`)}); err == nil {
+		t.Fatal("canonicalization error suppressed")
+	}
+	if digest, err := snapshotRowDigest(map[string]any{"ok": "value"}); err != nil || digest == "" {
+		t.Fatalf("valid row digest=%q err=%v", digest, err)
 	}
 }
 

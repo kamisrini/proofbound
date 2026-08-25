@@ -125,7 +125,7 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		return fmt.Errorf("projections: unsupported event %s/%s", r.Event.Source, r.Event.Kind)
 	}
 	switch {
-	case r.Event.Source == core.SourceGit && r.Event.Kind == core.KindCommitRecorded:
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeCommit:
 		var v commitPayload
 		if err := decode(r.Event.Payload, &v); err != nil {
 			return fmt.Errorf("commit seq %d: %w", r.Seq, err)
@@ -137,7 +137,7 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		cited, _ := json.Marshal(v.CitedDecisions)
 		_, err := tx.Exec(ctx, `INSERT INTO commits_view(sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(sha) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,author_name=EXCLUDED.author_name,author_email=EXCLUDED.author_email,committer_name=EXCLUDED.committer_name,committer_email=EXCLUDED.committer_email,committed_at=EXCLUDED.committed_at,subject=EXCLUDED.subject,files_touched=EXCLUDED.files_touched,cited_decisions=EXCLUDED.cited_decisions WHERE commits_view.seq < EXCLUDED.seq`, v.SHA, r.Event.ID.String(), r.Seq, v.AuthorName, v.AuthorEmail, v.CommitterName, v.CommitterEmail, v.CommittedAt, v.Subject, files, cited)
 		return err
-	case r.Event.Source == core.SourceChecks && r.Event.Kind == core.KindCheckRun:
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeCheck:
 		var v checkPayload
 		if err := decode(r.Event.Payload, &v); err != nil {
 			return fmt.Errorf("check seq %d: %w", r.Seq, err)
@@ -154,7 +154,25 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 }
 
 func supported(s core.Source, k core.Kind) bool {
-	return (s == core.SourceGit && k == core.KindCommitRecorded) || (s == core.SourceChecks && k == core.KindCheckRun)
+	return eventRoute(s, k) != routeUnsupported
+}
+
+type route uint8
+
+const (
+	routeUnsupported route = iota
+	routeCommit
+	routeCheck
+)
+
+func eventRoute(s core.Source, k core.Kind) route {
+	if s == core.SourceGit && k == core.KindCommitRecorded {
+		return routeCommit
+	}
+	if s == core.SourceChecks && k == core.KindCheckRun {
+		return routeCheck
+	}
+	return routeUnsupported
 }
 
 type commitPayload struct {
@@ -253,7 +271,7 @@ func requireFields(raw []byte, out any) error {
 
 func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, error) {
 	if err := p.Ensure(ctx, s); err != nil {
-		return Snapshot{}, err
+		return Snapshot{}, fmt.Errorf("snapshot ensure: %w", err)
 	}
 	result := Snapshot{Tables: make(map[string][]string)}
 	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,event_id,seq,severity,reviewed_commit,defect_commit FROM reviews_view"}
@@ -302,20 +320,28 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 			return Snapshot{}, err
 		}
 		for _, row := range rowsData {
-			raw, err := json.Marshal(row)
+			digest, err := snapshotRowDigest(row)
 			if err != nil {
 				return Snapshot{}, err
 			}
-			canonical, err := core.Canonicalize(raw)
-			if err != nil {
-				return Snapshot{}, err
-			}
-			h := sha256.Sum256(canonical)
-			result.Tables[name] = append(result.Tables[name], hex.EncodeToString(h[:]))
+			result.Tables[name] = append(result.Tables[name], digest)
 		}
 		sort.Strings(result.Tables[name])
 	}
 	return result, nil
+}
+
+func snapshotRowDigest(row map[string]any) (string, error) {
+	raw, err := json.Marshal(row)
+	if err != nil {
+		return "", err
+	}
+	canonical, err := core.Canonicalize(raw)
+	if err != nil {
+		return "", err
+	}
+	h := sha256.Sum256(canonical)
+	return hex.EncodeToString(h[:]), nil
 }
 
 func isJSONColumn(table string, index int) bool {
