@@ -156,6 +156,16 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		tools, _ := json.Marshal(v.ToolVersions)
 		_, err := tx.Exec(ctx, `INSERT INTO checks_view(run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT(run_id) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,command=EXCLUDED.command,exit_code=EXCLUDED.exit_code,started_at=EXCLUDED.started_at,finished_at=EXCLUDED.finished_at,duration_ms=EXCLUDED.duration_ms,output_sha256=EXCLUDED.output_sha256,git_sha=EXCLUDED.git_sha,git_dirty=EXCLUDED.git_dirty,tool_versions=EXCLUDED.tool_versions WHERE checks_view.seq < EXCLUDED.seq`, v.RunID, r.Event.ID.String(), r.Seq, v.Command, v.ExitCode, v.StartedAt, v.FinishedAt, v.DurationMS, v.OutputSHA256, v.GitSHA, v.GitDirty, tools)
 		return err
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeSession:
+		var v sessionPayload
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return fmt.Errorf("session seq %d: %w", r.Seq, err)
+		}
+		if err := v.validate(); err != nil {
+			return fmt.Errorf("session seq %d: %w", r.Seq, err)
+		}
+		_, err := tx.Exec(ctx, `INSERT INTO sessions_view(session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(session_id) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,started_at=EXCLUDED.started_at,finished_at=EXCLUDED.finished_at,message_count=EXCLUDED.message_count,tool_call_count=EXCLUDED.tool_call_count,files_written_count=EXCLUDED.files_written_count,parse_coverage=EXCLUDED.parse_coverage WHERE sessions_view.seq < EXCLUDED.seq`, v.SessionID, r.Event.ID.String(), r.Seq, v.StartedAt, v.FinishedAt, v.MessageCount, v.ToolCallCount, v.FilesWrittenCount, v.ParseCoverage)
+		return err
 	default:
 		return nil
 	}
@@ -171,6 +181,7 @@ const (
 	routeUnsupported route = iota
 	routeCommit
 	routeCheck
+	routeSession
 )
 
 func eventRoute(s core.Source, k core.Kind) route {
@@ -179,6 +190,9 @@ func eventRoute(s core.Source, k core.Kind) route {
 	}
 	if s == core.SourceChecks && k == core.KindCheckRun {
 		return routeCheck
+	}
+	if s == core.SourceSessions && k == core.KindSessionObserved {
+		return routeSession
 	}
 	return routeUnsupported
 }
@@ -231,6 +245,26 @@ type checkPayload struct {
 	ToolVersions toolPayload `json:"tool_versions"`
 }
 
+type sessionPayload struct {
+	SessionID         string     `json:"session_id"`
+	StartedAt         *time.Time `json:"started_at"`
+	FinishedAt        *time.Time `json:"finished_at"`
+	MessageCount      int64      `json:"message_count"`
+	ToolCallCount     int64      `json:"tool_call_count"`
+	FilesWrittenCount int64      `json:"files_written_count"`
+	ParseCoverage     float64    `json:"parse_coverage"`
+}
+
+func (v sessionPayload) validate() error {
+	if strings.TrimSpace(v.SessionID) == "" || v.MessageCount < 0 || v.ToolCallCount < 0 || v.FilesWrittenCount < 0 || v.ParseCoverage < 0 || v.ParseCoverage > 1 {
+		return errors.New("invalid or missing session field")
+	}
+	if v.StartedAt != nil && v.FinishedAt != nil && v.FinishedAt.Before(*v.StartedAt) {
+		return errors.New("session timestamps are invalid")
+	}
+	return nil
+}
+
 func (v checkPayload) validate() error {
 	if v.Schema != "vera.witness.v1" || !ulidPattern.MatchString(v.RunID) || v.Command != "make check" || v.ExitCode < 0 || v.ExitCode > 255 || v.StartedAt.IsZero() || v.FinishedAt.IsZero() || v.FinishedAt.Before(v.StartedAt) || v.DurationMS < 0 || !hexPattern.MatchString(v.OutputSHA256) || !gitPattern.MatchString(v.GitSHA) || strings.TrimSpace(v.ToolVersions.Go) == "" || strings.TrimSpace(v.ToolVersions.GolangCILint) == "" || strings.TrimSpace(v.ToolVersions.Make) == "" {
 		return errors.New("invalid or missing check field")
@@ -267,6 +301,8 @@ func requireFields(raw []byte, out any) error {
 		required = []string{"sha", "author_name", "author_email", "committer_name", "committer_email", "committed_at", "subject", "files_touched", "cited_decisions"}
 	case *checkPayload:
 		required = []string{"schema", "run_id", "command", "exit_code", "started_at", "finished_at", "duration_ms", "output_sha256", "git_sha", "git_dirty", "tool_versions"}
+	case *sessionPayload:
+		required = []string{"session_id", "message_count", "tool_call_count", "files_written_count", "parse_coverage"}
 	}
 	for _, name := range required {
 		value, ok := fields[name]

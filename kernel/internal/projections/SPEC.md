@@ -9,12 +9,10 @@ The ledger is the sole source of truth. Projectors consume `store.Record` in asc
 `seq` order and write only derived tables. They never import pgx or open a database; all database
 access goes through `store.Store` and `store.Tx`.
 
-Task 6 materializes `commits_view` and `checks_view`. `sessions_view` and `reviews_view` are
-created as empty, versioned derived tables so later connectors have a stable destination; their
-reducers are intentionally deferred to Tasks 7 and the verdict-ingestion work. Until those
-reducers exist, a session or review event fails closed rather than being silently discarded.
-Task 7 owns `sync sessions`; Task 8 owns `vera report week`. Task 6's `sync all` therefore means
-all connectors implemented at this point: Git and checks.
+Task 6 materializes `commits_view` and `checks_view`. Task 7 adds the best-effort sessions
+connector and materializes `sessions_view`; `reviews_view` remains an empty stable destination
+until verdict ingestion lands. Review events fail closed rather than being silently discarded.
+Task 7 owns `sync sessions`; Task 8 owns `vera report week`.
 
 ## 2. Public API
 
@@ -50,8 +48,9 @@ canonical JSON columns.
 7. **P-INV-7 — Malformed or unsupported events fail closed.** No partial projection transaction commits.
 8. **P-INV-8 — Projection DDL is not ledger migration.** Derived tables are created only by this package.
 9. **P-INV-9 — Snapshots are natural-key canonical multisets.** Database order and JSON formatting do not affect comparison.
-10. **P-INV-10 — Empty future views are deterministic.** Session and review views exist and snapshot as empty until their connectors land; their events fail closed while deferred.
+10. **P-INV-10 — Empty future views are deterministic.** The review view exists and snapshots as empty until verdict ingestion lands; review events fail closed while deferred.
 11. **P-INV-11 — Projection metadata is unique and versioned.** Exactly one named metadata row owns the checkpoint for projection version 1.
+12. **P-INV-12 — Session metadata is projected without content.** Session rows contain only the connector's bounded metadata and preserve the event proof links.
 
 ## 5. Proving table
 
@@ -66,5 +65,6 @@ canonical JSON columns.
 | P-INV-7 | Unsupported or malformed events fail closed | projection_test.go::TestApply_RejectsUnsupportedEvent |
 | P-INV-8 | Projection DDL is absent from ledger migration | projection_test.go::TestDDL_IsNotLedgerMigration |
 | P-INV-9 | Snapshot comparison ignores row order and formatting | projection_test.go::TestSnapshot_CanonicalMultisets |
-| P-INV-10 | Future views are present and empty; deferred events fail closed | projection_test.go::TestEnsure_CreatesFutureViews |
+| P-INV-10 | Review view is present and empty; deferred review events fail closed | projection_test.go::TestEnsure_CreatesFutureViews |
 | P-INV-11 | Metadata has one versioned checkpoint row | projection_test.go::TestEnsure_MetadataIsUniqueAndVersioned |
+| P-INV-12 | Session metadata is materialized with proof identity | projection_test.go::TestApply_Session |

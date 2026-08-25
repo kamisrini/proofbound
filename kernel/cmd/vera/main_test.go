@@ -14,15 +14,9 @@ import (
 )
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
-	for _, args := range [][]string{{"other", "checks"}, {"sync"}, {"sync", "sessions"}} {
+	for _, args := range [][]string{{"other", "checks"}, {"sync"}} {
 		var stdout, stderr bytes.Buffer
 		code := run(context.Background(), args, &stdout, &stderr)
-		if args[1:] != nil && len(args) == 2 && args[1] == "sessions" {
-			if code != 1 || !strings.Contains(stderr.String(), "not implemented") {
-				t.Fatalf("args=%v code=%d stdout=%q stderr=%q", args, code, stdout.String(), stderr.String())
-			}
-			continue
-		}
 		if code != 2 {
 			t.Fatalf("args=%v code=%d stdout=%q stderr=%q", args, code, stdout.String(), stderr.String())
 		}
@@ -39,10 +33,10 @@ func TestParseCommand(t *testing.T) {
 	}{
 		{[]string{"sync", "git"}, commandSyncGit},
 		{[]string{"sync", "checks"}, commandSyncChecks},
+		{[]string{"sync", "sessions"}, commandSyncSessions},
 		{[]string{"sync", "all"}, commandSyncAll},
 		{[]string{"rebuild"}, commandRebuild},
 		{[]string{"verify"}, commandVerify},
-		{[]string{"sync", "sessions"}, commandInvalid},
 		{[]string{"sync", "git", "extra"}, commandInvalid},
 	}
 	for _, tt := range tests {

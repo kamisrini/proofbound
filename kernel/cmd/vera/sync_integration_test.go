@@ -87,6 +87,38 @@ func TestSyncChecksReportsMalformedWitness(t *testing.T) {
 	}
 }
 
+func TestSyncSessionsIngestsMetadataAndDeduplicates(t *testing.T) {
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" { t.Fatal("DATABASE_URL is required for integration tests") }
+	resetIntegrationDatabase(t, databaseURL)
+	root, home := t.TempDir(), t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, ".git"), 0o755); err != nil { t.Fatal(err) }
+	t.Setenv("HOME", home)
+	path := filepath.Join(home, ".claude", "projects", strings.NewReplacer("/", "-", ".", "-").Replace(root), "session-1.jsonl")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil { t.Fatal(err) }
+	if err := os.WriteFile(path, []byte(`{"sessionId":"session-1","timestamp":"2026-08-01T00:00:00Z","type":"user"}
+`), 0o644); err != nil { t.Fatal(err) }
+	old := time.Now().Add(-11 * time.Minute)
+	if err := os.Chtimes(path, old, old); err != nil { t.Fatal(err) }
+	var output, stderr bytes.Buffer
+	if code := runWithRootForTest(t, root, databaseURL, []string{"sync", "sessions"}, &output, &stderr); code != 0 || output.String() != "listed=1 appended=1 existing=0 skipped=0\n" || stderr.Len() != 0 {
+		t.Fatalf("first code=%d output=%q stderr=%q", code, output.String(), stderr.String())
+	}
+	output.Reset()
+	if code := runWithRootForTest(t, root, databaseURL, []string{"sync", "sessions"}, &output, &stderr); code != 0 || output.String() != "listed=1 appended=0 existing=1 skipped=0\n" || stderr.Len() != 0 {
+		t.Fatalf("second code=%d output=%q stderr=%q", code, output.String(), stderr.String())
+	}
+}
+
+func runWithRootForTest(t *testing.T, root, databaseURL string, args []string, stdout, stderr *bytes.Buffer) int {
+	t.Helper()
+	old, err := os.Getwd(); if err != nil { t.Fatal(err) }
+	if err := os.Chdir(root); err != nil { t.Fatal(err) }
+	t.Cleanup(func() { _ = os.Chdir(old) })
+	t.Setenv("DATABASE_URL", databaseURL)
+	return run(context.Background(), args, stdout, stderr)
+}
+
 func resetIntegrationDatabase(t *testing.T, databaseURL string) {
 	t.Helper()
 	pool, err := pgxpool.New(context.Background(), databaseURL)

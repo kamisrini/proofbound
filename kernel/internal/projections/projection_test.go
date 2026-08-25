@@ -108,20 +108,57 @@ func TestApply_RejectsUnsupportedEvent(t *testing.T) {
 	}
 }
 
-func TestApply_RejectsDeferredSessionAndReviewEvents(t *testing.T) {
-	for _, tc := range []struct {
-		source core.Source
-		kind   core.Kind
-	}{
-		{core.SourceSessions, core.KindSessionObserved},
-		{core.SourceReviews, core.KindReviewVerdict},
+func TestApply_RejectsDeferredReviewEvents(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "deferred", []byte(`{}`), 1)
+	if err := New().Apply(context.Background(), s); err == nil {
+		t.Fatal("deferred event accepted")
+	}
+}
+
+func TestApply_Session(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"session_id":"session-1","started_at":"2026-08-25T12:00:00Z","finished_at":"2026-08-25T12:01:00Z","message_count":2,"tool_call_count":1,"files_written_count":1,"parse_coverage":0.5}`)
+	appendRaw(t, s, core.SourceSessions, core.KindSessionObserved, "session-1", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	var count, messages int
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		return tx.QueryRow(ctx, `SELECT count(*), max(message_count) FROM sessions_view WHERE session_id=$1`, "session-1").Scan(&count, &messages)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 || messages != 2 {
+		t.Fatalf("sessions_view count=%d messages=%d", count, messages)
+	}
+}
+
+func TestSessionPayloadRejectsReversedTimestamps(t *testing.T) {
+	start := time.Date(2026, 8, 25, 12, 1, 0, 0, time.UTC)
+	finish := start.Add(-time.Minute)
+	v := sessionPayload{SessionID: "session-1", StartedAt: &start, FinishedAt: &finish, ParseCoverage: 1}
+	if err := v.validate(); err == nil {
+		t.Fatal("reversed session timestamps accepted")
+	}
+}
+
+func TestSessionPayloadRejectsInvalidCounters(t *testing.T) {
+	for name, mutate := range map[string]func(*sessionPayload){
+		"session id":    func(v *sessionPayload) { v.SessionID = "" },
+		"messages":      func(v *sessionPayload) { v.MessageCount = -1 },
+		"tools":         func(v *sessionPayload) { v.ToolCallCount = -1 },
+		"files":         func(v *sessionPayload) { v.FilesWrittenCount = -1 },
+		"coverage low":  func(v *sessionPayload) { v.ParseCoverage = -0.1 },
+		"coverage high": func(v *sessionPayload) { v.ParseCoverage = 1.1 },
 	} {
-		t.Run(string(tc.source), func(t *testing.T) {
-			s := testStore(t)
-			defer s.Close()
-			appendRaw(t, s, tc.source, tc.kind, "deferred", []byte(`{}`), 1)
-			if err := New().Apply(context.Background(), s); err == nil {
-				t.Fatal("deferred event accepted")
+		t.Run(name, func(t *testing.T) {
+			v := sessionPayload{SessionID: "session-1", ParseCoverage: 0.5}
+			mutate(&v)
+			if err := v.validate(); err == nil {
+				t.Fatal("invalid session accepted")
 			}
 		})
 	}
@@ -165,7 +202,10 @@ func TestSupportedEventMatrix(t *testing.T) {
 		{core.SourceChecks, core.KindCheckRun, true},
 		{core.SourceGit, core.KindCheckRun, false},
 		{core.SourceChecks, core.KindCommitRecorded, false},
-		{core.SourceSessions, core.KindSessionObserved, false},
+		{core.SourceSessions, core.KindSessionObserved, true},
+		{core.SourceSessions, core.KindCheckRun, false},
+		{core.SourceGit, core.KindSessionObserved, false},
+		{core.SourceChecks, core.KindSessionObserved, false},
 		{core.SourceReviews, core.KindReviewVerdict, false},
 	}
 	for _, tc := range cases {
@@ -178,6 +218,9 @@ func TestSupportedEventMatrix(t *testing.T) {
 		}
 		if tc.source == core.SourceChecks && tc.kind == core.KindCheckRun {
 			wantRoute = routeCheck
+		}
+		if tc.source == core.SourceSessions && tc.kind == core.KindSessionObserved {
+			wantRoute = routeSession
 		}
 		if got := eventRoute(tc.source, tc.kind); got != wantRoute {
 			t.Errorf("eventRoute(%s,%s)=%v want %v", tc.source, tc.kind, got, wantRoute)
