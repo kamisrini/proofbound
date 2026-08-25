@@ -17,6 +17,8 @@ import (
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
 )
 
+const gitCommandTimeout = 10 * time.Second
+
 var ErrShallow = errors.New("gitcmd: repository history is incomplete")
 
 type Repo struct {
@@ -164,9 +166,9 @@ func (r *Repo) files(ctx context.Context, sha string) ([]string, error) {
 	parents := strings.Fields(string(parentsOut))
 	var out []byte
 	if len(parents) == 0 {
-		out, err = r.run(ctx, "diff-tree", "--root", "--ignore-submodules=none", "--no-commit-id", "--name-only", "-r", "-z", sha)
+		out, err = r.run(ctx, "diff-tree", "--root", "--ignore-submodules=none", "--no-ext-diff", "--no-textconv", "--no-commit-id", "--name-only", "-r", "-z", sha)
 	} else {
-		out, err = r.run(ctx, "diff", "--ignore-submodules=none", "--name-only", "-z", parents[0], sha)
+		out, err = r.run(ctx, "diff", "--ignore-submodules=none", "--no-ext-diff", "--no-textconv", "--name-only", "-z", parents[0], sha)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gitcmd: list files for %q: %w", sha, err)
@@ -332,8 +334,10 @@ func (r *Repo) tipCommit(ctx context.Context, ref string) (string, bool, error) 
 }
 
 func (r *Repo) run(ctx context.Context, args ...string) ([]byte, error) {
+	commandCtx, cancel := context.WithTimeout(ctx, gitCommandTimeout)
+	defer cancel()
 	base := []string{"--no-replace-objects", "-c", "core.quotepath=true", "-c", "diff.renames=false", "-c", "diff.ignoreSubmodules=none", "-C", r.root}
-	cmd := exec.CommandContext(ctx, "git", append(base, args...)...)
+	cmd := exec.CommandContext(commandCtx, "git", append(base, args...)...)
 	cmd.Env = gitEnvironment(os.Environ())
 	out, err := cmd.Output()
 	if err == nil {

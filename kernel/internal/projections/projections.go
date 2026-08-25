@@ -319,7 +319,11 @@ func canonicalJSONValue(value any) ([]byte, error) {
 	case string:
 		raw = []byte(v)
 	default:
-		return nil, errors.New("JSON column has unexpected type")
+		encoded, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("JSON column has unexpected type: %w", err)
+		}
+		raw = encoded
 	}
 	return core.Canonicalize(json.RawMessage(raw))
 }
