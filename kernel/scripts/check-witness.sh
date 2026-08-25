@@ -54,6 +54,25 @@ now_ms() {
   fi
 }
 
+timestamp_seconds() {
+  local value=$1 year month day hour minute second days leap month_days
+  [[ $value =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$ ]] || return 1
+  year=$((10#${BASH_REMATCH[1]})); month=$((10#${BASH_REMATCH[2]})); day=$((10#${BASH_REMATCH[3]}))
+  hour=$((10#${BASH_REMATCH[4]})); minute=$((10#${BASH_REMATCH[5]})); second=$((10#${BASH_REMATCH[6]}))
+  ((year >= 1970 && year <= 9999 && month >= 1 && month <= 12 && hour <= 23 && minute <= 59 && second <= 59)) || return 1
+  month_days=(31 28 31 30 31 30 31 31 30 31 30 31)
+  leap=0
+  if ((year % 4 == 0 && (year % 100 != 0 || year % 400 == 0))); then leap=1; fi
+  ((month == 2)) && ((month_days[1] += leap))
+  ((day >= 1 && day <= month_days[month-1])) || return 1
+  local prior_year=$((year - 1))
+  days=$((365 * (year - 1970) + (prior_year - 1968) / 4 - (prior_year - 1900) / 100 + (prior_year - 1600) / 400))
+  local index
+  for ((index = 0; index < month - 1; index++)); do days=$((days + month_days[index])); done
+  days=$((days + day - 1))
+  TIMESTAMP_SECONDS=$((days * 86400 + hour * 3600 + minute * 60 + second))
+}
+
 new_ulid() {
   local alphabet='0123456789ABCDEFGHJKMNPQRSTVWXYZ'
   local value=$1
@@ -63,15 +82,30 @@ new_ulid() {
     encoded="${alphabet:value%32:1}$encoded"
     value=$((value / 32))
   done
-  local bytes
-  if ! bytes=$(od -An -N16 -tu1 /dev/urandom); then
+  if ! read_od_bytes /dev/urandom 16; then
     return 1
   fi
-  [[ -n $bytes ]] || return 1
-  for byte in $bytes; do
+  local byte
+  for byte in "${OD_BYTES[@]}"; do
     encoded+="${alphabet:byte%32:1}"
   done
   printf '%s' "$encoded"
+}
+
+read_od_bytes() {
+  local source=$1 expected=$2 bytes byte count
+  if ! bytes=$(od -An -v -N"$expected" -tu1 "$source"); then
+    return 1
+  fi
+  bytes=${bytes//$'\n'/ }
+  bytes=${bytes//$'\t'/ }
+  read -r -a OD_BYTES <<< "$bytes"
+  count=${#OD_BYTES[@]}
+  [[ $count -eq $expected ]] || return 1
+  for byte in "${OD_BYTES[@]}"; do
+    [[ $byte =~ ^[0-9]+$ ]] || return 1
+    ((byte <= 255)) || return 1
+  done
 }
 
 first_line() {
@@ -97,13 +131,16 @@ first_line() {
     return 1
   fi
   rm -f "$output_file"
-  local bytes
-  if ! bytes=$(od -An -v -tu1 "$line_file"); then
+  local byte_count
+  if ! byte_count=$(wc -c <"$line_file"); then
     rm -f "$line_file"
     return 1
   fi
-  [[ -n $bytes ]] || { rm -f "$line_file"; return 1; }
-  for byte in $bytes; do
+  if ! read_od_bytes "$line_file" "$byte_count"; then
+    rm -f "$line_file"
+    return 1
+  fi
+  for byte in "${OD_BYTES[@]}"; do
     if [[ $byte == 0 ]]; then
       rm -f "$line_file"
       return 1
@@ -179,10 +216,11 @@ if ! started_ms=$(now_ms) || ! [[ $started_ms =~ ^[0-9]{13}$ ]]; then
   printf 'check-witness: cannot observe start time\n' >&2
   exit 1
 fi
-if ! started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || [[ ! $started_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+if ! started_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || ! timestamp_seconds "$started_at"; then
   printf 'check-witness: cannot observe start timestamp\n' >&2
   exit 1
 fi
+started_timestamp_seconds=$TIMESTAMP_SECONDS
 if ! run_id=$(new_ulid "$started_ms"); then
   printf 'check-witness: cannot generate run id\n' >&2
   exit 1
@@ -210,11 +248,16 @@ if ! finished_ms=$(now_ms) || ! [[ $finished_ms =~ ^[0-9]{13}$ ]]; then
   printf 'check-witness: cannot observe finish time\n' >&2
   exit 1
 fi
-if ! finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || [[ ! $finished_at =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+if ! finished_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ') || ! timestamp_seconds "$finished_at"; then
   printf 'check-witness: cannot observe finish timestamp\n' >&2
   exit 1
 fi
+finished_timestamp_seconds=$TIMESTAMP_SECONDS
 duration_ms=$((finished_ms - started_ms))
+if ((finished_timestamp_seconds < started_timestamp_seconds || duration_ms < 0)); then
+  printf 'check-witness: finish timestamp precedes start timestamp\n' >&2
+  exit 1
+fi
 if command -v sha256sum >/dev/null 2>&1; then
   if ! hash_line=$(sha256sum "$output_file"); then
     printf 'check-witness: cannot hash gate output\n' >&2

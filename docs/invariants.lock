@@ -25,6 +25,7 @@ kernel/internal/connector/checks/SPEC.md	C-INV-21	Inadmissible evidence bytes fa
 kernel/internal/connector/checks/SPEC.md	C-INV-22	Publication failure is never reported as a witnessed gate.
 kernel/internal/connector/checks/SPEC.md	C-INV-23	Helper observation failure is never reported as a witnessed gate.
 kernel/internal/connector/checks/SPEC.md	C-INV-24	Successful-empty helper output is never treated as observation.
+kernel/internal/connector/checks/SPEC.md	C-INV-25	Helper observations are complete and semantically ordered.
 kernel/internal/connector/git/SPEC.md	INV-1	One event per commit, keyed by SHA.
 kernel/internal/connector/git/SPEC.md	INV-2	A second Sync over unchanged history appends ZERO.
 kernel/internal/connector/git/SPEC.md	INV-3	`Result` counts are exact and partition the listing.

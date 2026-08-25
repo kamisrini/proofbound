@@ -132,6 +132,9 @@ validated filename list for observability only and is never read as a seen-set.
     helper children and their temporary files are cleaned.
 24. **C-INV-24 — Successful-empty helper output is never treated as observation.** Empty byte scans,
     timestamps, or entropy cannot produce a witness or a relabeled tool observation.
+25. **C-INV-25 — Helper observations are complete and semantically ordered.** Byte scans cover the
+    complete source with decimal bytes in range, entropy contains exactly 16 such bytes, and
+    timestamps are real calendar values with finish at or after start and non-negative duration.
 
 ## 5. Invariant table
 
@@ -161,6 +164,7 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-22 | Publication failures are loud and capture temps are cleaned | emitter_test.go::TestEmitter_PublicationFailuresAreLoud |
 | C-INV-23 | Helper observation failures fail closed without publishing a witness | emitter_test.go::TestEmitter_HelperFailuresAreLoud |
 | C-INV-24 | Successful-empty helper output fails closed without publishing a witness | emitter_test.go::TestEmitter_EmptyHelperOutputIsLoud |
+| C-INV-25 | Truncated/malformed helpers and invalid timestamps fail closed | emitter_test.go::TestEmitter_MalformedHelperOutputIsLoud |
 
 ## 6. Non-goals and recovery
 
