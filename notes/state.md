@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-25 (Tasks 3–5 accepted; Task 6 implementation remediated, acceptance blocked on DB evidence)
+**As of:** 2026-08-25 (Tasks 3–6 accepted; Task 7 paused)
 
 ## Resume Prompt
 
@@ -78,18 +78,13 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Next: finish Task 6 integration and mutation evidence, request a fresh non-author review, and repeat until
-ACCEPTABLE. Do not start Task 7.
-
-Finish Task 6 integration and mutation evidence, then run a fresh non-author adversarial review of
-the frozen Task 6 implementation. Commit the verdict verbatim on receipt. Fix findings, re-sweep,
-and repeat until ACCEPTABLE. Do not start Task 7.
+Next: Task 6 is complete under Law 9. Do not start Task 7 until explicitly directed.
 ```
 
 ## Worktree
 
 - **Branch:** `main`
-- **HEAD:** use `git log -1 --oneline`; the imported `make state` target is absent
+- **HEAD:** `2326d3e docs: record Task 6 final verification evidence`; the imported `make state` target is absent
 - **Remote:** `origin` → `git@github.com:kamisrini/proofbound.git`; push after each coherent commit and keep a local bundle backup.
 - **Uncommitted:** none expected; commit cadence is enforced at 90m
 
@@ -121,11 +116,10 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 fixes are at `2106ef5`, `b9848f2`, `07d5ddb`, `5892c04`, and `d6b865d`: PostgreSQL migrations are serialized, Git helpers are bounded, JSON snapshots are canonicalized, integration tests isolate the database, mutation execution is package-scoped after full calibration, and reducer/validation/sequence/snapshot-digest coverage is expanded. CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Independent Round 4 returned NEEDS_WORK; the next sweep is focused on defensive snapshot database-driver branches. Do not start Task 7.
-   before ACCEPTABLE.
+1. **P1 forward path:** Tasks 5 and 6 are accepted under Law 9. Task 6 final frozen state is `2326d3e`; its independent Round 6 verdict returned ACCEPTABLE and is committed verbatim at `docs/verification/verdicts/task6-current-round6.md`. Final evidence records 83/83 projection mutants killed, 0 invalid, 0 survivors, passing race/check gates, PostgreSQL integration, and fresh-schema `vera verify`. Do not start Task 7.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–5 DONE · Task 6 IN PROGRESS · Tasks 7–9 NOT STARTED · Task 9 hard
+   Tasks 0–6 DONE · Tasks 7–9 NOT STARTED · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
    cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
