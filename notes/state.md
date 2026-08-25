@@ -121,7 +121,7 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 fixes are at `2106ef5`, `b9848f2`, `07d5ddb`, and `5892c04`: PostgreSQL migrations are serialized, Git helpers are bounded, JSON snapshots are canonicalized, integration tests isolate the database, mutation execution is package-scoped after full calibration, and validation/sequence coverage is expanded. CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Independent Round 4 returned NEEDS_WORK; the projection sweep still has undeclared reducer and defensive snapshot survivors. Do not start Task 7.
+1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 fixes are at `2106ef5`, `b9848f2`, `07d5ddb`, `5892c04`, and `d6b865d`: PostgreSQL migrations are serialized, Git helpers are bounded, JSON snapshots are canonicalized, integration tests isolate the database, mutation execution is package-scoped after full calibration, and reducer/validation/sequence/snapshot-digest coverage is expanded. CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Independent Round 4 returned NEEDS_WORK; the next sweep is focused on defensive snapshot database-driver branches. Do not start Task 7.
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
