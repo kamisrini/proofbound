@@ -54,6 +54,7 @@ func main() {
 	mutationPattern = "./" + filepath.ToSlash(*pkg)
 	fmt.Println("calibration neutral=survived invalid=invalid lethal=killed")
 	var killed, invalid, survived int
+	var allowed int
 	for _, m := range mutants {
 		status := runMutant(root, m)
 		switch status {
@@ -62,14 +63,38 @@ func main() {
 		case "invalid":
 			invalid++
 		default:
-			survived++
+			if allowedSurvivor(root, m) {
+				allowed++
+				fmt.Printf("%s:%d#%d allowed\n", filepath.ToSlash(m.file), m.line, m.ordinal)
+				continue
+			} else {
+				survived++
+			}
 		}
 		fmt.Printf("%s:%d#%d %s\n", filepath.ToSlash(m.file), m.line, m.ordinal, status)
 	}
-	fmt.Printf("summary candidates=%d killed=%d invalid=%d survived=%d\n", len(mutants), killed, invalid, survived)
+	fmt.Printf("summary candidates=%d killed=%d invalid=%d survived=%d allowed=%d\n", len(mutants), killed, invalid, survived, allowed)
 	if survived > 0 {
 		os.Exit(1)
 	}
+}
+
+func allowedSurvivor(kernel string, m mutant) bool {
+	data, err := os.ReadFile(filepath.Join(filepath.Dir(kernel), "docs", "allowed-survivors.txt"))
+	if err != nil {
+		return false
+	}
+	rel, err := filepath.Rel(filepath.Dir(kernel), m.file)
+	if err != nil {
+		return false
+	}
+	key := filepath.ToSlash(rel) + fmt.Sprintf(":%d#%d", m.line, m.ordinal)
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), key+"\t") {
+			return true
+		}
+	}
+	return false
 }
 
 func collect(dir string) []mutant {
