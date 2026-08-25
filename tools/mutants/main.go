@@ -21,6 +21,7 @@ type mutant struct {
 }
 
 var testTags string
+var mutationPattern = "./..."
 
 func main() {
 	pkg := flag.String("pkg", "", "kernel package directory, e.g. internal/store")
@@ -50,6 +51,7 @@ func main() {
 	if err := calibrate(root); err != nil {
 		fail("calibration: " + err.Error())
 	}
+	mutationPattern = "./" + filepath.ToSlash(*pkg)
 	fmt.Println("calibration neutral=survived invalid=invalid lethal=killed")
 	var killed, invalid, survived int
 	for _, m := range mutants {
@@ -122,7 +124,7 @@ func runMutant(root string, m mutant) string {
 	if err := os.WriteFile(path, b, 0o644); err != nil {
 		return "invalid"
 	}
-	args := testArgs("./...")
+	args := testArgs(mutationPattern)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", args...)

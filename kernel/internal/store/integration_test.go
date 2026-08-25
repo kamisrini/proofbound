@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 )
 
@@ -20,6 +21,7 @@ func TestStoreAppendDuplicateRevisionAndRead(t *testing.T) {
 	if url == "" {
 		t.Fatal("DATABASE_URL is required for integration tests")
 	}
+	resetIntegrationDatabase(t, url)
 	s, err := Open(context.Background(), Config{Root: t.TempDir(), DatabaseURL: url})
 	if err != nil {
 		t.Fatal(err)
@@ -166,11 +168,34 @@ func integrationStore(t *testing.T) *Store {
 	if url == "" {
 		t.Fatal("DATABASE_URL is required")
 	}
+	resetIntegrationDatabase(t, url)
 	s, err := Open(context.Background(), Config{Root: t.TempDir(), DatabaseURL: url})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return s
+}
+
+func resetIntegrationDatabase(t *testing.T, databaseURL string) {
+	t.Helper()
+	pool, err := pgxpool.New(context.Background(), databaseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	var exists bool
+	if err := pool.QueryRow(context.Background(), `SELECT to_regclass('public.events') IS NOT NULL`).Scan(&exists); err != nil {
+		t.Fatal(err)
+	}
+	if !exists {
+		return
+	}
+	if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, commits_view, checks_view, sessions_view, reviews_view CASCADE`); err != nil {
+		t.Fatal(err)
+	}
 }
 func integrationEvent(t *testing.T, label string) core.Event {
 	t.Helper()

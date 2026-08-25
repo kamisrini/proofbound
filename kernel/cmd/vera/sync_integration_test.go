@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -21,6 +22,7 @@ func TestSyncChecksIngestsAndDeduplicates(t *testing.T) {
 	if databaseURL == "" {
 		t.Fatal("DATABASE_URL is required for integration tests")
 	}
+	resetIntegrationDatabase(t, databaseURL)
 	root := t.TempDir()
 	if err := os.Mkdir(filepath.Join(root, ".git"), 0o755); err != nil {
 		t.Fatal(err)
@@ -69,6 +71,7 @@ func TestSyncChecksReportsMalformedWitness(t *testing.T) {
 	if databaseURL == "" {
 		t.Fatal("DATABASE_URL is required for integration tests")
 	}
+	resetIntegrationDatabase(t, databaseURL)
 	root := t.TempDir()
 	spool := filepath.Join(root, ".vera", "spool")
 	if err := os.MkdirAll(spool, 0o755); err != nil {
@@ -81,5 +84,27 @@ func TestSyncChecksReportsMalformedWitness(t *testing.T) {
 	var output bytes.Buffer
 	if err := syncChecks(context.Background(), root, databaseURL, &output); err == nil || output.Len() != 0 {
 		t.Fatalf("output=%q error=%v", output.String(), err)
+	}
+}
+
+func resetIntegrationDatabase(t *testing.T, databaseURL string) {
+	t.Helper()
+	pool, err := pgxpool.New(context.Background(), databaseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	var exists bool
+	if err := pool.QueryRow(context.Background(), `SELECT to_regclass('public.events') IS NOT NULL`).Scan(&exists); err != nil {
+		t.Fatal(err)
+	}
+	if !exists {
+		return
+	}
+	if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, commits_view, checks_view, sessions_view, reviews_view CASCADE`); err != nil {
+		t.Fatal(err)
 	}
 }

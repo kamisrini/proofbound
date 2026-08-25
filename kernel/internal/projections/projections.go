@@ -279,7 +279,7 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 				}
 				m := map[string]any{}
 				for i, v := range a {
-					if (name == "commits_view" && (i == 9 || i == 10)) || (name == "checks_view" && i == 11) {
+					if isJSONColumn(name, i) {
 						canonical, err := canonicalJSONValue(v)
 						if err != nil {
 							return err
@@ -309,6 +309,10 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 		sort.Strings(result.Tables[name])
 	}
 	return result, nil
+}
+
+func isJSONColumn(table string, index int) bool {
+	return (table == "commits_view" && (index == 9 || index == 10)) || (table == "checks_view" && index == 11)
 }
 
 func canonicalJSONValue(value any) ([]byte, error) {
