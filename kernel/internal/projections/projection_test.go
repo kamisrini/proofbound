@@ -5,13 +5,13 @@ package projections
 import (
 	"context"
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -30,7 +30,7 @@ func TestApply_UsesLedgerOrder(t *testing.T) {
 	}
 	var subject string
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
-		return tx.QueryRow(ctx, `SELECT subject FROM commits_view WHERE sha LIKE '%order'`).Scan(&subject)
+		return tx.QueryRow(ctx, `SELECT subject FROM commits_view WHERE sha=$1`, shaFor("order")).Scan(&subject)
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestApply_MalformedPayloadRollsBack(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
 	appendCommit(t, s, "good", "good", 1)
-	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "bad", []byte(`{"sha":`), 2)
+	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "bad", []byte(`{"sha":"bad"}`), 2)
 	if err := New().Apply(context.Background(), s); err == nil {
 		t.Fatal("malformed event accepted")
 	}
@@ -87,7 +87,7 @@ func TestRows_RetainProofIdentity(t *testing.T) {
 	var id string
 	var seq int64
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
-		return tx.QueryRow(ctx, `SELECT event_id,seq FROM commits_view WHERE sha LIKE '%proof'`).Scan(&id, &seq)
+		return tx.QueryRow(ctx, `SELECT event_id,seq FROM commits_view WHERE sha=$1`, shaFor("proof")).Scan(&id, &seq)
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -256,10 +256,10 @@ func appendRaw(t *testing.T, s *store.Store, source core.Source, kind core.Kind,
 	return r
 }
 func commitJSON(sha, subject string) []byte {
-	b, _ := json.Marshal(map[string]any{"sha": sha, "author_name": "a", "author_email": "a@e", "committer_name": "c", "committer_email": "c@e", "committed_at": time.Now().UTC(), "subject": subject, "files_touched": []string{}, "cited_decisions": []string{}})
+	b, _ := json.Marshal(map[string]any{"sha": sha, "author_name": "A Author", "author_email": "author@example.test", "committer_name": "C Committer", "committer_email": "committer@example.test", "committed_at": time.Now().UTC(), "subject": subject, "files_touched": []string{}, "cited_decisions": []string{}})
 	return b
 }
-func shaFor(label string) string { return strings.Repeat("0", 40-len(label)) + label }
+func shaFor(label string) string { return fmt.Sprintf("%x", sha256.Sum256([]byte(label))) }
 func ledgerCount(t *testing.T, s *store.Store) int {
 	var n int
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {

@@ -100,8 +100,26 @@ func embeddedPort(port uint16) uint16 {
 	return port
 }
 func migrate(ctx context.Context, pool *pgxpool.Pool) error {
-	_, err := pool.Exec(ctx, string(ledgerSQL))
-	return err
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// Multiple vera processes may open the same externally managed database at
+	// once (for example, package-level integration tests). Serialize the
+	// create-if-not-exists migration on the database connection.
+	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext('proofbound:ledger-migration'))`); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, string(ledgerSQL)); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 func (s *Store) usable() error {
 	if s == nil || s.closed {
