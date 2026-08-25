@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-24 (Tasks 3–4 accepted; Task 5 Round 6 returned NEEDS_WORK at frozen `98617e4`; acceptance remains open)
+**As of:** 2026-08-25 (Tasks 3–4 accepted; Task 5 Round 6 remediation committed at `517470e`; fresh non-author acceptance remains open)
 
 ## Resume Prompt
 
@@ -35,7 +35,8 @@ Load-bearing facts:
   `make check-witnessed` emits strict
   `vera.witness.v1` evidence without invoking VERA; `vera sync checks` ingests and deduplicates it.
   Post-remediation connector mutation is 37/37 killed; DB-aware CLI mutation is 17/17 killed, with
-  no invalids or survivors. Task 5 is NOT accepted; the next remediation must close malformed helper output.
+  no invalids or survivors. Task 5 Round 6 remediation is committed at `517470e`; Task 5 is NOT accepted
+  pending a fresh non-author verdict.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -72,8 +73,8 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Next: remediate Round 6 findings (truncated `od`, incomplete entropy, semantically invalid/backward
-timestamps), then request a fresh non-author adversarial review of Task 5. Do not start Task 6.
+Next: request a fresh non-author adversarial review of the frozen `517470e` Task 5 remediation. Do not
+start Task 6.
 
 Run the next non-author adversarial review of Task 5 against the frozen remediation, all Task 5
 harm/route sections, and both committed verdicts. Commit the verdict
@@ -115,12 +116,12 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 Round 6 is recorded as NEEDS_WORK and mechanically green, but Law 9 acceptance is
-   open pending remediation and a fresh non-author verdict. Commit each verdict verbatim on receipt; do not start Task 6
+1. **P1 forward path:** Round 6 malformed-helper findings are remediated and mechanically green at `517470e`, but Law 9 acceptance is
+   open pending a fresh non-author verdict. Commit each verdict verbatim on receipt; do not start Task 6
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–4 DONE · Task 5 ROUND-6 NEEDS_WORK, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
+   Tasks 0–4 DONE · Task 5 remediated after Round 6, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
    cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
