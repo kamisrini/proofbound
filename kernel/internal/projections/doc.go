@@ -1,2 +1,2 @@
-// Package projections will provide rebuildable ledger projections.
+// Package projections owns the rebuildable ledger projections.
 package projections

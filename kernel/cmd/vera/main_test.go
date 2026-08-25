@@ -10,13 +10,40 @@ import (
 )
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
-	for _, args := range [][]string{{"sync", "git"}, {"other", "checks"}} {
+	for _, args := range [][]string{{"other", "checks"}, {"sync"}, {"sync", "sessions"}} {
 		var stdout, stderr bytes.Buffer
-		if code := run(context.Background(), args, &stdout, &stderr); code != 2 {
+		code := run(context.Background(), args, &stdout, &stderr)
+		if args[1:] != nil && len(args) == 2 && args[1] == "sessions" {
+			if code != 1 || !strings.Contains(stderr.String(), "not implemented") {
+				t.Fatalf("args=%v code=%d stdout=%q stderr=%q", args, code, stdout.String(), stderr.String())
+			}
+			continue
+		}
+		if code != 2 {
 			t.Fatalf("args=%v code=%d stdout=%q stderr=%q", args, code, stdout.String(), stderr.String())
 		}
-		if stdout.Len() != 0 || stderr.String() != "usage: vera sync checks\n" {
+		if stdout.Len() != 0 || stderr.String() != usage+"\n" {
 			t.Fatalf("args=%v stdout=%q stderr=%q", args, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestParseCommand(t *testing.T) {
+	tests := []struct {
+		args []string
+		want command
+	}{
+		{[]string{"sync", "git"}, commandSyncGit},
+		{[]string{"sync", "checks"}, commandSyncChecks},
+		{[]string{"sync", "all"}, commandSyncAll},
+		{[]string{"rebuild"}, commandRebuild},
+		{[]string{"verify"}, commandVerify},
+		{[]string{"sync", "sessions"}, commandInvalid},
+		{[]string{"sync", "git", "extra"}, commandInvalid},
+	}
+	for _, tt := range tests {
+		if got := parseCommand(tt.args); got != tt.want {
+			t.Errorf("parseCommand(%v) = %d, want %d", tt.args, got, tt.want)
 		}
 	}
 }

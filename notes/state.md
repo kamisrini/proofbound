@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-25 (Tasks 3–5 accepted; Round 7 verdict committed at `05c1456`)
+**As of:** 2026-08-25 (Tasks 3–5 accepted; Task 6 implementation in progress, DB-backed acceptance open)
 
 ## Resume Prompt
 
@@ -73,12 +73,12 @@ Load-bearing facts:
 Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
 `git bundle --all` until the target and its self-test are restored.
 
-Next: Task 5 is accepted under Law 9. Begin Task 6 only after orienting against the roadmap and current
-state; do not reopen accepted Task 5 without new evidence.
+Next: finish Task 6 integration and mutation evidence, request a fresh non-author review, and repeat until
+ACCEPTABLE. Do not start Task 7.
 
-Run the next non-author adversarial review of Task 5 against the frozen remediation, all Task 5
-harm/route sections, and both committed verdicts. Commit the verdict
-verbatim on receipt. Fix findings, re-sweep, and repeat until ACCEPTABLE. Do not start Task 6.
+Finish Task 6 integration and mutation evidence, then run a fresh non-author adversarial review of
+the frozen Task 6 implementation. Commit the verdict verbatim on receipt. Fix findings, re-sweep,
+and repeat until ACCEPTABLE. Do not start Task 7.
 ```
 
 ## Worktree
@@ -116,11 +116,11 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 is now the next roadmap task.
+1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 implementation is in progress; unit `make check` is green, but DB-backed integration/mutation evidence is blocked because this environment has no `DATABASE_URL`, Docker, or free embedded PostgreSQL port.
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–4 DONE · Task 5 remediated after Round 6, acceptance open · Tasks 6–9 NOT STARTED · Task 9 hard
+   Tasks 0–5 DONE · Task 6 IN PROGRESS · Tasks 7–9 NOT STARTED · Task 9 hard
    deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
    cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green

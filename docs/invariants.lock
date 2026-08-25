@@ -104,6 +104,16 @@ kernel/internal/core/SPEC.md	INV-26	Revision semantics.
 kernel/internal/core/SPEC.md	INV-29	`NewEvent` returns `Validate`'s error and builds nothing.
 kernel/internal/core/SPEC.md	INV-27	No ordering surface.
 kernel/internal/core/SPEC.md	INV-28	No I/O, blessed imports only.
+kernel/internal/projections/SPEC.md	P-INV-1	Ledger order is projection order.
+kernel/internal/projections/SPEC.md	P-INV-2	Revisions are last-write-wins.
+kernel/internal/projections/SPEC.md	P-INV-3	Projection writes are resumable.
+kernel/internal/projections/SPEC.md	P-INV-4	Rebuild is ledger-preserving.
+kernel/internal/projections/SPEC.md	P-INV-5	Incremental and rebuilt row sets are identical.
+kernel/internal/projections/SPEC.md	P-INV-6	Projection rows retain proof identity.
+kernel/internal/projections/SPEC.md	P-INV-7	Malformed or unsupported events fail closed.
+kernel/internal/projections/SPEC.md	P-INV-8	Projection DDL is not ledger migration.
+kernel/internal/projections/SPEC.md	P-INV-9	Snapshots are natural-key canonical multisets.
+kernel/internal/projections/SPEC.md	P-INV-10	Empty future views are deterministic.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.
