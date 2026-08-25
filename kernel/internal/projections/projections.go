@@ -22,10 +22,12 @@ import (
 var ErrSnapshotMismatch = errors.New("projections: snapshots differ")
 
 var (
-	shaPattern  = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
-	ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
-	hexPattern  = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	gitPattern  = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	shaPattern      = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
+	ulidPattern     = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
+	hexPattern      = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	gitPattern      = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	emailPattern    = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
+	decisionPattern = regexp.MustCompile(`^VD-[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6}$`)
 )
 
 type Projector struct{}
@@ -161,12 +163,17 @@ type commitPayload struct {
 }
 
 func (v commitPayload) validate() error {
-	if !shaPattern.MatchString(v.SHA) || v.CommittedAt.IsZero() {
+	if !shaPattern.MatchString(v.SHA) || strings.TrimSpace(v.AuthorName) == "" || !emailPattern.MatchString(v.AuthorEmail) || strings.TrimSpace(v.CommitterName) == "" || !emailPattern.MatchString(v.CommitterEmail) || v.CommittedAt.IsZero() || strings.TrimSpace(v.Subject) == "" {
 		return errors.New("invalid or missing commit field")
 	}
 	for _, file := range v.FilesTouched {
 		if file == "" || strings.IndexByte(file, 0) >= 0 {
 			return errors.New("invalid files_touched")
+		}
+	}
+	for _, citation := range v.CitedDecisions {
+		if !decisionPattern.MatchString(citation) {
+			return errors.New("invalid cited_decisions")
 		}
 	}
 	return nil

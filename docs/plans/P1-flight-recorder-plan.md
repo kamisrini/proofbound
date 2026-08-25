@@ -83,6 +83,13 @@ New make target `check-witnessed` calls the script; **plain `make check` stays u
 
 **Projections:** `commits_view`, `checks_view`, `sessions_view` + `week_report` query. Reducers are pure functions over seq-ordered events. **Projection tables use natural keys only (commit sha, run_id, session id) — no serials, no wall-clock columns.** **row-set identical :=** per projection table, the multiset of full rows (ordered by natural key, all columns, compared as canonical-JSON row digests) is equal between incremental state and a from-genesis rebuild.
 
+**Task sequencing boundary (2026-08-25):** Task 6 owns the projection engine and `vera verify` over
+the connectors that exist today (`git` and `checks`). Task 7 owns the sessions connector and its
+projection reducer; Task 8 owns `vera report week` and the report's event-proof rendering. The
+`review.verdict` kind remains a P1-close requirement, but its connector/projection and red-verdict
+chain are not silently claimed by Task 6; they must be completed before Task 9 closes P1. Until
+those tasks land, `sync all` means all implemented connectors and `sync sessions` fails explicitly.
+
 **CLI (`vera`):** `cmd/vera` with stdlib `flag` + subcommand switch. **Canonical invocation: `cd kernel && go run ./cmd/vera <args>`** (optional `make vera ARGS=…` passthrough may be added — with a gates.md note if it gains checks). All DoD commands below mean that invocation.
 - `vera sync [git|checks|sessions|all]` · `vera rebuild` · `vera verify` · `vera report week`
 - `vera verify` executes the phase DoD as code: (a) sync twice → 0 new events on pass two (holds under the sessions quiescence rule); (b) snapshot projections → rebuild → row-set-identical diff; (c) ≥1 witness event for the latest `make check-witnessed` run.

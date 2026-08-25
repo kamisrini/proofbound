@@ -13,6 +13,8 @@ Task 6 materializes `commits_view` and `checks_view`. `sessions_view` and `revie
 created as empty, versioned derived tables so later connectors have a stable destination; their
 reducers are intentionally deferred to Tasks 7 and the verdict-ingestion work. Until those
 reducers exist, a session or review event fails closed rather than being silently discarded.
+Task 7 owns `sync sessions`; Task 8 owns `vera report week`. Task 6's `sync all` therefore means
+all connectors implemented at this point: Git and checks.
 
 ## 2. Public API
 
@@ -59,7 +61,7 @@ canonical JSON columns.
 | P-INV-2 | Newer revisions replace older rows | projection_test.go::TestApply_RevisionLastWriteWins |
 | P-INV-3 | Checkpoint and rows commit atomically | projection_test.go::TestApply_MalformedPayloadRollsBack |
 | P-INV-4 | Rebuild leaves ledger unchanged | projection_test.go::TestRebuild_DoesNotModifyLedger |
-| P-INV-5 | Rebuild matches incremental canonical row sets | integration_test.go::TestRebuild_RowSetMatchesIncremental |
+| P-INV-5 | Rebuild matches incremental canonical row sets | projection_test.go::TestRebuild_RowSetMatchesIncremental |
 | P-INV-6 | Rows retain event ID and seq | projection_test.go::TestRows_RetainProofIdentity |
 | P-INV-7 | Unsupported or malformed events fail closed | projection_test.go::TestApply_RejectsUnsupportedEvent |
 | P-INV-8 | Projection DDL is absent from ledger migration | projection_test.go::TestDDL_IsNotLedgerMigration |
