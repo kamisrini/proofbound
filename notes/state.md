@@ -121,7 +121,7 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 follow-up fixes are at `2106ef5` and `b9848f2`: PostgreSQL migrations are advisory-lock serialized, Git helpers are bounded and disable external diff/textconv, and PostgreSQL JSON values are canonicalized for snapshots. The local `postgres:16-alpine` container is available; CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Independent Round 4 returned NEEDS_WORK at `task6-current-round4.md`; mutation calibration/acceptance and independent verify reproduction remain open. Do not start Task 7.
+1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 fixes are at `2106ef5`, `b9848f2`, and `07d5ddb`: PostgreSQL migrations are serialized, Git helpers are bounded, JSON snapshots are canonicalized, integration tests isolate the database, and mutation execution is package-scoped after full calibration. CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Independent Round 4 returned NEEDS_WORK; the projection sweep now calibrates but still has undeclared survivors in validation/snapshot routes. Do not start Task 7.
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
