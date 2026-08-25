@@ -1,0 +1,1 @@
+NEEDS_WORK — Projection error paths are directly tested and the allowlist bypass is removed; `make check` and projection race tests pass. However, the 83/83 mutation result and post-`d1f2f57` PostgreSQL/`vera verify` run are not recorded or independently reproducible here; Docker access is unavailable.
