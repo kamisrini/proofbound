@@ -121,7 +121,7 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 has a follow-up fix at `2106ef5`: PostgreSQL migrations are advisory-lock serialized and projection fixtures satisfy the strict payload contract. The local `postgres:16-alpine` container is now available; CLI and store integration pass, projections pass with embedded integration, `make check` and race tests pass. End-to-end `make verify` is still blocked by the repository git scan exceeding a bounded run, and mutation acceptance remains incomplete; do not start Task 7.
+1. **P1 forward path:** Task 5 is accepted under Law 9 at frozen remediation `517470e`, with the independent Round 7 verdict committed verbatim. Task 6 follow-up fixes are at `2106ef5` and `b9848f2`: PostgreSQL migrations are advisory-lock serialized, Git helpers are bounded and disable external diff/textconv, and PostgreSQL JSON values are canonicalized for snapshots. The local `postgres:16-alpine` container is available; CLI/store integration, embedded projection integration, `make check`, race tests, and end-to-end `make verify` pass. Mutation acceptance remains incomplete; do not start Task 7.
    before ACCEPTABLE.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
