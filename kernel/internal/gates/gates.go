@@ -127,8 +127,15 @@ func (d Definition) EnforceReady() error {
 }
 
 func Enforce(result Result) error {
-	if result.State == StateBlocked || result.State == StateUnknown {
+	if result.State != StatePass {
 		return fmt.Errorf("gate %s is %s", result.GateID, result.State)
+	}
+	return nil
+}
+
+func RequireDefinitions(definitions []Definition) error {
+	if len(definitions) == 0 {
+		return errors.New("gate enforcement blocked: no gate definitions found")
 	}
 	return nil
 }

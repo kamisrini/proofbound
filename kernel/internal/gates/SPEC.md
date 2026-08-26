@@ -37,3 +37,4 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-4 | Canary evaluation does not mutate the ledger | gates_integration_test.go::TestEvaluateIsReadOnly |
 | GATE-INV-5 | Enforcement requires explicit mode promotion | gates_test.go::TestEnforceRequiresPromotion |
 | GATE-INV-6 | Enforcement rejects BLOCKED and UNKNOWN results | gates_test.go::TestEnforceRejectsNonPass |
+| GATE-INV-7 | Enforcement rejects an empty definition set | gates_test.go::TestRequireDefinitions |

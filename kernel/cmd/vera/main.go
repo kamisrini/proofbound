@@ -291,8 +291,10 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		if err != nil {
 			return err
 		}
-		if cmd == commandGatesEnforce && len(definitions) == 0 {
-			return errors.New("gate enforcement blocked: no gate definitions found")
+		if cmd == commandGatesEnforce {
+			if err := gates.RequireDefinitions(definitions); err != nil {
+				return err
+			}
 		}
 		blocked := false
 		for _, definition := range definitions {

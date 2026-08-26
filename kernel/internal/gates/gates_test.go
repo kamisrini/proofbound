@@ -73,12 +73,21 @@ func TestEnforceRequiresPromotion(t *testing.T) {
 }
 
 func TestEnforceRejectsNonPass(t *testing.T) {
-	for _, state := range []State{StateBlocked, StateUnknown} {
+	for _, state := range []State{StateBlocked, StateUnknown, State("INVALID"), State("")} {
 		if err := Enforce(Result{GateID: "x", State: state}); err == nil {
 			t.Fatalf("state %s was accepted", state)
 		}
 	}
 	if err := Enforce(Result{GateID: "x", State: StatePass}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRequireDefinitions(t *testing.T) {
+	if err := RequireDefinitions(nil); err == nil {
+		t.Fatal("empty definition set accepted")
+	}
+	if err := RequireDefinitions([]Definition{{ID: "x"}}); err != nil {
 		t.Fatal(err)
 	}
 }
