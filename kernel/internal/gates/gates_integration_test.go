@@ -6,11 +6,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
@@ -284,5 +288,82 @@ func TestEvaluateIsReadOnly(t *testing.T) {
 	}
 	if before != after {
 		t.Fatalf("event count changed: before=%d after=%d", before, after)
+	}
+}
+
+func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
+	s := gateIntegrationStore(t)
+	ids := testIDs(t)
+	root, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := t.TempDir()
+	write := func(name, content string) {
+		if err := os.WriteFile(filepath.Join(repo, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("Makefile", "kernel-check:\n\t@test ! -f bad.go\n")
+	write("bad.go", "package bad\n\nvar Bad = true\n")
+	for _, args := range [][]string{{"init"}, {"config", "user.email", "test@example.invalid"}, {"config", "user.name", "test"}, {"add", "Makefile", "bad.go"}, {"commit", "-m", "bad change"}} {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = repo
+		if output, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, output)
+		}
+	}
+	copyScript, err := os.ReadFile(filepath.Join(root, "..", "..", "scripts", "check-witness.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := filepath.Join(repo, "kernel", "scripts", "check-witness.sh")
+	if err := os.MkdirAll(filepath.Dir(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(script, copyScript, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("bash", script)
+	cmd.Dir = repo
+	if output, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("bad kernel-check unexpectedly passed: %s", output)
+	}
+	connector, err := checks.New(&checks.Deps{SpoolDir: filepath.Join(repo, ".vera", "spool"), IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err := s.BeginSync(context.Background(), "bad-change-proof")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := connector.Sync(context.Background(), run); err != nil {
+		t.Fatal(err)
+	}
+	if err := run.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "kernel-check-success.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	definition, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	definition.Mode = "canary"
+	canary, err := Evaluate(context.Background(), s, definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if canary.State != StateBlocked || !canary.WouldBlock || canary.EventID == "" || canary.Seq == 0 {
+		t.Fatalf("canary=%+v", canary)
+	}
+	definition.Mode = "enforce"
+	if err := definition.EnforceReady(); err != nil {
+		t.Fatal(err)
+	}
+	if err := Enforce(canary); err == nil {
+		t.Fatal("enforce accepted a canary-blocked bad witness")
 	}
 }

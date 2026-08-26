@@ -62,6 +62,8 @@ Load-bearing facts:
   streams, ingests them, and invokes `vera gates enforce`; ordinary `make check` remains product-independent.
 - The delivery boundary is implemented by `scripts/delivery-enforce.sh`, which serializes concurrent
   runs with an atomic `.vera/delivery.lock` and pins the aggregate witness target to `check`.
+- P2 acceptance evidence is recorded in `docs/verification/p2-gate-evidence.md`: a bad kernel-check
+  witness is BLOCKED in canary and rejected by enforce with the same ledger proof.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

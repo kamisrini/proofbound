@@ -66,6 +66,7 @@ Currently implemented and verified:
 - Link lint gate witness (`make link-witnessed`)
 - Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
 - Explicit delivery enforcement workflow (`make delivery-enforce`): fresh witnesses, ingestion, then fail-closed gate enforcement
+- P2 canary-to-enforce bad-witness acceptance evidence
 - Verification and mutation-testing infrastructure
 
 Remaining work:
