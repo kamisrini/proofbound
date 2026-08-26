@@ -41,22 +41,28 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-Currently implemented:
+As of 2026-08-26, Tasks 0–8 of the P1 plan are accepted under the repository’s independent
+verification rule. The next planned step is Task 9, P1 close, and it is currently paused.
+
+Currently implemented and verified:
 
 - Go kernel and core event primitives
 - Durable store foundations with migrations and append/read operations
 - Transaction handling and embedded/external database configuration
 - PostgreSQL-backed integration tests
+- Git, checks, and sessions connectors
+- Projection rebuild and `vera verify`
+- `vera report week`, including event-ID proof and `[superseded]` commit marking
 - Verification and mutation-testing infrastructure
 
-Still in progress:
+Remaining P1 work:
 
-- Completing store mutation acceptance
-- End-to-end Git repository integration
-- Production witness and verdict emission
+- Task 9 P1 close and its remaining graduation checks
 - The complete user-facing delivery workflow
 
-Interfaces and behavior may change while these foundations are being completed.
+The mutation harness’s report-package integration calibration currently exceeds its 30-second
+ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
+standard `make check` gate is green.
 
 ## Quick start
 
