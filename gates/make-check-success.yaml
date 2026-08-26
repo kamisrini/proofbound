@@ -1,0 +1,9 @@
+{
+  "schema": "vera.gate.v1",
+  "id": "make-check-success",
+  "description": "The latest make check witness succeeded",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"field": "exit_code", "equals": 0}
+}

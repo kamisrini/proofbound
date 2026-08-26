@@ -23,7 +23,7 @@ func TestLoadRejectsInvalidDefinitions(t *testing.T) {
 	}
 }
 
-func TestEvaluateUsesLatestMatchingEvent(t *testing.T) {
+func TestEvaluatePayloadPassesMatchingValue(t *testing.T) {
 	condition := Condition{Field: "exit_code", Equals: json.RawMessage("0")}
 	state, blocked, err := evaluatePayload(map[string]json.RawMessage{"exit_code": json.RawMessage("0")}, condition)
 	if err != nil || state != StatePass || blocked {
@@ -31,7 +31,7 @@ func TestEvaluateUsesLatestMatchingEvent(t *testing.T) {
 	}
 }
 
-func TestEvaluateStatesAndProof(t *testing.T) {
+func TestEvaluatePayloadBlocksMismatchAndMissing(t *testing.T) {
 	condition := Condition{Field: "exit_code", Equals: json.RawMessage("0")}
 	for _, tc := range []struct {
 		name    string
@@ -50,7 +50,7 @@ func TestEvaluateStatesAndProof(t *testing.T) {
 	}
 }
 
-func TestEvaluateIsReadOnly(t *testing.T) {
+func TestParseIsReadOnly(t *testing.T) {
 	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	want := append([]byte(nil), data...)
 	if _, err := Parse(data); err != nil {

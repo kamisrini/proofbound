@@ -84,7 +84,11 @@ func LoadDir(dir string) ([]Definition, error) {
 
 func Parse(data []byte) (Definition, error) {
 	var definition Definition
-	decoder := json.NewDecoder(bytes.NewReader(data))
+	canonical, err := core.Canonicalize(data)
+	if err != nil {
+		return definition, fmt.Errorf("gate JSON: %w", err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(canonical))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&definition); err != nil {
 		return definition, err
