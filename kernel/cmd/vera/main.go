@@ -156,6 +156,7 @@ type committedVerdictReader struct{ root string }
 
 func (r committedVerdictReader) ReadCommittedVerdicts(ctx context.Context) ([]connectorreviews.Artifact, error) {
 	cmd := exec.CommandContext(ctx, "git", "-C", r.root, "ls-tree", "-r", "--name-only", "HEAD", "--", "docs/verification/verdicts")
+	cmd.Env = repositoryGitEnv()
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("list committed verdicts: %w", err)
@@ -165,13 +166,25 @@ func (r committedVerdictReader) ReadCommittedVerdicts(ctx context.Context) ([]co
 		if name == "" || !strings.HasSuffix(name, ".md") {
 			continue
 		}
-		data, err := exec.CommandContext(ctx, "git", "-C", r.root, "show", "HEAD:"+name).Output()
+		show := exec.CommandContext(ctx, "git", "-C", r.root, "show", "HEAD:"+name)
+		show.Env = repositoryGitEnv()
+		data, err := show.Output()
 		if err != nil {
 			return nil, fmt.Errorf("read committed verdict %s: %w", name, err)
 		}
 		artifacts = append(artifacts, connectorreviews.Artifact{Path: name, Bytes: data})
 	}
 	return artifacts, nil
+}
+
+func repositoryGitEnv() []string {
+	env := make([]string, 0, len(os.Environ()))
+	for _, value := range os.Environ() {
+		if !strings.HasPrefix(value, "GIT_") {
+			env = append(env, value)
+		}
+	}
+	return env
 }
 
 type reviewsResult struct{ Listed, Appended, Existing, Malformed int }

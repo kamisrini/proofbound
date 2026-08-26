@@ -2,10 +2,10 @@
 schema: vera.verdict.v1
 verdict_id: task8-current-round1
 status: ACCEPTABLE
-reviewed_commit: 327219c000000000000000000000000000000000
+reviewed_commit: 327219ca06e8a0b95d36c59576159ecaac1fd2af
 findings: []
 artifact_path: docs/verification/verdicts/task8-current-round1.md
-artifact_sha: f89014e56c0fc7b3b1978e16060c3fcfcb12323418b8d49ccf84dec7fbb7b92f
+artifact_sha: 785915e2d4089a805587649d588bb7834530fe5295a0b1dc5228ecaa922b87a6
 ---
 
 ACCEPTABLE

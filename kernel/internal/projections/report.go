@@ -198,20 +198,19 @@ func readReviewReportRows(ctx context.Context, tx *store.Tx, start, end time.Tim
 }
 
 type chainMarker struct {
-	seq        int64
-	id         string
-	kind       string
-	red        bool
-	occurredAt time.Time
+	seq           int64
+	id, kind, ref string
+	red           bool
+	occurredAt    time.Time
 }
 
 func readRedVerdictChains(ctx context.Context, s *store.Store, start, end time.Time) ([]redVerdictChain, error) {
 	var markers []chainMarker
 	if err := s.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
-		if record.Event.OccurredAt.Before(start) || !record.Event.OccurredAt.Before(end) {
-			return nil
-		}
 		if record.Event.Source == core.SourceReviews && record.Event.Kind == core.KindReviewVerdict {
+			if record.Event.OccurredAt.Before(start) || !record.Event.OccurredAt.Before(end) {
+				return nil
+			}
 			var payload reviewPayload
 			if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
 				return fmt.Errorf("review event %s: %w", record.Event.ID, err)
@@ -219,9 +218,13 @@ func readRedVerdictChains(ctx context.Context, s *store.Store, start, end time.T
 			if err := payload.validate(); err != nil {
 				return fmt.Errorf("review event %s: %w", record.Event.ID, err)
 			}
-			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "review", payload.Status == "NEEDS_WORK", record.Event.OccurredAt})
+			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "review", payload.ReviewedCommit, payload.Status == "NEEDS_WORK", record.Event.OccurredAt})
 		} else if record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded {
-			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "commit", false, record.Event.OccurredAt})
+			var payload commitPayload
+			if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
+				return err
+			}
+			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "commit", payload.SHA, false, record.Event.OccurredAt})
 		}
 		return nil
 	}); err != nil {
@@ -238,6 +241,13 @@ func readRedVerdictChains(ctx context.Context, s *store.Store, start, end time.T
 			if next.kind == "commit" {
 				changes = append(changes, next.id)
 				continue
+			}
+			if len(changes) == 0 {
+				for _, candidate := range markers {
+					if candidate.kind == "commit" && candidate.ref == next.ref {
+						changes = append(changes, candidate.id)
+					}
+				}
 			}
 			if len(changes) > 0 {
 				chains = append(chains, redVerdictChain{marker.id, next.id, marker.seq, next.seq, changes})

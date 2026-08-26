@@ -110,3 +110,13 @@ func TestLatestSpoolWitnessUsesLatestULIDAndRejectsTrailingJSON(t *testing.T) {
 		t.Fatalf("expected trailing-data error, got %v", err)
 	}
 }
+
+func TestRepositoryGitEnvCannotRedirectRepository(t *testing.T) {
+	t.Setenv("GIT_DIR", "/tmp/foreign.git")
+	t.Setenv("GIT_WORK_TREE", "/tmp/foreign-worktree")
+	for _, value := range repositoryGitEnv() {
+		if strings.HasPrefix(value, "GIT_") {
+			t.Fatalf("repository-selection environment leaked: %s", value)
+		}
+	}
+}

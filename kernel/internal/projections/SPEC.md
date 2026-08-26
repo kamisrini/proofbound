@@ -69,7 +69,7 @@ canonical JSON columns.
 | P-INV-7 | Unsupported or malformed events fail closed | projection_test.go::TestApply_RejectsUnsupportedEvent |
 | P-INV-8 | Projection DDL is absent from ledger migration | projection_test.go::TestDDL_IsNotLedgerMigration |
 | P-INV-9 | Snapshot comparison ignores row order and formatting | projection_test.go::TestSnapshot_CanonicalMultisets |
-| P-INV-10 | Review verdict events validate and materialize finding proof rows | projection_test.go::TestEnsure_CreatesFutureViews |
+| P-INV-10 | Review verdict events validate and materialize finding proof rows | review_integration_test.go::TestApply_ReviewFindingsRetainProofAndRevision |
 | P-INV-11 | Metadata has one versioned checkpoint row | projection_test.go::TestEnsure_MetadataIsUniqueAndVersioned |
 | P-INV-12 | Session metadata is materialized with proof identity | projection_test.go::TestApply_Session |
 | P-INV-13 | Week report entries render their originating event IDs | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |

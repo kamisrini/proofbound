@@ -1,6 +1,9 @@
 package specfirst
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,7 +12,7 @@ import (
 	"testing"
 )
 
-var proofCitation = regexp.MustCompile("\\|(?:[^|]*\\|\\s*){1,2}`?([A-Za-z0-9_.-]+_test\\.go)::(Test[A-Za-z0-9_]+)`?\\s*\\|")
+var proofCitation = regexp.MustCompile("\\|\\s*(?:[A-Za-z0-9]+-)?INV-[0-9]+\\s*\\|[^|]+\\|\\s*`?([A-Za-z0-9_.-]+_test\\.go)::(Test[A-Za-z0-9_]+)`?\\s*\\|")
 
 func TestEveryInternalPackageHasSpecAndProof(t *testing.T) {
 	_, filename, _, ok := runtime.Caller(0)
@@ -48,8 +51,7 @@ func TestEveryInternalPackageHasSpecAndProof(t *testing.T) {
 		matches := proofCitation.FindAllStringSubmatch(string(spec), -1)
 		for _, match := range matches {
 			testPath := filepath.Join(path, match[1])
-			body, readErr := os.ReadFile(testPath)
-			if readErr == nil && strings.Contains(string(body), "func "+match[2]+"(") {
+			if hasTestFunc(testPath, match[2]) {
 				return nil
 			}
 		}
@@ -59,4 +61,17 @@ func TestEveryInternalPackageHasSpecAndProof(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func hasTestFunc(path, name string) bool {
+	file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+	if err != nil {
+		return false
+	}
+	for _, declaration := range file.Decls {
+		if function, ok := declaration.(*ast.FuncDecl); ok && function.Recv == nil && function.Name.Name == name {
+			return true
+		}
+	}
+	return false
 }
