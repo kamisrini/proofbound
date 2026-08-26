@@ -2,13 +2,14 @@
 
 **Frozen implementation:** `d91bd63` (`feat: add proof-bound weekly report`)
 **Date:** 2026-08-26
-**Acceptance status:** pending independent Law 9 verification
+**Acceptance status:** ACCEPTABLE under independent Law 9 review
 
 The first independent review returned `NEEDS_WORK` on a MED finding: inner joins could
 silently omit a projection row whose event proof was missing. The remediation changes
 the report queries to left joins and fails closed with an explicit missing-proof error;
 `TestReportWeek_FailsClosedWhenProofEventIsMissing` covers the route. The amended review
-target is the follow-up commit after this evidence update.
+target was remediated in `327219c`; the independent Round 1 verdict is committed verbatim
+at `docs/verification/verdicts/task8-current-round1.md` and returned `ACCEPTABLE`.
 
 ## Scope
 
