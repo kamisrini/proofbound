@@ -12,7 +12,8 @@ access goes through `store.Store` and `store.Tx`.
 Task 6 materializes `commits_view` and `checks_view`. Task 7 adds the best-effort sessions
 connector and materializes `sessions_view`; `reviews_view` remains an empty stable destination
 until verdict ingestion lands. Review events fail closed rather than being silently discarded.
-Task 7 owns `sync sessions`; Task 8 owns `vera report week`.
+Task 7 owns `sync sessions`; Task 8 owns `vera report week`; P3 owns the GitHub delivery view and
+`ReportGitHub`.
 
 ## 2. Public API
 
@@ -25,12 +26,20 @@ func (p *Projector) Rebuild(context.Context, *store.Store) error
 func (p *Projector) Snapshot(context.Context, *store.Store) (Snapshot, error)
 func CompareSnapshots(Snapshot, Snapshot) error
 func (p *Projector) ReportWeek(context.Context, *store.Store, time.Time, map[string]bool, io.Writer) error
+func (p *Projector) ReportGitHub(context.Context, *store.Store, time.Time, io.Writer) error
 ```
 
 `Apply` consumes events after a derived `projection_meta.last_seq` checkpoint. Row updates and the
 checkpoint advance are one transaction. `Rebuild` drops only projection tables, recreates them,
 replays every ledger event, and never changes ledger rows. Revisions with the same natural key
 fold last-write-wins by increasing `seq`.
+
+`ReportGitHub` groups `github_delivery_view` rows by `(repository, commit_sha)`. A missing workflow
+or deployment is rendered as `missing`; a workflow with a non-success completed conclusion is
+`failed`; a non-completed workflow is `running`. Deployment status is `observed` because the v1
+connector does not ingest deployment status. Freshness is the oldest `freshness_at` in the group:
+`fresh` means no older than 24 hours at report time, otherwise `stale`. Every rendered proof is
+`event_id/seq`, and a missing event proof fails closed.
 
 ## 3. Derived schema
 
@@ -55,6 +64,11 @@ canonical JSON columns.
 13. **P-INV-13 — Week report entries carry proof identity.** Every commit, check, and session entry renders its originating event ID.
 14. **P-INV-14 — Unreachable commits are retained and marked superseded.** A commit absent from the supplied current reachability set is not omitted from the report.
 15. **P-INV-15 — Missing proof rows fail closed.** A projection row whose event proof is absent causes the week report to fail rather than silently disappearing.
+16. **P-INV-16 — GitHub events are normalized by kind.** Workflow and deployment payloads validate their repository, commit, identity, status, and timestamps before materialization.
+17. **P-INV-17 — GitHub revisions are last-write-wins.** A later event for one qualified upstream `native_id` replaces its delivery row.
+18. **P-INV-18 — GitHub delivery rows retain proof.** Each normalized row stores its source event ID and ledger sequence.
+19. **P-INV-19 — GitHub report semantics are explicit.** Missing, failed, observed, and stale states are rendered rather than inferred as success.
+20. **P-INV-20 — GitHub report proof is fail-closed.** A delivery row whose event proof is absent or whose freshness is in the future causes reporting to fail.
 
 ## 5. Proving table
 
@@ -75,3 +89,8 @@ canonical JSON columns.
 | P-INV-13 | Week report entries render their originating event IDs | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |
 | P-INV-14 | Unreachable commit fixture is retained and marked superseded | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |
 | P-INV-15 | Missing projection proof fails closed | report_integration_test.go::TestReportWeek_FailsClosedWhenProofEventIsMissing |
+| P-INV-16 | GitHub workflow/deployment rows validate and normalize fields | projection_test.go::TestGitHubPayloadValidationRejectsMalformedFields |
+| P-INV-17 | GitHub delivery rows preserve the newest qualified event | projection_test.go::TestApply_GitHubDeliveryRetainsNormalizedFieldsAndProof |
+| P-INV-18 | GitHub rows retain event ID and seq | projection_test.go::TestApply_GitHubDeliveryRetainsNormalizedFieldsAndProof |
+| P-INV-19 | GitHub report renders missing, failed, observed, and stale states | report_test.go::TestRenderGitHubReport_StatesMissingFailedAndStaleExplicitly |
+| P-INV-20 | GitHub report renders proof and rejects missing proof integration path | report_integration_test.go::TestReportGitHub_RendersJoinStatesFreshnessAndProof |

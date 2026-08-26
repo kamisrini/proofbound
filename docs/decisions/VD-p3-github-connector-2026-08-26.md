@@ -1,6 +1,7 @@
 # VD-p3-github-connector-2026-08-26: GitHub Actions and deployments first
 
 **Status:** Accepted (2026-08-26)
+**Date:** 2026-08-26
 
 **Context:** P3 needs a second tenant's real delivery data and a deployed-where / tested-what
 view. GitHub is the default candidate in the roadmap and is also the project's remote, making

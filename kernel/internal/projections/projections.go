@@ -73,6 +73,13 @@ CREATE TABLE IF NOT EXISTS reviews_view (
  status TEXT NOT NULL, severity TEXT NOT NULL, reviewed_commit TEXT NOT NULL, defect_commit TEXT,
  artifact_path TEXT NOT NULL, artifact_sha TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS github_delivery_view (
+ native_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ kind TEXT NOT NULL, repository TEXT NOT NULL, commit_sha TEXT NOT NULL,
+ workflow_id BIGINT NOT NULL, workflow TEXT NOT NULL, deployment_id BIGINT NOT NULL,
+ environment TEXT NOT NULL, status TEXT NOT NULL, conclusion TEXT NOT NULL,
+ occurred_at TIMESTAMPTZ NOT NULL, freshness_at TIMESTAMPTZ NOT NULL, url TEXT NOT NULL
+);
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS verdict_id TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS status TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_path TEXT;
@@ -125,7 +132,7 @@ func validateSequence(checkpoint int64, records []store.Record, seq int64) error
 
 func (p *Projector) Rebuild(ctx context.Context, s *store.Store) error {
 	if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
-		_, err := tx.Exec(ctx, `DROP TABLE IF EXISTS commits_view, checks_view, sessions_view, reviews_view, projection_meta`)
+		_, err := tx.Exec(ctx, `DROP TABLE IF EXISTS commits_view, checks_view, sessions_view, reviews_view, github_delivery_view, projection_meta`)
 		return err
 	}); err != nil {
 		return err
@@ -185,6 +192,8 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 			}
 		}
 		return nil
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeGitHub:
+		return reduceGitHub(ctx, tx, r)
 	default:
 		return nil
 	}
@@ -202,6 +211,7 @@ const (
 	routeCheck
 	routeSession
 	routeReview
+	routeGitHub
 )
 
 func eventRoute(s core.Source, k core.Kind) route {
@@ -217,7 +227,98 @@ func eventRoute(s core.Source, k core.Kind) route {
 	if s == core.SourceReviews && k == core.KindReviewVerdict {
 		return routeReview
 	}
+	if s == core.SourceGitHub && (k == core.KindGitHubWorkflow || k == core.KindGitHubDeployment) {
+		return routeGitHub
+	}
 	return routeUnsupported
+}
+
+type githubWorkflowPayload struct {
+	Repository string    `json:"repository"`
+	RunID      int64     `json:"run_id"`
+	Workflow   string    `json:"workflow"`
+	HeadSHA    string    `json:"head_sha"`
+	Status     string    `json:"status"`
+	Conclusion string    `json:"conclusion"`
+	URL        string    `json:"url"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type githubDeploymentPayload struct {
+	Repository   string    `json:"repository"`
+	DeploymentID int64     `json:"deployment_id"`
+	Environment  string    `json:"environment"`
+	SHA          string    `json:"sha"`
+	URL          string    `json:"url"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type githubDeliveryRow struct {
+	NativeID, Kind, Repository, CommitSHA, Workflow, Environment, Status, Conclusion, URL string
+	WorkflowID, DeploymentID                                                              int64
+	OccurredAt, FreshnessAt                                                               time.Time
+}
+
+func reduceGitHub(ctx context.Context, tx *store.Tx, r store.Record) error {
+	var v githubDeliveryRow
+	switch r.Event.Kind {
+	case core.KindGitHubWorkflow:
+		var payload githubWorkflowPayload
+		if err := decode(r.Event.Payload, &payload); err != nil {
+			return fmt.Errorf("github workflow seq %d: %w", r.Seq, err)
+		}
+		if err := payload.validate(); err != nil {
+			return fmt.Errorf("github workflow seq %d: %w", r.Seq, err)
+		}
+		v = githubDeliveryRow{NativeID: r.Event.NativeID, Kind: string(r.Event.Kind), Repository: payload.Repository, CommitSHA: payload.HeadSHA, WorkflowID: payload.RunID, Workflow: payload.Workflow, Status: payload.Status, Conclusion: payload.Conclusion, OccurredAt: r.Event.OccurredAt, FreshnessAt: r.Event.RecordedAt, URL: payload.URL}
+	case core.KindGitHubDeployment:
+		var payload githubDeploymentPayload
+		if err := decode(r.Event.Payload, &payload); err != nil {
+			return fmt.Errorf("github deployment seq %d: %w", r.Seq, err)
+		}
+		if err := payload.validate(); err != nil {
+			return fmt.Errorf("github deployment seq %d: %w", r.Seq, err)
+		}
+		v = githubDeliveryRow{NativeID: r.Event.NativeID, Kind: string(r.Event.Kind), Repository: payload.Repository, CommitSHA: payload.SHA, DeploymentID: payload.DeploymentID, Environment: payload.Environment, Status: "observed", OccurredAt: r.Event.OccurredAt, FreshnessAt: r.Event.RecordedAt, URL: payload.URL}
+	default:
+		return fmt.Errorf("github: unsupported kind %s", r.Event.Kind)
+	}
+	_, err := tx.Exec(ctx, `INSERT INTO github_delivery_view(native_id,event_id,seq,kind,repository,commit_sha,workflow_id,workflow,deployment_id,environment,status,conclusion,occurred_at,freshness_at,url) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) ON CONFLICT(native_id) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,kind=EXCLUDED.kind,repository=EXCLUDED.repository,commit_sha=EXCLUDED.commit_sha,workflow_id=EXCLUDED.workflow_id,workflow=EXCLUDED.workflow,deployment_id=EXCLUDED.deployment_id,environment=EXCLUDED.environment,status=EXCLUDED.status,conclusion=EXCLUDED.conclusion,occurred_at=EXCLUDED.occurred_at,freshness_at=EXCLUDED.freshness_at,url=EXCLUDED.url WHERE github_delivery_view.seq < EXCLUDED.seq`, v.NativeID, r.Event.ID.String(), r.Seq, v.Kind, v.Repository, v.CommitSHA, v.WorkflowID, v.Workflow, v.DeploymentID, v.Environment, v.Status, v.Conclusion, v.OccurredAt, v.FreshnessAt, v.URL)
+	return err
+}
+
+func (v githubWorkflowPayload) validate() error {
+	if !validRepository(v.Repository) || v.RunID <= 0 || strings.TrimSpace(v.Workflow) == "" || !gitPattern.MatchString(v.HeadSHA) || strings.TrimSpace(v.Status) == "" || (strings.EqualFold(v.Status, "completed") && strings.TrimSpace(v.Conclusion) == "") || v.CreatedAt.IsZero() || v.UpdatedAt.IsZero() || v.UpdatedAt.Before(v.CreatedAt) {
+		return errors.New("invalid or missing GitHub workflow field")
+	}
+	return nil
+}
+
+func (v githubDeploymentPayload) validate() error {
+	if !validRepository(v.Repository) || v.DeploymentID <= 0 || strings.TrimSpace(v.Environment) == "" || !gitPattern.MatchString(v.SHA) || v.CreatedAt.IsZero() || v.UpdatedAt.IsZero() || v.UpdatedAt.Before(v.CreatedAt) {
+		return errors.New("invalid or missing GitHub deployment field")
+	}
+	return nil
+}
+
+func validRepository(value string) bool {
+	parts := strings.Split(value, "/")
+	return len(parts) == 2 && validExternalName(parts[0]) && validExternalName(parts[1])
+}
+
+func validExternalName(value string) bool {
+	if value == "" || value == "." || value == ".." || len(value) > 100 {
+		return false
+	}
+	for _, r := range value {
+		valid := r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '-' || r == '_' || r == '.'
+		if !valid {
+			return false
+		}
+	}
+	return true
 }
 
 type commitPayload struct {
@@ -366,6 +467,10 @@ func requireFields(raw []byte, out any) error {
 		required = []string{"session_id", "message_count", "tool_call_count", "files_written_count", "parse_coverage"}
 	case *reviewPayload:
 		required = []string{"schema", "verdict_id", "status", "reviewed_commit", "findings", "artifact_path", "artifact_sha"}
+	case *githubWorkflowPayload:
+		required = []string{"repository", "run_id", "workflow", "head_sha", "status", "conclusion", "url", "created_at", "updated_at"}
+	case *githubDeploymentPayload:
+		required = []string{"repository", "deployment_id", "environment", "sha", "url", "created_at", "updated_at"}
 	}
 	for _, name := range required {
 		value, ok := fields[name]
@@ -381,7 +486,7 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 		return Snapshot{}, fmt.Errorf("snapshot ensure: %w", err)
 	}
 	result := Snapshot{Tables: make(map[string][]string)}
-	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha FROM reviews_view"}
+	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha FROM reviews_view", "github_delivery_view": "SELECT native_id,event_id,seq,kind,repository,commit_sha,workflow_id,workflow,deployment_id,environment,status,conclusion,occurred_at,freshness_at,url FROM github_delivery_view"}
 	for name, q := range queries {
 		var rowsData []map[string]any
 		if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
@@ -427,6 +532,8 @@ func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) 
 			a = make([]any, 9)
 		case "reviews_view":
 			a = make([]any, 10)
+		case "github_delivery_view":
+			a = make([]any, 15)
 		default:
 			a = make([]any, 6)
 		}

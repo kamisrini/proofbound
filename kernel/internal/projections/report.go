@@ -55,6 +55,122 @@ func (p *Projector) ReportWeek(ctx context.Context, s *store.Store, now time.Tim
 	return renderWeekReport(output, start, end, report)
 }
 
+const githubFreshnessWindow = 24 * time.Hour
+
+// ReportGitHub renders the current GitHub delivery view. A delivery is grouped
+// by repository and commit SHA. Missing workflow/deployment evidence is shown
+// explicitly; any failed workflow is failed, and deployment records are only
+// observed because the v1 connector does not ingest deployment status. Freshness
+// is the oldest evidence observation in the group and is fresh for 24 hours.
+func (p *Projector) ReportGitHub(ctx context.Context, s *store.Store, now time.Time, output io.Writer) error {
+	if output == nil {
+		return fmt.Errorf("projections: report output is required")
+	}
+	if err := p.Apply(ctx, s); err != nil {
+		return fmt.Errorf("github report: apply projections: %w", err)
+	}
+	now = now.UTC()
+	groups := map[string]*githubReportRow{}
+	if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
+		rows, err := tx.Query(ctx, `SELECT v.native_id,v.event_id,v.seq,v.kind,v.repository,v.commit_sha,v.workflow,v.environment,v.status,v.conclusion,v.freshness_at,e.event_id FROM github_delivery_view v LEFT JOIN events e ON e.event_id=v.event_id ORDER BY v.repository,v.commit_sha,v.seq,v.native_id`)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var nativeID, eventID, kind, repository, commitSHA, workflow, environment, status, conclusion string
+			var proofEventID *string
+			var seq int64
+			var freshness time.Time
+			if err := rows.Scan(&nativeID, &eventID, &seq, &kind, &repository, &commitSHA, &workflow, &environment, &status, &conclusion, &freshness, &proofEventID); err != nil {
+				return err
+			}
+			if proofEventID == nil || *proofEventID == "" {
+				return fmt.Errorf("GitHub delivery %s: missing event proof %s", nativeID, eventID)
+			}
+			if freshness.After(now) {
+				return fmt.Errorf("GitHub delivery %s: freshness is in the future", nativeID)
+			}
+			key := repository + "\x00" + commitSHA
+			row := groups[key]
+			if row == nil {
+				row = &githubReportRow{repository: repository, commitSHA: commitSHA, freshness: freshness}
+				groups[key] = row
+			} else if freshness.Before(row.freshness) {
+				row.freshness = freshness
+			}
+			row.proofs = append(row.proofs, fmt.Sprintf("%s/%d", eventID, seq))
+			switch kind {
+			case string(core.KindGitHubWorkflow):
+				row.tested = true
+				state := workflowState(status, conclusion)
+				row.workflows = append(row.workflows, workflow+":"+state)
+				if state == "failed" {
+					row.testFailed = true
+				}
+			case string(core.KindGitHubDeployment):
+				row.deployed = true
+				row.deployments = append(row.deployments, environment+":"+status)
+			}
+		}
+		return rows.Err()
+	}); err != nil {
+		return fmt.Errorf("github report: read view: %w", err)
+	}
+	result := make([]githubReportRow, 0, len(groups))
+	for _, row := range groups {
+		sort.Strings(row.workflows)
+		sort.Strings(row.deployments)
+		sort.Strings(row.proofs)
+		result = append(result, *row)
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].repository+result[i].commitSHA < result[j].repository+result[j].commitSHA
+	})
+	return renderGitHubReport(output, now, result)
+}
+
+func renderGitHubReport(output io.Writer, now time.Time, result []githubReportRow) error {
+	if _, err := fmt.Fprintf(output, "github_deliveries count=%d\n", len(result)); err != nil {
+		return err
+	}
+	for _, row := range result {
+		tested := "missing"
+		if row.tested {
+			tested = strings.Join(row.workflows, ",")
+		}
+		deployed := "missing"
+		if row.deployed {
+			deployed = strings.Join(row.deployments, ",")
+		}
+		freshness := "fresh"
+		if now.Sub(row.freshness) > githubFreshnessWindow {
+			freshness = "stale"
+		}
+		if _, err := fmt.Fprintf(output, "- %s commit=%s tested=%s deployed=%s freshness=%s proof=%s\n", row.repository, row.commitSHA, tested, deployed, freshness, strings.Join(row.proofs, ",")); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type githubReportRow struct {
+	repository, commitSHA          string
+	freshness                      time.Time
+	workflows, deployments, proofs []string
+	tested, deployed, testFailed   bool
+}
+
+func workflowState(status, conclusion string) string {
+	if !strings.EqualFold(status, "completed") {
+		return "running"
+	}
+	if strings.EqualFold(conclusion, "success") {
+		return "passed"
+	}
+	return "failed"
+}
+
 type weekReport struct {
 	commits  []commitReportRow
 	checks   []checkReportRow

@@ -135,6 +135,11 @@ kernel/internal/projections/SPEC.md	P-INV-12	Session metadata is projected witho
 kernel/internal/projections/SPEC.md	P-INV-13	Week report entries carry proof identity.
 kernel/internal/projections/SPEC.md	P-INV-14	Unreachable commits are retained and marked superseded.
 kernel/internal/projections/SPEC.md	P-INV-15	Missing proof rows fail closed.
+kernel/internal/projections/SPEC.md	P-INV-16	GitHub events are normalized by kind.
+kernel/internal/projections/SPEC.md	P-INV-17	GitHub revisions are last-write-wins.
+kernel/internal/projections/SPEC.md	P-INV-18	GitHub delivery rows retain proof.
+kernel/internal/projections/SPEC.md	P-INV-19	GitHub report semantics are explicit.
+kernel/internal/projections/SPEC.md	P-INV-20	GitHub report proof is fail-closed.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.

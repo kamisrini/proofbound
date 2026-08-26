@@ -192,6 +192,59 @@ func TestApply_CheckRun(t *testing.T) {
 	}
 }
 
+func TestApply_GitHubDeliveryRetainsNormalizedFieldsAndProof(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	sha := shaFor("github-delivery")
+	workflow := []byte(fmt.Sprintf(`{"repository":"github/docs","run_id":7,"workflow":"CI","head_sha":"%s","status":"completed","conclusion":"success","url":"https://github.test/run/7","created_at":"2026-08-25T12:00:00Z","updated_at":"2026-08-25T12:01:00Z"}`, sha))
+	deployment := []byte(fmt.Sprintf(`{"repository":"github/docs","deployment_id":9,"environment":"production","sha":"%s","url":"https://github.test/deploy/9","created_at":"2026-08-25T12:02:00Z","updated_at":"2026-08-25T12:03:00Z"}`, sha))
+	w := appendRaw(t, s, core.SourceGitHub, core.KindGitHubWorkflow, "github/docs/workflow/7", workflow, 1)
+	d := appendRaw(t, s, core.SourceGitHub, core.KindGitHubDeployment, "github/docs/deployment/9", deployment, 2)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	var count int
+	var eventID string
+	var seq int64
+	var repository, commitSHA, status, environment string
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		if err := tx.QueryRow(ctx, `SELECT count(*) FROM github_delivery_view`).Scan(&count); err != nil {
+			return err
+		}
+		return tx.QueryRow(ctx, `SELECT event_id,seq,repository,commit_sha,status,environment FROM github_delivery_view WHERE native_id=$1`, "github/docs/deployment/9").Scan(&eventID, &seq, &repository, &commitSHA, &status, &environment)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 || eventID != d.Event.ID.String() || seq != d.Seq || repository != "github/docs" || commitSHA != sha || status != "observed" || environment != "production" {
+		t.Fatalf("count=%d proof=(%s,%d) repository=%s sha=%s status=%s environment=%s want deployment=(%s,%d)", count, eventID, seq, repository, commitSHA, status, environment, w.Event.ID, w.Seq)
+	}
+}
+
+func TestGitHubPayloadValidationRejectsMalformedFields(t *testing.T) {
+	validWorkflow := githubWorkflowPayload{Repository: "github/docs", RunID: 1, Workflow: "CI", HeadSHA: shaFor("valid"), Status: "completed", Conclusion: "success", CreatedAt: time.Unix(1, 0), UpdatedAt: time.Unix(2, 0)}
+	for name, edit := range map[string]func(*githubWorkflowPayload){
+		"repository": func(v *githubWorkflowPayload) { v.Repository = "github/docs/actions" },
+		"run id":     func(v *githubWorkflowPayload) { v.RunID = 0 },
+		"sha":        func(v *githubWorkflowPayload) { v.HeadSHA = "bad" },
+		"timestamps": func(v *githubWorkflowPayload) { v.UpdatedAt = v.CreatedAt.Add(-time.Second) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			v := validWorkflow
+			edit(&v)
+			if err := v.validate(); err == nil {
+				t.Fatal("malformed workflow accepted")
+			}
+		})
+	}
+}
+
+func TestGitHubWorkflowValidationAllowsInProgressWithoutConclusion(t *testing.T) {
+	v := githubWorkflowPayload{Repository: "github/docs", RunID: 1, Workflow: "CI", HeadSHA: shaFor("running"), Status: "in_progress", CreatedAt: time.Unix(1, 0), UpdatedAt: time.Unix(2, 0)}
+	if err := v.validate(); err != nil {
+		t.Fatalf("in-progress workflow rejected: %v", err)
+	}
+}
+
 func TestSupportedEventMatrix(t *testing.T) {
 	cases := []struct {
 		source core.Source
@@ -557,7 +610,7 @@ func testStore(t *testing.T) *store.Store {
 	if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, commits_view, checks_view, sessions_view, reviews_view CASCADE`); err != nil {
+	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`); err != nil {
 		t.Fatal(err)
 	}
 	return s

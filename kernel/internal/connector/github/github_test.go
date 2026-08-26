@@ -131,6 +131,15 @@ func TestHTTPClientPreservesQueryAndUsesHeaderAuth(t *testing.T) {
 	}
 }
 
+func TestHTTPClientClampsCollectionLimit(t *testing.T) {
+	if got, err := boundedLimit(1000); err != nil || got != maxItemsPerCollection {
+		t.Fatalf("bounded limit=%d err=%v", got, err)
+	}
+	if _, err := boundedLimit(0); err == nil {
+		t.Fatal("accepted zero collection limit")
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

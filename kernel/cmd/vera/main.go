@@ -19,6 +19,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
 	"github.com/kamisrini/proofbound/kernel/internal/connector/git/gitcmd"
+	connectorgithub "github.com/kamisrini/proofbound/kernel/internal/connector/github"
 	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
@@ -27,7 +28,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week | vera gates {canary|enforce}"
+const usage = "usage: vera sync {git|checks|sessions|reviews|github|all} | vera rebuild | vera verify | vera report {week|github} | vera gates {canary|enforce}"
 
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -39,10 +40,12 @@ const (
 	commandSyncChecks
 	commandSyncSessions
 	commandSyncReviews
+	commandSyncGitHub
 	commandSyncAll
 	commandRebuild
 	commandVerify
 	commandReportWeek
+	commandReportGitHub
 	commandGatesCanary
 	commandGatesEnforce
 )
@@ -57,6 +60,8 @@ func parseCommand(args []string) command {
 		return commandSyncSessions
 	case len(args) == 2 && args[0] == "sync" && args[1] == "reviews":
 		return commandSyncReviews
+	case len(args) == 2 && args[0] == "sync" && args[1] == "github":
+		return commandSyncGitHub
 	case len(args) == 2 && args[0] == "sync" && args[1] == "all":
 		return commandSyncAll
 	case len(args) == 1 && args[0] == "rebuild":
@@ -65,6 +70,8 @@ func parseCommand(args []string) command {
 		return commandVerify
 	case len(args) == 2 && args[0] == "report" && args[1] == "week":
 		return commandReportWeek
+	case len(args) == 2 && args[0] == "report" && args[1] == "github":
+		return commandReportGitHub
 	case len(args) == 2 && args[0] == "gates" && args[1] == "canary":
 		return commandGatesCanary
 	case len(args) == 2 && args[0] == "gates" && args[1] == "enforce":
@@ -210,6 +217,32 @@ func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, i
 	return reviewsResult{result.Listed, result.Appended, result.Existing, result.Malformed}, errors.Join(syncErr, finishErr)
 }
 
+type githubResult struct{ Listed, Appended, Existing int }
+
+func syncGitHubOnStore(ctx context.Context, ledger *store.Store, ids *core.IDGenerator) (githubResult, error) {
+	owner := strings.TrimSpace(os.Getenv("VERA_GITHUB_OWNER"))
+	var repos []string
+	for _, repo := range strings.Split(os.Getenv("VERA_GITHUB_REPOS"), ",") {
+		if repo = strings.TrimSpace(repo); repo != "" {
+			repos = append(repos, repo)
+		}
+	}
+	connector, err := connectorgithub.New(&connectorgithub.Deps{
+		API:   &connectorgithub.HTTPClient{BaseURL: os.Getenv("VERA_GITHUB_API_BASE_URL"), Token: os.Getenv("GITHUB_TOKEN")},
+		Owner: owner, Repos: repos, IDs: ids, Logger: logger(),
+	})
+	if err != nil {
+		return githubResult{}, err
+	}
+	run, err := ledger.BeginSync(ctx, "github")
+	if err != nil {
+		return githubResult{}, err
+	}
+	result, syncErr := connector.Sync(ctx, run)
+	finishErr := run.Finish(ctx, result.Cursor, syncErr)
+	return githubResult{result.Listed, result.Appended, result.Existing}, errors.Join(syncErr, finishErr)
+}
+
 func syncSessionsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (sessionsResult, error) {
 	connector, err := connectorsessions.New(&connectorsessions.Deps{Root: root, IDs: ids, Logger: logger()})
 	if err != nil {
@@ -278,6 +311,23 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			return err
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d malformed=%d\n", result.Listed, result.Appended, result.Existing, result.Malformed)
+		return err
+	}
+	if cmd == commandSyncGitHub {
+		ids, err := newIDs()
+		if err != nil {
+			return err
+		}
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		result, err := syncGitHubOnStore(ctx, ledger, ids)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
 		return err
 	}
 	ledger, err := openStore(ctx, root, databaseURL)
@@ -375,6 +425,8 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			return err
 		}
 		return projector.ReportWeek(ctx, ledger, time.Now(), reachable, output)
+	case commandReportGitHub:
+		return projector.ReportGitHub(ctx, ledger, time.Now(), output)
 	}
 	return nil
 }

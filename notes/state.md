@@ -68,7 +68,8 @@ Load-bearing facts:
   The initial implementation collects bounded workflow-run and deployment records through an
   injectable standard-library HTTP client and emits repository-qualified external events. Fixture
   selection evidence is in `docs/verification/p3-github-fixture-check.md`. The
-  joined delivery projection, CLI surface, and live acceptance run are still outstanding.
+  joined delivery projection and `vera sync github` / `vera report github` surfaces are implemented
+  and tested; the live acceptance run remains outstanding.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

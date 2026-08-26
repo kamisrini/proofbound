@@ -23,3 +23,8 @@ Invariants:
 | GITHUB-INV-1 | unsafe repository configuration enters the connector | github_test.go::TestNewRejectsUnsafeRepository |
 | GITHUB-INV-2 | external records lose repository-qualified identity | github_test.go::TestSyncEmitsQualifiedWorkflowAndDeploymentEvents |
 | GITHUB-INV-3 | transport query or authorization is malformed or leaked | github_test.go::TestHTTPClientPreservesQueryAndUsesHeaderAuth |
+| GITHUB-INV-4 | replay or changed upstream content has correct ledger identity semantics | github_test.go::TestSyncChangedUpstreamRecordCreatesRevision |
+| GITHUB-INV-5 | collection limits cannot exceed the v1 bound or be non-positive | github_test.go::TestHTTPClientClampsCollectionLimit |
+| GITHUB-INV-6 | API records are emitted with normalized upstream fields | github_test.go::TestSyncEmitsQualifiedWorkflowAndDeploymentEvents |
+| GITHUB-INV-7 | malformed repository configuration fails before sync | github_test.go::TestNewRejectsUnsafeRepository |
+| GITHUB-INV-8 | authorization remains transport-only | github_test.go::TestHTTPClientPreservesQueryAndUsesHeaderAuth |

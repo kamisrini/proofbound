@@ -35,6 +35,7 @@ func TestParseCommand(t *testing.T) {
 		{[]string{"sync", "git"}, commandSyncGit},
 		{[]string{"sync", "checks"}, commandSyncChecks},
 		{[]string{"sync", "sessions"}, commandSyncSessions},
+		{[]string{"sync", "github"}, commandSyncGitHub},
 		{[]string{"sync", "all"}, commandSyncAll},
 		{[]string{"rebuild"}, commandRebuild},
 		{[]string{"verify"}, commandVerify},

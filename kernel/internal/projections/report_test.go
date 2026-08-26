@@ -32,3 +32,41 @@ func TestRenderWeekReport_ProofAndSupersededFixture(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderGitHubReport_StatesMissingFailedAndStaleExplicitly(t *testing.T) {
+	now := time.Date(2026, 8, 26, 12, 0, 0, 0, time.UTC)
+	rows := []githubReportRow{
+		{repository: "github/docs", commitSHA: "a", freshness: now.Add(-48 * time.Hour), deployments: []string{"production:observed"}, deployed: true, proofs: []string{"deploy-proof/2"}},
+		{repository: "github/docs", commitSHA: "b", freshness: now.Add(-time.Hour), workflows: []string{"CI:failed"}, tested: true, testFailed: true, proofs: []string{"workflow-proof/1"}},
+		{repository: "github/docs", commitSHA: "c", freshness: now.Add(-time.Hour), proofs: []string{"commit-proof/3"}},
+	}
+	var output bytes.Buffer
+	if err := renderGitHubReport(&output, now, rows); err != nil {
+		t.Fatal(err)
+	}
+	text := output.String()
+	for _, want := range []string{
+		"github_deliveries count=3",
+		"commit=a tested=missing deployed=production:observed freshness=stale proof=deploy-proof/2",
+		"commit=b tested=CI:failed deployed=missing freshness=fresh proof=workflow-proof/1",
+		"commit=c tested=missing deployed=missing freshness=fresh proof=commit-proof/3",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("report missing %q:\n%s", want, text)
+		}
+	}
+}
+
+func TestWorkflowState(t *testing.T) {
+	for _, tc := range []struct {
+		status, conclusion, want string
+	}{
+		{"completed", "success", "passed"},
+		{"completed", "failure", "failed"},
+		{"in_progress", "", "running"},
+	} {
+		if got := workflowState(tc.status, tc.conclusion); got != tc.want {
+			t.Errorf("workflowState(%q,%q)=%q want %q", tc.status, tc.conclusion, got, tc.want)
+		}
+	}
+}
