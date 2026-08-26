@@ -64,6 +64,8 @@ Load-bearing facts:
   the same command-plus-exit-code proof requirement.
 - The next P2 migration adds `make link-witnessed` and `link-success` with the same command-plus-exit-code
   proof requirement.
+- The current P2 migration adds `make kernel-check-witnessed` and `kernel-check-success` with the
+  same command-plus-exit-code proof requirement.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

@@ -187,6 +187,39 @@ func TestLoadedLinkGateMatchesCommandAndExitCode(t *testing.T) {
 	}
 }
 
+func TestLoadedKernelCheckGateMatchesCommandAndExitCode(t *testing.T) {
+	s := gateIntegrationStore(t)
+	ids := testIDs(t)
+	root, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "kernel-check-success.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	definition, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrong := appendCheckEventWithCommand(t, s, ids, "kernel-wrong", "make check", 0)
+	result, err := Evaluate(context.Background(), s, definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.State != StateBlocked || !result.WouldBlock || result.EventID != wrong.Event.ID.String() {
+		t.Fatalf("result=%+v wrong=%+v", result, wrong)
+	}
+	pass := appendCheckEventWithCommand(t, s, ids, "kernel-good", "make kernel-check", 0)
+	result, err = Evaluate(context.Background(), s, definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.State != StatePass || result.EventID != pass.Event.ID.String() || result.Seq != pass.Seq {
+		t.Fatalf("result=%+v pass=%+v", result, pass)
+	}
+}
+
 func gateDefinition() Definition {
 	return Definition{Schema: Version, ID: "make-check-success", Description: "test", Expires: "2099-01-01", Mode: "canary", Source: core.SourceChecks, Kind: core.KindCheckRun, Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
 }

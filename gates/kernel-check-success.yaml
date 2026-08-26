@@ -1,0 +1,13 @@
+{
+  "schema": "vera.gate.v1",
+  "id": "kernel-check-success",
+  "description": "The latest kernel build, test, and lint check succeeded",
+  "expires": "2026-10-16",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"all": [
+    {"field": "command", "equals": "make kernel-check"},
+    {"field": "exit_code", "equals": 0}
+  ]}
+}

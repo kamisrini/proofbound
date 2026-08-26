@@ -1,5 +1,5 @@
 SHELL := /usr/bin/env bash
-.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed verify gates-canary gates-enforce short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint
+.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed verify gates-canary gates-enforce short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint
 check: hooks-test link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint kernel-check
 check-witnessed:
 	@bash kernel/scripts/check-witness.sh
@@ -13,6 +13,8 @@ invariant-table-witnessed:
 	@VERA_CHECK_TARGET=invariant-table-lint bash kernel/scripts/check-witness.sh
 link-witnessed:
 	@VERA_CHECK_TARGET=link-lint bash kernel/scripts/check-witness.sh
+kernel-check-witnessed:
+	@VERA_CHECK_TARGET=kernel-check bash kernel/scripts/check-witness.sh
 verify:
 	@cd kernel && go run ./cmd/vera verify
 gates-canary:

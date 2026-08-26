@@ -64,6 +64,7 @@ Currently implemented and verified:
 - SPEC invariant numbering gate witness (`make spec-numbering-witnessed`)
 - Invariant table gate witness (`make invariant-table-witnessed`)
 - Link lint gate witness (`make link-witnessed`)
+- Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
 - Verification and mutation-testing infrastructure
 
 Remaining work:

@@ -240,7 +240,7 @@ if [[ ! $check_target =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]; then
   exit 1
 fi
 check_command="make $check_target"
-if (cd "$repo_root" && env "${git_env_args[@]}" make "$check_target") >"$output_file" 2>&1; then
+if (cd "$repo_root" && env "${git_env_args[@]}" -u VERA_CHECK_TARGET make "$check_target") >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?
