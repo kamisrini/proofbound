@@ -101,8 +101,9 @@ the unit tests, and runs linting. For a faster inner loop:
 make short
 ```
 
-To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It emits fresh
-witnesses for every promoted target, ingests them, and then runs `vera gates enforce`.
+To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It serializes
+the workflow, emits fresh witnesses for every promoted target, ingests them, and then runs
+`vera gates enforce`.
 
 The current command-line entry point is a scaffold while the product workflow is being built. The
 working implementation and tests live under [`kernel/`](kernel/).

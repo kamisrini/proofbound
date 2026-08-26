@@ -16,15 +16,7 @@ link-witnessed:
 kernel-check-witnessed:
 	@VERA_CHECK_TARGET=kernel-check bash kernel/scripts/check-witness.sh
 delivery-enforce:
-	@$(MAKE) index-check-witnessed
-	@$(MAKE) law-citation-witnessed
-	@$(MAKE) spec-numbering-witnessed
-	@$(MAKE) invariant-table-witnessed
-	@$(MAKE) link-witnessed
-	@$(MAKE) kernel-check-witnessed
-	@VERA_CHECK_TARGET=check $(MAKE) check-witnessed
-	@cd kernel && go run ./cmd/vera sync checks
-	@cd kernel && go run ./cmd/vera gates enforce
+	@bash scripts/delivery-enforce.sh
 verify:
 	@cd kernel && go run ./cmd/vera verify
 gates-canary:

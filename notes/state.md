@@ -49,19 +49,10 @@ Load-bearing facts:
   committed artifacts, `reviews_view` retains finding/event proof, and `vera report week` exposes the
   ledger-ordered red-verdict/change/next-verdict chain. The spec-first graduation is a blocking Go test
   under `make check` at `kernel/internal/specfirst`.
-- P2 first slice is landed: `gates/make-check-success.yaml` and `vera gates canary` evaluate the
-  latest `check.run` payload against the ledger and retain event proof. Gate definitions carry an
-  ISO expiry date; `vera gates enforce` requires explicit `mode: enforce` promotion, rejects expired
-  definitions, and fails closed on BLOCKED/UNKNOWN. Remaining P0 checks are not yet migrated and
-  the initial gate remains canary-only.
-- The next P2 migration adds `make index-check-witnessed` and a distinct `index-check-success` gate;
-  its compound condition requires both the witnessed command and `exit_code: 0`.
-- The current P2 migration adds `make law-citation-witnessed` and `law-citation-success` with the
-  same command-plus-exit-code proof requirement.
-- The next P2 migration adds `make spec-numbering-witnessed` and `spec-numbering-success` with the
-  same command-plus-exit-code proof requirement.
-- The current P2 migration adds `make invariant-table-witnessed` and `invariant-table-success` with
-  the same command-plus-exit-code proof requirement.
+- P2 gate data is landed for the aggregate check, index freshness, law citation, SPEC numbering,
+  invariant table, link lint, and kernel build/test/lint. Each definition carries an ISO expiry date,
+  is explicitly promoted to `mode: enforce`; the six specialized definitions use command selectors
+  plus `exit_code`, while the aggregate definition is exit-code-only by design.
 - Specialized gates now use an explicit command selector plus an `exit_code` condition, so later
   witnesses for other targets do not falsely block them; isolated canary evaluation returned PASS
   for all seven definitions.
@@ -69,10 +60,8 @@ Load-bearing facts:
   is validated against the same isolated ledger before any future gate additions are promoted.
 - `make delivery-enforce` is now the explicit delivery boundary: it refreshes all seven witness
   streams, ingests them, and invokes `vera gates enforce`; ordinary `make check` remains product-independent.
-- The next P2 migration adds `make link-witnessed` and `link-success` with the same command-plus-exit-code
-  proof requirement.
-- The current P2 migration adds `make kernel-check-witnessed` and `kernel-check-success` with the
-  same command-plus-exit-code proof requirement.
+- The delivery boundary is implemented by `scripts/delivery-enforce.sh`, which serializes concurrent
+  runs with an atomic `.vera/delivery.lock` and pins the aggregate witness target to `check`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -80,8 +69,8 @@ Load-bearing facts:
   My fix rate and my defect-introduction rate are roughly equal, and being MORE careful did
   not change it. What converges is MECHANISM — script+self-test classes have recurred zero
   times; prose-answered classes recurred 3-5x.
-- The imported corpus DESCRIBES skip-lint, prescription-lint, state-freshness, invariant-lint,
-  spec-numbering-lint and other gates that are absent from this checkout. Current `make check`
+- The imported corpus DESCRIBES skip-lint, prescription-lint, state-freshness, invariant-lint and
+  other gates that are absent from this checkout. Current `make check`
   runs only the scripts actually present plus kernel build/test/lint. Do not cite historical gate
   claims as current enforcement.
 - Accepted Task 4 author sweeps are GREEN: gitcmd 77/77 killed; combined connector target 95/95
