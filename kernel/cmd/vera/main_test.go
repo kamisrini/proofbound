@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
+	"github.com/kamisrini/proofbound/kernel/internal/gates"
 )
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
@@ -45,6 +46,21 @@ func TestParseCommand(t *testing.T) {
 		if got := parseCommand(tt.args); got != tt.want {
 			t.Errorf("parseCommand(%v) = %d, want %d", tt.args, got, tt.want)
 		}
+	}
+}
+
+func TestEnforceGateResultsFailsClosed(t *testing.T) {
+	definition := gates.Definition{Schema: gates.Version, ID: "x", Description: "d", Mode: "enforce", Source: "checks", Kind: "check.run", Condition: gates.Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	for _, state := range []gates.State{gates.StateBlocked, gates.StateUnknown} {
+		if err := enforceGateResults([]gates.Definition{definition}, []gates.Result{{GateID: "x", State: state}}); err == nil {
+			t.Fatalf("state %s accepted", state)
+		}
+	}
+	if err := enforceGateResults(nil, nil); err == nil {
+		t.Fatal("empty definitions accepted")
+	}
+	if err := enforceGateResults([]gates.Definition{definition}, []gates.Result{{GateID: "x", State: gates.StatePass}}); err != nil {
+		t.Fatal(err)
 	}
 }
 

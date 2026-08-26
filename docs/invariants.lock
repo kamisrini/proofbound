@@ -111,6 +111,13 @@ kernel/internal/core/SPEC.md	INV-26	Revision semantics.
 kernel/internal/core/SPEC.md	INV-29	`NewEvent` returns `Validate`'s error and builds nothing.
 kernel/internal/core/SPEC.md	INV-27	No ordering surface.
 kernel/internal/core/SPEC.md	INV-28	No I/O, blessed imports only.
+kernel/internal/gates/SPEC.md	GATE-INV-1	Definitions require the closed v1 schema and an explicit canary or enforce mode.
+kernel/internal/gates/SPEC.md	GATE-INV-2	The latest matching ledger event determines the result.
+kernel/internal/gates/SPEC.md	GATE-INV-3	PASS and BLOCKED results retain event proof; no event is UNKNOWN.
+kernel/internal/gates/SPEC.md	GATE-INV-4	Canary evaluation does not mutate the ledger.
+kernel/internal/gates/SPEC.md	GATE-INV-5	Enforcement requires explicit mode promotion.
+kernel/internal/gates/SPEC.md	GATE-INV-6	Enforcement rejects BLOCKED and UNKNOWN results.
+kernel/internal/gates/SPEC.md	GATE-INV-7	Enforcement rejects an empty definition set.
 kernel/internal/projections/SPEC.md	P-INV-1	Ledger order is projection order.
 kernel/internal/projections/SPEC.md	P-INV-2	Revisions are last-write-wins.
 kernel/internal/projections/SPEC.md	P-INV-3	Projection writes are resumable.

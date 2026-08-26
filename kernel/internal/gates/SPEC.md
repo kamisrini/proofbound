@@ -29,6 +29,14 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 
 ## Invariants
 
+1. **GATE-INV-1 — Definitions require the closed v1 schema and an explicit canary or enforce mode.**
+2. **GATE-INV-2 — The latest matching ledger event determines the result.**
+3. **GATE-INV-3 — PASS and BLOCKED results retain event proof; no event is UNKNOWN.**
+4. **GATE-INV-4 — Canary evaluation does not mutate the ledger.**
+5. **GATE-INV-5 — Enforcement requires explicit mode promotion.**
+6. **GATE-INV-6 — Enforcement rejects BLOCKED and UNKNOWN results.**
+7. **GATE-INV-7 — Enforcement rejects an empty definition set.**
+
 | Invariant | Statement | Proving test |
 |---|---|---|
 | GATE-INV-1 | Definitions require the closed v1 schema and an explicit canary or enforce mode | gates_test.go::TestLoadRejectsInvalidDefinitions |

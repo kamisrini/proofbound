@@ -297,6 +297,7 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			}
 		}
 		blocked := false
+		results := make([]gates.Result, 0, len(definitions))
 		for _, definition := range definitions {
 			if cmd == commandGatesEnforce {
 				if err := definition.EnforceReady(); err != nil {
@@ -312,6 +313,12 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			}
 			if cmd == commandGatesEnforce && gates.Enforce(result) != nil {
 				blocked = true
+			}
+			results = append(results, result)
+		}
+		if cmd == commandGatesEnforce {
+			if err := enforceGateResults(definitions, results); err != nil {
+				return err
 			}
 		}
 		if blocked {
@@ -368,6 +375,24 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			return err
 		}
 		return projector.ReportWeek(ctx, ledger, time.Now(), reachable, output)
+	}
+	return nil
+}
+
+func enforceGateResults(definitions []gates.Definition, results []gates.Result) error {
+	if err := gates.RequireDefinitions(definitions); err != nil {
+		return err
+	}
+	if len(definitions) != len(results) {
+		return errors.New("gate enforcement blocked: incomplete evaluation")
+	}
+	for i, definition := range definitions {
+		if err := definition.EnforceReady(); err != nil {
+			return err
+		}
+		if err := gates.Enforce(results[i]); err != nil {
+			return err
+		}
 	}
 	return nil
 }
