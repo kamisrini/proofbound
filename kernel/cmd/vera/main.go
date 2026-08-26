@@ -291,6 +291,9 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		if err != nil {
 			return err
 		}
+		if cmd == commandGatesEnforce && len(definitions) == 0 {
+			return errors.New("gate enforcement blocked: no gate definitions found")
+		}
 		blocked := false
 		for _, definition := range definitions {
 			if cmd == commandGatesEnforce {
@@ -305,7 +308,7 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock); err != nil {
 				return err
 			}
-			if cmd == commandGatesEnforce && (result.State == gates.StateBlocked || result.State == gates.StateUnknown) {
+			if cmd == commandGatesEnforce && gates.Enforce(result) != nil {
 				blocked = true
 			}
 		}

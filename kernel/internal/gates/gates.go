@@ -126,6 +126,13 @@ func (d Definition) EnforceReady() error {
 	return nil
 }
 
+func Enforce(result Result) error {
+	if result.State == StateBlocked || result.State == StateUnknown {
+		return fmt.Errorf("gate %s is %s", result.GateID, result.State)
+	}
+	return nil
+}
+
 func Evaluate(ctx context.Context, s *store.Store, definition Definition) (Result, error) {
 	if err := definition.validate(); err != nil {
 		return Result{}, err

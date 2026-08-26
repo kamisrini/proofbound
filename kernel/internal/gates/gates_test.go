@@ -71,3 +71,14 @@ func TestEnforceRequiresPromotion(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestEnforceRejectsNonPass(t *testing.T) {
+	for _, state := range []State{StateBlocked, StateUnknown} {
+		if err := Enforce(Result{GateID: "x", State: state}); err == nil {
+			t.Fatalf("state %s was accepted", state)
+		}
+	}
+	if err := Enforce(Result{GateID: "x", State: StatePass}); err != nil {
+		t.Fatal(err)
+	}
+}

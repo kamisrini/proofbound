@@ -36,3 +36,4 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-3 | PASS and BLOCKED results retain event proof; no event is UNKNOWN | gates_integration_test.go::TestEvaluateStatesAndProof |
 | GATE-INV-4 | Canary evaluation does not mutate the ledger | gates_integration_test.go::TestEvaluateIsReadOnly |
 | GATE-INV-5 | Enforcement requires explicit mode promotion | gates_test.go::TestEnforceRequiresPromotion |
+| GATE-INV-6 | Enforcement rejects BLOCKED and UNKNOWN results | gates_test.go::TestEnforceRejectsNonPass |

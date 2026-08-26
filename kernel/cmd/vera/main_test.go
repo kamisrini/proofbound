@@ -38,6 +38,7 @@ func TestParseCommand(t *testing.T) {
 		{[]string{"rebuild"}, commandRebuild},
 		{[]string{"verify"}, commandVerify},
 		{[]string{"gates", "canary"}, commandGatesCanary},
+		{[]string{"gates", "enforce"}, commandGatesEnforce},
 		{[]string{"sync", "git", "extra"}, commandInvalid},
 	}
 	for _, tt := range tests {
