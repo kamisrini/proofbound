@@ -11,7 +11,7 @@
 Copy this verbatim into a fresh session started in this repository:
 
 ```
-Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-24.md`. Do not start work until you have.
+Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-25.md`. Do not start work until you have.
 
 Load-bearing facts:
 - The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
@@ -90,9 +90,8 @@ Next: Task 7 is complete under Law 9. Task 8 is next; do not start it until expl
 
 ## What this session shipped
 
-This repository migration began from a documentation corpus. Store and Git are accepted. The
-witness emitter, checks connector, and `vera sync checks` composition are author-complete and await
-independent verification.
+This repository migration began from a documentation corpus. Tasks 0–7 are accepted. Task 8 is
+the next planned task and remains paused; Tasks 8–9 are not started.
 
 **Migration warning:** the imported docs describe a richer enforcement suite than this repository
 currently contains. Present mechanisms are the scripts visible under `scripts/`, their visible
@@ -104,7 +103,7 @@ mutation sweep is accepted at 107 candidates, 107 killed, 0 invalid, and 0 survi
 passed and the allowed-survivor ledger needed no store entry. Full reasoning and routes are in
 `notes/journal/2026-08-24.md`.
 
-## Where Task 4 stands
+## Accepted work
 
 The pure connector and gitcmd adapter are implemented from restored package-specific SPECs. Rounds
 1–2 are closed. Round 3 found wrong-repository ingestion through inherited Git environment,
@@ -113,6 +112,12 @@ routes now have code/spec remedies and real-adapter tests. G-INV-19 through G-IN
 gitcmd is 77/77 killed; combined parent+child is 95/95 killed. No survivor was declared.
 
 Round 4 independently closed the full route classes and returned ACCEPTABLE. Task 4 is complete.
+
+Task 5 is accepted by its Round 7 verdict. Task 6 is accepted by its Round 6 verdict, with
+83/83 mutants killed and no invalids or survivors. Task 7 is accepted by its Round 1 verdict,
+with 62/62 session mutants and 99/99 projection mutants killed and no invalids or survivors.
+The final Task 7 evidence also includes race, PostgreSQL integration, fresh-schema verification,
+and the full `make check` gate.
 
 ## Blockers / open, in priority order
 
@@ -145,3 +150,18 @@ Round 4 independently closed the full route classes and returned ACCEPTABLE. Tas
   Re-sweep and refresh after any edit; a stale entry licenses a different site than its reason
   describes.
 - Keep the pushed GitHub repository and a dated `git bundle` as the two recovery copies.
+
+## End-of-day 2026-08-25
+
+- Branch `main` is clean and pushed to `origin`; the final durability commit is the current HEAD.
+- Today’s completed work is Task 6 acceptance closeout and Task 7 implementation, verification,
+  independent acceptance, evidence, journal, and state updates. Task 8 is open but intentionally paused.
+- Unverified assumptions: no real Claude session JSONL corpus was present in the expected session-artifact
+  directory; Task 7’s ingestion behavior was verified with synthetic fixtures only, as designed.
+- Tomorrow’s exact first action: run `git status --short --branch && git log -1 --oneline`, reread
+  `CLAUDE.md`, this file, and `notes/journal/2026-08-25.md`; then inspect the Task 8 scope. Do not
+  begin Task 8 until explicitly directed.
+- Institutionalized lightweight improvements: when adding a SPEC invariant, use the existing
+  `file_test.go::TestName` citation form, append the invariant number, and run `make invariants-lock`
+  before `make check`; for PostgreSQL-backed mutation runs, confirm the disposable Docker image and
+  `DATABASE_URL` first, and inspect the retained mutant log when calibration fails.
