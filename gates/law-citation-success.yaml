@@ -6,8 +6,6 @@
   "mode": "canary",
   "source": "checks",
   "kind": "check.run",
-  "condition": {"all": [
-    {"field": "command", "equals": "make law-citation-lint"},
-    {"field": "exit_code", "equals": 0}
-  ]}
+  "selector": {"field": "command", "equals": "make law-citation-lint"},
+  "condition": {"field": "exit_code", "equals": 0}
 }

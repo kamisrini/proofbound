@@ -62,6 +62,9 @@ Load-bearing facts:
   same command-plus-exit-code proof requirement.
 - The current P2 migration adds `make invariant-table-witnessed` and `invariant-table-success` with
   the same command-plus-exit-code proof requirement.
+- Specialized gates now use an explicit command selector plus an `exit_code` condition, so later
+  witnesses for other targets do not falsely block them; isolated canary evaluation returned PASS
+  for all seven definitions.
 - The next P2 migration adds `make link-witnessed` and `link-success` with the same command-plus-exit-code
   proof requirement.
 - The current P2 migration adds `make kernel-check-witnessed` and `kernel-check-success` with the

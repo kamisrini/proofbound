@@ -19,11 +19,13 @@ dependency. They carry a `.yaml` extension and must contain:
   "mode": "canary",
   "source": "checks",
   "kind": "check.run",
+  "selector": {"field": "command", "equals": "make check"},
   "condition": {"field": "exit_code", "equals": 0}
 }
 ```
 
-The evaluator selects the highest-sequence event matching `source` and `kind`,
+The evaluator selects the highest-sequence event matching `source`, `kind`, and
+the optional `selector`,
 reads the named top-level JSON payload field, and compares it with `equals`.
 `condition.all` is also supported for a non-empty list of field predicates; all
 predicates must match the same event.
@@ -40,6 +42,7 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 6. **GATE-INV-6 — Enforcement rejects BLOCKED and UNKNOWN results.**
 7. **GATE-INV-7 — Enforcement rejects an empty definition set.**
 8. **GATE-INV-8 — Compound conditions are conjunctive.**
+9. **GATE-INV-9 — Selectors isolate event streams.**
 
 | Invariant | Statement | Proving test |
 |---|---|---|
@@ -51,3 +54,4 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-6 | Enforcement rejects BLOCKED and UNKNOWN results | gates_test.go::TestEnforceRejectsNonPass |
 | GATE-INV-7 | Enforcement rejects an empty definition set | gates_test.go::TestRequireDefinitions |
 | GATE-INV-8 | Compound conditions are conjunctive | gates_test.go::TestEvaluatePayloadRequiresAllPredicates |
+| GATE-INV-9 | Selectors isolate event streams | gates_integration_test.go::TestLoadedIndexGateMatchesCommandAndExitCode |

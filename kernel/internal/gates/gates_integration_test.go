@@ -75,7 +75,7 @@ func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateBlocked || !result.WouldBlock {
+	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
 		t.Fatalf("result=%+v", result)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "index-good", "make index-check", 0)
@@ -108,7 +108,7 @@ func TestLoadedSpecNumberingGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateBlocked || !result.WouldBlock || result.EventID != wrong.Event.ID.String() {
+	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
 		t.Fatalf("result=%+v wrong=%+v", result, wrong)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "spec-good", "make spec-numbering-lint", 0)
@@ -141,7 +141,7 @@ func TestLoadedInvariantTableGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateBlocked || !result.WouldBlock || result.EventID != wrong.Event.ID.String() {
+	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
 		t.Fatalf("result=%+v wrong=%+v", result, wrong)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "table-good", "make invariant-table-lint", 0)
@@ -174,7 +174,7 @@ func TestLoadedLinkGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateBlocked || !result.WouldBlock || result.EventID != wrong.Event.ID.String() {
+	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
 		t.Fatalf("result=%+v wrong=%+v", result, wrong)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "link-good", "make link-lint", 0)
@@ -207,7 +207,7 @@ func TestLoadedKernelCheckGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateBlocked || !result.WouldBlock || result.EventID != wrong.Event.ID.String() {
+	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
 		t.Fatalf("result=%+v wrong=%+v", result, wrong)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "kernel-good", "make kernel-check", 0)

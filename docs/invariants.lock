@@ -119,6 +119,7 @@ kernel/internal/gates/SPEC.md	GATE-INV-5	Enforcement requires explicit mode prom
 kernel/internal/gates/SPEC.md	GATE-INV-6	Enforcement rejects BLOCKED and UNKNOWN results.
 kernel/internal/gates/SPEC.md	GATE-INV-7	Enforcement rejects an empty definition set.
 kernel/internal/gates/SPEC.md	GATE-INV-8	Compound conditions are conjunctive.
+kernel/internal/gates/SPEC.md	GATE-INV-9	Selectors isolate event streams.
 kernel/internal/projections/SPEC.md	P-INV-1	Ledger order is projection order.
 kernel/internal/projections/SPEC.md	P-INV-2	Revisions are last-write-wins.
 kernel/internal/projections/SPEC.md	P-INV-3	Projection writes are resumable.

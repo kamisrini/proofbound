@@ -28,6 +28,7 @@ type Definition struct {
 	Mode        string      `json:"mode"`
 	Source      core.Source `json:"source"`
 	Kind        core.Kind   `json:"kind"`
+	Selector    *Predicate  `json:"selector,omitempty"`
 	Condition   Condition   `json:"condition"`
 }
 
@@ -124,6 +125,9 @@ func (d Definition) validate() error {
 	if !validCondition(d.Condition) {
 		return errors.New("invalid gate condition")
 	}
+	if d.Selector != nil && !validPredicate(*d.Selector) {
+		return errors.New("invalid gate selector")
+	}
 	return nil
 }
 
@@ -187,6 +191,19 @@ func Evaluate(ctx context.Context, s *store.Store, definition Definition) (Resul
 	result := Result{GateID: definition.ID, State: StateUnknown}
 	var latest *store.Record
 	if err := s.ReadEvents(ctx, store.Filter{Source: definition.Source, Kind: definition.Kind}, func(record store.Record) error {
+		if definition.Selector != nil {
+			var payload map[string]json.RawMessage
+			if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
+				return fmt.Errorf("gate %s: payload: %w", definition.ID, err)
+			}
+			state, _, err := evaluatePredicate(payload, *definition.Selector)
+			if err != nil {
+				return err
+			}
+			if state != StatePass {
+				return nil
+			}
+		}
 		copy := record
 		latest = &copy
 		return nil
