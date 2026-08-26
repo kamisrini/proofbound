@@ -56,7 +56,6 @@ type commitReportRow struct {
 	files                 int
 	decisions             []string
 	superseded            bool
-	at                    time.Time
 }
 
 type checkReportRow struct {
@@ -64,7 +63,6 @@ type checkReportRow struct {
 	seq            int64
 	exitCode       int
 	durationMS     int64
-	at             time.Time
 }
 
 type sessionReportRow struct {
@@ -73,13 +71,12 @@ type sessionReportRow struct {
 	messages, tools    int64
 	files              int64
 	coverage           float64
-	at                 time.Time
 }
 
 func readCommitReportRows(ctx context.Context, tx *store.Tx, start, end time.Time, reachable map[string]bool) ([]commitReportRow, error) {
-	rows, err := tx.Query(ctx, `SELECT c.sha,c.event_id,c.seq,c.subject,c.files_touched,c.cited_decisions,c.committed_at
-FROM commits_view c JOIN events e ON e.event_id=c.event_id
-WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.sha`, start, end)
+	rows, err := tx.Query(ctx, `SELECT c.sha,c.event_id,c.seq,c.subject,c.files_touched,c.cited_decisions,e.occurred_at
+FROM commits_view c LEFT JOIN events e ON e.event_id=c.event_id
+WHERE e.event_id IS NULL OR (e.occurred_at >= $1 AND e.occurred_at < $2) ORDER BY e.occurred_at,c.seq,c.sha`, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +85,12 @@ WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.
 	for rows.Next() {
 		var row commitReportRow
 		var filesRaw, decisionsRaw []byte
-		if err := rows.Scan(&row.sha, &row.eventID, &row.seq, &row.subject, &filesRaw, &decisionsRaw, &row.at); err != nil {
+		var occurredAt *time.Time
+		if err := rows.Scan(&row.sha, &row.eventID, &row.seq, &row.subject, &filesRaw, &decisionsRaw, &occurredAt); err != nil {
 			return nil, err
+		}
+		if occurredAt == nil {
+			return nil, fmt.Errorf("commit %s: missing event proof %s", row.sha, row.eventID)
 		}
 		var files, decisions []string
 		if err := json.Unmarshal(filesRaw, &files); err != nil {
@@ -106,9 +107,9 @@ WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.
 }
 
 func readCheckReportRows(ctx context.Context, tx *store.Tx, start, end time.Time) ([]checkReportRow, error) {
-	rows, err := tx.Query(ctx, `SELECT c.run_id,c.event_id,c.seq,c.exit_code,c.duration_ms,c.started_at
-FROM checks_view c JOIN events e ON e.event_id=c.event_id
-WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.run_id`, start, end)
+	rows, err := tx.Query(ctx, `SELECT c.run_id,c.event_id,c.seq,c.exit_code,c.duration_ms,e.occurred_at
+FROM checks_view c LEFT JOIN events e ON e.event_id=c.event_id
+WHERE e.event_id IS NULL OR (e.occurred_at >= $1 AND e.occurred_at < $2) ORDER BY e.occurred_at,c.seq,c.run_id`, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +117,12 @@ WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.
 	var result []checkReportRow
 	for rows.Next() {
 		var row checkReportRow
-		if err := rows.Scan(&row.runID, &row.eventID, &row.seq, &row.exitCode, &row.durationMS, &row.at); err != nil {
+		var occurredAt *time.Time
+		if err := rows.Scan(&row.runID, &row.eventID, &row.seq, &row.exitCode, &row.durationMS, &occurredAt); err != nil {
 			return nil, err
+		}
+		if occurredAt == nil {
+			return nil, fmt.Errorf("check %s: missing event proof %s", row.runID, row.eventID)
 		}
 		result = append(result, row)
 	}
@@ -126,8 +131,8 @@ WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,c.seq,c.
 
 func readSessionReportRows(ctx context.Context, tx *store.Tx, start, end time.Time) ([]sessionReportRow, error) {
 	rows, err := tx.Query(ctx, `SELECT s.session_id,s.event_id,s.seq,s.message_count,s.tool_call_count,s.files_written_count,s.parse_coverage,e.occurred_at
-FROM sessions_view s JOIN events e ON e.event_id=s.event_id
-WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,s.seq,s.session_id`, start, end)
+FROM sessions_view s LEFT JOIN events e ON e.event_id=s.event_id
+WHERE e.event_id IS NULL OR (e.occurred_at >= $1 AND e.occurred_at < $2) ORDER BY e.occurred_at,s.seq,s.session_id`, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +140,12 @@ WHERE e.occurred_at >= $1 AND e.occurred_at < $2 ORDER BY e.occurred_at,s.seq,s.
 	var result []sessionReportRow
 	for rows.Next() {
 		var row sessionReportRow
-		if err := rows.Scan(&row.sessionID, &row.eventID, &row.seq, &row.messages, &row.tools, &row.files, &row.coverage, &row.at); err != nil {
+		var occurredAt *time.Time
+		if err := rows.Scan(&row.sessionID, &row.eventID, &row.seq, &row.messages, &row.tools, &row.files, &row.coverage, &occurredAt); err != nil {
 			return nil, err
+		}
+		if occurredAt == nil {
+			return nil, fmt.Errorf("session %s: missing event proof %s", row.sessionID, row.eventID)
 		}
 		result = append(result, row)
 	}

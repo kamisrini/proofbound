@@ -118,6 +118,7 @@ kernel/internal/projections/SPEC.md	P-INV-11	Projection metadata is unique and v
 kernel/internal/projections/SPEC.md	P-INV-12	Session metadata is projected without content.
 kernel/internal/projections/SPEC.md	P-INV-13	Week report entries carry proof identity.
 kernel/internal/projections/SPEC.md	P-INV-14	Unreachable commits are retained and marked superseded.
+kernel/internal/projections/SPEC.md	P-INV-15	Missing proof rows fail closed.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.

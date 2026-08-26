@@ -4,6 +4,12 @@
 **Date:** 2026-08-26
 **Acceptance status:** pending independent Law 9 verification
 
+The first independent review returned `NEEDS_WORK` on a MED finding: inner joins could
+silently omit a projection row whose event proof was missing. The remediation changes
+the report queries to left joins and fails closed with an explicit missing-proof error;
+`TestReportWeek_FailsClosedWhenProofEventIsMissing` covers the route. The amended review
+target is the follow-up commit after this evidence update.
+
 ## Scope
 
 Task 8 implements `vera report week`. The report reads the projection views for the
@@ -20,6 +26,7 @@ detached `HEAD` when it resolves to a commit.
 - bare `make check` — PASS (exit 0; known read-only `docs/decisions/INDEX.md` stale diagnostic)
 - `bash scripts/tests/mutants.test.sh` — PASS
 - real repository `vera report week` run — PASS; rendered ledger-backed commits with proof IDs and a superseded fixture
+- PostgreSQL proof-loss regression test — PASS; missing event proof fails closed
 
 ## Mutation limitation
 

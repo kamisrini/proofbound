@@ -54,6 +54,7 @@ canonical JSON columns.
 12. **P-INV-12 — Session metadata is projected without content.** Session rows contain only the connector's bounded metadata and preserve the event proof links.
 13. **P-INV-13 — Week report entries carry proof identity.** Every commit, check, and session entry renders its originating event ID.
 14. **P-INV-14 — Unreachable commits are retained and marked superseded.** A commit absent from the supplied current reachability set is not omitted from the report.
+15. **P-INV-15 — Missing proof rows fail closed.** A projection row whose event proof is absent causes the week report to fail rather than silently disappearing.
 
 ## 5. Proving table
 
@@ -73,3 +74,4 @@ canonical JSON columns.
 | P-INV-12 | Session metadata is materialized with proof identity | projection_test.go::TestApply_Session |
 | P-INV-13 | Week report entries render their originating event IDs | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |
 | P-INV-14 | Unreachable commit fixture is retained and marked superseded | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |
+| P-INV-15 | Missing projection proof fails closed | report_integration_test.go::TestReportWeek_FailsClosedWhenProofEventIsMissing |
