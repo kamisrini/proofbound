@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P1 Tasks 0–9 accepted; P1 closed)
+**As of:** 2026-08-26 (P1 closed; P2 gates-as-data in progress)
 
 ## Resume Prompt
 
@@ -49,6 +49,9 @@ Load-bearing facts:
   committed artifacts, `reviews_view` retains finding/event proof, and `vera report week` exposes the
   ledger-ordered red-verdict/change/next-verdict chain. The spec-first graduation is a blocking Go test
   under `make check` at `kernel/internal/specfirst`.
+- P2 first slice is landed but advisory: `gates/make-check-success.yaml` and `vera gates canary`
+  evaluate the latest `check.run` payload against the ledger and retain event proof. Remaining P0
+  checks are not yet migrated and no gate blocks commands yet.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -83,8 +86,9 @@ Load-bearing facts:
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
 Next-session sequence: run `git status --short --branch && git log -1 --oneline`, then reread
-`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. P1 is closed; begin P2 only from
-its declared plan. `make check` BARE is the verification gate. `make backup` is currently missing;
+`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Continue P2 from the ROADMAP P2
+status and migrate the next P0 check only after adding its gate and canary test. `make check` BARE is
+the verification gate. `make backup` is currently missing;
 create a manual `git bundle --all` until the target and its self-test are restored.
 ```
 

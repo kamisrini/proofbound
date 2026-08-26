@@ -22,11 +22,12 @@ import (
 	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
+	"github.com/kamisrini/proofbound/kernel/internal/gates"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week"
+const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week | vera gates canary"
 
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -42,6 +43,7 @@ const (
 	commandRebuild
 	commandVerify
 	commandReportWeek
+	commandGatesCanary
 )
 
 func parseCommand(args []string) command {
@@ -62,6 +64,8 @@ func parseCommand(args []string) command {
 		return commandVerify
 	case len(args) == 2 && args[0] == "report" && args[1] == "week":
 		return commandReportWeek
+	case len(args) == 2 && args[0] == "gates" && args[1] == "canary":
+		return commandGatesCanary
 	default:
 		return commandInvalid
 	}
@@ -279,6 +283,22 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 	}
 	defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
 	projector := projections.New()
+	if cmd == commandGatesCanary {
+		definitions, err := gates.LoadDir(filepath.Join(root, "gates"))
+		if err != nil {
+			return err
+		}
+		for _, definition := range definitions {
+			result, err := gates.Evaluate(ctx, ledger, definition)
+			if err != nil {
+				return err
+			}
+			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	switch cmd {
 	case commandRebuild:
 		return projector.Rebuild(ctx, ledger)

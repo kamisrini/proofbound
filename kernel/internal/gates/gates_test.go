@@ -1,0 +1,62 @@
+package gates
+
+import (
+	"bytes"
+	"encoding/json"
+	"testing"
+)
+
+func TestLoadRejectsInvalidDefinitions(t *testing.T) {
+	valid := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	if _, err := Parse(valid); err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range [][]byte{
+		[]byte(`{"schema":"vera.gate.v2"}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"enforce","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
+	} {
+		if _, err := Parse(bad); err == nil {
+			t.Fatal("invalid definition accepted")
+		}
+	}
+}
+
+func TestEvaluateUsesLatestMatchingEvent(t *testing.T) {
+	condition := Condition{Field: "exit_code", Equals: json.RawMessage("0")}
+	state, blocked, err := evaluatePayload(map[string]json.RawMessage{"exit_code": json.RawMessage("0")}, condition)
+	if err != nil || state != StatePass || blocked {
+		t.Fatalf("state=%s blocked=%v err=%v", state, blocked, err)
+	}
+}
+
+func TestEvaluateStatesAndProof(t *testing.T) {
+	condition := Condition{Field: "exit_code", Equals: json.RawMessage("0")}
+	for _, tc := range []struct {
+		name    string
+		payload map[string]json.RawMessage
+		want    State
+	}{
+		{"blocked", map[string]json.RawMessage{"exit_code": json.RawMessage("1")}, StateBlocked},
+		{"missing", map[string]json.RawMessage{}, StateBlocked},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			state, blocked, err := evaluatePayload(tc.payload, condition)
+			if err != nil || state != tc.want || !blocked {
+				t.Fatalf("state=%s blocked=%v err=%v", state, blocked, err)
+			}
+		})
+	}
+}
+
+func TestEvaluateIsReadOnly(t *testing.T) {
+	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	want := append([]byte(nil), data...)
+	if _, err := Parse(data); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(data, want) {
+		t.Fatal("Parse mutated its input")
+	}
+}

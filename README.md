@@ -44,7 +44,7 @@ This repository is an early-stage working scaffold, not yet a finished end-user 
 As of 2026-08-26, P1 Tasks 0–9 are implemented and accepted under the repository’s independent
 verification rule. P1 is closed; the next planned phase is P2.
 
-Current project status: P1 complete; P2 gates-as-data is next.
+Current project status: P1 complete; P2 gates-as-data is in progress.
 
 Currently implemented and verified:
 
@@ -57,11 +57,12 @@ Currently implemented and verified:
 - `vera report week`, including event-ID proof and `[superseded]` commit marking
 - Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
 - Machine-enforced spec-first coverage for every kernel package
+- P2 gate canary evaluation for the latest `make check` witness
 - Verification and mutation-testing infrastructure
 
 Remaining work:
 
-- P2 gates-as-data and the complete user-facing delivery workflow
+- Remaining P2 gate migrations and the complete user-facing delivery workflow
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The

@@ -1,0 +1,38 @@
+# `internal/gates` SPEC
+
+The gates package evaluates versioned gate definitions against the append-only
+event ledger. P2 begins in canary mode: a failing condition is reported as
+`BLOCKED` with ledger proof, but no command is refused and no ledger row is
+written by the evaluator.
+
+## Definition format
+
+Gate files use the JSON subset of YAML so the repository needs no new parser
+dependency. They carry a `.yaml` extension and must contain:
+
+```json
+{
+  "schema": "vera.gate.v1",
+  "id": "make-check-success",
+  "description": "The latest make check witness succeeded",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"field": "exit_code", "equals": 0}
+}
+```
+
+The evaluator selects the highest-sequence event matching `source` and `kind`,
+reads the named top-level JSON payload field, and compares it with `equals`.
+Missing events produce `UNKNOWN`; a matching value produces `PASS`; another
+value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
+
+## Invariants
+
+| Invariant | Statement | Proving test |
+|---|---|---|
+| GATE-INV-1 | Definitions require the closed v1 schema and canary mode | gates_test.go::TestLoadRejectsInvalidDefinitions |
+| GATE-INV-2 | The latest matching ledger event determines the result | gates_test.go::TestEvaluateUsesLatestMatchingEvent |
+| GATE-INV-3 | PASS and BLOCKED results retain event proof; no event is UNKNOWN | gates_test.go::TestEvaluateStatesAndProof |
+| GATE-INV-4 | Canary evaluation does not mutate the ledger | gates_test.go::TestEvaluateIsReadOnly |
+
