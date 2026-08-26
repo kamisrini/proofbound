@@ -62,6 +62,7 @@ Currently implemented and verified:
 - Generated-files freshness gate witness (`make index-check-witnessed`) with compound matching
 - Law citation lint gate witness (`make law-citation-witnessed`)
 - SPEC invariant numbering gate witness (`make spec-numbering-witnessed`)
+- Invariant table gate witness (`make invariant-table-witnessed`)
 - Verification and mutation-testing infrastructure
 
 Remaining work:

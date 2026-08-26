@@ -1,0 +1,13 @@
+{
+  "schema": "vera.gate.v1",
+  "id": "invariant-table-success",
+  "description": "The latest invariant table lint check succeeded",
+  "expires": "2026-10-16",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"all": [
+    {"field": "command", "equals": "make invariant-table-lint"},
+    {"field": "exit_code", "equals": 0}
+  ]}
+}
