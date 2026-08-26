@@ -242,13 +242,6 @@ func readRedVerdictChains(ctx context.Context, s *store.Store, start, end time.T
 				changes = append(changes, next.id)
 				continue
 			}
-			if len(changes) == 0 {
-				for _, candidate := range markers {
-					if candidate.kind == "commit" && candidate.ref == next.ref {
-						changes = append(changes, candidate.id)
-					}
-				}
-			}
 			if len(changes) > 0 {
 				chains = append(chains, redVerdictChain{marker.id, next.id, marker.seq, next.seq, changes})
 			}

@@ -5,6 +5,7 @@ package projections
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
@@ -32,5 +33,26 @@ func TestApply_ReviewFindingsRetainProofAndRevision(t *testing.T) {
 	}
 	if status != "ACCEPTABLE" || severity != "LOW" || eventID == "" || seq != 2 {
 		t.Fatalf("row=(%s,%s,%s,%d)", status, severity, eventID, seq)
+	}
+}
+
+func TestRedVerdictChainRequiresStrictLedgerInterval(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	sha := "0123456789012345678901234567890123456789"
+	verdict := func(id, status string) []byte {
+		return []byte(`{"schema":"vera.verdict.v1","verdict_id":"` + id + `","status":"` + status + `","reviewed_commit":"` + sha + `","findings":[{"finding_id":"` + id + `-finding","severity":"MED","defect_commit":""}],"artifact_path":"docs/verification/verdicts/` + id + `.md","artifact_sha":"0000000000000000000000000000000000000000000000000000000000000000"}`)
+	}
+	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "before", commitJSON(sha, "before"), 1)
+	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "red", verdict("red", "NEEDS_WORK"), 2)
+	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "between", commitJSON(sha, "between"), 3)
+	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "next", verdict("next", "ACCEPTABLE"), 4)
+	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "after", commitJSON(sha, "after"), 5)
+	chains, err := readRedVerdictChains(context.Background(), s, time.Now().Add(-time.Hour), time.Now().Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(chains) != 1 || len(chains[0].changeEventIDs) != 1 {
+		t.Fatalf("chains=%+v", chains)
 	}
 }
