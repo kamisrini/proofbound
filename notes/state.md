@@ -67,6 +67,8 @@ Load-bearing facts:
   for all seven definitions.
 - All seven current gate definitions are now explicitly promoted to `mode: enforce`; enforcement
   is validated against the same isolated ledger before any future gate additions are promoted.
+- `make delivery-enforce` is now the explicit delivery boundary: it refreshes all seven witness
+  streams, ingests them, and invokes `vera gates enforce`; ordinary `make check` remains product-independent.
 - The next P2 migration adds `make link-witnessed` and `link-success` with the same command-plus-exit-code
   proof requirement.
 - The current P2 migration adds `make kernel-check-witnessed` and `kernel-check-success` with the

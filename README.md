@@ -65,6 +65,7 @@ Currently implemented and verified:
 - Invariant table gate witness (`make invariant-table-witnessed`)
 - Link lint gate witness (`make link-witnessed`)
 - Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
+- Explicit delivery enforcement workflow (`make delivery-enforce`): fresh witnesses, ingestion, then fail-closed gate enforcement
 - Verification and mutation-testing infrastructure
 
 Remaining work:
@@ -99,6 +100,9 @@ the unit tests, and runs linting. For a faster inner loop:
 ```bash
 make short
 ```
+
+To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It emits fresh
+witnesses for every promoted target, ingests them, and then runs `vera gates enforce`.
 
 The current command-line entry point is a scaffold while the product workflow is being built. The
 working implementation and tests live under [`kernel/`](kernel/).
