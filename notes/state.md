@@ -75,10 +75,10 @@ Load-bearing facts:
 - macOS trap: t.TempDir() is a SYMLINK. Path-guard mutations under TMPDIR=/private/tmp/vkreal.
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
-Pre-flight: `make check` BARE — expect GREEN. `make backup` is currently missing; create a manual
-`git bundle --all` until the target and its self-test are restored.
-
-Next: Task 7 is complete under Law 9. Task 8 is next; do not start it until explicitly directed.
+Tomorrow’s resume sequence: run `git status --short --branch && git log -1 --oneline`, then reread
+`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-25.md`. Inspect the Task 8 scope and do
+not begin Task 8 until explicitly directed. `make check` BARE is the verification gate. `make backup`
+is currently missing; create a manual `git bundle --all` until the target and its self-test are restored.
 ```
 
 ## Worktree
