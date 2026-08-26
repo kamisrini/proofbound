@@ -41,12 +41,13 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-08-26, P1 Tasks 0–9 and P2 gates-as-data are implemented and accepted under the
-repository’s independent verification rule. P2 is closed; the next planned phase is P3.
+As of 2026-08-26, P1 Tasks 0–9, P2 gates-as-data, and P3’s first external connector are implemented
+and accepted under the repository’s independent verification rule. P3 is closed; the next planned
+phase is P4.
 
-Current project status: P2 gates-as-data complete; P3 external connector is next.
+Current project status: P3 external GitHub connector complete; P4 twin spike is next.
 
-Currently implemented and verified (P3 slice is under verification):
+Currently implemented and verified:
 
 - Go kernel and core event primitives
 - Durable store foundations with migrations and append/read operations
@@ -67,13 +68,14 @@ Currently implemented and verified (P3 slice is under verification):
 - Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
 - Explicit delivery enforcement workflow (`make delivery-enforce`): fresh witnesses, ingestion, then fail-closed gate enforcement
 - P2 canary-to-enforce bad-witness acceptance evidence
-- P3 GitHub connector decision and initial workflow/deployment ingestion slice (under verification)
+- P3 GitHub connector decision and initial workflow/deployment ingestion slice
 - P3 live fixture-selection evidence for `github/docs`
+- P3 live GitHub sync/report acceptance evidence
 - Verification and mutation-testing infrastructure
 
 Remaining work:
 
-- P3: complete the GitHub deployed-where / tested-what projection and live freshness acceptance
+- P4: twin spike with ephemeral replay and prediction-ledger calibration
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The

@@ -17,8 +17,8 @@ token and is never persisted in event payloads or logs. Tests use an injectable 
 HTTP fixtures. `github/docs` is the live smoke-test fixture, not a hard-coded production default.
 
 **Boundary:** Pull requests, issues, comments, users, webhooks, and a generic external-event
-framework are out of scope. Projection/report rendering of the joined deployed-where / tested-what
-view is the next P3 slice after connector ingestion is independently verified.
+framework are out of scope. The connector, projection, and report surface are accepted for this
+narrow slice; broader GitHub pagination and additional entities remain future scope.
 
 Fixture-selection evidence is recorded in
 `docs/verification/p3-github-fixture-check.md`.

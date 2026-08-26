@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P2 closed; P3 GitHub connector in progress)
+**As of:** 2026-08-26 (P3 GitHub connector closed; P4 twin spike next)
 
 ## Resume Prompt
 
@@ -69,7 +69,9 @@ Load-bearing facts:
   injectable standard-library HTTP client and emits repository-qualified external events. Fixture
   selection evidence is in `docs/verification/p3-github-fixture-check.md`. The
   joined delivery projection and `vera sync github` / `vera report github` surfaces are implemented
-  and tested; the live acceptance run remains outstanding.
+  and tested. Live acceptance is recorded in `docs/verification/p3-github-live-acceptance.md`:
+  200 records synced in 7 seconds, the report rendered 106 real delivery groups with proof and
+  freshness, and replay returned 0 appended / 200 existing in 4 seconds. P3 is closed; P4 is next.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -104,8 +106,8 @@ Load-bearing facts:
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
 Next-session sequence: run `git status --short --branch && git log -1 --oneline`, then reread
-`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Start P3 by selecting the first
-external connector under the ROADMAP decision rule. `make check` BARE is the verification gate.
+`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Start P4 from the ROADMAP twin
+spike definition. `make check` BARE is the verification gate.
 `make backup` is currently missing; create a manual `git bundle --all` until the target and its
 self-test are restored.
 ```
