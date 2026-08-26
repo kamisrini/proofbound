@@ -1,0 +1,13 @@
+{
+  "schema": "vera.gate.v1",
+  "id": "index-check-success",
+  "description": "The latest generated-files freshness check succeeded",
+  "expires": "2026-10-16",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"all": [
+    {"field": "command", "equals": "make index-check"},
+    {"field": "exit_code", "equals": 0}
+  ]}
+}

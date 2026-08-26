@@ -234,7 +234,13 @@ if ! json_tmp=$(mktemp "$spool_dir/.witness.XXXXXX"); then
   exit 1
 fi
 
-if (cd "$repo_root" && env "${git_env_args[@]}" make check) >"$output_file" 2>&1; then
+check_target=${VERA_CHECK_TARGET:-check}
+if [[ ! $check_target =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]; then
+  printf 'check-witness: invalid check target\n' >&2
+  exit 1
+fi
+check_command="make $check_target"
+if (cd "$repo_root" && env "${git_env_args[@]}" make "$check_target") >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?
@@ -275,8 +281,8 @@ if [[ ! $hash_line =~ ^([0-9a-f]{64})[[:space:]] ]]; then
 fi
 output_sha256=${BASH_REMATCH[1]}
 
-if ! printf '{"schema":"vera.witness.v1","run_id":"%s","command":"make check","exit_code":%d,"started_at":"%s","finished_at":"%s","duration_ms":%d,"output_sha256":"%s","git_sha":"%s","git_dirty":%s,"tool_versions":{"go":"%s","golangci_lint":"%s","make":"%s"}}\n' \
-  "$run_id" "$exit_code" "$started_at" "$finished_at" "$duration_ms" "$output_sha256" \
+if ! printf '{"schema":"vera.witness.v1","run_id":"%s","command":"%s","exit_code":%d,"started_at":"%s","finished_at":"%s","duration_ms":%d,"output_sha256":"%s","git_sha":"%s","git_dirty":%s,"tool_versions":{"go":"%s","golangci_lint":"%s","make":"%s"}}\n' \
+  "$run_id" "$(json_escape "$check_command")" "$exit_code" "$started_at" "$finished_at" "$duration_ms" "$output_sha256" \
   "$(json_escape "$git_sha")" "$git_dirty" "$(json_escape "$go_version")" \
   "$(json_escape "$lint_version")" "$(json_escape "$make_version")" >"$json_tmp"; then
   printf 'check-witness: cannot serialize witness\n' >&2

@@ -15,6 +15,7 @@ dependency. They carry a `.yaml` extension and must contain:
   "schema": "vera.gate.v1",
   "id": "make-check-success",
   "description": "The latest make check witness succeeded",
+  "expires": "2026-10-16",
   "mode": "canary",
   "source": "checks",
   "kind": "check.run",
@@ -24,6 +25,8 @@ dependency. They carry a `.yaml` extension and must contain:
 
 The evaluator selects the highest-sequence event matching `source` and `kind`,
 reads the named top-level JSON payload field, and compares it with `equals`.
+`condition.all` is also supported for a non-empty list of field predicates; all
+predicates must match the same event.
 Missing events produce `UNKNOWN`; a matching value produces `PASS`; another
 value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 
@@ -36,6 +39,7 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 5. **GATE-INV-5 — Enforcement requires explicit mode promotion.**
 6. **GATE-INV-6 — Enforcement rejects BLOCKED and UNKNOWN results.**
 7. **GATE-INV-7 — Enforcement rejects an empty definition set.**
+8. **GATE-INV-8 — Compound conditions are conjunctive.**
 
 | Invariant | Statement | Proving test |
 |---|---|---|
@@ -46,3 +50,4 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-5 | Enforcement requires explicit mode promotion | gates_test.go::TestEnforceRequiresPromotion |
 | GATE-INV-6 | Enforcement rejects BLOCKED and UNKNOWN results | gates_test.go::TestEnforceRejectsNonPass |
 | GATE-INV-7 | Enforcement rejects an empty definition set | gates_test.go::TestRequireDefinitions |
+| GATE-INV-8 | Compound conditions are conjunctive | gates_test.go::TestEvaluatePayloadRequiresAllPredicates |

@@ -30,8 +30,12 @@ func gateIntegrationStore(t *testing.T) *store.Store {
 }
 
 func appendCheckEvent(t *testing.T, s *store.Store, ids *core.IDGenerator, native string, exitCode int) store.Record {
+	return appendCheckEventWithCommand(t, s, ids, native, "make check", exitCode)
+}
+
+func appendCheckEventWithCommand(t *testing.T, s *store.Store, ids *core.IDGenerator, native, command string, exitCode int) store.Record {
 	t.Helper()
-	payload, _ := json.Marshal(map[string]any{"schema": "vera.witness.v1", "run_id": native, "command": "make check", "exit_code": exitCode, "started_at": time.Now().UTC(), "finished_at": time.Now().UTC(), "duration_ms": 1, "output_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "git_sha": "0000000000000000000000000000000000000000", "git_dirty": false, "tool_versions": map[string]string{"go": "go", "golangci_lint": "lint", "make": "make"}})
+	payload, _ := json.Marshal(map[string]any{"schema": "vera.witness.v1", "run_id": native, "command": command, "exit_code": exitCode, "started_at": time.Now().UTC(), "finished_at": time.Now().UTC(), "duration_ms": 1, "output_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "git_sha": "0000000000000000000000000000000000000000", "git_dirty": false, "tool_versions": map[string]string{"go": "go", "golangci_lint": "lint", "make": "make"}})
 	e, err := ids.NewEvent(core.NewEventParams{Source: core.SourceChecks, NativeID: native, Kind: core.KindCheckRun, OccurredAt: time.Now(), Payload: payload, ConnectorVersion: "test/1"})
 	if err != nil {
 		t.Fatal(err)
@@ -48,6 +52,40 @@ func appendCheckEvent(t *testing.T, s *store.Store, ids *core.IDGenerator, nativ
 		t.Fatal(err)
 	}
 	return record
+}
+
+func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
+	s := gateIntegrationStore(t)
+	ids := testIDs(t)
+	root, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "index-check-success.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	definition, err := Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	appendCheckEventWithCommand(t, s, ids, "index-bad", "make index-check", 1)
+	appendCheckEventWithCommand(t, s, ids, "other", "make check", 0)
+	result, err := Evaluate(context.Background(), s, definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.State != StateBlocked || !result.WouldBlock {
+		t.Fatalf("result=%+v", result)
+	}
+	pass := appendCheckEventWithCommand(t, s, ids, "index-good", "make index-check", 0)
+	result, err = Evaluate(context.Background(), s, definition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.State != StatePass || result.EventID != pass.Event.ID.String() || result.Seq != pass.Seq {
+		t.Fatalf("result=%+v pass=%+v", result, pass)
+	}
 }
 
 func gateDefinition() Definition {

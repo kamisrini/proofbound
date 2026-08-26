@@ -59,6 +59,7 @@ Currently implemented and verified:
 - Machine-enforced spec-first coverage for every kernel package
 - P2 gate canary evaluation for the latest `make check` witness
 - Explicit canary-to-enforce gate promotion workflow
+- Generated-files freshness gate witness (`make index-check-witnessed`) with compound matching
 - Verification and mutation-testing infrastructure
 
 Remaining work:

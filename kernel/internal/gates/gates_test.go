@@ -52,6 +52,18 @@ func TestEvaluatePayloadBlocksMismatchAndMissing(t *testing.T) {
 	}
 }
 
+func TestEvaluatePayloadRequiresAllPredicates(t *testing.T) {
+	condition := Condition{All: []Predicate{{Field: "command", Equals: json.RawMessage(`"make index-check"`)}, {Field: "exit_code", Equals: json.RawMessage("0")}}}
+	state, blocked, err := evaluatePayload(map[string]json.RawMessage{"command": json.RawMessage(`"make index-check"`), "exit_code": json.RawMessage("1")}, condition)
+	if err != nil || state != StateBlocked || !blocked {
+		t.Fatalf("state=%s blocked=%v err=%v", state, blocked, err)
+	}
+	state, blocked, err = evaluatePayload(map[string]json.RawMessage{"command": json.RawMessage(`"make index-check"`), "exit_code": json.RawMessage("0")}, condition)
+	if err != nil || state != StatePass || blocked {
+		t.Fatalf("state=%s blocked=%v err=%v", state, blocked, err)
+	}
+}
+
 func TestParseIsReadOnly(t *testing.T) {
 	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	want := append([]byte(nil), data...)

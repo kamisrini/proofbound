@@ -34,6 +34,12 @@ type Definition struct {
 type Condition struct {
 	Field  string          `json:"field"`
 	Equals json.RawMessage `json:"equals"`
+	All    []Predicate     `json:"all,omitempty"`
+}
+
+type Predicate struct {
+	Field  string          `json:"field"`
+	Equals json.RawMessage `json:"equals"`
 }
 
 type State string
@@ -109,16 +115,35 @@ func Parse(data []byte) (Definition, error) {
 }
 
 func (d Definition) validate() error {
-	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Expires == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() || d.Condition.Field == "" || len(d.Condition.Equals) == 0 || !json.Valid(d.Condition.Equals) {
+	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Expires == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() {
 		return errors.New("invalid gate definition")
 	}
 	if _, err := time.Parse("2006-01-02", d.Expires); err != nil {
 		return errors.New("invalid gate expiry")
 	}
-	if strings.ContainsAny(d.Condition.Field, ".[]\\\x00") {
-		return errors.New("invalid condition field")
+	if !validCondition(d.Condition) {
+		return errors.New("invalid gate condition")
 	}
 	return nil
+}
+
+func validPredicate(p Predicate) bool {
+	return p.Field != "" && !strings.ContainsAny(p.Field, ".[]\\\x00") && len(p.Equals) > 0 && json.Valid(p.Equals)
+}
+
+func validCondition(c Condition) bool {
+	if len(c.All) > 0 {
+		if c.Field != "" || len(c.Equals) != 0 {
+			return false
+		}
+		for _, p := range c.All {
+			if !validPredicate(p) {
+				return false
+			}
+		}
+		return true
+	}
+	return validPredicate(Predicate{Field: c.Field, Equals: c.Equals})
 }
 
 func (d Definition) EnforceReady() error {
@@ -185,11 +210,24 @@ func Evaluate(ctx context.Context, s *store.Store, definition Definition) (Resul
 }
 
 func evaluatePayload(payload map[string]json.RawMessage, condition Condition) (State, bool, error) {
-	value, ok := payload[condition.Field]
+	if len(condition.All) > 0 {
+		for _, predicate := range condition.All {
+			state, blocked, err := evaluatePredicate(payload, predicate)
+			if err != nil || state != StatePass {
+				return state, blocked, err
+			}
+		}
+		return StatePass, false, nil
+	}
+	return evaluatePredicate(payload, Predicate{Field: condition.Field, Equals: condition.Equals})
+}
+
+func evaluatePredicate(payload map[string]json.RawMessage, predicate Predicate) (State, bool, error) {
+	value, ok := payload[predicate.Field]
 	if !ok {
 		return StateBlocked, true, nil
 	}
-	if bytes.Equal(bytes.TrimSpace(value), bytes.TrimSpace(condition.Equals)) {
+	if bytes.Equal(bytes.TrimSpace(value), bytes.TrimSpace(predicate.Equals)) {
 		return StatePass, false, nil
 	}
 	return StateBlocked, true, nil

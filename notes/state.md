@@ -54,6 +54,8 @@ Load-bearing facts:
   ISO expiry date; `vera gates enforce` requires explicit `mode: enforce` promotion, rejects expired
   definitions, and fails closed on BLOCKED/UNKNOWN. Remaining P0 checks are not yet migrated and
   the initial gate remains canary-only.
+- The next P2 migration adds `make index-check-witnessed` and a distinct `index-check-success` gate;
+  its compound condition requires both the witnessed command and `exit_code: 0`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
