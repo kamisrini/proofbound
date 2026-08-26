@@ -47,9 +47,9 @@ test, and recorded the full verifier run. Task status detail: the plan's Positio
 
 **Status 2026-08-26:** first vertical slice landed: `gates/make-check-success.yaml`, the
 ledger-backed `vera gates canary` command, proof-bearing PASS/BLOCKED/UNKNOWN results, and an
-explicit `vera gates enforce` path. The initial gate remains advisory until its definition is
-promoted to `mode: enforce`; promotion is explicit and enforcement fails closed. Gate definitions
-also carry an ISO expiry date, and enforcement rejects expired definitions.
+explicit `vera gates enforce` path. All seven current definitions are promoted to `mode: enforce`
+after PASS canary evidence; enforcement is explicit and fails closed. Gate definitions also carry
+an ISO expiry date, and enforcement rejects expired definitions.
 
 - Gate definitions in `gates/*.yaml` evaluated by the kernel against the ledger (replaces parts of Makefile checks)
 - Canary evaluation against historical events before a gate can block

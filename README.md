@@ -58,7 +58,7 @@ Currently implemented and verified:
 - Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
 - Machine-enforced spec-first coverage for every kernel package
 - P2 gate canary evaluation for the latest `make check` witness
-- Explicit canary-to-enforce gate promotion workflow
+- Explicit canary-to-enforce gate promotion workflow; current seven-gate set promoted to enforce
 - Generated-files freshness gate witness (`make index-check-witnessed`) with compound matching
 - Law citation lint gate witness (`make law-citation-witnessed`)
 - SPEC invariant numbering gate witness (`make spec-numbering-witnessed`)

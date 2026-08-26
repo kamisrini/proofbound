@@ -3,7 +3,7 @@
   "id": "make-check-success",
   "description": "The latest make check witness succeeded",
   "expires": "2026-10-16",
-  "mode": "canary",
+  "mode": "enforce",
   "source": "checks",
   "kind": "check.run",
   "condition": {"field": "exit_code", "equals": 0}

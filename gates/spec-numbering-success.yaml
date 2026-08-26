@@ -3,7 +3,7 @@
   "id": "spec-numbering-success",
   "description": "The latest SPEC invariant numbering check succeeded",
   "expires": "2026-10-16",
-  "mode": "canary",
+  "mode": "enforce",
   "source": "checks",
   "kind": "check.run",
   "selector": {"field": "command", "equals": "make spec-numbering-lint"},
