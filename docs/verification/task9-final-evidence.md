@@ -20,7 +20,7 @@ Frozen implementation: `2457245`
 - Fresh empty PostgreSQL database: `go run ./cmd/vera verify` — PASS. The verifier completed its two-pass sync, projection apply/rebuild snapshot comparison, and latest witness assertion.
 - Fresh empty PostgreSQL database `vera_task9_final3`: strict review projection and chain integration tests — PASS.
 - Fresh empty PostgreSQL database `vera_task9_final4`: `vera sync reviews` — `listed=19 appended=19 existing=0 malformed=0`; `go run ./cmd/vera verify` — PASS.
-- Fresh PostgreSQL database: `go run ./cmd/vera report week` — PASS; review findings rendered with event proof IDs. The in-window chain count was zero because the historical commit/verdict sequence was outside the selected week, not because it was omitted from the implementation.
+- Fresh PostgreSQL database: `go run ./cmd/vera report week` — PASS; review findings rendered with event proof IDs. The chain count was zero because the committed-only run ingested verdicts contiguously before Git events, leaving no commit sequence strictly between adjacent verdict events; this is ledger ordering, not an omitted implementation.
 
 ## Known limitation
 
