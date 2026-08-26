@@ -44,6 +44,8 @@ This repository is an early-stage working scaffold, not yet a finished end-user 
 As of 2026-08-26, P1 Tasks 0–9 are implemented and accepted under the repository’s independent
 verification rule. P1 is closed; the next planned phase is P2.
 
+Current project status: P1 complete; P2 gates-as-data is next.
+
 Currently implemented and verified:
 
 - Go kernel and core event primitives
