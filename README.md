@@ -63,6 +63,7 @@ Currently implemented and verified:
 - Law citation lint gate witness (`make law-citation-witnessed`)
 - SPEC invariant numbering gate witness (`make spec-numbering-witnessed`)
 - Invariant table gate witness (`make invariant-table-witnessed`)
+- Link lint gate witness (`make link-witnessed`)
 - Verification and mutation-testing infrastructure
 
 Remaining work:

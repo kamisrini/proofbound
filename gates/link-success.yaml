@@ -1,0 +1,13 @@
+{
+  "schema": "vera.gate.v1",
+  "id": "link-success",
+  "description": "The latest repository link lint check succeeded",
+  "expires": "2026-10-16",
+  "mode": "canary",
+  "source": "checks",
+  "kind": "check.run",
+  "condition": {"all": [
+    {"field": "command", "equals": "make link-lint"},
+    {"field": "exit_code", "equals": 0}
+  ]}
+}
