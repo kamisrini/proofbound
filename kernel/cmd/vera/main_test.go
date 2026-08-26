@@ -50,7 +50,7 @@ func TestParseCommand(t *testing.T) {
 }
 
 func TestEnforceGateResultsFailsClosed(t *testing.T) {
-	definition := gates.Definition{Schema: gates.Version, ID: "x", Description: "d", Mode: "enforce", Source: "checks", Kind: "check.run", Condition: gates.Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	definition := gates.Definition{Schema: gates.Version, ID: "x", Description: "d", Expires: "2099-01-01", Mode: "enforce", Source: "checks", Kind: "check.run", Condition: gates.Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
 	for _, state := range []gates.State{gates.StateBlocked, gates.StateUnknown} {
 		if err := enforceGateResults([]gates.Definition{definition}, []gates.Result{{GateID: "x", State: state}}); err == nil {
 			t.Fatalf("state %s accepted", state)

@@ -51,7 +51,7 @@ func appendCheckEvent(t *testing.T, s *store.Store, ids *core.IDGenerator, nativ
 }
 
 func gateDefinition() Definition {
-	return Definition{Schema: Version, ID: "make-check-success", Description: "test", Mode: "canary", Source: core.SourceChecks, Kind: core.KindCheckRun, Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	return Definition{Schema: Version, ID: "make-check-success", Description: "test", Expires: "2099-01-01", Mode: "canary", Source: core.SourceChecks, Kind: core.KindCheckRun, Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
 }
 
 func testIDs(t *testing.T) *core.IDGenerator {
@@ -88,7 +88,7 @@ func TestEvaluateStatesAndProof(t *testing.T) {
 	if result.State != StateBlocked || !result.WouldBlock || result.Seq != blocked.Seq || result.EventID != blocked.Event.ID.String() {
 		t.Fatalf("result=%+v blocked=%+v", result, blocked)
 	}
-	unknown, err := Evaluate(context.Background(), s, Definition{Schema: Version, ID: "other", Description: "other", Mode: "canary", Source: core.SourceGit, Kind: core.KindCommitRecorded, Condition: Condition{Field: "sha", Equals: json.RawMessage(`"x"`)}})
+	unknown, err := Evaluate(context.Background(), s, Definition{Schema: Version, ID: "other", Description: "other", Expires: "2099-01-01", Mode: "canary", Source: core.SourceGit, Kind: core.KindCommitRecorded, Condition: Condition{Field: "sha", Equals: json.RawMessage(`"x"`)}})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,18 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func TestLoadRejectsInvalidDefinitions(t *testing.T) {
-	valid := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	valid := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	if _, err := Parse(valid); err != nil {
 		t.Fatal(err)
 	}
 	for _, bad := range [][]byte{
 		[]byte(`{"schema":"vera.gate.v2"}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"not-a-date","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
 	} {
 		if _, err := Parse(bad); err == nil {
 			t.Fatal("invalid definition accepted")
@@ -51,7 +53,7 @@ func TestEvaluatePayloadBlocksMismatchAndMissing(t *testing.T) {
 }
 
 func TestParseIsReadOnly(t *testing.T) {
-	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	want := append([]byte(nil), data...)
 	if _, err := Parse(data); err != nil {
 		t.Fatal(err)
@@ -62,13 +64,27 @@ func TestParseIsReadOnly(t *testing.T) {
 }
 
 func TestEnforceRequiresPromotion(t *testing.T) {
-	definition := Definition{Schema: Version, ID: "x", Description: "d", Mode: "canary", Source: "checks", Kind: "check.run", Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	definition := Definition{Schema: Version, ID: "x", Description: "d", Expires: "2099-01-01", Mode: "canary", Source: "checks", Kind: "check.run", Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
 	if err := definition.EnforceReady(); err == nil {
 		t.Fatal("canary definition accepted for enforcement")
 	}
 	definition.Mode = "enforce"
 	if err := definition.EnforceReady(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestEnforceRejectsExpiredDefinition(t *testing.T) {
+	d := Definition{Expires: "2026-08-26"}
+	if !d.Expired(time.Date(2026, 8, 27, 0, 0, 0, 0, time.UTC)) {
+		t.Fatal("expiry date should include the whole calendar day")
+	}
+	if d.Expired(time.Date(2026, 8, 26, 23, 59, 59, 0, time.UTC)) {
+		t.Fatal("future expiry unexpectedly expired")
+	}
+	d = Definition{Schema: Version, ID: "x", Description: "d", Expires: "2026-08-25", Mode: "enforce", Source: "checks", Kind: "check.run", Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	if err := d.EnforceReady(); err == nil {
+		t.Fatal("expired definition accepted for enforcement")
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
@@ -23,6 +24,7 @@ type Definition struct {
 	Schema      string      `json:"schema"`
 	ID          string      `json:"id"`
 	Description string      `json:"description"`
+	Expires     string      `json:"expires"`
 	Mode        string      `json:"mode"`
 	Source      core.Source `json:"source"`
 	Kind        core.Kind   `json:"kind"`
@@ -107,8 +109,11 @@ func Parse(data []byte) (Definition, error) {
 }
 
 func (d Definition) validate() error {
-	if d.Schema != Version || d.ID == "" || d.Description == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() || d.Condition.Field == "" || len(d.Condition.Equals) == 0 || !json.Valid(d.Condition.Equals) {
+	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Expires == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() || d.Condition.Field == "" || len(d.Condition.Equals) == 0 || !json.Valid(d.Condition.Equals) {
 		return errors.New("invalid gate definition")
+	}
+	if _, err := time.Parse("2006-01-02", d.Expires); err != nil {
+		return errors.New("invalid gate expiry")
 	}
 	if strings.ContainsAny(d.Condition.Field, ".[]\\\x00") {
 		return errors.New("invalid condition field")
@@ -123,7 +128,17 @@ func (d Definition) EnforceReady() error {
 	if d.Mode != "enforce" {
 		return fmt.Errorf("gate %s is not promoted to enforce mode", d.ID)
 	}
+	if d.Expired(time.Now()) {
+		return fmt.Errorf("gate %s expired on %s", d.ID, d.Expires)
+	}
 	return nil
+}
+
+func (d Definition) Expired(now time.Time) bool {
+	if _, err := time.Parse("2006-01-02", d.Expires); err != nil {
+		return false
+	}
+	return now.Format("2006-01-02") > d.Expires
 }
 
 func Enforce(result Result) error {
