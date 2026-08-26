@@ -1,7 +1,7 @@
 # Task 9 / P1 close evidence
 
 Date: 2026-08-26
-Frozen implementation: `074009b`
+Frozen implementation: `2457245`
 
 ## Scope
 
@@ -16,8 +16,10 @@ Frozen implementation: `074009b`
 - `make check` — PASS; emits the known non-failing `index stale; run make index` diagnostic.
 - `make check-witnessed` — PASS; emitted the latest `make check` witness.
 - `go test ./... -count=1` — PASS.
-- Fresh empty PostgreSQL database `vera_task9_final`: `vera sync reviews` — `listed=19 appended=19 existing=0 malformed=0`.
+- Fresh empty PostgreSQL database `vera_task9_final2`: `vera sync reviews` — `listed=19 appended=19 existing=0 malformed=0`.
 - Fresh empty PostgreSQL database: `go run ./cmd/vera verify` — PASS. The verifier completed its two-pass sync, projection apply/rebuild snapshot comparison, and latest witness assertion.
+- Fresh empty PostgreSQL database `vera_task9_final3`: strict review projection and chain integration tests — PASS.
+- Fresh empty PostgreSQL database `vera_task9_final4`: `vera sync reviews` — `listed=19 appended=19 existing=0 malformed=0`; `go run ./cmd/vera verify` — PASS.
 - Fresh PostgreSQL database: `go run ./cmd/vera report week` — PASS; review findings rendered with event proof IDs. The in-window chain count was zero because the historical commit/verdict sequence was outside the selected week, not because it was omitted from the implementation.
 
 ## Known limitation

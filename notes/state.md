@@ -166,7 +166,7 @@ the full `make check` gate.
 
 - Branch `main` is clean and pushed to `origin`; the final durability commit is the current HEAD.
 - Today’s completed work is Task 9 implementation, review-artifact migration, spec-first graduation,
-  independent verification, P1 evidence, journal, and state updates.
+  clean-database verification, independent acceptance, P1 evidence, journal, and state updates.
 - Unverified assumptions: no real Claude session JSONL corpus was present in the expected session-artifact
   directory; Task 7’s ingestion behavior was verified with synthetic fixtures only, as designed.
 - Next exact first action: run `git status --short --branch && git log -1 --oneline`, reread
