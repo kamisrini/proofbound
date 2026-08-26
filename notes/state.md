@@ -56,6 +56,8 @@ Load-bearing facts:
   the initial gate remains canary-only.
 - The next P2 migration adds `make index-check-witnessed` and a distinct `index-check-success` gate;
   its compound condition requires both the witnessed command and `exit_code: 0`.
+- The current P2 migration adds `make law-citation-witnessed` and `law-citation-success` with the
+  same command-plus-exit-code proof requirement.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

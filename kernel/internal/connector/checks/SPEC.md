@@ -1,6 +1,6 @@
 # internal/connector/checks — SPEC
 
-Contract for witnessed `make check` emission and ingestion. Written before implementation (Law 6).
+Contract for witnessed Make-target emission and ingestion. Written before implementation (Law 6).
 The v1 JSON schema lives here; the plan is historical design input, not a second mutable schema.
 
 ## 1. Purpose and boundary
@@ -25,7 +25,7 @@ The exact JSON object is:
 {
   "schema": "vera.witness.v1",
   "run_id": "<26-character Crockford ULID>",
-  "command": "make check",
+  "command": "make <letter-first-target>",
   "exit_code": 0,
   "started_at": "<RFC3339>",
   "finished_at": "<RFC3339>",
@@ -100,7 +100,7 @@ validated filename list for observability only and is never read as a seen-set.
 9. **C-INV-9 — The cursor is observational and deterministic.** It is the sorted validated filename
    set and no previous cursor is read.
 10. **C-INV-10 — Emission records the real gate result.** The wrapper writes exactly one valid v1
-    file after either success or failure and exits with `make check`'s status.
+    file after either success or failure and exits with the witnessed Make target's status.
 11. **C-INV-11 — Output digest covers the full combined gate output.** The stored SHA-256 matches
     the exact stdout+stderr bytes emitted by the wrapper.
 12. **C-INV-12 — Witness emission does not depend on VERA.** The script contains no `vera`
@@ -112,7 +112,7 @@ validated filename list for observability only and is never read as a seen-set.
 15. **C-INV-15 — Gate output and repository identity share one root.** The wrapper runs the gate at
     its derived repository root and removes every inherited `GIT_*` selector before Git observation.
 16. **C-INV-16 — Repository observation fails before the gate.** An unavailable or malformed HEAD
-    or failed dirty-state inspection emits no witness and never invokes `make check`.
+    or failed dirty-state inspection emits no witness and never invokes the Make target.
 17. **C-INV-17 — The committed Make target does not require executable script mode.** A 0644 script
     copied with the real Makefile runs through the explicit Bash recipe and emits valid evidence.
 18. **C-INV-18 — Runtime dependencies are valid before evidence listing.** A typed-nil appender is

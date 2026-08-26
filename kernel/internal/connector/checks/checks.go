@@ -27,6 +27,7 @@ var (
 	ulidPattern = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
 	hex64       = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	gitHash     = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	makeCommand = regexp.MustCompile(`^make [A-Za-z][A-Za-z0-9._-]*$`)
 )
 
 type ToolVersions struct {
@@ -225,8 +226,8 @@ func (w Witness) validate() error {
 		return errors.New("schema must be vera.witness.v1")
 	case !ulidPattern.MatchString(w.RunID):
 		return errors.New("run_id is not a strict ULID")
-	case w.Command != "make check":
-		return errors.New("command must be make check")
+	case !makeCommand.MatchString(w.Command):
+		return errors.New("command must be make <letter-first-target>")
 	case w.ExitCode < 0 || w.ExitCode > 255:
 		return errors.New("exit_code is outside 0..255")
 	case w.StartedAt.IsZero() || w.FinishedAt.IsZero() || w.FinishedAt.Before(w.StartedAt):

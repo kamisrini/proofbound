@@ -60,6 +60,7 @@ Currently implemented and verified:
 - P2 gate canary evaluation for the latest `make check` witness
 - Explicit canary-to-enforce gate promotion workflow
 - Generated-files freshness gate witness (`make index-check-witnessed`) with compound matching
+- Law citation lint gate witness (`make law-citation-witnessed`)
 - Verification and mutation-testing infrastructure
 
 Remaining work:

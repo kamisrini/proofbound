@@ -47,7 +47,7 @@ func TestWitness_StrictValidation(t *testing.T) {
 	mutations := map[string]func(*Witness){
 		"schema":       func(w *Witness) { w.Schema = "other" },
 		"run id":       func(w *Witness) { w.RunID = "invalid" },
-		"command":      func(w *Witness) { w.Command = "make short" },
+		"command":      func(w *Witness) { w.Command = "make -n" },
 		"exit low":     func(w *Witness) { w.ExitCode = -1 },
 		"exit high":    func(w *Witness) { w.ExitCode = 256 },
 		"start":        func(w *Witness) { w.StartedAt = time.Time{} },
