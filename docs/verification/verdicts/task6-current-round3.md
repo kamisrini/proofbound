@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task6-current-round3
+status: NEEDS_WORK
+reviewed_commit: ae956f7c5cb59c94e4d0d8ded1682b9bcc57cf45
+findings:
+  - finding_id: task6-current-round3-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task6-current-round3.md
+artifact_sha: d83cbcdb1325aebec5043692e9cf5e7c2f27215c39193a02033923e4e54fcefd
+---
+
 # NEEDS_WORK
 
 Frozen commit `ae956f7` is not acceptable yet.

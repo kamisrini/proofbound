@@ -206,7 +206,7 @@ func TestSupportedEventMatrix(t *testing.T) {
 		{core.SourceSessions, core.KindCheckRun, false},
 		{core.SourceGit, core.KindSessionObserved, false},
 		{core.SourceChecks, core.KindSessionObserved, false},
-		{core.SourceReviews, core.KindReviewVerdict, false},
+		{core.SourceReviews, core.KindReviewVerdict, true},
 	}
 	for _, tc := range cases {
 		if got := supported(tc.source, tc.kind); got != tc.want {
@@ -221,6 +221,9 @@ func TestSupportedEventMatrix(t *testing.T) {
 		}
 		if tc.source == core.SourceSessions && tc.kind == core.KindSessionObserved {
 			wantRoute = routeSession
+		}
+		if tc.source == core.SourceReviews && tc.kind == core.KindReviewVerdict {
+			wantRoute = routeReview
 		}
 		if got := eventRoute(tc.source, tc.kind); got != wantRoute {
 			t.Errorf("eventRoute(%s,%s)=%v want %v", tc.source, tc.kind, got, wantRoute)

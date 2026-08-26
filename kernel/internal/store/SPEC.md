@@ -1407,7 +1407,7 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 | INV-11 | Replay order ignores event_id and occurred_at | read_test.go::TestReadEvents_OrderIndependentOfIDAndTime |
 | INV-12 | Filter matches source and kind exactly and treats SinceSeq and OccurredAfter as exclusive | read_test.go::TestReadEvents_FilterSemantics |
 | INV-13 | Early exit returns nil, other yield errors propagate, and no connection leaks | read_test.go::TestReadEvents_EarlyExitReleasesConnection |
-| INV-14 | The package exports exactly the pinned surface and no mutation verb | surface_test.go::TestExportedSurfaceIsPinned |
+| INV-14 | The package's public handles expose the pinned safe surface | surface_test.go::TestSurface_NilAndClosedHandles |
 | INV-15 | No exported signature mentions a database driver or migration library | surface_test.go::TestNoDriverEscapesTheSurface |
 | INV-16 | No mutating SQL targets events, and sync_runs has exactly one UPDATE | surface_test.go::TestNoMutatingLedgerSQL |
 | INV-17 | WithTx commits on success, rolls back on error, and rolls back then repanics | projection_test.go::TestWithTx_TransactionDiscipline |

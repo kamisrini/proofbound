@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task5-current-round4
+status: NEEDS_WORK
+reviewed_commit: 7022fe6a2130b0cf979ef1d3db68c10cb89d570e
+findings:
+  - finding_id: task5-current-round4-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task5-current-round4.md
+artifact_sha: 3a61a449297b00b188cf1b5dea760e23607eb340917a19575c895548392ddb86
+---
+
 NEEDS_WORK
 
 ## Round 4 scope and calibration

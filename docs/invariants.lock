@@ -74,6 +74,13 @@ kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-18	Ref validation follows ann
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-19	The requested root selects the repository.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-20	Gitlink deltas are configuration-independent.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-21	Detached HEAD immediately names a commit object.
+kernel/internal/connector/reviews/SPEC.md	R-INV-1	Committed-only input:
+kernel/internal/connector/reviews/SPEC.md	R-INV-2	Exact schema:
+kernel/internal/connector/reviews/SPEC.md	R-INV-3	Event mapping:
+kernel/internal/connector/reviews/SPEC.md	R-INV-4	Idempotent and revision-safe:
+kernel/internal/connector/reviews/SPEC.md	R-INV-5	Determinism and preservation:
+kernel/internal/connector/reviews/SPEC.md	R-INV-6	Dependency safety:
+kernel/internal/connector/reviews/SPEC.md	R-INV-7	Binding:
 kernel/internal/core/SPEC.md	INV-1	Order and whitespace independence.
 kernel/internal/core/SPEC.md	INV-2	Idempotence.
 kernel/internal/core/SPEC.md	INV-3	Unicode fidelity.
@@ -113,7 +120,7 @@ kernel/internal/projections/SPEC.md	P-INV-6	Projection rows retain proof identit
 kernel/internal/projections/SPEC.md	P-INV-7	Malformed or unsupported events fail closed.
 kernel/internal/projections/SPEC.md	P-INV-8	Projection DDL is not ledger migration.
 kernel/internal/projections/SPEC.md	P-INV-9	Snapshots are natural-key canonical multisets.
-kernel/internal/projections/SPEC.md	P-INV-10	Empty future views are deterministic.
+kernel/internal/projections/SPEC.md	P-INV-10	Review findings are deterministic.
 kernel/internal/projections/SPEC.md	P-INV-11	Projection metadata is unique and versioned.
 kernel/internal/projections/SPEC.md	P-INV-12	Session metadata is projected without content.
 kernel/internal/projections/SPEC.md	P-INV-13	Week report entries carry proof identity.

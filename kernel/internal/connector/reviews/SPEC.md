@@ -85,12 +85,12 @@ func Parse(path string, data []byte) (Verdict, error)
 
 ## Proving table
 
-| Invariant | Proving test |
-|---|---|
-| R-INV-1 | reviews_test.go::TestSyncUsesOnlyInjectedCommittedReader |
-| R-INV-2 | reviews_test.go::TestParseStrictFrontMatter |
-| R-INV-3 | reviews_test.go::TestSyncMintsReviewVerdictEvent |
-| R-INV-4 | reviews_test.go::TestSyncIsIdempotentAndRevisionSafe |
-| R-INV-5 | reviews_test.go::TestSyncSortsAndFailsClosed |
-| R-INV-6 | reviews_test.go::TestNewRequiresDependencies |
-| R-INV-7 | reviews_test.go::TestParseBindsPathAndDigest |
+| Invariant | Statement | Proving test |
+|---|---|---|
+| R-INV-1 | Only injected committed artifacts are considered | reviews_test.go::TestSyncUsesOnlyInjectedCommittedReader |
+| R-INV-2 | Strict v1 metadata fails closed | reviews_test.go::TestParseStrictFrontMatter |
+| R-INV-3 | Valid artifacts emit review verdict events | reviews_test.go::TestSyncMintsReviewVerdictEvent |
+| R-INV-4 | Unchanged artifacts are idempotent and changes revise | reviews_test.go::TestSyncIsIdempotentAndRevisionSafe |
+| R-INV-5 | Processing is sorted and stops on malformed input | reviews_test.go::TestSyncSortsAndFailsClosed |
+| R-INV-6 | Required dependencies are enforced | reviews_test.go::TestNewRequiresDependencies |
+| R-INV-7 | Reader path and payload path remain bound | reviews_test.go::TestParseBindsPathAndDigest |

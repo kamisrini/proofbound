@@ -41,8 +41,8 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-08-26, Tasks 0–8 of the P1 plan are accepted under the repository’s independent
-verification rule. The next planned step is Task 9, P1 close, and it is currently paused.
+As of 2026-08-26, P1 Tasks 0–9 are implemented and accepted under the repository’s independent
+verification rule. P1 is closed; the next planned phase is P2.
 
 Currently implemented and verified:
 
@@ -53,12 +53,13 @@ Currently implemented and verified:
 - Git, checks, and sessions connectors
 - Projection rebuild and `vera verify`
 - `vera report week`, including event-ID proof and `[superseded]` commit marking
+- Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
+- Machine-enforced spec-first coverage for every kernel package
 - Verification and mutation-testing infrastructure
 
-Remaining P1 work:
+Remaining work:
 
-- Task 9 P1 close and its remaining graduation checks
-- The complete user-facing delivery workflow
+- P2 gates-as-data and the complete user-facing delivery workflow
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The

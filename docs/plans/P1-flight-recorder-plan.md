@@ -132,7 +132,7 @@ those tasks land, `sync all` means all implemented connectors and `sync sessions
 
 **P1 is done when:** `vera verify` passes, `vera report week` tells the truth about this repo with event-id proof, `make check` is green with the kernel wired, every internal package has a spec whose invariants map to passing tests (mechanically checked from Task 9 on), and ROADMAP § P1 DoD items are each satisfied by a named executable command.
 
-## Position — 2026-08-14 (validated against the repo, not memory)
+## Position — 2026-08-26 (validated against the repo, not memory)
 
 | # | Task | Status |
 |---|---|---|
@@ -141,11 +141,11 @@ those tasks land, `sync all` means all implemented connectors and `sync sessions
 | 2 | core (JCS, ULIDs, envelope) | ✓ DONE — accepted after ONE adversarial round |
 | 3 | store (ledger, lock, migrations) | ✓ DONE — shipped after NINE rounds with an enumerated residual list (VD-fix-discipline-0e0tnz is that story); its `rows.Err()` survivor-candidate folds into the store mutation sweep below |
 | 4 | git connector | ✓ DONE — accepted under Law 9 in current Round 4; frozen `d794ff7` received an independent ACCEPTABLE verdict with no findings; final author evidence was gitcmd 77/77 and combined 95/95 killed |
-| 5 | witness emitter + checks connector | ◐ ROUND-5 NEEDS_WORK — verdict committed verbatim; successful-empty helper output remains to remediate. Connector 37/37 and CLI 17/17 killed. The prescribed `.claude/commands/vera-wrap.md` does not exist in this checkout, so its step 3 remains explicit migration debt |
-| 6 | projections + `vera verify` | ○ NOT STARTED (placeholder). The `-short`/fixture-cluster decision owed here per the Risks table stands |
-| 7 | sessions connector | ○ NOT STARTED (placeholder) |
-| 8 | `vera report week` | ○ NOT STARTED |
-| 9 | P1 close | ○ NOT STARTED — hard-linked to the spec-first advisory expiry **2026-09-18** (~5 weeks out; Task 4 must close this week for the chain to hold) |
+| 5 | witness emitter + checks connector | ✓ DONE — independently accepted |
+| 6 | projections + `vera verify` | ✓ DONE — independently accepted |
+| 7 | sessions connector | ✓ DONE — independently accepted |
+| 8 | `vera report week` | ✓ DONE — independently accepted |
+| 9 | P1 close | ✓ DONE 2026-08-26 — review verdicts, red-verdict chain, full verifier evidence, and spec-first blocking gate landed |
 
 **Acceptance bar, amended (additive to every task's DoD from Task 4 on, per Law 9 and the measured
 verification asymmetry):** a package is accepted only when (a) `make mutants` is GREEN for it — every

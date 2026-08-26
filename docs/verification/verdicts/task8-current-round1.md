@@ -1,3 +1,13 @@
+---
+schema: vera.verdict.v1
+verdict_id: task8-current-round1
+status: ACCEPTABLE
+reviewed_commit: 327219c000000000000000000000000000000000
+findings: []
+artifact_path: docs/verification/verdicts/task8-current-round1.md
+artifact_sha: f89014e56c0fc7b3b1978e16060c3fcfcb12323418b8d49ccf84dec7fbb7b92f
+---
+
 ACCEPTABLE
 
 - MED finding resolved: `LEFT JOIN` now retains rows with absent proofs and returns explicit errors for commits, checks, and sessions. Integration regression coverage passed.

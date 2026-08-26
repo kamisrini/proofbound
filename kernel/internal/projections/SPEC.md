@@ -49,7 +49,7 @@ canonical JSON columns.
 7. **P-INV-7 — Malformed or unsupported events fail closed.** No partial projection transaction commits.
 8. **P-INV-8 — Projection DDL is not ledger migration.** Derived tables are created only by this package.
 9. **P-INV-9 — Snapshots are natural-key canonical multisets.** Database order and JSON formatting do not affect comparison.
-10. **P-INV-10 — Empty future views are deterministic.** The review view exists and snapshots as empty until verdict ingestion lands; review events fail closed while deferred.
+10. **P-INV-10 — Review findings are deterministic.** Valid verdict findings retain their verdict and event proof; malformed review events fail closed.
 11. **P-INV-11 — Projection metadata is unique and versioned.** Exactly one named metadata row owns the checkpoint for projection version 1.
 12. **P-INV-12 — Session metadata is projected without content.** Session rows contain only the connector's bounded metadata and preserve the event proof links.
 13. **P-INV-13 — Week report entries carry proof identity.** Every commit, check, and session entry renders its originating event ID.
@@ -69,7 +69,7 @@ canonical JSON columns.
 | P-INV-7 | Unsupported or malformed events fail closed | projection_test.go::TestApply_RejectsUnsupportedEvent |
 | P-INV-8 | Projection DDL is absent from ledger migration | projection_test.go::TestDDL_IsNotLedgerMigration |
 | P-INV-9 | Snapshot comparison ignores row order and formatting | projection_test.go::TestSnapshot_CanonicalMultisets |
-| P-INV-10 | Review view is present and empty; deferred review events fail closed | projection_test.go::TestEnsure_CreatesFutureViews |
+| P-INV-10 | Review verdict events validate and materialize finding proof rows | projection_test.go::TestEnsure_CreatesFutureViews |
 | P-INV-11 | Metadata has one versioned checkpoint row | projection_test.go::TestEnsure_MetadataIsUniqueAndVersioned |
 | P-INV-12 | Session metadata is materialized with proof identity | projection_test.go::TestApply_Session |
 | P-INV-13 | Week report entries render their originating event IDs | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |

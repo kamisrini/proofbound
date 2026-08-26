@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
@@ -37,10 +39,19 @@ func (p *Projector) ReportWeek(ctx context.Context, s *store.Store, now time.Tim
 			return err
 		}
 		report.sessions, err = readSessionReportRows(ctx, tx, start, end)
+		if err != nil {
+			return err
+		}
+		report.reviews, err = readReviewReportRows(ctx, tx, start, end)
 		return err
 	}); err != nil {
 		return fmt.Errorf("report: read week: %w", err)
 	}
+	chains, err := readRedVerdictChains(ctx, s, start, end)
+	if err != nil {
+		return fmt.Errorf("report: read review chains: %w", err)
+	}
+	report.chains = chains
 	return renderWeekReport(output, start, end, report)
 }
 
@@ -48,6 +59,8 @@ type weekReport struct {
 	commits  []commitReportRow
 	checks   []checkReportRow
 	sessions []sessionReportRow
+	reviews  []reviewReportRow
+	chains   []redVerdictChain
 }
 
 type commitReportRow struct {
@@ -71,6 +84,17 @@ type sessionReportRow struct {
 	messages, tools    int64
 	files              int64
 	coverage           float64
+}
+
+type reviewReportRow struct {
+	findingID, verdictID, eventID, status, severity, reviewedCommit, defectCommit string
+	seq                                                                           int64
+}
+
+type redVerdictChain struct {
+	redEventID, nextEventID string
+	redSeq, nextSeq         int64
+	changeEventIDs          []string
 }
 
 func readCommitReportRows(ctx context.Context, tx *store.Tx, start, end time.Time, reachable map[string]bool) ([]commitReportRow, error) {
@@ -152,6 +176,78 @@ WHERE e.event_id IS NULL OR (e.occurred_at >= $1 AND e.occurred_at < $2) ORDER B
 	return result, rows.Err()
 }
 
+func readReviewReportRows(ctx context.Context, tx *store.Tx, start, end time.Time) ([]reviewReportRow, error) {
+	rows, err := tx.Query(ctx, `SELECT r.finding_id,r.verdict_id,r.event_id,r.seq,r.status,r.severity,r.reviewed_commit,COALESCE(r.defect_commit,''),e.occurred_at FROM reviews_view r LEFT JOIN events e ON e.event_id=r.event_id WHERE e.event_id IS NULL OR (e.occurred_at >= $1 AND e.occurred_at < $2) ORDER BY e.occurred_at,r.seq,r.finding_id`, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var result []reviewReportRow
+	for rows.Next() {
+		var row reviewReportRow
+		var occurredAt *time.Time
+		if err := rows.Scan(&row.findingID, &row.verdictID, &row.eventID, &row.seq, &row.status, &row.severity, &row.reviewedCommit, &row.defectCommit, &occurredAt); err != nil {
+			return nil, err
+		}
+		if occurredAt == nil {
+			return nil, fmt.Errorf("review finding %s: missing event proof %s", row.findingID, row.eventID)
+		}
+		result = append(result, row)
+	}
+	return result, rows.Err()
+}
+
+type chainMarker struct {
+	seq        int64
+	id         string
+	kind       string
+	red        bool
+	occurredAt time.Time
+}
+
+func readRedVerdictChains(ctx context.Context, s *store.Store, start, end time.Time) ([]redVerdictChain, error) {
+	var markers []chainMarker
+	if err := s.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
+		if record.Event.OccurredAt.Before(start) || !record.Event.OccurredAt.Before(end) {
+			return nil
+		}
+		if record.Event.Source == core.SourceReviews && record.Event.Kind == core.KindReviewVerdict {
+			var payload reviewPayload
+			if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
+				return fmt.Errorf("review event %s: %w", record.Event.ID, err)
+			}
+			if err := payload.validate(); err != nil {
+				return fmt.Errorf("review event %s: %w", record.Event.ID, err)
+			}
+			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "review", payload.Status == "NEEDS_WORK", record.Event.OccurredAt})
+		} else if record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded {
+			markers = append(markers, chainMarker{record.Seq, record.Event.ID.String(), "commit", false, record.Event.OccurredAt})
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	sort.Slice(markers, func(i, j int) bool { return markers[i].seq < markers[j].seq })
+	var chains []redVerdictChain
+	for i, marker := range markers {
+		if !marker.red {
+			continue
+		}
+		var changes []string
+		for _, next := range markers[i+1:] {
+			if next.kind == "commit" {
+				changes = append(changes, next.id)
+				continue
+			}
+			if len(changes) > 0 {
+				chains = append(chains, redVerdictChain{marker.id, next.id, marker.seq, next.seq, changes})
+			}
+			break
+		}
+	}
+	return chains, nil
+}
+
 func renderWeekReport(output io.Writer, start, end time.Time, report weekReport) error {
 	if _, err := fmt.Fprintf(output, "week %s to %s\n", start.Format("2006-01-02"), end.Format("2006-01-02")); err != nil {
 		return err
@@ -186,6 +282,22 @@ func renderWeekReport(output io.Writer, start, end time.Time, report weekReport)
 	}
 	for _, row := range report.sessions {
 		if _, err := fmt.Fprintf(output, "- %s messages=%d tool_calls=%d files_written=%d coverage=%.3f proof=%s\n", row.sessionID, row.messages, row.tools, row.files, row.coverage, row.eventID); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(output, "reviews count=%d\n", len(report.reviews)); err != nil {
+		return err
+	}
+	for _, row := range report.reviews {
+		if _, err := fmt.Fprintf(output, "- %s verdict=%s status=%s severity=%s reviewed=%s proof=%s\n", row.findingID, row.verdictID, row.status, row.severity, row.reviewedCommit, row.eventID); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(output, "red_verdict_chains count=%d\n", len(report.chains)); err != nil {
+		return err
+	}
+	for _, chain := range report.chains {
+		if _, err := fmt.Fprintf(output, "- red_proof=%s red_seq=%d changes=%s next_verdict_proof=%s next_verdict_seq=%d\n", chain.redEventID, chain.redSeq, strings.Join(chain.changeEventIDs, ","), chain.nextEventID, chain.nextSeq); err != nil {
 			return err
 		}
 	}

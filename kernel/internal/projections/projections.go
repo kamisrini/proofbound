@@ -69,9 +69,14 @@ CREATE TABLE IF NOT EXISTS sessions_view (
  tool_call_count BIGINT NOT NULL, files_written_count BIGINT NOT NULL, parse_coverage NUMERIC NOT NULL
 );
 CREATE TABLE IF NOT EXISTS reviews_view (
- finding_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
- severity TEXT NOT NULL, reviewed_commit TEXT NOT NULL, defect_commit TEXT
-);`
+ finding_id TEXT PRIMARY KEY, verdict_id TEXT NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ status TEXT NOT NULL, severity TEXT NOT NULL, reviewed_commit TEXT NOT NULL, defect_commit TEXT,
+ artifact_path TEXT NOT NULL, artifact_sha TEXT NOT NULL
+);
+ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS verdict_id TEXT;
+ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_path TEXT;
+ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_sha TEXT;`
 
 func (p *Projector) Ensure(ctx context.Context, s *store.Store) error {
 	return s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error { _, err := tx.Exec(ctx, ddl); return err })
@@ -166,6 +171,20 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		}
 		_, err := tx.Exec(ctx, `INSERT INTO sessions_view(session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(session_id) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,started_at=EXCLUDED.started_at,finished_at=EXCLUDED.finished_at,message_count=EXCLUDED.message_count,tool_call_count=EXCLUDED.tool_call_count,files_written_count=EXCLUDED.files_written_count,parse_coverage=EXCLUDED.parse_coverage WHERE sessions_view.seq < EXCLUDED.seq`, v.SessionID, r.Event.ID.String(), r.Seq, v.StartedAt, v.FinishedAt, v.MessageCount, v.ToolCallCount, v.FilesWrittenCount, v.ParseCoverage)
 		return err
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeReview:
+		var v reviewPayload
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return fmt.Errorf("review seq %d: %w", r.Seq, err)
+		}
+		if err := v.validate(); err != nil {
+			return fmt.Errorf("review seq %d: %w", r.Seq, err)
+		}
+		for _, finding := range v.Findings {
+			if _, err := tx.Exec(ctx, `INSERT INTO reviews_view(finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(finding_id) DO UPDATE SET verdict_id=EXCLUDED.verdict_id,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,status=EXCLUDED.status,severity=EXCLUDED.severity,reviewed_commit=EXCLUDED.reviewed_commit,defect_commit=EXCLUDED.defect_commit,artifact_path=EXCLUDED.artifact_path,artifact_sha=EXCLUDED.artifact_sha WHERE reviews_view.seq < EXCLUDED.seq`, finding.FindingID, v.VerdictID, r.Event.ID.String(), r.Seq, v.Status, finding.Severity, v.ReviewedCommit, nullString(finding.DefectCommit), v.ArtifactPath, v.ArtifactSHA); err != nil {
+				return err
+			}
+		}
+		return nil
 	default:
 		return nil
 	}
@@ -182,6 +201,7 @@ const (
 	routeCommit
 	routeCheck
 	routeSession
+	routeReview
 )
 
 func eventRoute(s core.Source, k core.Kind) route {
@@ -193,6 +213,9 @@ func eventRoute(s core.Source, k core.Kind) route {
 	}
 	if s == core.SourceSessions && k == core.KindSessionObserved {
 		return routeSession
+	}
+	if s == core.SourceReviews && k == core.KindReviewVerdict {
+		return routeReview
 	}
 	return routeUnsupported
 }
@@ -255,6 +278,44 @@ type sessionPayload struct {
 	ParseCoverage     float64    `json:"parse_coverage"`
 }
 
+type reviewFinding struct {
+	FindingID    string `json:"finding_id"`
+	Severity     string `json:"severity"`
+	DefectCommit string `json:"defect_commit,omitempty"`
+}
+
+type reviewPayload struct {
+	Schema         string          `json:"schema"`
+	VerdictID      string          `json:"verdict_id"`
+	Status         string          `json:"status"`
+	ReviewedCommit string          `json:"reviewed_commit"`
+	Findings       []reviewFinding `json:"findings"`
+	ArtifactPath   string          `json:"artifact_path"`
+	ArtifactSHA    string          `json:"artifact_sha"`
+}
+
+func (v reviewPayload) validate() error {
+	if v.Schema != "vera.verdict.v1" || strings.TrimSpace(v.VerdictID) == "" || (v.Status != "ACCEPTABLE" && v.Status != "NEEDS_WORK") || !gitPattern.MatchString(v.ReviewedCommit) || !strings.HasPrefix(v.ArtifactPath, "docs/verification/verdicts/") || !strings.HasSuffix(v.ArtifactPath, ".md") || !hexPattern.MatchString(v.ArtifactSHA) {
+		return errors.New("invalid or missing review field")
+	}
+	if v.Status == "NEEDS_WORK" && len(v.Findings) == 0 {
+		return errors.New("NEEDS_WORK review has no findings")
+	}
+	for _, finding := range v.Findings {
+		if strings.TrimSpace(finding.FindingID) == "" || (finding.Severity != "HIGH" && finding.Severity != "MED" && finding.Severity != "LOW") || (finding.DefectCommit != "" && !gitPattern.MatchString(finding.DefectCommit)) {
+			return errors.New("invalid review finding")
+		}
+	}
+	return nil
+}
+
+func nullString(value string) any {
+	if value == "" {
+		return nil
+	}
+	return value
+}
+
 func (v sessionPayload) validate() error {
 	if strings.TrimSpace(v.SessionID) == "" || v.MessageCount < 0 || v.ToolCallCount < 0 || v.FilesWrittenCount < 0 || v.ParseCoverage < 0 || v.ParseCoverage > 1 {
 		return errors.New("invalid or missing session field")
@@ -303,6 +364,8 @@ func requireFields(raw []byte, out any) error {
 		required = []string{"schema", "run_id", "command", "exit_code", "started_at", "finished_at", "duration_ms", "output_sha256", "git_sha", "git_dirty", "tool_versions"}
 	case *sessionPayload:
 		required = []string{"session_id", "message_count", "tool_call_count", "files_written_count", "parse_coverage"}
+	case *reviewPayload:
+		required = []string{"schema", "verdict_id", "status", "reviewed_commit", "findings", "artifact_path", "artifact_sha"}
 	}
 	for _, name := range required {
 		value, ok := fields[name]
@@ -318,7 +381,7 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 		return Snapshot{}, fmt.Errorf("snapshot ensure: %w", err)
 	}
 	result := Snapshot{Tables: make(map[string][]string)}
-	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,event_id,seq,severity,reviewed_commit,defect_commit FROM reviews_view"}
+	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha FROM reviews_view"}
 	for name, q := range queries {
 		var rowsData []map[string]any
 		if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
@@ -362,6 +425,8 @@ func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) 
 			a = make([]any, 12)
 		case "sessions_view":
 			a = make([]any, 9)
+		case "reviews_view":
+			a = make([]any, 10)
 		default:
 			a = make([]any, 6)
 		}

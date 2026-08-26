@@ -10,20 +10,23 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
 	"github.com/kamisrini/proofbound/kernel/internal/connector/git/gitcmd"
+	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: vera sync {git|checks|sessions|all} | vera rebuild | vera verify | vera report week"
+const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week"
 
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -34,6 +37,7 @@ const (
 	commandSyncGit
 	commandSyncChecks
 	commandSyncSessions
+	commandSyncReviews
 	commandSyncAll
 	commandRebuild
 	commandVerify
@@ -48,6 +52,8 @@ func parseCommand(args []string) command {
 		return commandSyncChecks
 	case len(args) == 2 && args[0] == "sync" && args[1] == "sessions":
 		return commandSyncSessions
+	case len(args) == 2 && args[0] == "sync" && args[1] == "reviews":
+		return commandSyncReviews
 	case len(args) == 2 && args[0] == "sync" && args[1] == "all":
 		return commandSyncAll
 	case len(args) == 1 && args[0] == "rebuild":
@@ -146,6 +152,44 @@ func syncChecksOnStore(ctx context.Context, root string, ledger *store.Store, id
 
 type sessionsResult struct{ Listed, Appended, Existing, Skipped int }
 
+type committedVerdictReader struct{ root string }
+
+func (r committedVerdictReader) ReadCommittedVerdicts(ctx context.Context) ([]connectorreviews.Artifact, error) {
+	cmd := exec.CommandContext(ctx, "git", "-C", r.root, "ls-tree", "-r", "--name-only", "HEAD", "--", "docs/verification/verdicts")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("list committed verdicts: %w", err)
+	}
+	var artifacts []connectorreviews.Artifact
+	for _, name := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+		if name == "" || !strings.HasSuffix(name, ".md") {
+			continue
+		}
+		data, err := exec.CommandContext(ctx, "git", "-C", r.root, "show", "HEAD:"+name).Output()
+		if err != nil {
+			return nil, fmt.Errorf("read committed verdict %s: %w", name, err)
+		}
+		artifacts = append(artifacts, connectorreviews.Artifact{Path: name, Bytes: data})
+	}
+	return artifacts, nil
+}
+
+type reviewsResult struct{ Listed, Appended, Existing, Malformed int }
+
+func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (reviewsResult, error) {
+	connector, err := connectorreviews.New(&connectorreviews.Deps{Reader: committedVerdictReader{root: root}, IDs: ids, Logger: logger()})
+	if err != nil {
+		return reviewsResult{}, err
+	}
+	run, err := ledger.BeginSync(ctx, "reviews")
+	if err != nil {
+		return reviewsResult{}, err
+	}
+	result, syncErr := connector.Sync(ctx, run)
+	finishErr := run.Finish(ctx, result.Cursor, syncErr)
+	return reviewsResult{result.Listed, result.Appended, result.Existing, result.Malformed}, errors.Join(syncErr, finishErr)
+}
+
 func syncSessionsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (sessionsResult, error) {
 	connector, err := connectorsessions.New(&connectorsessions.Deps{Root: root, IDs: ids, Logger: logger()})
 	if err != nil {
@@ -199,6 +243,23 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d skipped=%d\n", result.Listed, result.Appended, result.Existing, result.Skipped)
 		return err
 	}
+	if cmd == commandSyncReviews {
+		ids, err := newIDs()
+		if err != nil {
+			return err
+		}
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		result, err := syncReviewsOnStore(ctx, root, ledger, ids)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d malformed=%d\n", result.Listed, result.Appended, result.Existing, result.Malformed)
+		return err
+	}
 	ledger, err := openStore(ctx, root, databaseURL)
 	if err != nil {
 		return err
@@ -229,7 +290,11 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprintf(output, "git appended=%d checks appended=%d sessions appended=%d\n", gitResult.Appended, checksResult.Appended, sessionsResult.Appended)
+		reviewsResult, err := syncReviewsOnStore(ctx, root, ledger, ids)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(output, "git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended)
 		return err
 	case commandVerify:
 		ids, err := newIDs()
@@ -264,6 +329,9 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	if _, err := syncSessionsOnStore(ctx, root, ledger, ids); err != nil {
 		return err
 	}
+	if _, err := syncReviewsOnStore(ctx, root, ledger, ids); err != nil {
+		return err
+	}
 	secondGit, err := syncGit(ctx, root, ledger, ids)
 	if err != nil {
 		return err
@@ -276,8 +344,12 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	if err != nil {
 		return err
 	}
-	if secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 {
-		return fmt.Errorf("verify: second sync appended git=%d checks=%d sessions=%d", secondGit.Appended, secondChecks.Appended, secondSessions.Appended)
+	secondReviews, err := syncReviewsOnStore(ctx, root, ledger, ids)
+	if err != nil {
+		return err
+	}
+	if secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 || secondReviews.Appended != 0 {
+		return fmt.Errorf("verify: second sync appended git=%d checks=%d sessions=%d reviews=%d", secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended)
 	}
 	if err := projector.Apply(ctx, ledger); err != nil {
 		return err

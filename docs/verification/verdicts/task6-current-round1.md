@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task6-current-round1
+status: NEEDS_WORK
+reviewed_commit: b246ed505026a40cc061ffc35f1247221aa9221d
+findings:
+  - finding_id: task6-current-round1-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task6-current-round1.md
+artifact_sha: 12b67de8a0890d80fa5a1d84a8e6297a0acb20fb7d7f23fbe55d20a5619ab332
+---
+
 # NEEDS_WORK
 
 Frozen commit `b246ed5` is not acceptable under the Task 6 contract.

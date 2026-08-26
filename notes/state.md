@@ -4,14 +4,14 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (Tasks 3–8 accepted; Task 9 paused)
+**As of:** 2026-08-26 (P1 Tasks 0–9 accepted; P1 closed)
 
 ## Resume Prompt
 
 Copy this verbatim into a fresh session started in this repository:
 
 ```
-Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-26.md`. Do not start work until you have.
+Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-26.md`.
 
 Load-bearing facts:
 - The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
@@ -45,6 +45,10 @@ Load-bearing facts:
 - Task 8 `vera report week` is accepted under Law 9. Frozen remediation is `327219c`; the independent
   Round 1 verdict is committed verbatim at `docs/verification/verdicts/task8-current-round1.md`. Evidence
   is in `docs/verification/task8-final-evidence.md`.
+- Task 9 closed P1: review verdict artifacts use `vera.verdict.v1` metadata, `vera sync reviews` ingests
+  committed artifacts, `reviews_view` retains finding/event proof, and `vera report week` exposes the
+  ledger-ordered red-verdict/change/next-verdict chain. The spec-first graduation is a blocking Go test
+  under `make check` at `kernel/internal/specfirst`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -78,10 +82,10 @@ Load-bearing facts:
 - macOS trap: t.TempDir() is a SYMLINK. Path-guard mutations under TMPDIR=/private/tmp/vkreal.
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
-Tomorrow’s resume sequence: run `git status --short --branch && git log -1 --oneline`, then reread
-`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Inspect the Task 9 scope and do
-not begin Task 9 until explicitly directed. `make check` BARE is the verification gate. `make backup`
-is currently missing; create a manual `git bundle --all` until the target and its self-test are restored.
+Next-session sequence: run `git status --short --branch && git log -1 --oneline`, then reread
+`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. P1 is closed; begin P2 only from
+its declared plan. `make check` BARE is the verification gate. `make backup` is currently missing;
+create a manual `git bundle --all` until the target and its self-test are restored.
 ```
 
 ## Worktree
@@ -93,8 +97,8 @@ is currently missing; create a manual `git bundle --all` until the target and it
 
 ## What this session shipped
 
-This repository migration began from a documentation corpus. Tasks 0–8 are accepted. Task 9 is
-the next planned task and remains paused; it has not started.
+This repository migration began from a documentation corpus. P1 Tasks 0–9 are accepted and P1 is
+closed under Law 9.
 
 **Migration warning:** the imported docs describe a richer enforcement suite than this repository
 currently contains. Present mechanisms are the scripts visible under `scripts/`, their visible
@@ -128,12 +132,12 @@ the full `make check` gate.
 
 ## Blockers / open, in priority order
 
-1. **P1 forward path:** Tasks 5–8 are accepted under Law 9. Task 8 final frozen state is `327219c`; its independent Round 1 verdict returned ACCEPTABLE and is committed verbatim at `docs/verification/verdicts/task8-current-round1.md`. Task 9 is next but paused.
+1. **P1 closed:** Tasks 5–9 are accepted under Law 9. Task 9’s review connector, projection chain,
+   full verifier evidence, and blocking spec-first gate are recorded in the 2026-08-26 journal.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–8 DONE · Task 9 NOT STARTED · Task 9 hard
-   deadline 2026-09-18 (spec-first advisory expiry). The planned `/vera-wrap` step-3 amendment
-   cannot be applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
+   Tasks 0–9 DONE · P1 closed 2026-08-26. The planned `/vera-wrap` step-3 amendment cannot be
+   applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
    author-side; `core` remains queued.
 4. **Owed mechanisms, validated and ranked:** restore the mechanisms the imported constitution and
@@ -141,7 +145,7 @@ the full `make check` gate.
    `make short`; state-freshness; full invariant citation resolution; skip-lint; prescription-lint.
    Invariant numbering and proving-test-cell shape are now blocking and self-tested. Then reassess
    the historical comment-claims and cleanroom-lint debts against the code that actually exists.
-5. **Calendar (none urgent):** spec-first advisory expires 2026-09-18 = Task 9's deadline;
+5. **Calendar (none urgent):** spec-first graduated to blocking on 2026-08-26;
    meta-tax + backup advisories 2026-10-16 (backup's graduation = mechanize bundle freshness or
    delete the row). No expired advisories; 0.6's stop-check bomb was defused by graduation 08-08.
    No human-owned items pending — remote was settled local-only (bundles).
@@ -158,16 +162,15 @@ the full `make check` gate.
   describes.
 - Keep the pushed GitHub repository and a dated `git bundle` as the two recovery copies.
 
-## End-of-day 2026-08-26
+## End-of-day 2026-08-26 — Task 9 / P1 close
 
 - Branch `main` is clean and pushed to `origin`; the final durability commit is the current HEAD.
-- Today’s completed work is Task 8 implementation, MED finding remediation, independent acceptance,
-  evidence, journal, and state updates. Task 9 is open but intentionally paused.
+- Today’s completed work is Task 9 implementation, review-artifact migration, spec-first graduation,
+  independent verification, P1 evidence, journal, and state updates.
 - Unverified assumptions: no real Claude session JSONL corpus was present in the expected session-artifact
   directory; Task 7’s ingestion behavior was verified with synthetic fixtures only, as designed.
-- Tomorrow’s exact first action: run `git status --short --branch && git log -1 --oneline`, reread
-  `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; then inspect the Task 9 scope. Do not
-  begin Task 9 until explicitly directed.
+- Next exact first action: run `git status --short --branch && git log -1 --oneline`, reread
+  `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; then inspect the P2 plan.
 - Institutionalized lightweight improvements: when adding a SPEC invariant, use the existing
   `file_test.go::TestName` citation form, append the invariant number, and run `make invariants-lock`
   before `make check`; for PostgreSQL-backed mutation runs, confirm the disposable Docker image and

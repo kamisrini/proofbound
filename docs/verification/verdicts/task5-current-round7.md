@@ -1,3 +1,13 @@
+---
+schema: vera.verdict.v1
+verdict_id: task5-current-round7
+status: ACCEPTABLE
+reviewed_commit: 517470e4b5672c8925c4f79f1325ee4ee03a0541
+findings: []
+artifact_path: docs/verification/verdicts/task5-current-round7.md
+artifact_sha: ee2217b9cfc3611a48aa58ccf9c94e7eed6a1044380ff39cc50ed2ca2fa35db0
+---
+
 ACCEPTABLE
 
 ## Scope and calibration

@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task6-current-round2
+status: NEEDS_WORK
+reviewed_commit: abf4344b5ac1d1306ed9527e59820b4704d217a6
+findings:
+  - finding_id: task6-current-round2-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task6-current-round2.md
+artifact_sha: 4eb65605fa2a5f850e268d09597ad823d4d699139a01b17cd686f1b3243e177f
+---
+
 # NEEDS_WORK
 
 Frozen commit `abf4344` is not acceptable under the full Task 6 / P1 contract.

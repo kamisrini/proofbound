@@ -438,7 +438,7 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 
 | Invariant | Statement | Proving test |
 |---|---|---|
-| INV-1 | Canonical bytes are independent of object key order and insignificant whitespace | canonical_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-1 | Canonical bytes are independent of object key order and insignificant whitespace | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
 | INV-2 | Canonicalization is idempotent | canonical_test.go::TestCanonicalize_Idempotent |
 | INV-3 | Non-ASCII strings survive as UTF-8 and keys sort by UTF-16 code unit | canonical_test.go::TestCanonicalize_Unicode |
 | INV-4 | -0 equals 0 and exponent forms normalize to their plain form | canonical_test.go::TestCanonicalize_NumberNormalization |

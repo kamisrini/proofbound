@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task4-current-round1
+status: NEEDS_WORK
+reviewed_commit: 3470e60a67caf1bda414d7baf08bfb57b76ffd8b
+findings:
+  - finding_id: task4-current-round1-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task4-current-round1.md
+artifact_sha: e641ece21d9a207c0107d2107f71626eb8757567e17c3b59ccc5fd0cb458e9c2
+---
+
 NEEDS_WORK
 
 ## Calibration and evidence

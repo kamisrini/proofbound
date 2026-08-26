@@ -1,3 +1,13 @@
+---
+schema: vera.verdict.v1
+verdict_id: task4-current-round4
+status: ACCEPTABLE
+reviewed_commit: d794ff7c691c3dc788505672ae817b33039b0ffc
+findings: []
+artifact_path: docs/verification/verdicts/task4-current-round4.md
+artifact_sha: ccd4440b1580ae89b6d0884e4e714b45df0fc90e0417d7a4d970e1a3e4811083
+---
+
 ACCEPTABLE
 
 ## Round 4 scope and calibration

@@ -39,9 +39,9 @@ package is DONE only when `make mutants` is green for it (all survivors declared
 adversarial verdict says ACCEPTABLE, committed under `docs/verification/verdicts/`. Author-green
 predicts nothing — measured three times.
 
-**Position 2026-08-14:** Tasks 0–3 done · Task 4 in final remediation (three rounds, closure 28/36,
-converging) · Tasks 5–9 not started · Task 9 must land before the 2026-09-18 spec-first expiry. Task
-status detail: the plan's Position section; the live queue: `notes/state.md`.
+**Position 2026-08-26:** P1 Tasks 0–9 are DONE. Task 9 closed the review-verdict connector and
+ledger-ordered red-verdict chain, graduated spec-first enforcement to a blocking `make check`
+test, and recorded the full verifier run. Task status detail: the plan's Position section.
 
 ## P2 — Gates as data (target: +4 weeks)
 

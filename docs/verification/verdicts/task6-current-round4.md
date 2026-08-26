@@ -1,3 +1,15 @@
+---
+schema: vera.verdict.v1
+verdict_id: task6-current-round4
+status: NEEDS_WORK
+reviewed_commit: b9848f2a474004eefc02da918f8e2b97cb57a734
+findings:
+  - finding_id: task6-current-round4-finding
+    severity: MED
+artifact_path: docs/verification/verdicts/task6-current-round4.md
+artifact_sha: 15dc22ec88f58619f43a56290ee887221c917973b54f9370666bb4ef353a497a
+---
+
 NEEDS_WORK
 
 Findings:
