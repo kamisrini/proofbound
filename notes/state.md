@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P1 closed; P2 gates-as-data in progress)
+**As of:** 2026-08-26 (P2 gates-as-data closed; P3 external connector next)
 
 ## Resume Prompt
 
@@ -98,10 +98,10 @@ Load-bearing facts:
 - Run make check BARE. Never pipe it through a && chain — the pipe eats the exit code.
 
 Next-session sequence: run `git status --short --branch && git log -1 --oneline`, then reread
-`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Continue P2 from the ROADMAP P2
-status and migrate the next P0 check only after adding its gate and canary test. `make check` BARE is
-the verification gate. `make backup` is currently missing;
-create a manual `git bundle --all` until the target and its self-test are restored.
+`CLAUDE.md`, `notes/state.md`, and `notes/journal/2026-08-26.md`. Start P3 by selecting the first
+external connector under the ROADMAP decision rule. `make check` BARE is the verification gate.
+`make backup` is currently missing; create a manual `git bundle --all` until the target and its
+self-test are restored.
 ```
 
 ## Worktree

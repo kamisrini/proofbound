@@ -43,14 +43,15 @@ predicts nothing — measured three times.
 ledger-ordered red-verdict chain, graduated spec-first enforcement to a blocking `make check`
 test, and recorded the full verifier run. Task status detail: the plan's Position section.
 
-## P2 — Gates as data (target: +4 weeks)
+## P2 — Gates as data ✅ (target: +4 weeks)
 
-**Status 2026-08-26:** the gate set and delivery boundary are complete: `gates/make-check-success.yaml`, the
+**Status 2026-08-26:** P2 is complete. The gate set and delivery boundary are complete: `gates/make-check-success.yaml`, the
 ledger-backed `vera gates canary` command, proof-bearing PASS/BLOCKED/UNKNOWN results, and an
 explicit `vera gates enforce` path. All seven current definitions are promoted to `mode: enforce`
 after PASS canary evidence; enforcement is explicit and fails closed. Gate definitions also carry
 an ISO expiry date, and enforcement rejects expired definitions. The canary→enforce bad-witness
-sequence is proven in `docs/verification/p2-gate-evidence.md`.
+sequence is proven in `docs/verification/p2-gate-evidence.md`. The runtime P0 checks are represented
+by dedicated witnessed gates; `hooks-test` remains explicitly retained as a mechanism self-test.
 
 - Gate definitions in `gates/*.yaml` evaluated by the kernel against the ledger (replaces parts of Makefile checks)
 - Canary evaluation against historical events before a gate can block

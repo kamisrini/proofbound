@@ -41,10 +41,10 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-08-26, P1 Tasks 0–9 are implemented and accepted under the repository’s independent
-verification rule. P1 is closed; the next planned phase is P2.
+As of 2026-08-26, P1 Tasks 0–9 and P2 gates-as-data are implemented and accepted under the
+repository’s independent verification rule. P2 is closed; the next planned phase is P3.
 
-Current project status: P1 complete; P2 gates-as-data is in progress.
+Current project status: P2 gates-as-data complete; P3 external connector is next.
 
 Currently implemented and verified:
 
@@ -71,7 +71,7 @@ Currently implemented and verified:
 
 Remaining work:
 
-- Remaining P2 gate migrations and the complete user-facing delivery workflow
+- P3: select and implement the first external connector, with real-data freshness evidence
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
