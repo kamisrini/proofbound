@@ -49,9 +49,10 @@ Load-bearing facts:
   committed artifacts, `reviews_view` retains finding/event proof, and `vera report week` exposes the
   ledger-ordered red-verdict/change/next-verdict chain. The spec-first graduation is a blocking Go test
   under `make check` at `kernel/internal/specfirst`.
-- P2 first slice is landed but advisory: `gates/make-check-success.yaml` and `vera gates canary`
-  evaluate the latest `check.run` payload against the ledger and retain event proof. Remaining P0
-  checks are not yet migrated and no gate blocks commands yet.
+- P2 first slice is landed: `gates/make-check-success.yaml` and `vera gates canary` evaluate the
+  latest `check.run` payload against the ledger and retain event proof. `vera gates enforce` now
+  requires explicit `mode: enforce` promotion and fails closed on BLOCKED/UNKNOWN. Remaining P0
+  checks are not yet migrated and the initial gate remains canary-only.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

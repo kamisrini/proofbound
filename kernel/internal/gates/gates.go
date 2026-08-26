@@ -107,11 +107,21 @@ func Parse(data []byte) (Definition, error) {
 }
 
 func (d Definition) validate() error {
-	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Mode != "canary" || !d.Source.WellFormed() || !d.Kind.Registered() || d.Condition.Field == "" || len(d.Condition.Equals) == 0 || !json.Valid(d.Condition.Equals) {
+	if d.Schema != Version || d.ID == "" || d.Description == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() || d.Condition.Field == "" || len(d.Condition.Equals) == 0 || !json.Valid(d.Condition.Equals) {
 		return errors.New("invalid gate definition")
 	}
 	if strings.ContainsAny(d.Condition.Field, ".[]\\\x00") {
 		return errors.New("invalid condition field")
+	}
+	return nil
+}
+
+func (d Definition) EnforceReady() error {
+	if err := d.validate(); err != nil {
+		return err
+	}
+	if d.Mode != "enforce" {
+		return fmt.Errorf("gate %s is not promoted to enforce mode", d.ID)
 	}
 	return nil
 }

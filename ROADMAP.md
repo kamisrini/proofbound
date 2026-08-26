@@ -46,9 +46,9 @@ test, and recorded the full verifier run. Task status detail: the plan's Positio
 ## P2 — Gates as data (target: +4 weeks)
 
 **Status 2026-08-26:** first vertical slice landed: `gates/make-check-success.yaml`, the
-ledger-backed `vera gates canary` command, and proof-bearing PASS/BLOCKED/UNKNOWN results. The
-gate is intentionally advisory until the remaining P0 checks are represented and the canary-to-
-enforce sequence is independently verified.
+ledger-backed `vera gates canary` command, proof-bearing PASS/BLOCKED/UNKNOWN results, and an
+explicit `vera gates enforce` path. The initial gate remains advisory until its definition is
+promoted to `mode: enforce`; promotion is explicit and enforcement fails closed.
 
 - Gate definitions in `gates/*.yaml` evaluated by the kernel against the ledger (replaces parts of Makefile checks)
 - Canary evaluation against historical events before a gate can block

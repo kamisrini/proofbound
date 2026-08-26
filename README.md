@@ -58,6 +58,7 @@ Currently implemented and verified:
 - Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
 - Machine-enforced spec-first coverage for every kernel package
 - P2 gate canary evaluation for the latest `make check` witness
+- Explicit canary-to-enforce gate promotion workflow
 - Verification and mutation-testing infrastructure
 
 Remaining work:

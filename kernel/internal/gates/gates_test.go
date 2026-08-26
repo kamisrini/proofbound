@@ -13,7 +13,7 @@ func TestLoadRejectsInvalidDefinitions(t *testing.T) {
 	}
 	for _, bad := range [][]byte{
 		[]byte(`{"schema":"vera.gate.v2"}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"enforce","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
 		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
 		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
 	} {
@@ -58,5 +58,16 @@ func TestParseIsReadOnly(t *testing.T) {
 	}
 	if !bytes.Equal(data, want) {
 		t.Fatal("Parse mutated its input")
+	}
+}
+
+func TestEnforceRequiresPromotion(t *testing.T) {
+	definition := Definition{Schema: Version, ID: "x", Description: "d", Mode: "canary", Source: "checks", Kind: "check.run", Condition: Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
+	if err := definition.EnforceReady(); err == nil {
+		t.Fatal("canary definition accepted for enforcement")
+	}
+	definition.Mode = "enforce"
+	if err := definition.EnforceReady(); err != nil {
+		t.Fatal(err)
 	}
 }

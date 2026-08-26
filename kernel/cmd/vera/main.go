@@ -27,7 +27,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week | vera gates canary"
+const usage = "usage: vera sync {git|checks|sessions|reviews|all} | vera rebuild | vera verify | vera report week | vera gates {canary|enforce}"
 
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -44,6 +44,7 @@ const (
 	commandVerify
 	commandReportWeek
 	commandGatesCanary
+	commandGatesEnforce
 )
 
 func parseCommand(args []string) command {
@@ -66,6 +67,8 @@ func parseCommand(args []string) command {
 		return commandReportWeek
 	case len(args) == 2 && args[0] == "gates" && args[1] == "canary":
 		return commandGatesCanary
+	case len(args) == 2 && args[0] == "gates" && args[1] == "enforce":
+		return commandGatesEnforce
 	default:
 		return commandInvalid
 	}
@@ -283,12 +286,18 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 	}
 	defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
 	projector := projections.New()
-	if cmd == commandGatesCanary {
+	if cmd == commandGatesCanary || cmd == commandGatesEnforce {
 		definitions, err := gates.LoadDir(filepath.Join(root, "gates"))
 		if err != nil {
 			return err
 		}
+		blocked := false
 		for _, definition := range definitions {
+			if cmd == commandGatesEnforce {
+				if err := definition.EnforceReady(); err != nil {
+					return err
+				}
+			}
 			result, err := gates.Evaluate(ctx, ledger, definition)
 			if err != nil {
 				return err
@@ -296,6 +305,12 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock); err != nil {
 				return err
 			}
+			if cmd == commandGatesEnforce && (result.State == gates.StateBlocked || result.State == gates.StateUnknown) {
+				blocked = true
+			}
+		}
+		if blocked {
+			return errors.New("gate enforcement blocked: a gate is BLOCKED or UNKNOWN")
 		}
 		return nil
 	}

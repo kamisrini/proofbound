@@ -7,6 +7,8 @@ verify:
 	@cd kernel && go run ./cmd/vera verify
 gates-canary:
 	@cd kernel && go run ./cmd/vera gates canary
+gates-enforce:
+	@cd kernel && go run ./cmd/vera gates enforce
 short: hooks-test
 hooks-test:
 	@for f in scripts/tests/*.test.sh; do bash "$$f"; done

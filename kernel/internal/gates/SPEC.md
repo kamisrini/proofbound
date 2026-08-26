@@ -31,7 +31,8 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 
 | Invariant | Statement | Proving test |
 |---|---|---|
-| GATE-INV-1 | Definitions require the closed v1 schema and canary mode | gates_test.go::TestLoadRejectsInvalidDefinitions |
+| GATE-INV-1 | Definitions require the closed v1 schema and an explicit canary or enforce mode | gates_test.go::TestLoadRejectsInvalidDefinitions |
 | GATE-INV-2 | The latest matching ledger event determines the result | gates_integration_test.go::TestEvaluateUsesLatestMatchingEvent |
 | GATE-INV-3 | PASS and BLOCKED results retain event proof; no event is UNKNOWN | gates_integration_test.go::TestEvaluateStatesAndProof |
 | GATE-INV-4 | Canary evaluation does not mutate the ledger | gates_integration_test.go::TestEvaluateIsReadOnly |
+| GATE-INV-5 | Enforcement requires explicit mode promotion | gates_test.go::TestEnforceRequiresPromotion |
