@@ -24,6 +24,7 @@ func (p *Projector) Apply(context.Context, *store.Store) error
 func (p *Projector) Rebuild(context.Context, *store.Store) error
 func (p *Projector) Snapshot(context.Context, *store.Store) (Snapshot, error)
 func CompareSnapshots(Snapshot, Snapshot) error
+func (p *Projector) ReportWeek(context.Context, *store.Store, time.Time, map[string]bool, io.Writer) error
 ```
 
 `Apply` consumes events after a derived `projection_meta.last_seq` checkpoint. Row updates and the
@@ -51,6 +52,8 @@ canonical JSON columns.
 10. **P-INV-10 — Empty future views are deterministic.** The review view exists and snapshots as empty until verdict ingestion lands; review events fail closed while deferred.
 11. **P-INV-11 — Projection metadata is unique and versioned.** Exactly one named metadata row owns the checkpoint for projection version 1.
 12. **P-INV-12 — Session metadata is projected without content.** Session rows contain only the connector's bounded metadata and preserve the event proof links.
+13. **P-INV-13 — Week report entries carry proof identity.** Every commit, check, and session entry renders its originating event ID.
+14. **P-INV-14 — Unreachable commits are retained and marked superseded.** A commit absent from the supplied current reachability set is not omitted from the report.
 
 ## 5. Proving table
 
@@ -68,3 +71,5 @@ canonical JSON columns.
 | P-INV-10 | Review view is present and empty; deferred review events fail closed | projection_test.go::TestEnsure_CreatesFutureViews |
 | P-INV-11 | Metadata has one versioned checkpoint row | projection_test.go::TestEnsure_MetadataIsUniqueAndVersioned |
 | P-INV-12 | Session metadata is materialized with proof identity | projection_test.go::TestApply_Session |
+| P-INV-13 | Week report entries render their originating event IDs | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |
+| P-INV-14 | Unreachable commit fixture is retained and marked superseded | report_test.go::TestRenderWeekReport_ProofAndSupersededFixture |

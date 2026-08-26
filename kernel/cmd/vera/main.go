@@ -23,7 +23,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: vera sync {git|checks|sessions|all} | vera rebuild | vera verify"
+const usage = "usage: vera sync {git|checks|sessions|all} | vera rebuild | vera verify | vera report week"
 
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -37,6 +37,7 @@ const (
 	commandSyncAll
 	commandRebuild
 	commandVerify
+	commandReportWeek
 )
 
 func parseCommand(args []string) command {
@@ -53,6 +54,8 @@ func parseCommand(args []string) command {
 		return commandRebuild
 	case len(args) == 1 && args[0] == "verify":
 		return commandVerify
+	case len(args) == 2 && args[0] == "report" && args[1] == "week":
+		return commandReportWeek
 	default:
 		return commandInvalid
 	}
@@ -234,6 +237,19 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 			return err
 		}
 		return verify(ctx, root, ledger, projector, ids)
+	case commandReportWeek:
+		repo, err := gitcmd.New(root)
+		if err != nil {
+			return err
+		}
+		reachable, err := repo.Reachable(ctx)
+		if err != nil {
+			return err
+		}
+		if err := projector.Apply(ctx, ledger); err != nil {
+			return err
+		}
+		return projector.ReportWeek(ctx, ledger, time.Now(), reachable, output)
 	}
 	return nil
 }

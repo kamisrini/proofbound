@@ -69,6 +69,18 @@ func TestCommits_EmptyRepositoryIsNotAnError(t *testing.T) {
 	}
 }
 
+func TestReachable_EmptyRepositoryIsNotAnError(t *testing.T) {
+	fixture := newFixture(t)
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reachable, err := repo.Reachable(context.Background())
+	if err != nil || len(reachable) != 0 {
+		t.Fatalf("reachable=%v error=%v", reachable, err)
+	}
+}
+
 func TestCommits_MapsEveryScalar(t *testing.T) {
 	fixture := newFixture(t)
 	fixture.write("file.txt", "content")

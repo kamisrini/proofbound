@@ -74,6 +74,34 @@ func (r *Repo) Commits(ctx context.Context) ([]connectorgit.Commit, error) {
 	return commits, nil
 }
 
+// Reachable returns the commit object names currently reachable from the
+// repository's non-excluded refs. It deliberately does not read commit
+// payloads or file trees; callers that only need supersession membership
+// should not pay the full ingestion cost.
+func (r *Repo) Reachable(ctx context.Context) (map[string]bool, error) {
+	if r == nil {
+		return nil, errors.New("gitcmd: repository is nil")
+	}
+	if err := r.refusePartial(ctx); err != nil {
+		return nil, err
+	}
+	if err := r.validateRefs(ctx); err != nil {
+		return nil, err
+	}
+	out, err := r.run(ctx, "rev-list", "--exclude=refs/stash", "--exclude=refs/notes/*", "--exclude=refs/replace/*", "--all")
+	if err != nil {
+		return nil, fmt.Errorf("gitcmd: list reachable commits: %w", err)
+	}
+	reachable := make(map[string]bool)
+	for _, sha := range strings.Fields(string(out)) {
+		reachable[sha] = true
+	}
+	if head, headErr := r.peelCommit(ctx, "HEAD"); headErr == nil {
+		reachable[head] = true
+	}
+	return reachable, nil
+}
+
 func (r *Repo) Tips(ctx context.Context) (map[string]string, error) {
 	if r == nil {
 		return nil, errors.New("gitcmd: repository is nil")
