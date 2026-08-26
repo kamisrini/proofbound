@@ -50,10 +50,12 @@ The complete exported surface of `package core`. Nothing else is exported.
 type Kind string
 
 const (
-	KindCommitRecorded  Kind = "commit.recorded"
-	KindCheckRun        Kind = "check.run"
-	KindSessionObserved Kind = "session.observed"
-	KindReviewVerdict   Kind = "review.verdict"
+	KindCommitRecorded   Kind = "commit.recorded"
+	KindCheckRun         Kind = "check.run"
+	KindSessionObserved  Kind = "session.observed"
+	KindReviewVerdict    Kind = "review.verdict"
+	KindGitHubWorkflow   Kind = "github.workflow_run"
+	KindGitHubDeployment Kind = "github.deployment"
 )
 
 // Registered reports whether k is a member of the kinds registry.
@@ -71,6 +73,7 @@ const (
 	SourceChecks   Source = "checks"
 	SourceSessions Source = "sessions"
 	SourceReviews  Source = "reviews"
+	SourceGitHub   Source = "github"
 )
 
 // WellFormed reports whether s matches ^[a-z][a-z0-9_]{0,31}$.

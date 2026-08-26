@@ -42,12 +42,12 @@ func TestContentSHA_Shape(t *testing.T) {
 	}
 }
 func TestKind_RegisteredOnlyForRegistryMembers(t *testing.T) {
-	if !KindCommitRecorded.Registered() || Kind("unknown").Registered() {
+	if !KindCommitRecorded.Registered() || !KindGitHubWorkflow.Registered() || !KindGitHubDeployment.Registered() || Kind("unknown").Registered() {
 		t.Fatal("registry mismatch")
 	}
 }
 func TestSource_WellFormed(t *testing.T) {
-	if Source("bad-value").WellFormed() || !Source("external_1").WellFormed() {
+	if Source("bad-value").WellFormed() || !Source("external_1").WellFormed() || !SourceGitHub.WellFormed() {
 		t.Fatal("source shape mismatch")
 	}
 }

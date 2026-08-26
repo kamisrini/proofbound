@@ -60,7 +60,10 @@ by dedicated witnessed gates; `hooks-test` remains explicitly retained as a mech
 
 ## P3 — First external connector (target: +4 weeks)
 
-A second tenant's real delivery data — a public GitHub organization is the default candidate, chosen for generality and reproducibility. Decision at P3 start (`/vera-decide`).
+**Status 2026-08-26:** P3 is in progress. The first connector decision selects a narrow, read-only
+GitHub Actions and deployments slice for one organization with an explicit repository allowlist.
+The connector contract and initial ingestion implementation are under verification; the joined
+deployed-where / tested-what projection and live acceptance run remain.
 
 - **DoD:** the deployed-where / tested-what view running on real external data; cold sync < 10 min; freshness rendered on every surface
 

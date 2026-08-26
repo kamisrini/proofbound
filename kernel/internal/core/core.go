@@ -21,21 +21,23 @@ import (
 type Kind string
 
 const (
-	KindCommitRecorded  Kind = "commit.recorded"
-	KindCheckRun        Kind = "check.run"
-	KindSessionObserved Kind = "session.observed"
-	KindReviewVerdict   Kind = "review.verdict"
+	KindCommitRecorded   Kind = "commit.recorded"
+	KindCheckRun         Kind = "check.run"
+	KindSessionObserved  Kind = "session.observed"
+	KindReviewVerdict    Kind = "review.verdict"
+	KindGitHubWorkflow   Kind = "github.workflow_run"
+	KindGitHubDeployment Kind = "github.deployment"
 )
 
 func (k Kind) Registered() bool {
 	switch k {
-	case KindCommitRecorded, KindCheckRun, KindSessionObserved, KindReviewVerdict:
+	case KindCommitRecorded, KindCheckRun, KindSessionObserved, KindReviewVerdict, KindGitHubWorkflow, KindGitHubDeployment:
 		return true
 	}
 	return false
 }
 func Kinds() []Kind {
-	return []Kind{KindCheckRun, KindCommitRecorded, KindReviewVerdict, KindSessionObserved}
+	return []Kind{KindCheckRun, KindCommitRecorded, KindGitHubDeployment, KindGitHubWorkflow, KindReviewVerdict, KindSessionObserved}
 }
 
 type Source string
@@ -45,6 +47,7 @@ const (
 	SourceChecks   Source = "checks"
 	SourceSessions Source = "sessions"
 	SourceReviews  Source = "reviews"
+	SourceGitHub   Source = "github"
 )
 
 var sourceRE = regexp.MustCompile(`^[a-z][a-z0-9_]{0,31}$`)

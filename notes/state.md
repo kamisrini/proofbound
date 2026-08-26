@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P2 gates-as-data closed; P3 external connector next)
+**As of:** 2026-08-26 (P2 closed; P3 GitHub connector in progress)
 
 ## Resume Prompt
 
@@ -64,6 +64,11 @@ Load-bearing facts:
   runs with an atomic `.vera/delivery.lock` and pins the aggregate witness target to `check`.
 - P2 acceptance evidence is recorded in `docs/verification/p2-gate-evidence.md`: a bad kernel-check
   witness is BLOCKED in canary and rejected by enforce with the same ledger proof.
+- P3 selected a narrow GitHub connector in `docs/decisions/VD-p3-github-connector-2026-08-26.md`.
+  The initial implementation collects bounded workflow-run and deployment records through an
+  injectable standard-library HTTP client and emits repository-qualified external events. Fixture
+  selection evidence is in `docs/verification/p3-github-fixture-check.md`. The
+  joined delivery projection, CLI surface, and live acceptance run are still outstanding.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.

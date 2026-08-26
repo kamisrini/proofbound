@@ -7,6 +7,7 @@
 - [VD-local-only-backup-mjic4a: local-only git for now; bundles are the backup mechanism](VD-local-only-backup-mjic4a.md) — Accepted (2026-08-08)
 - [VD-no-graph-2aa4vz: no knowledge graph during bootstrap — files + git are the record](VD-no-graph-2aa4vz.md) — Accepted (2026-08-07)
 - [VD-north-star-6io56h: The 100x magic-wand vision is VERA's ratified north star](VD-north-star-6io56h.md) — Accepted (2026-08-07)
+- [VD-p3-github-connector-2026-08-26: GitHub Actions and deployments first](VD-p3-github-connector-2026-08-26.md) — Accepted (2026-08-26) (undated)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
 - [VD-review-ceremony-tiers-v2b6kp: review ceremony is tiered by package class, and the parallel round comes EARLY](VD-review-ceremony-tiers-v2b6kp.md) — Accepted (2026-08-10)
 - [VD-stack-go-fid9mi: Go all the way — kernel, CLI, connectors](VD-stack-go-fid9mi.md) — Accepted (2026-08-07)

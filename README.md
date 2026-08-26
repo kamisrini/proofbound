@@ -46,7 +46,7 @@ repository’s independent verification rule. P2 is closed; the next planned pha
 
 Current project status: P2 gates-as-data complete; P3 external connector is next.
 
-Currently implemented and verified:
+Currently implemented and verified (P3 slice is under verification):
 
 - Go kernel and core event primitives
 - Durable store foundations with migrations and append/read operations
@@ -67,11 +67,13 @@ Currently implemented and verified:
 - Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
 - Explicit delivery enforcement workflow (`make delivery-enforce`): fresh witnesses, ingestion, then fail-closed gate enforcement
 - P2 canary-to-enforce bad-witness acceptance evidence
+- P3 GitHub connector decision and initial workflow/deployment ingestion slice (under verification)
+- P3 live fixture-selection evidence for `github/docs`
 - Verification and mutation-testing infrastructure
 
 Remaining work:
 
-- P3: select and implement the first external connector, with real-data freshness evidence
+- P3: complete the GitHub deployed-where / tested-what projection and live freshness acceptance
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
