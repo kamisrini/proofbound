@@ -164,4 +164,6 @@ and the full `make check` gate.
 - Institutionalized lightweight improvements: when adding a SPEC invariant, use the existing
   `file_test.go::TestName` citation form, append the invariant number, and run `make invariants-lock`
   before `make check`; for PostgreSQL-backed mutation runs, confirm the disposable Docker image and
-  `DATABASE_URL` first, and inspect the retained mutant log when calibration fails.
+  `DATABASE_URL` first, and inspect the retained mutant log when calibration fails. The EOD protocol
+  now requires the verbatim Resume Prompt itself to contain the complete next-session sequence;
+  tomorrow’s instructions may not exist only in a separate closeout section.

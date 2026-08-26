@@ -51,7 +51,9 @@ Files + git + grep ARE the record during bootstrap. Derived indexes only (`make 
 ## Session protocol
 
 - **Start:** the SessionStart hook prints `notes/state.md` + git status. Run `/vera-next` to orient and pick the next task.
-- **End:** run `/vera-wrap` — journal entry, rewrite `notes/state.md`, `make check`, commit.
+- **End:** run `/vera-wrap` — journal entry, rewrite `notes/state.md`, make its verbatim Resume Prompt
+  contain the complete next-session sequence, run `make check`, commit, push, and create/verify the
+  dated bundle. Do not leave tomorrow’s instructions only in a separate EOD summary.
 - **Decisions during work:** `/vera-decide` immediately, not at session end.
 - **Before merging a meaningful chunk:** `/vera-review` (adversarial pass against these laws + the spec).
 - **Parallel sessions:** exactly one session owns `notes/` writes and `/vera-wrap` at a time; subagents never write `notes/state.md` or the journal — they return results to the owning session; parallel worktree sessions write journal fragments to `notes/tmp/` and the owner merges at wrap.
