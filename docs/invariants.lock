@@ -191,3 +191,9 @@ kernel/internal/store/SPEC.md	INV-48	A row is never counted twice, and never cou
 kernel/internal/store/SPEC.md	INV-49	A lost lock is reported at ERROR level.
 kernel/internal/store/SPEC.md	INV-50	Teardown does not run under the lifecycle mutex.
 kernel/internal/store/SPEC.md	INV-51	A projection rollback does not depend on the caller's context.
+kernel/internal/twin/SPEC.md	TWIN-INV-1	Production preservation.
+kernel/internal/twin/SPEC.md	TWIN-INV-2	Bounded source.
+kernel/internal/twin/SPEC.md	TWIN-INV-3	Ordered replay.
+kernel/internal/twin/SPEC.md	TWIN-INV-4	Immutable source.
+kernel/internal/twin/SPEC.md	TWIN-INV-6	Deterministic result.
+kernel/internal/twin/SPEC.md	TWIN-INV-7	Fail closed.

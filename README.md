@@ -45,7 +45,7 @@ As of 2026-08-26, P1 Tasks 0–9, P2 gates-as-data, and P3’s first external co
 and accepted under the repository’s independent verification rule. P3 is closed; the next planned
 phase is P4.
 
-Current project status: P3 external GitHub connector complete; P4 twin spike is next.
+Current project status: P3 external GitHub connector complete; P4 twin spike is in progress.
 
 Currently implemented and verified:
 
@@ -75,7 +75,7 @@ Currently implemented and verified:
 
 Remaining work:
 
-- P4: twin spike with ephemeral replay and prediction-ledger calibration
+- P4 bounded replay contract; PostgreSQL fork isolation and prediction-ledger calibration remain
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The

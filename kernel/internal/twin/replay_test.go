@@ -1,0 +1,143 @@
+package twin
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"reflect"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/kamisrini/proofbound/kernel/internal/core"
+	"github.com/kamisrini/proofbound/kernel/internal/projections"
+	"github.com/kamisrini/proofbound/kernel/internal/store"
+)
+
+func TestReplayBoundsAndOrdersStream(t *testing.T) {
+	s := testStore(t)
+	appendEvent(t, s, 1)
+	appendEvent(t, s, 2)
+	before := eventSeqs(t, s)
+	baseline := projections.Snapshot{Tables: map[string][]string{"x": {"base"}}}
+	var got []int64
+	result, err := Replay(context.Background(), s, Request{ThroughSeq: 1, Candidate: []Candidate{{Seq: 3, Event: event(3)}}}, baseline, func(_ context.Context, records []store.Record) (projections.Snapshot, error) {
+		for _, r := range records {
+			got = append(got, r.Seq)
+		}
+		return baseline, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Verdict != VerdictPreserved || len(got) != 2 || got[0] != 1 || got[1] != 3 {
+		t.Fatalf("got result=%+v stream=%v", result, got)
+	}
+	if after := eventSeqs(t, s); !reflect.DeepEqual(before, after) {
+		t.Fatalf("replay changed production ledger: before=%v after=%v", before, after)
+	}
+}
+
+func TestReplayIsDeterministic(t *testing.T) {
+	s := testStore(t)
+	appendEvent(t, s, 1)
+	b := projections.Snapshot{Tables: map[string][]string{"x": {"base"}}}
+	project := func(_ context.Context, _ []store.Record) (projections.Snapshot, error) { return b, nil }
+	a, err := Replay(context.Background(), s, Request{ThroughSeq: 1}, b, project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := Replay(context.Background(), s, Request{ThroughSeq: 1}, b, project)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(a, c) {
+		t.Fatalf("not deterministic: %+v vs %+v", a, c)
+	}
+}
+
+func TestReplayDetectsChangedProjection(t *testing.T) {
+	s := testStore(t)
+	baseline := projections.Snapshot{Tables: map[string][]string{"x": {"base"}}}
+	result, err := Replay(context.Background(), s, Request{ThroughSeq: 0}, baseline, func(_ context.Context, _ []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{Tables: map[string][]string{"x": {"candidate"}}}, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Verdict != VerdictChanged {
+		t.Fatalf("got verdict %q", result.Verdict)
+	}
+}
+
+func TestReplayRejectsInvalidCandidate(t *testing.T) {
+	s := testStore(t)
+	_, err := Replay(context.Background(), s, Request{ThroughSeq: 2, Candidate: []Candidate{{Seq: 2, Event: event(2)}}}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	})
+	if err == nil {
+		t.Fatal("expected sequence validation error")
+	}
+}
+
+func TestReplayFailsClosedOnProjectorError(t *testing.T) {
+	s := testStore(t)
+	want := errors.New("boom")
+	_, err := Replay(context.Background(), s, Request{ThroughSeq: 0}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, want
+	})
+	if err == nil || !errors.Is(err, want) {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestReplayRejectsDecreasingCandidates(t *testing.T) {
+	s := testStore(t)
+	_, err := Replay(context.Background(), s, Request{ThroughSeq: 1, Candidate: []Candidate{{Seq: 3, Event: event(3)}, {Seq: 3, Event: event(4)}}}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	})
+	if err == nil {
+		t.Fatal("expected candidate ordering error")
+	}
+}
+
+func event(seq int64) core.Event {
+	p := json.RawMessage(`{"seq":1}`)
+	h := sha256.Sum256(p)
+	return core.Event{ID: core.EventID{byte(seq)}, Source: core.SourceGit, NativeID: "n-" + strconv.FormatInt(seq, 10), Kind: core.KindCheckRun, OccurredAt: time.Unix(seq, 0), RecordedAt: time.Unix(seq, 0), Payload: p, ContentSHA: hex.EncodeToString(h[:]), ConnectorVersion: "test"}
+}
+
+func testStore(t *testing.T) *store.Store {
+	t.Helper()
+	s, err := store.Open(context.Background(), store.Config{Root: t.TempDir()})
+	if err != nil {
+		t.Skipf("embedded postgres unavailable: %v", err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	return s
+}
+func appendEvent(t *testing.T, s *store.Store, seq int64) {
+	t.Helper()
+	sy, err := s.BeginSync(context.Background(), "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, err = sy.Append(context.Background(), event(seq))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := sy.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func eventSeqs(t *testing.T, s *store.Store) []int64 {
+	t.Helper()
+	var seqs []int64
+	if err := s.ReadEvents(context.Background(), store.Filter{}, func(r store.Record) error { seqs = append(seqs, r.Seq); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	return seqs
+}

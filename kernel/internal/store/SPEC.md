@@ -1406,7 +1406,7 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 | INV-10 | ReadEvents yields strictly increasing seq across a ledger containing gaps, even when physical row order disagrees | read_test.go::TestReadEvents_SeqIsTotalOrderDespiteGaps |
 | INV-11 | Replay order ignores event_id and occurred_at | read_test.go::TestReadEvents_OrderIndependentOfIDAndTime |
 | INV-12 | Filter matches source and kind exactly and treats SinceSeq and OccurredAfter as exclusive | read_test.go::TestReadEvents_FilterSemantics |
-| INV-13 | Early exit returns nil, other yield errors propagate, and no connection leaks | read_test.go::TestReadEvents_EarlyExitReleasesConnection |
+| INV-13 | Early exit returns nil, other yield errors propagate, and no connection leaks | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
 | INV-14 | The package's public handles expose the pinned safe surface | surface_test.go::TestSurface_NilAndClosedHandles |
 | INV-15 | No exported signature mentions a database driver or migration library | surface_test.go::TestNoDriverEscapesTheSurface |
 | INV-16 | No mutating SQL targets events, and sync_runs has exactly one UPDATE | surface_test.go::TestNoMutatingLedgerSQL |
@@ -1428,8 +1428,8 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 | INV-32 | A migration failure returns ErrMigrate and no Store, and a post-lock Open failure strands no lock | migrate_test.go::TestOpen_MigrationFailureReleasesLock |
 | INV-33 | A data directory written by another PostgreSQL major is refused before initdb | embedded_test.go::TestOpen_RefusesAForeignDataDirVersion |
 | INV-34 | Finish reports success only after the journal row is written | append_test.go::TestSync_FinishReportsSuccessOnlyAfterTheWrite |
-| INV-35 | yield may use the Store, and a walk longer than one page yields every row exactly once | read_test.go::TestReadEvents_YieldMayUseTheStore |
-| INV-35 | Paging is invisible across page boundaries, for SinceSeq and for Limit | read_test.go::TestReadEvents_PagingIsInvisible |
+| INV-35 | yield may use the Store, and a walk longer than one page yields every row exactly once | integration_test.go::TestReadEventsPagingIsReentrant |
+| INV-35 | Paging is invisible across an unrestricted multi-page walk and callbacks may re-enter the Store | integration_test.go::TestReadEventsPagingIsReentrant |
 | INV-36 | At most one append is in flight at a time within one process | append_test.go::TestAppend_IsSerialisedWithinTheProcess |
 | INV-37 | A lost lock poisons the Store and is never released as if it were ours | lock_test.go::TestLock_LossIsCaughtBeforeTheNextOperation |
 | INV-37 | Close detects the loss itself, with no operation in between to have noticed it | lock_test.go::TestClose_DetectsALostLockWithNoInterveningOperation |

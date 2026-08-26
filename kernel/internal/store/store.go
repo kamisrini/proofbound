@@ -318,45 +318,66 @@ func (s *Store) ReadEvents(ctx context.Context, f Filter, yield func(Record) err
 	if f.Limit < 0 {
 		return ErrConfig
 	}
-	q := `SELECT seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version FROM events WHERE seq>$1`
-	args := []any{f.SinceSeq}
-	if f.Source != "" {
-		q += fmt.Sprintf(` AND source=$%d`, len(args)+1)
-		args = append(args, f.Source)
-	}
-	if f.Kind != "" {
-		q += fmt.Sprintf(` AND kind=$%d`, len(args)+1)
-		args = append(args, f.Kind)
-	}
-	if !f.OccurredAfter.IsZero() {
-		q += fmt.Sprintf(` AND occurred_at>$%d`, len(args)+1)
-		args = append(args, f.OccurredAfter)
-	}
-	q += ` ORDER BY seq`
-	if f.Limit > 0 {
-		q += fmt.Sprintf(` LIMIT %d`, f.Limit)
-	}
-	rows, err := s.pool.Query(ctx, q, args...)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var r Record
-		var id string
-		err = rows.Scan(&r.Seq, &id, &r.Event.Source, &r.Event.NativeID, &r.Event.Kind, &r.Event.OccurredAt, &r.Event.RecordedAt, &r.Event.Payload, &r.Event.ContentSHA, &r.Event.ConnectorVersion)
-		if err != nil {
-			return err
+	const pageSize = 256
+	cursor, emitted := f.SinceSeq, 0
+	for {
+		pageLimit := pageSize
+		if f.Limit > 0 && f.Limit-emitted < pageLimit {
+			pageLimit = f.Limit - emitted
 		}
-		r.Event.ID, err = core.ParseEventID(id)
-		if err != nil {
-			return err
-		}
-		if err = yield(r); errors.Is(err, ErrStopIteration) {
+		if pageLimit <= 0 {
 			return nil
-		} else if err != nil {
-			return fmt.Errorf("read events: %w", err)
+		}
+		q := `SELECT seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version FROM events WHERE seq>$1`
+		args := []any{cursor}
+		if f.Source != "" {
+			q += fmt.Sprintf(` AND source=$%d`, len(args)+1)
+			args = append(args, f.Source)
+		}
+		if f.Kind != "" {
+			q += fmt.Sprintf(` AND kind=$%d`, len(args)+1)
+			args = append(args, f.Kind)
+		}
+		if !f.OccurredAfter.IsZero() {
+			q += fmt.Sprintf(` AND occurred_at>$%d`, len(args)+1)
+			args = append(args, f.OccurredAfter)
+		}
+		q += fmt.Sprintf(` ORDER BY seq LIMIT %d`, pageLimit)
+		rows, err := s.pool.Query(ctx, q, args...)
+		if err != nil {
+			return err
+		}
+		page := make([]Record, 0, pageLimit)
+		for rows.Next() {
+			var r Record
+			var id string
+			err = rows.Scan(&r.Seq, &id, &r.Event.Source, &r.Event.NativeID, &r.Event.Kind, &r.Event.OccurredAt, &r.Event.RecordedAt, &r.Event.Payload, &r.Event.ContentSHA, &r.Event.ConnectorVersion)
+			if err != nil {
+				rows.Close()
+				return err
+			}
+			r.Event.ID, err = core.ParseEventID(id)
+			if err != nil {
+				rows.Close()
+				return err
+			}
+			page = append(page, r)
+		}
+		err = rows.Err()
+		rows.Close()
+		if err != nil {
+			return err
+		}
+		for _, r := range page {
+			if err = yield(r); errors.Is(err, ErrStopIteration) {
+				return nil
+			} else if err != nil {
+				return fmt.Errorf("read events: %w", err)
+			}
+			cursor, emitted = r.Seq, emitted+1
+		}
+		if len(page) < pageLimit {
+			return nil
 		}
 	}
-	return rows.Err()
 }

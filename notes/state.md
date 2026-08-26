@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P3 GitHub connector closed; P4 twin spike next)
+**As of:** 2026-08-26 (P3 closed; P4 bounded replay slice in progress)
 
 ## Resume Prompt
 
@@ -72,6 +72,10 @@ Load-bearing facts:
   and tested. Live acceptance is recorded in `docs/verification/p3-github-live-acceptance.md`:
   200 records synced in 7 seconds, the report rendered 106 real delivery groups with proof and
   freshness, and replay returned 0 appended / 200 existing in 4 seconds. P3 is closed; P4 is next.
+- P4 has started with `kernel/internal/twin`: a bounded, non-mutating prefix-plus-candidate replay
+  contract and proving tests. The projection function is injected for this first slice; the next
+  slice must provide an isolated PostgreSQL fork before prediction events or calibration scoring.
+  Decision: `docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
   ceiling could misclassify timeout as a kill. Both mechanism routes have a self-test.
@@ -186,6 +190,14 @@ the full `make check` gate.
   describes.
 - Keep the pushed GitHub repository and a dated `git bundle` as the two recovery copies.
 
+## P4 start — 2026-08-26
+
+- The first replay contract is implemented and its package tests pass. It bounds source events by
+  `ThroughSeq`, rejects invalid candidate ordering, preserves the source store, and reports a
+  canonical snapshot verdict through an injected projector.
+- Next exact action: design and implement an isolated PostgreSQL fork adapter with cleanup and
+  production-preservation integration tests; defer prediction-ledger persistence until that passes.
+
 ## End-of-day 2026-08-26 — Task 9 / P1 close
 
 - Branch `main` is clean and pushed to `origin`; the final durability commit is the current HEAD.
@@ -194,7 +206,8 @@ the full `make check` gate.
 - Unverified assumptions: no real Claude session JSONL corpus was present in the expected session-artifact
   directory; Task 7’s ingestion behavior was verified with synthetic fixtures only, as designed.
 - Next exact first action: run `git status --short --branch && git log -1 --oneline`, reread
-  `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; then inspect the P2 plan.
+  `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; then inspect the P4 twin decision
+  and design the isolated PostgreSQL adapter.
 - Institutionalized lightweight improvements: when adding a SPEC invariant, use the existing
   `file_test.go::TestName` citation form, append the invariant number, and run `make invariants-lock`
   before `make check`; for PostgreSQL-backed mutation runs, confirm the disposable Docker image and

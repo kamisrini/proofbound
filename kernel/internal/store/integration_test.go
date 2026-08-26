@@ -162,14 +162,51 @@ func TestStoreTransactionWrappersUseAndCloseLiveRows(t *testing.T) {
 	}
 }
 
+func TestReadEventsPagingIsReentrant(t *testing.T) {
+	s := integrationStoreWithConfig(t, Config{MaxConns: 1})
+	defer s.Close()
+	sy, err := s.BeginSync(context.Background(), "paging")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 260; i++ {
+		e := integrationEvent(t, fmt.Sprintf("paging-%d", i))
+		if _, _, err := sy.Append(context.Background(), e); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := sy.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	count := 0
+	if err := s.ReadEvents(context.Background(), Filter{Source: core.SourceGit}, func(r Record) error {
+		count++
+		return s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
+			var n int
+			return tx.QueryRow(ctx, "SELECT count(*) FROM events WHERE seq <= $1", r.Seq).Scan(&n)
+		})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if count != 260 {
+		t.Fatalf("count=%d", count)
+	}
+}
+
 func integrationStore(t *testing.T) *Store {
+	return integrationStoreWithConfig(t, Config{})
+}
+
+func integrationStoreWithConfig(t *testing.T, cfg Config) *Store {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
 		t.Fatal("DATABASE_URL is required")
 	}
 	resetIntegrationDatabase(t, url)
-	s, err := Open(context.Background(), Config{Root: t.TempDir(), DatabaseURL: url})
+	cfg.Root = t.TempDir()
+	cfg.DatabaseURL = url
+	s, err := Open(context.Background(), cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
