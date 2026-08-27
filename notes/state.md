@@ -4,7 +4,7 @@
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
 
-**As of:** 2026-08-26 (P3 closed; P4 bounded replay slice in progress)
+**As of:** 2026-08-26 (P3 closed; P4 isolated replay remains unaccepted WIP)
 
 ## Resume Prompt
 
@@ -72,9 +72,9 @@ Load-bearing facts:
   and tested. Live acceptance is recorded in `docs/verification/p3-github-live-acceptance.md`:
   200 records synced in 7 seconds, the report rendered 106 real delivery groups with proof and
   freshness, and replay returned 0 appended / 200 existing in 4 seconds. P3 is closed; P4 is next.
-- P4 has started with `kernel/internal/twin`: a bounded, non-mutating prefix-plus-candidate replay
-  contract and proving tests. The projection function is injected for this first slice; the next
-  slice must provide an isolated PostgreSQL fork before prediction events or calibration scoring.
+- P4 bounded replay contract is accepted in commit `548ca19`; the later isolated PostgreSQL
+  implementation is preserved in stash `wip: p4 isolated replay unaccepted 2026-08-26` and is
+  not accepted or pushed. No prediction events are persisted.
   Decision: `docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
@@ -195,8 +195,8 @@ the full `make check` gate.
 - The first replay contract is implemented and its package tests pass. It bounds source events by
   `ThroughSeq`, rejects invalid candidate ordering, preserves the source store, and reports a
   canonical snapshot verdict through an injected projector.
-- Next exact action: design and implement an isolated PostgreSQL fork adapter with cleanup and
-  production-preservation integration tests; defer prediction-ledger persistence until that passes.
+- The isolated replay attempt remains unaccepted. Its verifier findings are sequence identity,
+  cleanup/failure-path evidence, and broader multi-event isolation coverage.
 
 ## End-of-day 2026-08-26 — Task 9 / P1 close
 
@@ -205,12 +205,31 @@ the full `make check` gate.
   clean-database verification, independent acceptance, P1 evidence, journal, and state updates.
 - Unverified assumptions: no real Claude session JSONL corpus was present in the expected session-artifact
   directory; Task 7’s ingestion behavior was verified with synthetic fixtures only, as designed.
-- Next exact first action: run `git status --short --branch && git log -1 --oneline`, reread
-  `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; then inspect the P4 twin decision
-  and design the isolated PostgreSQL adapter.
+- Next exact first action: run `git status --short --branch && git log -1 --oneline && git stash list -1`;
+  reread `CLAUDE.md`, this file, and `notes/journal/2026-08-26.md`; inspect the P4 decision and
+  review the unaccepted stash before changing code. Resume by adding cleanup/failure-path tests,
+  multi-event sequence-gap coverage, and a stronger replay-import safety boundary; run focused
+  twin/store tests, then `make check`, then obtain an independent `ACCEPTABLE` verdict.
 - Institutionalized lightweight improvements: when adding a SPEC invariant, use the existing
   `file_test.go::TestName` citation form, append the invariant number, and run `make invariants-lock`
   before `make check`; for PostgreSQL-backed mutation runs, confirm the disposable Docker image and
   `DATABASE_URL` first, and inspect the retained mutant log when calibration fails. The EOD protocol
   now requires the verbatim Resume Prompt itself to contain the complete next-session sequence;
   tomorrow’s instructions may not exist only in a separate closeout section.
+
+## End-of-day durability closeout — 2026-08-26
+
+- Repository status: branch `main`, clean and synchronized with `origin/main` after this closeout commit.
+- Completed today: P3 live acceptance closeout (`db97486`); independently accepted bounded P4
+  replay contract; P4 isolated replay investigation and targeted tests, not accepted.
+- Open: isolated replay still needs cleanup/failure-path evidence, broader multi-event and
+  sequence-gap isolation coverage, and a stronger replay-import safety boundary. Prediction
+  events and calibration remain unstarted.
+- Unverified assumptions: no session artifact files were found under `.agents`, `.codex`, or
+  `notes/tmp`; `make check` passed repeatedly on the unaccepted WIP tree, but that is not an
+  acceptance verdict. `make backup` remains absent; the dated fallback bundle was created and
+  verified at `/home/s/Backups/proofbound-2026-08-26-p4-start.bundle`.
+- The unaccepted implementation is preserved in stash `wip: p4 isolated replay unaccepted 2026-08-26`.
+- Newly institutionalized: the P4 resume checklist now requires positive, neutral, sequence-gap,
+  multi-event, and failure-path tests before independent acceptance review. This is a lightweight
+  response to repeated review gaps; no speculative automation was added.
