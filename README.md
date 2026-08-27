@@ -45,7 +45,7 @@ As of 2026-08-26, P1 Tasks 0–9, P2 gates-as-data, and P3’s first external co
 and accepted under the repository’s independent verification rule. P3 is closed; the next planned
 phase is P4.
 
-Current project status: P3 external GitHub connector complete; P4 twin spike is in progress.
+Current project status: P4 twin spike accepted; durable prediction events remain future work.
 
 Currently implemented and verified:
 

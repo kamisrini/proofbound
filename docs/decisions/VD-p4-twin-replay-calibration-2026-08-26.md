@@ -27,7 +27,6 @@ isolation prematurely.
 
 The package contract and proving tests are in [kernel/internal/twin/SPEC.md](../../kernel/internal/twin/SPEC.md).
 The isolated implementation, deterministic replay proof, and pure calibration boundary are now
-present behind the package boundary. They are not accepted as a production capability until
-independent review verifies cleanup on every failure path, production preservation, cancellation,
-multi-event sequence gaps, proof binding, and calibration validation. Durable prediction events
-remain deferred until a real prediction feed has its own decision and acceptance evidence.
+accepted under the independent verdict recorded in
+[`p4-current-round1.md`](../verification/verdicts/p4-current-round1.md). Durable prediction
+events remain deferred until a real prediction feed has its own decision and acceptance evidence.

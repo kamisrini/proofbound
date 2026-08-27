@@ -69,12 +69,12 @@ implemented; live acceptance is recorded in `docs/verification/p3-github-live-ac
 
 ## P4 — Twin spike (target: +6 weeks)
 
-**Implementation complete 2026-08-27:** `kernel/internal/twin` provides bounded replay, a
+**Accepted 2026-08-27:** `kernel/internal/twin` provides bounded replay, a
 temporary embedded-PostgreSQL projection path, deterministic `vera.replay.v1` proof metadata,
 and validated in-memory forecast calibration. Isolated replay preserves the source ledger and
-projects only in a disposable store. Independent acceptance evidence is still required before
-this slice is treated as an accepted production capability; durable prediction events remain a
-later feed-backed extension.
+projects only in a disposable store. Independent acceptance is recorded in
+[`p4-current-round1.md`](docs/verification/verdicts/p4-current-round1.md); durable prediction
+events remain a later feed-backed extension.
 Decision and acceptance boundary: [VD-p4-twin-replay-calibration-2026-08-26](docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md).
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
