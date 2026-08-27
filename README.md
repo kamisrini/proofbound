@@ -75,7 +75,8 @@ Currently implemented and verified:
 
 Remaining work:
 
-- P4 bounded replay contract; PostgreSQL fork isolation and prediction-ledger calibration remain
+- P4 bounded replay, isolated PostgreSQL projection, deterministic replay proof, and validated
+  in-memory prediction calibration
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The

@@ -57,6 +57,9 @@ func TestReplayIsDeterministic(t *testing.T) {
 	if !reflect.DeepEqual(a, c) {
 		t.Fatalf("not deterministic: %+v vs %+v", a, c)
 	}
+	if a.Proof.Schema != "vera.replay.v1" || a.Proof.SourceDigest == "" || a.Proof.BaselineSnapshotDigest == "" {
+		t.Fatalf("missing replay proof: %+v", a.Proof)
+	}
 }
 
 func TestReplayDetectsChangedProjection(t *testing.T) {

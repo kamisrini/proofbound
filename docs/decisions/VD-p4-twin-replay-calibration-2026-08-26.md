@@ -26,7 +26,8 @@ isolation prematurely.
 ## Acceptance boundary
 
 The package contract and proving tests are in [kernel/internal/twin/SPEC.md](../../kernel/internal/twin/SPEC.md).
-The isolated implementation is now present behind the package boundary. It is not accepted
-as a production capability until independent review verifies cleanup on every failure path,
-production preservation, cancellation, multi-event sequence gaps, and proof-bearing replay
-results. No prediction-ledger surface is accepted before that evidence.
+The isolated implementation, deterministic replay proof, and pure calibration boundary are now
+present behind the package boundary. They are not accepted as a production capability until
+independent review verifies cleanup on every failure path, production preservation, cancellation,
+multi-event sequence gaps, proof binding, and calibration validation. Durable prediction events
+remain deferred until a real prediction feed has its own decision and acceptance evidence.

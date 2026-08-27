@@ -198,3 +198,5 @@ kernel/internal/twin/SPEC.md	TWIN-INV-4	Immutable source.
 kernel/internal/twin/SPEC.md	TWIN-INV-6	Deterministic result.
 kernel/internal/twin/SPEC.md	TWIN-INV-7	Fail closed.
 kernel/internal/twin/SPEC.md	TWIN-INV-8	Ephemeral isolation.
+kernel/internal/twin/SPEC.md	TWIN-INV-9	Bound proof.
+kernel/internal/twin/SPEC.md	TWIN-INV-10	Honest calibration.

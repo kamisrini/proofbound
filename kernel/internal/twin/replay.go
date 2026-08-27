@@ -3,10 +3,15 @@ package twin
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"net"
 	"os"
+	"sort"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
@@ -38,6 +43,16 @@ type Result struct {
 	Candidate       projections.Snapshot
 	Verdict         Verdict
 	SequenceMap     []SequenceBinding
+	Proof           Proof
+}
+
+type Proof struct {
+	Schema                  string
+	ThroughSeq              int64
+	SourceDigest            string
+	CandidateDigest         string
+	BaselineSnapshotDigest  string
+	CandidateSnapshotDigest string
 }
 
 type SequenceBinding struct {
@@ -74,7 +89,7 @@ func Replay(ctx context.Context, s *store.Store, req Request, baseline projectio
 		}
 		verdict = VerdictChanged
 	}
-	return Result{ThroughSeq: req.ThroughSeq, SourceEvents: len(records), CandidateEvents: len(req.Candidate), Baseline: baseline, Candidate: candidate, Verdict: verdict, SequenceMap: sequenceMap(records, req.Candidate)}, nil
+	return makeResult(req, records, baseline, candidate, verdict), nil
 }
 
 // ReplayIsolated runs the real projector against a temporary embedded store.
@@ -133,7 +148,68 @@ func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 		}
 		verdict = VerdictChanged
 	}
-	return Result{ThroughSeq: req.ThroughSeq, SourceEvents: len(records), CandidateEvents: len(req.Candidate), Baseline: baseline, Candidate: candidate, Verdict: verdict, SequenceMap: sequenceMap(records, req.Candidate)}, nil
+	return makeResult(req, records, baseline, candidate, verdict), nil
+}
+
+func makeResult(req Request, records []store.Record, baseline, candidate projections.Snapshot, verdict Verdict) Result {
+	return Result{
+		ThroughSeq: req.ThroughSeq, SourceEvents: len(records), CandidateEvents: len(req.Candidate),
+		Baseline: baseline, Candidate: candidate, Verdict: verdict,
+		SequenceMap: sequenceMap(records, req.Candidate),
+		Proof: Proof{
+			Schema: "vera.replay.v1", ThroughSeq: req.ThroughSeq,
+			SourceDigest: digestRecords(records), CandidateDigest: digestRecords(candidateRecords(req.Candidate)),
+			BaselineSnapshotDigest: digestSnapshot(baseline), CandidateSnapshotDigest: digestSnapshot(candidate),
+		},
+	}
+}
+
+func candidateRecords(candidates []Candidate) []store.Record {
+	result := make([]store.Record, 0, len(candidates))
+	for _, c := range candidates {
+		result = append(result, store.Record{Seq: c.Seq, Event: c.Event})
+	}
+	return result
+}
+
+func digestRecords(records []store.Record) string {
+	h := sha256.New()
+	var buf [8]byte
+	for _, r := range records {
+		binary.BigEndian.PutUint64(buf[:], uint64(r.Seq))
+		_, _ = h.Write(buf[:])
+		for _, part := range []string{r.Event.ID.String(), string(r.Event.Source), r.Event.NativeID, string(r.Event.Kind), r.Event.ContentSHA} {
+			binary.BigEndian.PutUint64(buf[:], uint64(len(part)))
+			_, _ = h.Write(buf[:])
+			_, _ = h.Write([]byte(part))
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func digestSnapshot(snapshot projections.Snapshot) string {
+	h := sha256.New()
+	var names []string
+	for name := range snapshot.Tables {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var buf [8]byte
+	for _, name := range names {
+		writeDigestPart(h, buf[:], name)
+		rows := append([]string(nil), snapshot.Tables[name]...)
+		sort.Strings(rows)
+		for _, row := range rows {
+			writeDigestPart(h, buf[:], row)
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func writeDigestPart(h hash.Hash, buf []byte, value string) {
+	binary.BigEndian.PutUint64(buf, uint64(len(value)))
+	_, _ = h.Write(buf)
+	_, _ = h.Write([]byte(value))
 }
 
 func readPrefix(ctx context.Context, s *store.Store, through int64) ([]store.Record, error) {
