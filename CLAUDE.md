@@ -51,9 +51,10 @@ Files + git + grep ARE the record during bootstrap. Derived indexes only (`make 
 ## Session protocol
 
 - **Start:** the SessionStart hook prints `notes/state.md` + git status. Run `/vera-next` to orient and pick the next task.
-- **End:** run `/vera-wrap` — journal entry, rewrite `notes/state.md`, make its verbatim Resume Prompt
-  contain the complete next-session sequence, run `make check`, commit, push, and create/verify the
-  dated bundle. Do not leave tomorrow’s instructions only in a separate EOD summary.
+- **End:** use the single canonical EOD prompt in [docs/eod-prompt.md](docs/eod-prompt.md). It owns
+  inspection, journal/state durability, `make check`, coherent commit/push, and bundle verification.
+  The next action written into `notes/state.md` is agent handoff state, not a second user command.
+  `/vera-wrap` is optional only when that command exists in the checkout.
 - **Decisions during work:** `/vera-decide` immediately, not at session end.
 - **Before merging a meaningful chunk:** `/vera-review` (adversarial pass against these laws + the spec).
 - **Parallel sessions:** exactly one session owns `notes/` writes and `/vera-wrap` at a time; subagents never write `notes/state.md` or the journal — they return results to the owning session; parallel worktree sessions write journal fragments to `notes/tmp/` and the owner merges at wrap.

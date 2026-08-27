@@ -3,12 +3,15 @@
 > THE resume note. Overwrite-in-place; never append; never a second copy. A fresh session reads this first.
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
 > The judgement below is hand-written; the imported `make state` target is currently absent.
+> The single canonical closeout instruction is [docs/eod-prompt.md](../docs/eod-prompt.md); the
+> next-action block below is recorded handoff state, not a separate command for the user.
 
 **As of:** 2026-08-26 (P3 closed; P4 isolated replay remains unaccepted WIP)
 
-## Resume Prompt
+## Next-session handoff
 
-Copy this verbatim into a fresh session started in this repository:
+The following block is durable agent context read during normal session start; it is not a
+separate user prompt or command to run.
 
 ```
 Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-26.md`.
