@@ -197,3 +197,4 @@ kernel/internal/twin/SPEC.md	TWIN-INV-3	Ordered replay.
 kernel/internal/twin/SPEC.md	TWIN-INV-4	Immutable source.
 kernel/internal/twin/SPEC.md	TWIN-INV-6	Deterministic result.
 kernel/internal/twin/SPEC.md	TWIN-INV-7	Fail closed.
+kernel/internal/twin/SPEC.md	TWIN-INV-8	Ephemeral isolation.

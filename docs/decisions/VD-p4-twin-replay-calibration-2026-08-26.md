@@ -26,6 +26,7 @@ isolation prematurely.
 ## Acceptance boundary
 
 The package contract and proving tests are in [kernel/internal/twin/SPEC.md](../../kernel/internal/twin/SPEC.md).
-The next P4 slice must add an isolated PostgreSQL implementation and tests for cleanup,
-production preservation, cancellation, and proof-bearing replay results before any
-prediction-ledger surface is accepted.
+The isolated implementation is now present behind the package boundary. It is not accepted
+as a production capability until independent review verifies cleanup on every failure path,
+production preservation, cancellation, multi-event sequence gaps, and proof-bearing replay
+results. No prediction-ledger surface is accepted before that evidence.

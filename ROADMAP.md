@@ -69,10 +69,11 @@ implemented; live acceptance is recorded in `docs/verification/p3-github-live-ac
 
 ## P4 — Twin spike (target: +6 weeks)
 
-**In progress 2026-08-26:** the first bounded replay contract is implemented in
-`kernel/internal/twin`: it selects a ledger prefix, validates sequenced candidates, and
-compares injected projection snapshots without mutating production state. PostgreSQL fork
-isolation, proof-bearing verdict persistence, and prediction-ledger calibration remain open.
+**In progress 2026-08-27:** the bounded replay contract and a temporary embedded-PostgreSQL
+implementation are present in `kernel/internal/twin`. Isolated replay preserves the source
+ledger, imports explicitly sequenced candidate events, and projects only in a disposable
+store. Independent acceptance still requires failure-path cleanup and proof-bearing replay
+results; prediction-ledger calibration remains open.
 Decision and acceptance boundary: [VD-p4-twin-replay-calibration-2026-08-26](docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md).
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

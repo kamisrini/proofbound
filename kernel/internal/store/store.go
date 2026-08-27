@@ -381,3 +381,57 @@ func (s *Store) ReadEvents(ctx context.Context, f Filter, yield func(Record) err
 		}
 	}
 }
+
+// ImportReplayRecords imports an explicitly sequenced stream into a store
+// created solely for an isolated replay. Ordinary stores cannot use this seam.
+func (s *Store) ImportReplayRecords(ctx context.Context, records []Record) error {
+	if err := s.usable(); err != nil {
+		return err
+	}
+	if !s.cfg.AllowReplayImport {
+		return fmt.Errorf("%w: replay import disabled", ErrConfig)
+	}
+	seenIDs := make(map[string]struct{}, len(records))
+	seenKeys := make(map[string]struct{}, len(records))
+	var last int64
+	for i, r := range records {
+		if r.Seq <= last {
+			return fmt.Errorf("%w: replay sequence %d is not increasing", ErrConfig, i)
+		}
+		if err := r.Event.Validate(); err != nil {
+			return fmt.Errorf("%w: replay event %d: %v", ErrConfig, i, err)
+		}
+		id := r.Event.ID.String()
+		key := string(r.Event.Source) + "\x00" + r.Event.NativeID + "\x00" + r.Event.ContentSHA
+		if _, ok := seenIDs[id]; ok {
+			return fmt.Errorf("%w: duplicate replay event id at %d", ErrConfig, i)
+		}
+		if _, ok := seenKeys[key]; ok {
+			return fmt.Errorf("%w: duplicate replay idempotency key at %d", ErrConfig, i)
+		}
+		seenIDs[id], seenKeys[key], last = struct{}{}, struct{}{}, r.Seq
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+	for _, r := range records {
+		_, err = tx.Exec(ctx, `INSERT INTO events(seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, r.Seq, r.Event.ID.String(), r.Event.Source, r.Event.NativeID, r.Event.Kind, r.Event.OccurredAt, r.Event.RecordedAt, r.Event.Payload, r.Event.ContentSHA, r.Event.ConnectorVersion)
+		if err != nil {
+			return err
+		}
+	}
+	if len(records) > 0 {
+		_, err = tx.Exec(ctx, `SELECT setval(pg_get_serial_sequence('events','seq'), $1, true)`, records[len(records)-1].Seq)
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit(ctx)
+	return err
+}

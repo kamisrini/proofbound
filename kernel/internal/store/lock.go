@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -18,20 +19,24 @@ var (
 )
 
 type Config struct {
-	Root        string
-	DataDir     string
-	RuntimeDir  string
-	BinariesDir string
-	LockPath    string
-	Port        uint16
-	DatabaseURL string
-	MaxConns    int
-	Now         func() time.Time
+	Root              string
+	DataDir           string
+	RuntimeDir        string
+	BinariesDir       string
+	LockPath          string
+	Port              uint16
+	DatabaseURL       string
+	MaxConns          int
+	AllowReplayImport bool
+	Now               func() time.Time
 }
 
 func (c Config) normalized() (Config, error) {
 	if c.Root == "" {
 		return Config{}, fmt.Errorf("%w: Root is required", ErrConfig)
+	}
+	if c.AllowReplayImport && !strings.HasPrefix(filepath.Base(c.Root), "vera-twin-") {
+		return Config{}, fmt.Errorf("%w: replay import requires a temporary twin root", ErrConfig)
 	}
 	root, err := filepath.Abs(c.Root)
 	if err != nil {

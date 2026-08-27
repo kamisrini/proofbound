@@ -127,6 +127,11 @@ type Config struct {
 	// type — so tests can pin it to 1 and prove ReadEvents leaks no connection (INV-13).
 	MaxConns int
 
+	// AllowReplayImport is a guarded seam for twin's temporary stores. It is
+	// valid only when Root's base name begins with "vera-twin-"; ordinary
+	// production stores refuse explicit-sequence imports.
+	AllowReplayImport bool
+
 	// Now is optional; nil means time.Now. It stamps sync_runs.started_at /
 	// finished_at and the lock file's informational acquired_at. It is no longer
 	// load-bearing for the lock: it was injected so lock-STALENESS tests could
@@ -167,6 +172,11 @@ type Store struct{ /* unexported */ }
 // DETECTS that itself — it must, because it cannot decide about the server
 // otherwise — rather than relying on an earlier operation to have noticed.
 func (s *Store) Close() error
+
+// ImportReplayRecords writes a prevalidated, strictly increasing, explicitly
+// sequenced stream. It is available only to temporary twin stores and is
+// transactional: a failed import leaves no partial rows.
+func (s *Store) ImportReplayRecords(context.Context, []Record) error
 
 // Lock reports the lock this Store holds. The zero LockInfo when DatabaseURL was set.
 func (s *Store) Lock() LockInfo

@@ -150,4 +150,13 @@ func TestConfig_DefaultsAndLockAssertion(t *testing.T) {
 	}
 }
 
+func TestConfig_ReplayImportRequiresTwinRoot(t *testing.T) {
+	if _, err := (Config{Root: t.TempDir(), AllowReplayImport: true}).normalized(); !errors.Is(err, ErrConfig) {
+		t.Fatalf("expected guarded replay root error, got %v", err)
+	}
+	if _, err := (Config{Root: filepath.Join(t.TempDir(), "vera-twin-123"), AllowReplayImport: true}).normalized(); err != nil {
+		t.Fatalf("expected temporary twin root to be accepted, got %v", err)
+	}
+}
+
 func validSurfaceEvent(t *testing.T) core.Event { t.Helper(); return core.Event{} }
