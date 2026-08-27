@@ -48,7 +48,8 @@ func main() {
 	if len(mutants) == 0 {
 		fail("no mutation candidates found")
 	}
-	if err := calibrate(root); err != nil {
+	mutationPattern = "./" + filepath.ToSlash(*pkg)
+	if err := calibrate(root, *pkg); err != nil {
 		fail("calibration: " + err.Error())
 	}
 	mutationPattern = "./" + filepath.ToSlash(*pkg)
@@ -145,7 +146,7 @@ func runMutant(root string, m mutant) string {
 	return "killed"
 }
 
-func calibrate(root string) error {
+func calibrate(root, pkg string) error {
 	tmp, err := os.MkdirTemp("", "vera-calibration-")
 	if err != nil {
 		return err
@@ -153,7 +154,11 @@ func calibrate(root string) error {
 	defer os.RemoveAll(tmp)
 	copyTree(root, tmp)
 	kernel := tmp
-	neutral := filepath.Join(kernel, "internal", "store", "doc.go")
+	target := filepath.Join(kernel, filepath.FromSlash(pkg))
+	neutral, packageName, err := calibrationSource(target)
+	if err != nil {
+		return err
+	}
 	b, err := os.ReadFile(neutral)
 	if err != nil {
 		return err
@@ -165,7 +170,7 @@ func calibrate(root string) error {
 	if status := runTests(tmp); status != "survived" {
 		return fmt.Errorf("neutral mutant did not survive: %s", status)
 	}
-	invalid := filepath.Join(kernel, "internal", "store", "doc.go")
+	invalid := neutral
 	b, err = os.ReadFile(invalid)
 	if err != nil {
 		return err
@@ -179,8 +184,8 @@ func calibrate(root string) error {
 	if err = os.WriteFile(invalid, original, 0o644); err != nil {
 		return err
 	}
-	dead := filepath.Join(kernel, "internal", "store", "zz_calibration_test.go")
-	if err = os.WriteFile(dead, []byte("package store\nimport \"testing\"\nfunc TestCalibrationLethal(t *testing.T){ t.Fatal(\"lethal calibration\") }\n"), 0o644); err != nil {
+	dead := filepath.Join(target, "zz_calibration_test.go")
+	if err = os.WriteFile(dead, []byte("package "+packageName+"\nimport \"testing\"\nfunc TestCalibrationLethal(t *testing.T){ t.Fatal(\"lethal calibration\") }\n"), 0o644); err != nil {
 		return err
 	}
 	if status := runTests(tmp); status != "killed" {
@@ -188,8 +193,32 @@ func calibrate(root string) error {
 	}
 	return nil
 }
+
+func calibrationSource(dir string) (string, string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "", "", err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
+		}
+		path := filepath.Join(dir, entry.Name())
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return "", "", err
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			fields := strings.Fields(line)
+			if len(fields) == 2 && fields[0] == "package" {
+				return path, fields[1], nil
+			}
+		}
+	}
+	return "", "", fmt.Errorf("no non-test Go source in %s", dir)
+}
 func runTests(dir string) string {
-	args := testArgs("./...")
+	args := testArgs(mutationPattern)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", args...)
@@ -213,7 +242,9 @@ func runTests(dir string) string {
 }
 
 func testArgs(pattern string) []string {
-	args := []string{"test"}
+	// Mutation and calibration runs must execute the copied tree, not reuse a
+	// cached result from a previous scratch tree (especially the lethal control).
+	args := []string{"test", "-count=1"}
 	if testTags != "" {
 		// Integration packages share the configured disposable database. Running them
 		// concurrently makes one package's rows invalidate another package's assertions.
@@ -224,9 +255,9 @@ func testArgs(pattern string) []string {
 
 func testTimeout() time.Duration {
 	if testTags != "" {
-		return 30 * time.Second
+		return 2 * time.Minute
 	}
-	return 10 * time.Second
+	return 1 * time.Minute
 }
 
 func copyTree(src, dst string) {

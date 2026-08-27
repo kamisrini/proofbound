@@ -6,7 +6,7 @@
 > The single canonical closeout instruction is [docs/eod-prompt.md](../docs/eod-prompt.md); the
 > next-action block below is recorded handoff state, not a separate command for the user.
 
-**As of:** 2026-08-26 (P3 closed; P4 isolated replay remains unaccepted WIP)
+**As of:** 2026-08-27 (P4 closed; acceptance evidence complete)
 
 ## Next-session handoff
 
@@ -75,9 +75,13 @@ Load-bearing facts:
   and tested. Live acceptance is recorded in `docs/verification/p3-github-live-acceptance.md`:
   200 records synced in 7 seconds, the report rendered 106 real delivery groups with proof and
   freshness, and replay returned 0 appended / 200 existing in 4 seconds. P3 is closed; P4 is next.
-- P4 bounded replay contract is accepted in commit `548ca19`; the later isolated PostgreSQL
-  implementation is preserved in stash `wip: p4 isolated replay unaccepted 2026-08-26` and is
-  not accepted or pushed. No prediction events are persisted.
+- P4 isolated replay and calibration are pushed through `3452405` and independently accepted in
+  `docs/verification/verdicts/p4-current-round1.md`; no prediction events are persisted. The
+  final external-backed package mutation sweep is green: 31 candidates, 31 killed, 0 invalid,
+  0 survivors.
+- The mutation harness is repaired to force `-count=1`, calibrate only the selected package, and
+  support the scratch-tree layout used by spec-first; the repair is committed in the current
+  closeout commit.
   Decision: `docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md`.
 - The tagged mutation mechanism now serializes integration packages and uses a tested 30-second
   ceiling. Its earlier concurrent form let packages contaminate one database; its fixed 10-second
@@ -200,6 +204,24 @@ the full `make check` gate.
   canonical snapshot verdict through an injected projector.
 - The isolated replay attempt remains unaccepted. Its verifier findings are sequence identity,
   cleanup/failure-path evidence, and broader multi-event isolation coverage.
+
+## P4 acceptance repair — 2026-08-27
+
+- Independent implementation review: ACCEPTABLE, committed at
+  `docs/verification/verdicts/p4-current-round1.md`.
+- Bare `make check`: PASS, `0 issues`.
+- Twin mutation sweep: `31` candidates, `31` killed, `0` invalid, `0` survivors; the Law 9
+  package acceptance bar is satisfied.
+- `vera verify` now has a fifteen-minute command deadline and labels the failing verification stage;
+  the fresh clean external-PostgreSQL run completed successfully.
+- A fresh external-PostgreSQL verifier run on 2026-08-27 completed initial sync, all four
+  idempotence syncs, projection apply/snapshot, rebuild/snapshot, witness read, and ledger
+  witness lookup without error. Git parent lookup was folded into commit metadata to make this
+  run complete on the mounted workspace; witness projection validation now accepts every strict
+  `make <target>` witness emitted by the checks connector.
+- Phase-review answers: the isolated replay/calibration capability was built as planned; the
+  adversarial risks were addressed by the clean mutation sweep, bounded verifier, and strict
+  witness/projection boundary.
 
 ## End-of-day 2026-08-26 — Task 9 / P1 close
 

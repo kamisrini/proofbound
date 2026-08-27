@@ -19,7 +19,7 @@ func TestParseScalars_RejectsMisframing(t *testing.T) {
 	for _, data := range [][]byte{
 		[]byte("too few\x00fields\x00"),
 		[]byte("a\x00b\x00c\x00d\x00e\x00f\x00g\x00h\x00not-empty"),
-		[]byte("a\x00b\x00c\x00d\x00e\x00f\x00g\x00h\x00\x00"),
+		[]byte("a\x00b\x00c\x00d\x00e\x00f\x00g\x00h\x00\x00\x00"),
 	} {
 		if _, err := parseScalars(data); err == nil {
 			t.Fatalf("accepted %q", data)
@@ -489,8 +489,8 @@ func TestCommits_GitlinkPayloadIgnoresSubmoduleConfig(t *testing.T) {
 }
 
 func TestCommits_RefusesInvalidUTF8Scalars(t *testing.T) {
-	for index := 0; index < 8; index++ {
-		fields := [][]byte{[]byte("sha"), []byte("author"), []byte("author@example.test"), []byte("committer"), []byte("committer@example.test"), []byte("2026-08-24T00:00:00Z"), []byte("subject"), []byte("body"), nil}
+	for index := 0; index < 9; index++ {
+		fields := [][]byte{[]byte("sha"), []byte("author"), []byte("author@example.test"), []byte("committer"), []byte("committer@example.test"), []byte("2026-08-24T00:00:00Z"), []byte("subject"), []byte("body"), nil, nil}
 		fields[index] = append(fields[index], 0xff)
 		if _, err := parseScalars(bytes.Join(fields, []byte{0})); err == nil {
 			t.Fatalf("scalar field %d accepted invalid UTF-8", index)

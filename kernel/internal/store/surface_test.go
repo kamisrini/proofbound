@@ -78,6 +78,20 @@ func TestEmbeddedPort_DefaultAndExplicit(t *testing.T) {
 	}
 }
 
+func TestEnsurePrivateDirCreatesPrivateDirectory(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "nested", "postgres")
+	if err := ensurePrivateDir(dir); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := info.Mode().Perm(); got != 0o700 {
+		t.Fatalf("permissions=%#o, want 0700", got)
+	}
+}
+
 func TestOpen_FailureRoutesReleaseTheLock(t *testing.T) {
 	t.Run("invalid database URL", func(t *testing.T) {
 		root := t.TempDir()

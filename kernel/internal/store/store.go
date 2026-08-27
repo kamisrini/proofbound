@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -64,6 +65,12 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 	var server *embeddedpostgres.EmbeddedPostgres
 	stopServer := func() {}
 	if cfg.DatabaseURL == "" {
+		for _, dir := range []string{cfg.DataDir, cfg.RuntimeDir} {
+			if err := ensurePrivateDir(dir); err != nil {
+				_ = lock.close()
+				return nil, fmt.Errorf("%w: prepare embedded postgres directory: %v", ErrMigrate, err)
+			}
+		}
 		port := embeddedPort(cfg.Port)
 		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username("vera").Password("vera").Database("vera"))
 		if err = server.Start(); err != nil {
@@ -93,6 +100,14 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 	}
 	return &Store{pool: pool, lock: lock, cfg: cfg, embedded: server}, nil
 }
+
+func ensurePrivateDir(path string) error {
+	if err := os.MkdirAll(path, 0o700); err != nil {
+		return err
+	}
+	return os.Chmod(path, 0o700)
+}
+
 func embeddedPort(port uint16) uint16 {
 	if port == 0 {
 		return 55432

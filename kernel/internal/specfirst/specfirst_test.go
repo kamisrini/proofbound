@@ -1,6 +1,7 @@
 package specfirst
 
 import (
+	"errors"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -21,6 +22,13 @@ func TestEveryInternalPackageHasSpecAndProof(t *testing.T) {
 	}
 	root := filepath.Clean(filepath.Join(filepath.Dir(filename), "..", "..", ".."))
 	internal := filepath.Join(root, "kernel", "internal")
+	// The mutation harness copies the kernel module into a scratch root rather
+	// than copying the entire repository. Keep the proof test valid in both
+	// layouts without weakening its package walk.
+	if _, err := os.Stat(internal); errors.Is(err, os.ErrNotExist) {
+		scratchRoot := filepath.Clean(filepath.Join(filepath.Dir(filename), "..", ".."))
+		internal = filepath.Join(scratchRoot, "internal")
+	}
 	err := filepath.WalkDir(internal, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr

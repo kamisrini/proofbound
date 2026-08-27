@@ -66,6 +66,7 @@ type Project func(context.Context, []store.Record) (projections.Snapshot, error)
 var (
 	makeTempTwinRoot   = func() (string, error) { return os.MkdirTemp("", "vera-twin-") }
 	removeTempTwinRoot = os.RemoveAll
+	closeTwinStore     = func(s *store.Store) error { return s.Close() }
 )
 
 func Replay(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, project Project) (Result, error) {
@@ -79,6 +80,10 @@ func Replay(ctx context.Context, s *store.Store, req Request, baseline projectio
 	if err != nil {
 		return Result{}, fmt.Errorf("twin: read prefix: %w", err)
 	}
+	return replayRecords(ctx, req, records, baseline, project)
+}
+
+func replayRecords(ctx context.Context, req Request, records []store.Record, baseline projections.Snapshot, project Project) (Result, error) {
 	combined := append([]store.Record(nil), records...)
 	for _, c := range req.Candidate {
 		combined = append(combined, store.Record{Seq: c.Seq, Event: c.Event})
@@ -118,7 +123,7 @@ func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 	var candidateStore *store.Store
 	defer func() {
 		if candidateStore != nil {
-			err = errors.Join(err, candidateStore.Close())
+			err = errors.Join(err, closeTwinStore(candidateStore))
 		}
 		err = errors.Join(err, removeTempTwinRoot(root))
 	}()

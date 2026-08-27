@@ -30,6 +30,8 @@ import (
 
 const usage = "usage: vera sync {git|checks|sessions|reviews|github|all} | vera rebuild | vera verify | vera report {week|github} | vera gates {canary|enforce}"
 
+const verifyTimeout = 15 * time.Minute
+
 func main() { os.Exit(run(context.Background(), os.Args[1:], os.Stdout, os.Stderr)) }
 
 type command int
@@ -89,9 +91,17 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	root, err := repositoryRoot()
 	if err == nil {
+		if cmd == commandVerify {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, verifyTimeout)
+			defer cancel()
+		}
 		err = runCommand(ctx, cmd, root, os.Getenv("DATABASE_URL"), stdout)
 	}
 	if err != nil {
+		if cmd == commandVerify && errors.Is(err, context.DeadlineExceeded) {
+			err = fmt.Errorf("verify: timed out after %s: %w", verifyTimeout, err)
+		}
 		fmt.Fprintf(stderr, "vera: %v\n", err)
 		return 1
 	}
@@ -450,64 +460,85 @@ func enforceGateResults(definitions []gates.Definition, results []gates.Result) 
 }
 
 func verify(ctx context.Context, root string, ledger *store.Store, projector *projections.Projector, ids *core.IDGenerator) error {
-	if _, err := syncGit(ctx, root, ledger, ids); err != nil {
+	if err := verifyStep(ctx, "initial git sync", func() error { _, err := syncGit(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	if _, err := syncChecksOnStore(ctx, root, ledger, ids); err != nil {
+	if err := verifyStep(ctx, "initial checks sync", func() error { _, err := syncChecksOnStore(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	if _, err := syncSessionsOnStore(ctx, root, ledger, ids); err != nil {
+	if err := verifyStep(ctx, "initial sessions sync", func() error { _, err := syncSessionsOnStore(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	if _, err := syncReviewsOnStore(ctx, root, ledger, ids); err != nil {
+	if err := verifyStep(ctx, "initial reviews sync", func() error { _, err := syncReviewsOnStore(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	secondGit, err := syncGit(ctx, root, ledger, ids)
-	if err != nil {
+	var secondGit connectorgit.Result
+	if err := verifyStep(ctx, "idempotence git sync", func() error { var err error; secondGit, err = syncGit(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	secondChecks, err := syncChecksOnStore(ctx, root, ledger, ids)
-	if err != nil {
+	var secondChecks checksResult
+	if err := verifyStep(ctx, "idempotence checks sync", func() error { var err error; secondChecks, err = syncChecksOnStore(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
-	secondSessions, err := syncSessionsOnStore(ctx, root, ledger, ids)
-	if err != nil {
+	var secondSessions sessionsResult
+	if err := verifyStep(ctx, "idempotence sessions sync", func() error {
+		var err error
+		secondSessions, err = syncSessionsOnStore(ctx, root, ledger, ids)
+		return err
+	}); err != nil {
 		return err
 	}
-	secondReviews, err := syncReviewsOnStore(ctx, root, ledger, ids)
-	if err != nil {
+	var secondReviews reviewsResult
+	if err := verifyStep(ctx, "idempotence reviews sync", func() error {
+		var err error
+		secondReviews, err = syncReviewsOnStore(ctx, root, ledger, ids)
+		return err
+	}); err != nil {
 		return err
 	}
 	if secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 || secondReviews.Appended != 0 {
 		return fmt.Errorf("verify: second sync appended git=%d checks=%d sessions=%d reviews=%d", secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended)
 	}
-	if err := projector.Apply(ctx, ledger); err != nil {
+	if err := verifyStep(ctx, "projection apply", func() error { return projector.Apply(ctx, ledger) }); err != nil {
 		return err
 	}
-	before, err := projector.Snapshot(ctx, ledger)
-	if err != nil {
+	var before projections.Snapshot
+	if err := verifyStep(ctx, "projection snapshot", func() error { var err error; before, err = projector.Snapshot(ctx, ledger); return err }); err != nil {
 		return err
 	}
-	if err := projector.Rebuild(ctx, ledger); err != nil {
+	if err := verifyStep(ctx, "projection rebuild", func() error { return projector.Rebuild(ctx, ledger) }); err != nil {
 		return err
 	}
-	after, err := projector.Snapshot(ctx, ledger)
-	if err != nil {
+	var after projections.Snapshot
+	if err := verifyStep(ctx, "rebuilt projection snapshot", func() error { var err error; after, err = projector.Snapshot(ctx, ledger); return err }); err != nil {
 		return err
 	}
 	if err := projections.CompareSnapshots(before, after); err != nil {
 		return fmt.Errorf("verify: %w", err)
 	}
-	witness, err := latestSpoolWitness(root)
-	if err != nil {
+	var witness checks.Witness
+	if err := verifyStep(ctx, "witness read", func() error { var err error; witness, err = latestSpoolWitness(root); return err }); err != nil {
 		return err
 	}
-	latestLedgerRunID, err := latestLedgerCheckRunID(ctx, ledger)
-	if err != nil {
+	var latestLedgerRunID string
+	if err := verifyStep(ctx, "ledger witness lookup", func() error { var err error; latestLedgerRunID, err = latestLedgerCheckRunID(ctx, ledger); return err }); err != nil {
 		return err
 	}
 	if latestLedgerRunID != witness.RunID {
 		return fmt.Errorf("verify: latest spool witness %s is not the latest ledger check.run %s", witness.RunID, latestLedgerRunID)
+	}
+	return nil
+}
+
+func verifyStep(ctx context.Context, name string, fn func() error) error {
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("verify: %s: %w", name, err)
+	}
+	if os.Getenv("VERA_VERIFY_TRACE") == "1" {
+		fmt.Fprintf(os.Stderr, "verify: begin %s\n", name)
+	}
+	if err := fn(); err != nil {
+		return fmt.Errorf("verify: %s: %w", name, err)
 	}
 	return nil
 }

@@ -20,6 +20,7 @@ func TestCalibrateRejectsInvalidAndDuplicateFeedRecords(t *testing.T) {
 	for name, feed := range map[string][]Forecast{
 		"empty":        nil,
 		"nan":          {{ID: "a", Probability: math.NaN()}},
+		"negative":     {{ID: "a", Probability: -0.1}},
 		"out of range": {{ID: "a", Probability: 1.1}},
 		"duplicate":    {{ID: "a"}, {ID: "a"}},
 	} {

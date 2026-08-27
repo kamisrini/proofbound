@@ -138,7 +138,9 @@ func (r *Repo) Tips(ctx context.Context) (map[string]string, error) {
 }
 
 func (r *Repo) readCommit(ctx context.Context, sha string) (connectorgit.Commit, error) {
-	format := "%H%x00%an%x00%ae%x00%cn%x00%ce%x00%cI%x00%s%x00%B%x00"
+	// Include parents in the metadata query. This removes one Git subprocess
+	// per commit during verification on mounted workspaces.
+	format := "%H%x00%an%x00%ae%x00%cn%x00%ce%x00%cI%x00%s%x00%B%x00%P%x00"
 	out, err := r.run(ctx, "show", "-s", "--format="+format, sha)
 	if err != nil {
 		return connectorgit.Commit{}, fmt.Errorf("gitcmd: read commit %q: %w", sha, err)
@@ -151,7 +153,7 @@ func (r *Repo) readCommit(ctx context.Context, sha string) (connectorgit.Commit,
 	if err != nil {
 		return connectorgit.Commit{}, fmt.Errorf("gitcmd: commit %q committer date: %w", sha, err)
 	}
-	files, err := r.files(ctx, sha)
+	files, err := r.files(ctx, sha, string(fields[8]))
 	if err != nil {
 		return connectorgit.Commit{}, err
 	}
@@ -175,10 +177,13 @@ func (r *Repo) readCommit(ctx context.Context, sha string) (connectorgit.Commit,
 func parseScalars(out []byte) ([][]byte, error) {
 	out = bytes.TrimSuffix(out, []byte{'\n'})
 	fields := bytes.Split(out, []byte{0})
-	if len(fields) != 9 || len(fields[8]) != 0 {
+	if len(fields) != 10 {
 		return nil, errors.New("output framing is invalid")
 	}
-	for _, field := range fields[:8] {
+	if len(fields[9]) != 0 {
+		return nil, errors.New("output framing is invalid")
+	}
+	for _, field := range fields[:9] {
 		if !utf8.Valid(field) {
 			return nil, errors.New("scalar is not valid UTF-8")
 		}
@@ -186,13 +191,10 @@ func parseScalars(out []byte) ([][]byte, error) {
 	return fields, nil
 }
 
-func (r *Repo) files(ctx context.Context, sha string) ([]string, error) {
-	parentsOut, err := r.run(ctx, "show", "-s", "--format=%P", sha)
-	if err != nil {
-		return nil, fmt.Errorf("gitcmd: list parents for %q: %w", sha, err)
-	}
-	parents := strings.Fields(string(parentsOut))
+func (r *Repo) files(ctx context.Context, sha, parentText string) ([]string, error) {
+	parents := strings.Fields(parentText)
 	var out []byte
+	var err error
 	if len(parents) == 0 {
 		out, err = r.run(ctx, "diff-tree", "--root", "--ignore-submodules=none", "--no-ext-diff", "--no-textconv", "--no-commit-id", "--name-only", "-r", "-z", sha)
 	} else {

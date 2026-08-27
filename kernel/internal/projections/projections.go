@@ -22,12 +22,13 @@ import (
 var ErrSnapshotMismatch = errors.New("projections: snapshots differ")
 
 var (
-	shaPattern      = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
-	ulidPattern     = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
-	hexPattern      = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	gitPattern      = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-	emailPattern    = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
-	decisionPattern = regexp.MustCompile(`^VD-[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6}$`)
+	shaPattern         = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
+	ulidPattern        = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
+	hexPattern         = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	gitPattern         = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	emailPattern       = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
+	decisionPattern    = regexp.MustCompile(`^VD-[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6}$`)
+	makeCommandPattern = regexp.MustCompile(`^make [A-Za-z][A-Za-z0-9_-]*$`)
 )
 
 type Projector struct{}
@@ -428,7 +429,7 @@ func (v sessionPayload) validate() error {
 }
 
 func (v checkPayload) validate() error {
-	if v.Schema != "vera.witness.v1" || !ulidPattern.MatchString(v.RunID) || v.Command != "make check" || v.ExitCode < 0 || v.ExitCode > 255 || v.StartedAt.IsZero() || v.FinishedAt.IsZero() || v.FinishedAt.Before(v.StartedAt) || v.DurationMS < 0 || !hexPattern.MatchString(v.OutputSHA256) || !gitPattern.MatchString(v.GitSHA) || strings.TrimSpace(v.ToolVersions.Go) == "" || strings.TrimSpace(v.ToolVersions.GolangCILint) == "" || strings.TrimSpace(v.ToolVersions.Make) == "" {
+	if v.Schema != "vera.witness.v1" || !ulidPattern.MatchString(v.RunID) || !makeCommandPattern.MatchString(v.Command) || v.ExitCode < 0 || v.ExitCode > 255 || v.StartedAt.IsZero() || v.FinishedAt.IsZero() || v.FinishedAt.Before(v.StartedAt) || v.DurationMS < 0 || !hexPattern.MatchString(v.OutputSHA256) || !gitPattern.MatchString(v.GitSHA) || strings.TrimSpace(v.ToolVersions.Go) == "" || strings.TrimSpace(v.ToolVersions.GolangCILint) == "" || strings.TrimSpace(v.ToolVersions.Make) == "" {
 		return errors.New("invalid or missing check field")
 	}
 	return nil

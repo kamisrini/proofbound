@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -109,6 +110,29 @@ func TestReplayRejectsInvalidCandidate(t *testing.T) {
 	}
 }
 
+func TestReplayRejectsEveryInvalidRequestShape(t *testing.T) {
+	project := func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	}
+	for name, req := range map[string]Request{
+		"nil store":        {ThroughSeq: 0},
+		"negative through": {ThroughSeq: -1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			requestStore := &store.Store{}
+			if name == "nil store" {
+				requestStore = nil
+			}
+			if _, err := Replay(context.Background(), requestStore, req, projections.Snapshot{}, project); err == nil || !strings.Contains(err.Error(), "invalid replay request") {
+				t.Fatal("expected invalid replay request")
+			}
+		})
+	}
+	if _, err := Replay(context.Background(), &store.Store{}, Request{ThroughSeq: 0}, projections.Snapshot{}, nil); err == nil || !strings.Contains(err.Error(), "invalid replay request") {
+		t.Fatal("expected nil projector to be rejected")
+	}
+}
+
 func TestReplayFailsClosedOnProjectorError(t *testing.T) {
 	s := testStore(t)
 	want := errors.New("boom")
@@ -117,6 +141,22 @@ func TestReplayFailsClosedOnProjectorError(t *testing.T) {
 	})
 	if err == nil || !errors.Is(err, want) {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestReplayRecordsFailsClosedOnProjectorAndComparisonErrors(t *testing.T) {
+	baseline := projections.Snapshot{Tables: map[string][]string{"x": {"base"}}}
+	want := errors.New("projector failed")
+	if _, err := replayRecords(context.Background(), Request{}, nil, baseline, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, want
+	}); err == nil || !errors.Is(err, want) {
+		t.Fatalf("projector error=%v", err)
+	}
+	result, err := replayRecords(context.Background(), Request{}, nil, baseline, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{Tables: map[string][]string{"x": {"changed"}}}, nil
+	})
+	if err != nil || result.Verdict != VerdictChanged {
+		t.Fatalf("comparison result=%+v error=%v", result, err)
 	}
 }
 
@@ -156,18 +196,53 @@ func TestReplayIsolatedRejectsCanceledContext(t *testing.T) {
 	}
 }
 
+func TestReplayIsolatedRejectsEveryInvalidRequestShape(t *testing.T) {
+	for name, testCase := range map[string]struct {
+		store *store.Store
+		req   Request
+	}{
+		"nil store":        {store: nil, req: Request{ThroughSeq: 0}},
+		"negative through": {store: &store.Store{}, req: Request{ThroughSeq: -1}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := ReplayIsolated(context.Background(), testCase.store, testCase.req, projections.Snapshot{}); err == nil || !strings.Contains(err.Error(), "invalid replay request") {
+				t.Fatal("expected invalid isolated replay request")
+			}
+		})
+	}
+}
+
+func TestReplayRejectsInvalidCandidateEvent(t *testing.T) {
+	_, err := Replay(context.Background(), &store.Store{}, Request{ThroughSeq: 0, Candidate: []Candidate{{Seq: 1}}}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	})
+	if err == nil {
+		t.Fatal("expected invalid candidate event")
+	}
+}
+
 func TestReplayIsolatedFailsClosedOnProjectionError(t *testing.T) {
 	s := testStore(t)
 	var root string
 	originalMake := makeTempTwinRoot
 	originalRemove := removeTempTwinRoot
+	originalClose := closeTwinStore
+	closed := false
 	makeTempTwinRoot = func() (string, error) {
 		var err error
 		root, err = originalMake()
 		return root, err
 	}
 	removeTempTwinRoot = originalRemove
-	t.Cleanup(func() { makeTempTwinRoot = originalMake; removeTempTwinRoot = originalRemove })
+	closeTwinStore = func(s *store.Store) error {
+		closed = true
+		return originalClose(s)
+	}
+	t.Cleanup(func() {
+		makeTempTwinRoot = originalMake
+		removeTempTwinRoot = originalRemove
+		closeTwinStore = originalClose
+	})
 	bad := githubDeploymentEvent(30)
 	bad.Payload = json.RawMessage(`{"repository":"github/docs"}`)
 	h := sha256.Sum256(bad.Payload)
@@ -183,6 +258,9 @@ func TestReplayIsolatedFailsClosedOnProjectionError(t *testing.T) {
 	}
 	if _, err := os.Stat(root); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("temporary root remains: %v", err)
+	}
+	if !closed {
+		t.Fatal("temporary store was not closed")
 	}
 }
 
@@ -214,9 +292,18 @@ func emptySnapshot() projections.Snapshot {
 
 func testStore(t *testing.T) *store.Store {
 	t.Helper()
-	s, err := store.Open(context.Background(), store.Config{Root: t.TempDir()})
+	config := store.Config{Root: t.TempDir(), Port: 55440, DatabaseURL: os.Getenv("DATABASE_URL")}
+	s, err := store.Open(context.Background(), config)
 	if err != nil {
 		t.Skipf("embedded postgres unavailable: %v", err)
+	}
+	if config.DatabaseURL != "" {
+		if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+			_, err := tx.Exec(ctx, "TRUNCATE TABLE events, sync_runs RESTART IDENTITY CASCADE")
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	return s
