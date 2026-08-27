@@ -63,6 +63,11 @@ type SequenceBinding struct {
 
 type Project func(context.Context, []store.Record) (projections.Snapshot, error)
 
+var (
+	makeTempTwinRoot   = func() (string, error) { return os.MkdirTemp("", "vera-twin-") }
+	removeTempTwinRoot = os.RemoveAll
+)
+
 func Replay(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, project Project) (Result, error) {
 	if s == nil || project == nil || req.ThroughSeq < 0 {
 		return Result{}, fmt.Errorf("twin: invalid replay request")
@@ -106,7 +111,7 @@ func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 	if err != nil {
 		return Result{}, err
 	}
-	root, err := os.MkdirTemp("", "vera-twin-")
+	root, err := makeTempTwinRoot()
 	if err != nil {
 		return Result{}, fmt.Errorf("twin: create temporary root: %w", err)
 	}
@@ -115,7 +120,7 @@ func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 		if candidateStore != nil {
 			err = errors.Join(err, candidateStore.Close())
 		}
-		err = errors.Join(err, os.RemoveAll(root))
+		err = errors.Join(err, removeTempTwinRoot(root))
 	}()
 	port, err := temporaryPort()
 	if err != nil {
@@ -178,7 +183,7 @@ func digestRecords(records []store.Record) string {
 	for _, r := range records {
 		binary.BigEndian.PutUint64(buf[:], uint64(r.Seq))
 		_, _ = h.Write(buf[:])
-		for _, part := range []string{r.Event.ID.String(), string(r.Event.Source), r.Event.NativeID, string(r.Event.Kind), r.Event.ContentSHA} {
+		for _, part := range []string{r.Event.ID.String(), string(r.Event.Source), r.Event.NativeID, string(r.Event.Kind), r.Event.ContentSHA, string(r.Event.Payload)} {
 			binary.BigEndian.PutUint64(buf[:], uint64(len(part)))
 			_, _ = h.Write(buf[:])
 			_, _ = h.Write([]byte(part))

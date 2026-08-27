@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"testing"
@@ -59,6 +60,28 @@ func TestReplayIsDeterministic(t *testing.T) {
 	}
 	if a.Proof.Schema != "vera.replay.v1" || a.Proof.SourceDigest == "" || a.Proof.BaselineSnapshotDigest == "" {
 		t.Fatalf("missing replay proof: %+v", a.Proof)
+	}
+}
+
+func TestReplayProofBindsPayloadBytes(t *testing.T) {
+	s := testStore(t)
+	a := event(1)
+	b := a
+	b.Payload = json.RawMessage(`{"seq":2}`)
+	resultA, err := Replay(context.Background(), s, Request{ThroughSeq: 0, Candidate: []Candidate{{Seq: 1, Event: a}}}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultB, err := Replay(context.Background(), s, Request{ThroughSeq: 0, Candidate: []Candidate{{Seq: 1, Event: b}}}, projections.Snapshot{}, func(context.Context, []store.Record) (projections.Snapshot, error) {
+		return projections.Snapshot{}, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultA.Proof.CandidateDigest == resultB.Proof.CandidateDigest {
+		t.Fatalf("payload mutation did not change proof: %q", resultA.Proof.CandidateDigest)
 	}
 }
 
@@ -119,7 +142,7 @@ func TestReplayIsolatedSupportsMultipleGappedCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.CandidateEvents != 2 || len(result.SequenceMap) != 2 || result.SequenceMap[1].Effective != 20 {
+	if result.CandidateEvents != 2 || len(result.SequenceMap) != 2 || result.SequenceMap[1].Effective != 20 || len(result.Candidate.Tables["github_delivery_view"]) != 2 {
 		t.Fatalf("unexpected result: %+v", result)
 	}
 }
@@ -135,6 +158,16 @@ func TestReplayIsolatedRejectsCanceledContext(t *testing.T) {
 
 func TestReplayIsolatedFailsClosedOnProjectionError(t *testing.T) {
 	s := testStore(t)
+	var root string
+	originalMake := makeTempTwinRoot
+	originalRemove := removeTempTwinRoot
+	makeTempTwinRoot = func() (string, error) {
+		var err error
+		root, err = originalMake()
+		return root, err
+	}
+	removeTempTwinRoot = originalRemove
+	t.Cleanup(func() { makeTempTwinRoot = originalMake; removeTempTwinRoot = originalRemove })
 	bad := githubDeploymentEvent(30)
 	bad.Payload = json.RawMessage(`{"repository":"github/docs"}`)
 	h := sha256.Sum256(bad.Payload)
@@ -144,6 +177,12 @@ func TestReplayIsolatedFailsClosedOnProjectionError(t *testing.T) {
 	}
 	if got := eventSeqs(t, s); len(got) != 0 {
 		t.Fatalf("source ledger changed: %v", got)
+	}
+	if root == "" {
+		t.Fatal("temporary root was not created")
+	}
+	if _, err := os.Stat(root); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("temporary root remains: %v", err)
 	}
 }
 
