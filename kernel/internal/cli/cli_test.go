@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"bytes"
@@ -24,6 +24,57 @@ func TestRunRejectsUnknownCommand(t *testing.T) {
 		if stdout.Len() != 0 || stderr.String() != usage+"\n" {
 			t.Fatalf("args=%v stdout=%q stderr=%q", args, stdout.String(), stderr.String())
 		}
+	}
+}
+
+func TestRunUsesProofboundIdentity(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := Run(context.Background(), "proofbound", []string{"unknown"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("code=%d", code)
+	}
+	if strings.Contains(strings.ToLower(stderr.String()), "usage: vera") || !strings.Contains(stderr.String(), "usage: proofbound") {
+		t.Fatalf("stderr=%q", stderr.String())
+	}
+}
+
+func TestOpenStoreUsesProofboundState(t *testing.T) {
+	root := t.TempDir()
+	if got, want := stateRoot(root), filepath.Join(root, ".proofbound"); got != want {
+		t.Fatalf("state root=%q want=%q", got, want)
+	}
+}
+
+func TestProductEnvPrefersProofbound(t *testing.T) {
+	t.Setenv("PROOFBOUND_GITHUB_OWNER", "live")
+	t.Setenv("VERA_GITHUB_OWNER", "legacy")
+	if got := productEnv("PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"); got != "live" {
+		t.Fatalf("value=%q", got)
+	}
+}
+
+func TestProductEnvLegacyAliasWarns(t *testing.T) {
+	t.Setenv("PROOFBOUND_GITHUB_OWNER", "")
+	if err := os.Unsetenv("PROOFBOUND_GITHUB_OWNER"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("VERA_GITHUB_OWNER", "legacy")
+	var stderr bytes.Buffer
+	warnLegacyEnvironment(&stderr)
+	if got := productEnv("PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"); got != "legacy" {
+		t.Fatalf("value=%q", got)
+	}
+	if !strings.Contains(stderr.String(), "2026-12-31") || !strings.Contains(stderr.String(), "VERA_GITHUB_OWNER -> PROOFBOUND_GITHUB_OWNER") {
+		t.Fatalf("stderr=%q", stderr.String())
+	}
+}
+
+func TestRunLegacyProgramWarns(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := Run(context.Background(), "vera", []string{"unknown"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("code=%d", code)
+	}
+	if !strings.Contains(stderr.String(), legacyAdvisory) || !strings.Contains(stderr.String(), usage) {
+		t.Fatalf("stderr=%q", stderr.String())
 	}
 }
 
@@ -96,7 +147,7 @@ func TestRepositoryRootRejectsOutsideRepository(t *testing.T) {
 
 func TestLatestSpoolWitnessUsesLatestULIDAndRejectsTrailingJSON(t *testing.T) {
 	root := t.TempDir()
-	spool := filepath.Join(root, ".vera", "spool")
+	spool := filepath.Join(root, ".proofbound", "spool")
 	if err := os.MkdirAll(spool, 0o755); err != nil {
 		t.Fatal(err)
 	}

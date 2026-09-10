@@ -104,7 +104,7 @@ func collect(dir string) []mutant {
 }
 
 func runMutant(root string, m mutant) string {
-	tmp, err := os.MkdirTemp("", "vera-mutant-")
+	tmp, err := os.MkdirTemp("", "proofbound-mutant-")
 	if err != nil {
 		return "invalid"
 	}
@@ -132,7 +132,7 @@ func runMutant(root string, m mutant) string {
 	cmd.Dir = tmp
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/vera-mutant-cache")
+	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache")
 	err = cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
 		return "killed"
@@ -147,7 +147,7 @@ func runMutant(root string, m mutant) string {
 }
 
 func calibrate(root, pkg string) error {
-	tmp, err := os.MkdirTemp("", "vera-calibration-")
+	tmp, err := os.MkdirTemp("", "proofbound-calibration-")
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func runTests(dir string) string {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stderr
-	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/vera-mutant-cache")
+	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache")
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
 		return "killed"
@@ -237,7 +237,7 @@ func runTests(dir string) string {
 	if bytes.Contains(stderr.Bytes(), []byte("undefined")) || bytes.Contains(stderr.Bytes(), []byte("syntax error")) {
 		return "invalid"
 	}
-	_ = os.WriteFile("/tmp/vera-mutant-last.log", stderr.Bytes(), 0o644)
+	_ = os.WriteFile("/tmp/proofbound-mutant-last.log", stderr.Bytes(), 0o644)
 	return "killed"
 }
 

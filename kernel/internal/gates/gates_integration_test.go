@@ -25,7 +25,7 @@ func gateIntegrationStore(t *testing.T) *store.Store {
 	if url == "" {
 		t.Skip("DATABASE_URL is required")
 	}
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".vera"), DatabaseURL: url})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: url})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -329,7 +329,7 @@ func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
 	if output, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("bad kernel-check unexpectedly passed: %s", output)
 	}
-	connector, err := checks.New(&checks.Deps{SpoolDir: filepath.Join(repo, ".vera", "spool"), IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
+	connector, err := checks.New(&checks.Deps{SpoolDir: filepath.Join(repo, ".proofbound", "spool"), IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil))})
 	if err != nil {
 		t.Fatal(err)
 	}

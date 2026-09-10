@@ -64,7 +64,7 @@ type SequenceBinding struct {
 type Project func(context.Context, []store.Record) (projections.Snapshot, error)
 
 var (
-	makeTempTwinRoot   = func() (string, error) { return os.MkdirTemp("", "vera-twin-") }
+	makeTempTwinRoot   = func() (string, error) { return os.MkdirTemp("", "proofbound-twin-") }
 	removeTempTwinRoot = os.RemoveAll
 	closeTwinStore     = func(s *store.Store) error { return s.Close() }
 )

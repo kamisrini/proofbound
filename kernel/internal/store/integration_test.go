@@ -104,7 +104,7 @@ func TestStoreWithTxCommitRollbackAndStop(t *testing.T) {
 	s := integrationStore(t)
 	defer s.Close()
 	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
-		_, err := tx.Exec(ctx, "CREATE TEMP TABLE vera_tx_probe (n integer)")
+		_, err := tx.Exec(ctx, "CREATE TEMP TABLE proofbound_tx_probe (n integer)")
 		return err
 	}); err != nil {
 		t.Fatal(err)

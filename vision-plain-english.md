@@ -1,4 +1,4 @@
-# VERA — The Vision in Plain English
+# Proofbound — The Vision in Plain English
 
 *Companion to [vision-2028.md](vision-2028.md) — same ideas, everyday words.*
 
@@ -8,13 +8,13 @@
 
 - In 2 years, AI agents will write code so fast and cheap that **the code itself is no longer the valuable thing**.
 - The valuable thing becomes: **"Can you PROVE this software works, is safe, and who checked it?"**
-- VERA is the tool that gives that proof. Like a diamond comes with a certificate, **software comes with a warranty** — machine-checkable, signed, portable.
+- Proofbound is the tool that gives that proof. Like a diamond comes with a certificate, **software comes with a warranty** — machine-checkable, signed, portable.
 
 ## The problem it solves
 
 - Today's tools run on **people claiming things**: "I tested it ✓", "it's deployed ✓", "status: done ✓".
 - Claims can be wrong, forgotten, or faked. Tracking systems drift away from reality, so the numbers on a dashboard and the state of the code can disagree — with no mechanical way to tell which is right.
-- **VERA's rule: nobody claims anything. The system only records what actually happened, with proof.** A security camera instead of a witness statement.
+- **Proofbound's rule: nobody claims anything. The system only records what actually happened, with proof.** A security camera instead of a witness statement.
 
 ## The five parts
 
@@ -57,4 +57,4 @@
 
 ---
 
-**The one-liner:** today's tools track what people *say* is happening; VERA records what *actually* happened, proves it, and lets AI do the work while humans only make the judgment calls.
+**The one-liner:** today's tools track what people *say* is happening; Proofbound records what *actually* happened, proves it, and lets AI do the work while humans only make the judgment calls.

@@ -1,4 +1,4 @@
-# VERA at 100x — The Magic Wand Document
+# Proofbound at 100x — The Magic Wand Document
 
 ## ★ THE NORTH STAR — ratified 2026-08-07 (VD-north-star-6io56h)
 

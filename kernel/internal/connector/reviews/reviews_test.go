@@ -149,6 +149,29 @@ func TestSyncUsesOnlyInjectedCommittedReader(t *testing.T) {
 	}
 }
 
+func TestSyncDistinguishesDocumentaryArtifacts(t *testing.T) {
+	documentary := Artifact{Path: "docs/verification/verdicts/p5-adjudication-round1.md", Bytes: []byte("# Adjudication\n\nDocumentary evidence.\n")}
+	r := &reader{artifacts: []Artifact{documentary}}
+	result, err := connector(t, r).Sync(context.Background(), &appender{})
+	if err != nil || result.Listed != 1 || result.Documentary != 1 || result.Appended != 0 || string(result.Cursor) != `["docs/verification/verdicts/p5-adjudication-round1.md"]` {
+		t.Fatalf("result=%+v error=%v", result, err)
+	}
+
+	for name, candidate := range map[string]Artifact{
+		"front matter": {Path: documentary.Path, Bytes: []byte("---\nbroken\n")},
+		"schema line":  {Path: documentary.Path, Bytes: []byte("schema: broken\n")},
+		"bad utf8":     {Path: documentary.Path, Bytes: []byte{0xff}},
+		"bad path":     {Path: "../outside.md", Bytes: documentary.Bytes},
+	} {
+		t.Run(name, func(t *testing.T) {
+			result, err := connector(t, &reader{artifacts: []Artifact{candidate}}).Sync(context.Background(), &appender{})
+			if err == nil || result.Malformed != 1 || result.Documentary != 0 {
+				t.Fatalf("result=%+v error=%v", result, err)
+			}
+		})
+	}
+}
+
 func TestSyncSortsAndFailsClosed(t *testing.T) {
 	good := artifact("docs/verification/verdicts/a.md", "ACCEPTABLE")
 	bad := artifact("docs/verification/verdicts/b.md", "NOPE")

@@ -1,5 +1,5 @@
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "link-success",
   "description": "The latest repository link lint check succeeded",
   "expires": "2026-10-16",

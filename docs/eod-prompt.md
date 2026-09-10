@@ -4,7 +4,7 @@ Use this one prompt at the end of a workday. It owns the complete durability clo
 create a separate manual resume-command sequence for the user.
 
 ```text
-End the workday according to the VERA durability rules.
+End the workday according to the Proofbound durability rules.
 
 Inspect the current repository state, today’s commits, tests, journals, notes, and session
 artifacts. Do not rely on conversation memory. Summarize completed, open, blocked, and unverified

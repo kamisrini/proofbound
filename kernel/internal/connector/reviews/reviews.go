@@ -66,8 +66,8 @@ type Connector struct {
 	now    func() time.Time
 }
 type Result struct {
-	Listed, Appended, Existing, Malformed int
-	Cursor                                json.RawMessage
+	Listed, Appended, Existing, Malformed, Documentary int
+	Cursor                                             json.RawMessage
 }
 
 func New(d *Deps) (*Connector, error) {
@@ -103,6 +103,17 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	out.Listed = len(items)
 	valid := make([]string, 0, len(items))
 	for _, item := range items {
+		candidate, err := wireCandidate(item.Path, item.Bytes)
+		if err != nil {
+			out.Malformed++
+			out.Cursor = cursor(valid)
+			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
+		}
+		if !candidate {
+			out.Documentary++
+			valid = append(valid, item.Path)
+			continue
+		}
 		v, err := Parse(item.Path, item.Bytes)
 		if err != nil {
 			out.Malformed++
@@ -133,6 +144,17 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	}
 	out.Cursor = cursor(valid)
 	return out, nil
+}
+
+func wireCandidate(path string, data []byte) (bool, error) {
+	if !utf8.Valid(data) {
+		return false, errors.New("artifact is not valid UTF-8")
+	}
+	if !validPath(path) {
+		return false, errors.New("artifact path is not under docs/verification/verdicts and does not end in .md")
+	}
+	first, _, _ := strings.Cut(string(data), "\n")
+	return first == "---" || strings.HasPrefix(first, "schema:"), nil
 }
 
 // Parse validates the complete front matter and binds its declared path to path.

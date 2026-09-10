@@ -1,21 +1,21 @@
-# VERA — The Verified Delivery Organism
+# Proofbound — The Verified Delivery Organism
 
 ### A 2028 vision for the system that replaces the software delivery stack
 
-**Working name:** VERA (*Latin: "true things"* — VERified Autonomy).
+**Working name:** Proofbound (*Latin: "true things"* — VERified Autonomy).
 **★ North star (VD-north-star-6io56h):** this document is the 10x we build and defend — the PACE. The ratified DIRECTION is [vision-100x.md](vision-100x.md): software as verified promises; only intent, meaning, and memory persist. When the two conflict, the star wins — via a recorded VD, joyfully.
 
 ---
 
 ## 0. The one-paragraph vision
 
-By 2028, writing code is free. Fleets of agents hold coherence for a week and cost less than the meeting that discusses them. In that world the entire current delivery stack — tickets, sprints, pull requests, test plans, UAT sign-offs, status dashboards, audits — is answering a question nobody needs answered anymore ("is the work being done?") while failing to answer the only question that matters: **"is any of this true?"** VERA is the system that owns that question. It turns governed **intent** into operating software through a **living simulated twin**, under a **trust engine** in which no actor can grade its own work, governed by an **executable constitution** in which humans spend minutes a day making only the decisions that genuinely need human values. Its product is not software — software is abundant. Its product is the **warranty**: a portable, machine-checkable, cryptographically signed proof of what a system does, who verified it, and who answers when it fails. And along the way an entire profession's activity dissolves: **testing becomes 100% redundant as a human activity** — no test cases, no test plans, no QA phase, no UAT sign-offs — while the evidence itself becomes ambient, continuous, and free.
+By 2028, writing code is free. Fleets of agents hold coherence for a week and cost less than the meeting that discusses them. In that world the entire current delivery stack — tickets, sprints, pull requests, test plans, UAT sign-offs, status dashboards, audits — is answering a question nobody needs answered anymore ("is the work being done?") while failing to answer the only question that matters: **"is any of this true?"** Proofbound is the system that owns that question. It turns governed **intent** into operating software through a **living simulated twin**, under a **trust engine** in which no actor can grade its own work, governed by an **executable constitution** in which humans spend minutes a day making only the decisions that genuinely need human values. Its product is not software — software is abundant. Its product is the **warranty**: a portable, machine-checkable, cryptographically signed proof of what a system does, who verified it, and who answers when it fails. And along the way an entire profession's activity dissolves: **testing becomes 100% redundant as a human activity** — no test cases, no test plans, no QA phase, no UAT sign-offs — while the evidence itself becomes ambient, continuous, and free.
 
 ## The elevator pitch
 
-> By 2028, AI writes the world's software — and no one can prove any of it is safe. **VERA is the trust layer for that world.** It records what agents actually did, simulates every change before reality touches it, and ships every system with a machine-checkable warranty: who built it, who verified it, who answers when it fails. Code became free; we sell certainty. *When anyone can generate software, the company that can prove it owns the industry.*
+> By 2028, AI writes the world's software — and no one can prove any of it is safe. **Proofbound is the trust layer for that world.** It records what agents actually did, simulates every change before reality touches it, and ships every system with a machine-checkable warranty: who built it, who verified it, who answers when it fails. Code became free; we sell certainty. *When anyone can generate software, the company that can prove it owns the industry.*
 
-**The one-liner:** *VERA is the warranty for AI-built software — when code is free, certainty is the product.*
+**The one-liner:** *Proofbound is the warranty for AI-built software — when code is free, certainty is the product.*
 
 ## The mission & the north star
 
@@ -56,20 +56,20 @@ By 2028, writing code is free. Fleets of agents hold coherence for a week and co
 2. **The unit of record shifts.** From human-asserted artifacts (tickets, status fields, PR descriptions) to **claims cryptographically bound to evidence produced by executing the change in forked reality** (millisecond-forkable microVMs, database branching, ambient agent telemetry, emerging agent-identity standards — all shipping now). Single-write by construction; reconciliation ceases to exist as a concept.
 3. **The regulatory-economic pincer.** High-risk AI obligations (automatic logging, retention) land 2027–2028, and cyber-resilience reporting is already live. Machine-verifiable delivery provenance becomes **legally mandatory** exactly as agent payment rails make verified outcomes **economically settleable**. Industry forecasts put a third of enterprise software on agentic foundations by 2028 — while predicting that more than 40% of agentic projects will be canceled first, on trust, cost, and risk. The buyer is every enterprise that has learned the hard way that **ungoverned agent fleets produce theater, not truth.**
 
-**And the window is dated.** One more model generation (2029) makes agent campaigns month-long, tournaments 50-wide, and proofs the default for critical kernels — but it also means someone else will have attempted this layer. Arriving in 2029 means competing against two years of a rival's accumulated calibration history and precedent data. Every compounding asset in this design (precedent, calibration, witnesses) rewards the earliest ledger — **a 2029-tech vision is a reason to start recording now, not to wait.** One flip to plan for: as verification compute goes to zero, the binding constraint moves again — from verification cost to **validated intent**. The scarcest resource in the 2029 industry is humans having decided what should be true; VERA is designed around maximizing adjudication throughput for exactly that reason.
+**And the window is dated.** One more model generation (2029) makes agent campaigns month-long, tournaments 50-wide, and proofs the default for critical kernels — but it also means someone else will have attempted this layer. Arriving in 2029 means competing against two years of a rival's accumulated calibration history and precedent data. Every compounding asset in this design (precedent, calibration, witnesses) rewards the earliest ledger — **a 2029-tech vision is a reason to start recording now, not to wait.** One flip to plan for: as verification compute goes to zero, the binding constraint moves again — from verification cost to **validated intent**. The scarcest resource in the 2029 industry is humans having decided what should be true; Proofbound is designed around maximizing adjudication throughput for exactly that reason.
 
 ---
 
 ## 2. The Eight Laws (non-negotiable design axioms)
 
-Process-and-policy tooling fails in well-known ways: enforcement that decays silently, duplicated sources of truth, warnings that never become errors, and unmeasured maintenance cost. These laws are the physics VERA is built on so those failure modes are unrepresentable rather than merely discouraged:
+Process-and-policy tooling fails in well-known ways: enforcement that decays silently, duplicated sources of truth, warnings that never become errors, and unmeasured maintenance cost. These laws are the physics Proofbound is built on so those failure modes are unrepresentable rather than merely discouraged:
 
-1. **Derived state or dead state.** Any representation of work that is *declared* rather than *derived from execution* becomes a lie — at agent speed, 100x faster. VERA has no status-setting call of any kind — status is not a writable field. Every status is a fold over an append-only ledger of things that actually executed.
+1. **Derived state or dead state.** Any representation of work that is *declared* rather than *derived from execution* becomes a lie — at agent speed, 100x faster. Proofbound has no status-setting call of any kind — status is not a writable field. Every status is a fold over an append-only ledger of things that actually executed.
 2. **No actor grades its own work.** Evidence is minted only by verifier identities whose signing keys are cryptographically unavailable to the builder. Fabricated evidence stops being a discipline problem and becomes a key-compromise problem — a category cryptography already knows how to detect.
 3. **Enforcement lives only where it cannot be skipped — and must prove it fires.** Enforcement a caller can bypass, disable, or simply not invoke is not enforcement. Every gate continuously rejects seeded known-bad canaries or is auto-quarantined. An enforcement layer that cannot prove it fires is treated as absent.
 4. **A gate honest work cannot pass turns truthful agents into fabricators.** Applicability is a first-class typed dimension; every check has an honest not-applicable outcome; overrides are louder than compliance (signed, expiring, auto-emitting a defect).
 5. **Nothing advisory is permanent.** Every shadow mode, warn-only validator, and default-OFF flag carries a mandatory expiry at creation: graduate or die. "Proposed enforcement, coming later" is not a representable state.
-6. **The machinery's own tax is a published, bounded number.** Tooling of this kind tends to accumulate maintenance cost that nobody measures. VERA's meta-tax is a first-class metric with a budget; breaching it is a product defect.
+6. **The machinery's own tax is a published, bounded number.** Tooling of this kind tends to accumulate maintenance cost that nobody measures. Proofbound's meta-tax is a first-class metric with a budget; breaching it is a product defect.
 7. **Lessons compile to enforcement.** A captured anti-pattern drafts its own executable check, canaried against historical traffic, shipped into the admission path — the second occurrence of a known trap is mechanically impossible, not mechanically re-discoverable. Prose lessons in a pattern library are compost; compiled lessons hold.
 8. **Human attention is the scarcest currency in the building.** Asking a human a transcription-grade question is a system defect with an SLO. The decision inbox is measured in minutes per day.
 
@@ -218,7 +218,7 @@ Nothing reaches reality without first living in the twin — and there is no han
 
 ## 5. What 10x actually means (before → after)
 
-| Today | VERA (2028) |
+| Today | Proofbound (2028) |
 |---|---|
 | Backlog of human guesses, groomed weekly | Divergence ledger — live, exhaustive, machine-typed, priced |
 | Pull-request review of code | Consequence brief — measured behavioral diff, independently certified |
@@ -270,4 +270,4 @@ Model-driven architecture, formal methods, business-process engines, industrial 
 4. **The autonomy ratchet + decision router** (Governor v1): policy envelopes, scoped credentials, the decision inbox.
 5. **The verifier marketplace + portable warranties** (Trust Engine endgame): the category move — trust as a product that crosses org boundaries.
 
-**The 2029 milestone: VERA builds VERA.** The control plane regenerates itself under its own warranty — self-hosting is both the ultimate demo and the standing stress test, and it is what proves the maintenance tax stays inside its budget.
+**The 2029 milestone: Proofbound builds Proofbound.** The control plane regenerates itself under its own warranty — self-hosting is both the ultimate demo and the standing stress test, and it is what proves the maintenance tax stays inside its budget.

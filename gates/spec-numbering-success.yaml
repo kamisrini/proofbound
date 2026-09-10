@@ -1,5 +1,5 @@
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "spec-numbering-success",
   "description": "The latest SPEC invariant numbering check succeeded",
   "expires": "2026-10-16",

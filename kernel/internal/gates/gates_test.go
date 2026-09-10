@@ -8,16 +8,16 @@ import (
 )
 
 func TestLoadRejectsInvalidDefinitions(t *testing.T) {
-	valid := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	valid := []byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	if _, err := Parse(valid); err != nil {
 		t.Fatal(err)
 	}
 	for _, bad := range [][]byte{
-		[]byte(`{"schema":"vera.gate.v2"}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"not-a-date","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
-		[]byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
+		[]byte(`{"schema":"proofbound.gate.v2"}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"not-a-date","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
 	} {
 		if _, err := Parse(bad); err == nil {
 			t.Fatal("invalid definition accepted")
@@ -65,7 +65,7 @@ func TestEvaluatePayloadRequiresAllPredicates(t *testing.T) {
 }
 
 func TestParseIsReadOnly(t *testing.T) {
-	data := []byte(`{"schema":"vera.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
+	data := []byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`)
 	want := append([]byte(nil), data...)
 	if _, err := Parse(data); err != nil {
 		t.Fatal(err)

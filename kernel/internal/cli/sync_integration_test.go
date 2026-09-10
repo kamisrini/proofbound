@@ -1,6 +1,6 @@
 //go:build integration
 
-package main
+package cli
 
 import (
 	"bytes"
@@ -28,7 +28,7 @@ func TestSyncChecksIngestsAndDeduplicates(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	spool := filepath.Join(root, ".vera", "spool")
+	spool := filepath.Join(root, ".proofbound", "spool")
 	if err := os.MkdirAll(spool, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestSyncChecksReportsMalformedWitness(t *testing.T) {
 	}
 	resetIntegrationDatabase(t, databaseURL)
 	root := t.TempDir()
-	spool := filepath.Join(root, ".vera", "spool")
+	spool := filepath.Join(root, ".proofbound", "spool")
 	if err := os.MkdirAll(spool, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestSyncAllIncludesSessions(t *testing.T) {
 	}
 }
 
-func TestVerifyIncludesSessionDoubleSync(t *testing.T) {
+func TestSyncChecksRebuildAndVerify(t *testing.T) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		t.Fatal("DATABASE_URL is required for integration tests")
@@ -144,7 +144,7 @@ func TestVerifyIncludesSessionDoubleSync(t *testing.T) {
 	resetIntegrationDatabase(t, databaseURL)
 	root, home := makeIntegrationRepo(t)
 	writeSessionFixture(t, root, home)
-	spool := filepath.Join(root, ".vera", "spool")
+	spool := filepath.Join(root, ".proofbound", "spool")
 	if err := os.MkdirAll(spool, 0o755); err != nil {
 		t.Fatal(err)
 	}

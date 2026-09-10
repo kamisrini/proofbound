@@ -21,6 +21,11 @@ directory automatically. The directory is local derived/runtime state and remain
 store lock remains derived from the data directory, so moving the root does not weaken lock
 ownership.
 
+An already-initialized embedded PostgreSQL cluster retains its legacy internal database/user name so
+the directory move does not destroy access to its ledger. That private storage identity is a
+deprecated compatibility alias, not a live product surface; newly initialized stores use Proofbound
+identity, and the alias is removed with the rest of the P5 compatibility window.
+
 ## Compatibility aliases
 
 The live executable is `proofbound`. The `vera` executable remains a deprecated delegating alias

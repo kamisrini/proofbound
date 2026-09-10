@@ -1,5 +1,5 @@
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "kernel-check-success",
   "description": "The latest kernel build, test, and lint check succeeded",
   "expires": "2026-10-16",

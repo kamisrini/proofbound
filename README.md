@@ -54,8 +54,8 @@ Currently implemented and verified:
 - Transaction handling and embedded/external database configuration
 - PostgreSQL-backed integration tests
 - Git, checks, and sessions connectors
-- Projection rebuild and `vera verify`
-- `vera report week`, including event-ID proof and `[superseded]` commit marking
+- Projection rebuild and `proofbound verify`
+- `proofbound report week`, including event-ID proof and `[superseded]` commit marking
 - Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
 - Machine-enforced spec-first coverage for every kernel package
 - P2 gate canary evaluation for the latest `make check` witness
@@ -111,7 +111,7 @@ make short
 
 To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It serializes
 the workflow, emits fresh witnesses for every promoted target, ingests them, and then runs
-`vera gates enforce`.
+`proofbound gates enforce`.
 
 The current command-line entry point is a scaffold while the product workflow is being built. The
 working implementation and tests live under [`kernel/`](kernel/).

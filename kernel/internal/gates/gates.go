@@ -18,7 +18,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const Version = "vera.gate.v1"
+const Version = "proofbound.gate.v1"
 
 type Definition struct {
 	Schema      string      `json:"schema"`

@@ -12,7 +12,7 @@ kernel/internal/connector/checks/SPEC.md	C-INV-8	Every dependency is required at
 kernel/internal/connector/checks/SPEC.md	C-INV-9	The cursor is observational and deterministic.
 kernel/internal/connector/checks/SPEC.md	C-INV-10	Emission records the real gate result.
 kernel/internal/connector/checks/SPEC.md	C-INV-11	Output digest covers the full combined gate output.
-kernel/internal/connector/checks/SPEC.md	C-INV-12	Witness emission does not depend on VERA.
+kernel/internal/connector/checks/SPEC.md	C-INV-12	Witness emission does not depend on Proofbound.
 kernel/internal/connector/checks/SPEC.md	C-INV-13	Emitted identity is self-consistent and sortable.
 kernel/internal/connector/checks/SPEC.md	C-INV-14	Repository and tool observations are present.
 kernel/internal/connector/checks/SPEC.md	C-INV-15	Gate output and repository identity share one root.
@@ -81,6 +81,7 @@ kernel/internal/connector/reviews/SPEC.md	R-INV-4	Idempotent and revision-safe:
 kernel/internal/connector/reviews/SPEC.md	R-INV-5	Determinism and preservation:
 kernel/internal/connector/reviews/SPEC.md	R-INV-6	Dependency safety:
 kernel/internal/connector/reviews/SPEC.md	R-INV-7	Binding:
+kernel/internal/connector/reviews/SPEC.md	R-INV-8	Documentary artifacts are not wire verdicts:
 kernel/internal/core/SPEC.md	INV-1	Order and whitespace independence.
 kernel/internal/core/SPEC.md	INV-2	Idempotence.
 kernel/internal/core/SPEC.md	INV-3	Unicode fidelity.

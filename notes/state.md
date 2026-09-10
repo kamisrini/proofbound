@@ -1,4 +1,4 @@
-# VERA — Current State
+# Proofbound — Current State
 
 > THE resume note. Overwrite-in-place; never append; never a second copy. A fresh session reads this first.
 > Kept live under **Law 10** — `make check` fails when HEAD moves >3 commits past its last update.
@@ -6,7 +6,7 @@
 > The single canonical closeout instruction is [docs/eod-prompt.md](../docs/eod-prompt.md); the
 > next-action block below is recorded handoff state, not a separate command for the user.
 
-**As of:** 2026-08-27 (P4 closed; acceptance evidence complete)
+**As of:** 2026-09-10 (P5 ratified; Task 0.5 identity migration mechanically complete)
 
 ## Next-session handoff
 
@@ -17,13 +17,24 @@ separate user prompt or command to run.
 Read `CLAUDE.md` explicitly, then `notes/state.md` and `notes/journal/2026-08-26.md`.
 
 Load-bearing facts:
+- P5 semantics and scope are ratified in `docs/decisions/VD-p5-intent-provenance-2026-09-10.md`;
+  the received adjudication, exhibit, and founder record are committed verbatim under
+  `docs/verification/verdicts/`. The exhibit digest matched its provenance header.
+- Task 0.5 made Proofbound the live CLI, environment, runtime-path, gate-schema, and documentation
+  identity. The three v1 wire identities remain frozen. The blocking classified inventory reports
+  zero unclassified occurrences; its evidence is `docs/verification/p5-identity-migration.md`.
+- The 105 MB local runtime tree was moved intact to `.proofbound/`; bare `make check` and
+  `proofbound verify` passed after the migration. The deprecated CLI/environment aliases expire
+  2026-12-31 or at P6 start.
+- Next: Task 1, freeze the intent-provider family and both provider SPECs, schemas, invariant tables,
+  valid vectors, and all hostile/conformance fixtures before implementation.
 - The GitHub remote is `git@github.com:kamisrini/proofbound.git`; branch `main` is pushed and clean.
 - The P1 Go scaffold/core/store work is committed. Store supports migrations, embedded/external DB
   configuration, append/read, transactions, and Docker-backed integration tests.
 - PostgreSQL test infrastructure is available locally: Docker image `postgres:16-alpine` was used
   successfully on 2026-08-25. Start a disposable container named `proofbound-task6-postgres` with
   host port `55433` mapped to 5432 and use
-  `postgres://postgres:postgres@127.0.0.1:55433/vera?sslmode=disable`; Docker inspection/run may
+  `postgres://postgres:postgres@127.0.0.1:55433/proofbound?sslmode=disable`; Docker inspection/run may
   require escalated host access. Check this image before claiming PostgreSQL is unavailable.
 - The mutation harness is calibrated and supports `MUTANT_TEST_TAGS=integration` with `DATABASE_URL`.
 - The post-`dc94712` database-aware store acceptance sweep found 107 candidates, 107 killed,
@@ -41,15 +52,15 @@ Load-bearing facts:
   or invalid UTF-8 before the gate/witness and before Go decoding/content identity.
   Round 3 remediation makes hash, serialization, publication, and capture cleanup failures loud.
   `make check-witnessed` emits strict
-  `vera.witness.v1` evidence without invoking VERA; `vera sync checks` ingests and deduplicates it.
+  `vera.witness.v1` evidence without invoking Proofbound; `proofbound sync checks` ingests and deduplicates it.
   Post-remediation connector mutation is 37/37 killed; DB-aware CLI mutation is 17/17 killed, with
   no invalids or survivors. Task 5 Round 6 remediation is committed at `517470e`; Round 7 independently
   returned ACCEPTABLE and is committed at `docs/verification/verdicts/task5-current-round7.md`.
-- Task 8 `vera report week` is accepted under Law 9. Frozen remediation is `327219c`; the independent
+- Task 8 `proofbound report week` is accepted under Law 9. Frozen remediation is `327219c`; the independent
   Round 1 verdict is committed verbatim at `docs/verification/verdicts/task8-current-round1.md`. Evidence
   is in `docs/verification/task8-final-evidence.md`.
-- Task 9 closed P1: review verdict artifacts use `vera.verdict.v1` metadata, `vera sync reviews` ingests
-  committed artifacts, `reviews_view` retains finding/event proof, and `vera report week` exposes the
+- Task 9 closed P1: review verdict artifacts use `vera.verdict.v1` metadata, `proofbound sync reviews` ingests
+  committed artifacts, `reviews_view` retains finding/event proof, and `proofbound report week` exposes the
   ledger-ordered red-verdict/change/next-verdict chain. The spec-first graduation is a blocking Go test
   under `make check` at `kernel/internal/specfirst`.
 - P2 gate data is landed for the aggregate check, index freshness, law citation, SPEC numbering,
@@ -62,16 +73,16 @@ Load-bearing facts:
 - All seven current gate definitions are now explicitly promoted to `mode: enforce`; enforcement
   is validated against the same isolated ledger before any future gate additions are promoted.
 - `make delivery-enforce` is now the explicit delivery boundary: it refreshes all seven witness
-  streams, ingests them, and invokes `vera gates enforce`; ordinary `make check` remains product-independent.
+  streams, ingests them, and invokes `proofbound gates enforce`; ordinary `make check` remains product-independent.
 - The delivery boundary is implemented by `scripts/delivery-enforce.sh`, which serializes concurrent
-  runs with an atomic `.vera/delivery.lock` and pins the aggregate witness target to `check`.
+  runs with an atomic `.proofbound/delivery.lock` and pins the aggregate witness target to `check`.
 - P2 acceptance evidence is recorded in `docs/verification/p2-gate-evidence.md`: a bad kernel-check
   witness is BLOCKED in canary and rejected by enforce with the same ledger proof.
 - P3 selected a narrow GitHub connector in `docs/decisions/VD-p3-github-connector-2026-08-26.md`.
   The initial implementation collects bounded workflow-run and deployment records through an
   injectable standard-library HTTP client and emits repository-qualified external events. Fixture
   selection evidence is in `docs/verification/p3-github-fixture-check.md`. The
-  joined delivery projection and `vera sync github` / `vera report github` surfaces are implemented
+  joined delivery projection and `proofbound sync github` / `proofbound report github` surfaces are implemented
   and tested. Live acceptance is recorded in `docs/verification/p3-github-live-acceptance.md`:
   200 records synced in 7 seconds, the report rendered 106 real delivery groups with proof and
   freshness, and replay returned 0 appended / 200 existing in 4 seconds. P3 is closed; P4 is next.
@@ -171,8 +182,8 @@ the full `make check` gate.
    full verifier evidence, and blocking spec-first gate are recorded in the 2026-08-26 journal.
 
 2. **P1 forward path (validated 2026-08-14 — full audit in the plan's Position section):**
-   Tasks 0–9 DONE · P1 closed 2026-08-26. The planned `/vera-wrap` step-3 amendment cannot be
-   applied because `.claude/commands/vera-wrap.md` is absent from this checkout.
+   Tasks 0–9 DONE · P1 closed 2026-08-26. The planned `/proofbound-wrap` step-3 amendment cannot be
+   applied because `.claude/commands/proofbound-wrap.md` is absent from this checkout.
 3. **Retroactive mutation sweeps:** store is accepted; current Git implementation is green
    author-side; `core` remains queued.
 4. **Owed mechanisms, validated and ranked:** restore the mechanisms the imported constitution and
@@ -212,7 +223,7 @@ the full `make check` gate.
 - Bare `make check`: PASS, `0 issues`.
 - Twin mutation sweep: `31` candidates, `31` killed, `0` invalid, `0` survivors; the Law 9
   package acceptance bar is satisfied.
-- `vera verify` now has a fifteen-minute command deadline and labels the failing verification stage;
+- `proofbound verify` now has a fifteen-minute command deadline and labels the failing verification stage;
   the fresh clean external-PostgreSQL run completed successfully.
 - A fresh external-PostgreSQL verifier run on 2026-08-27 completed initial sync, all four
   idempotence syncs, projection apply/snapshot, rebuild/snapshot, witness read, and ledger

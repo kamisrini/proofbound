@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '.')).Path
 Set-Location $repo
 
-Write-Host "VERA Windows setup: $repo"
+Write-Host "Proofbound Windows setup: $repo"
 
 if ($InstallTools) {
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {

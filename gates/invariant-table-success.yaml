@@ -1,5 +1,5 @@
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "invariant-table-success",
   "description": "The latest invariant table lint check succeeded",
   "expires": "2026-10-16",

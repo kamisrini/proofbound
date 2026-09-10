@@ -2,8 +2,8 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
-mkdir -p .vera
-lock=.vera/delivery.lock
+mkdir -p .proofbound
+lock=.proofbound/delivery.lock
 if ! mkdir "$lock" 2>/dev/null; then
   pid_file="$lock/pid"
   pid=''
@@ -34,6 +34,6 @@ make spec-numbering-witnessed
 make invariant-table-witnessed
 make link-witnessed
 make kernel-check-witnessed
-VERA_CHECK_TARGET=check make check-witnessed
-(cd kernel && go run ./cmd/vera sync checks)
-(cd kernel && go run ./cmd/vera gates enforce)
+PROOFBOUND_CHECK_TARGET=check make check-witnessed
+(cd kernel && go run ./cmd/proofbound sync checks)
+(cd kernel && go run ./cmd/proofbound gates enforce)

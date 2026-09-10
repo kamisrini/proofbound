@@ -92,6 +92,38 @@ func TestEnsurePrivateDirCreatesPrivateDirectory(t *testing.T) {
 	}
 }
 
+func TestEmbeddedIdentityUsesProofboundForNewAndLegacyOnlyForMovedData(t *testing.T) {
+	newData := t.TempDir()
+	identity, err := embeddedIdentityFor(newData)
+	if err != nil || identity != proofboundEmbeddedIdentity {
+		t.Fatalf("new identity=%+v error=%v", identity, err)
+	}
+
+	legacyData := t.TempDir()
+	if err := os.WriteFile(filepath.Join(legacyData, "PG_VERSION"), []byte("16\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	identity, err = embeddedIdentityFor(legacyData)
+	if err != nil || identity != legacyEmbeddedIdentity {
+		t.Fatalf("legacy identity=%+v error=%v", identity, err)
+	}
+
+	if err := os.WriteFile(filepath.Join(legacyData, ".proofbound-identity"), []byte(proofboundEmbeddedIdentity.marker+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	identity, err = embeddedIdentityFor(legacyData)
+	if err != nil || identity != proofboundEmbeddedIdentity {
+		t.Fatalf("marked identity=%+v error=%v", identity, err)
+	}
+
+	if err := os.WriteFile(filepath.Join(legacyData, ".proofbound-identity"), []byte("unknown\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := embeddedIdentityFor(legacyData); err == nil {
+		t.Fatal("malformed identity marker was accepted")
+	}
+}
+
 func TestOpen_FailureRoutesReleaseTheLock(t *testing.T) {
 	t.Run("invalid database URL", func(t *testing.T) {
 		root := t.TempDir()
@@ -168,7 +200,7 @@ func TestConfig_ReplayImportRequiresTwinRoot(t *testing.T) {
 	if _, err := (Config{Root: t.TempDir(), AllowReplayImport: true}).normalized(); !errors.Is(err, ErrConfig) {
 		t.Fatalf("expected guarded replay root error, got %v", err)
 	}
-	if _, err := (Config{Root: filepath.Join(t.TempDir(), "vera-twin-123"), AllowReplayImport: true}).normalized(); err != nil {
+	if _, err := (Config{Root: filepath.Join(t.TempDir(), "proofbound-twin-123"), AllowReplayImport: true}).normalized(); err != nil {
 		t.Fatalf("expected temporary twin root to be accepted, got %v", err)
 	}
 }

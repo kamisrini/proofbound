@@ -7,4 +7,4 @@ repo=$PWD
 cd tools/mutants
 args=( -root "$repo" -pkg "$pkg" )
 if [ -n "$tags" ]; then args+=( -tags "$tags" ); fi
-exec env GOCACHE=${GOCACHE:-/tmp/vera-mutant-cache} go run . "${args[@]}"
+exec env GOCACHE=${GOCACHE:-/tmp/proofbound-mutant-cache} go run . "${args[@]}"

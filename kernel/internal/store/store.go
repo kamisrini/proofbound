@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -46,6 +47,30 @@ type Store struct {
 	cfg      Config
 	closed   bool
 }
+
+type embeddedIdentity struct {
+	username string
+	password string
+	database string
+	marker   string
+}
+
+var proofboundEmbeddedIdentity = embeddedIdentity{
+	username: "proofbound",
+	password: "proofbound",
+	database: "proofbound",
+	marker:   "proofbound-v1",
+}
+
+// The old private database identity is retained only for an existing cluster moved from the
+// legacy state directory. New clusters never receive it.
+var legacyEmbeddedIdentity = embeddedIdentity{
+	username: "vera",
+	password: "vera",
+	database: "vera",
+	marker:   "vera-v1",
+}
+
 type Sync struct {
 	store    *Store
 	id       int64
@@ -64,6 +89,7 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 	}
 	var server *embeddedpostgres.EmbeddedPostgres
 	stopServer := func() {}
+	var identity embeddedIdentity
 	if cfg.DatabaseURL == "" {
 		for _, dir := range []string{cfg.DataDir, cfg.RuntimeDir} {
 			if err := ensurePrivateDir(dir); err != nil {
@@ -71,14 +97,19 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 				return nil, fmt.Errorf("%w: prepare embedded postgres directory: %v", ErrMigrate, err)
 			}
 		}
+		identity, err = embeddedIdentityFor(cfg.DataDir)
+		if err != nil {
+			_ = lock.close()
+			return nil, fmt.Errorf("%w: embedded identity: %v", ErrMigrate, err)
+		}
 		port := embeddedPort(cfg.Port)
-		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username("vera").Password("vera").Database("vera"))
+		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username(identity.username).Password(identity.password).Database(identity.database))
 		if err = server.Start(); err != nil {
 			_ = lock.close()
 			return nil, fmt.Errorf("%w: embedded postgres: %v", ErrMigrate, err)
 		}
 		stopServer = func() { _ = server.Stop() }
-		cfg.DatabaseURL = fmt.Sprintf("postgres://vera:vera@127.0.0.1:%d/vera?sslmode=disable", port)
+		cfg.DatabaseURL = fmt.Sprintf("postgres://%s:%s@127.0.0.1:%d/%s?sslmode=disable", identity.username, identity.password, port, identity.database)
 	}
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -98,7 +129,38 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 		_ = lock.close()
 		return nil, fmt.Errorf("%w: %v", ErrMigrate, err)
 	}
+	if server != nil {
+		if err = os.WriteFile(filepath.Join(cfg.DataDir, ".proofbound-identity"), []byte(identity.marker+"\n"), 0o600); err != nil {
+			pool.Close()
+			stopServer()
+			_ = lock.close()
+			return nil, fmt.Errorf("%w: record embedded identity: %v", ErrMigrate, err)
+		}
+	}
 	return &Store{pool: pool, lock: lock, cfg: cfg, embedded: server}, nil
+}
+
+func embeddedIdentityFor(dataDir string) (embeddedIdentity, error) {
+	data, err := os.ReadFile(filepath.Join(dataDir, ".proofbound-identity"))
+	if err == nil {
+		switch strings.TrimSpace(string(data)) {
+		case proofboundEmbeddedIdentity.marker:
+			return proofboundEmbeddedIdentity, nil
+		case legacyEmbeddedIdentity.marker:
+			return legacyEmbeddedIdentity, nil
+		default:
+			return embeddedIdentity{}, errors.New("unrecognized embedded identity marker")
+		}
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		return embeddedIdentity{}, err
+	}
+	if _, err = os.Stat(filepath.Join(dataDir, "PG_VERSION")); err == nil {
+		return legacyEmbeddedIdentity, nil
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return embeddedIdentity{}, err
+	}
+	return proofboundEmbeddedIdentity, nil
 }
 
 func ensurePrivateDir(path string) error {
@@ -125,7 +187,7 @@ func migrate(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-	// Multiple vera processes may open the same externally managed database at
+	// Multiple Proofbound processes may open the same externally managed database at
 	// once (for example, package-level integration tests). Serialize the
 	// create-if-not-exists migration on the database connection.
 	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext('proofbound:ledger-migration'))`); err != nil {

@@ -1,5 +1,5 @@
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "index-check-success",
   "description": "The latest generated-files freshness check succeeded",
   "expires": "2026-10-16",

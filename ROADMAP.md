@@ -1,4 +1,4 @@
-# VERA Roadmap
+# Proofbound Roadmap
 
 Phases are sequential; each has a mechanical Definition of Done. A phase is not done because it feels done — it is done when its DoD checks pass. Update `notes/state.md` as phases move.
 
@@ -12,7 +12,7 @@ Repo structure, CLAUDE.md constitution, hooks (self-tested), gates registry, dec
 
 ## P1 — Flight Recorder kernel, self-hosted (target: +6 weeks)
 
-The event ledger + witness substrate, with **this repo as the first tenant**: ingest VERA's own git commits, `make check` runs (as witnesses), and agent-session telemetry. Zero external dependencies. Full execution plan: [docs/plans/P1-flight-recorder-plan.md](docs/plans/P1-flight-recorder-plan.md).
+The event ledger + witness substrate, with **this repo as the first tenant**: ingest Proofbound's own git commits, `make check` runs (as witnesses), and agent-session telemetry. Zero external dependencies. Full execution plan: [docs/plans/P1-flight-recorder-plan.md](docs/plans/P1-flight-recorder-plan.md).
 
 **P1 preflight:** Go ≥1.26 pinned via the `go.mod` toolchain directive; golangci-lint installed; `kernel/go.mod` is the module the Makefile builds/tests; test DB = embedded-postgres per VD-stack-go-fid9mi (daemon-free, `DATABASE_URL` escape hatch).
 
@@ -46,8 +46,8 @@ test, and recorded the full verifier run. Task status detail: the plan's Positio
 ## P2 — Gates as data ✅ (target: +4 weeks)
 
 **Status 2026-08-26:** P2 is complete. The gate set and delivery boundary are complete: `gates/make-check-success.yaml`, the
-ledger-backed `vera gates canary` command, proof-bearing PASS/BLOCKED/UNKNOWN results, and an
-explicit `vera gates enforce` path. All seven current definitions are promoted to `mode: enforce`
+ledger-backed `proofbound gates canary` command, proof-bearing PASS/BLOCKED/UNKNOWN results, and an
+explicit `proofbound gates enforce` path. All seven current definitions are promoted to `mode: enforce`
 after PASS canary evidence; enforcement is explicit and fails closed. Gate definitions also carry
 an ISO expiry date, and enforcement rejects expired definitions. The canary→enforce bad-witness
 sequence is proven in `docs/verification/p2-gate-evidence.md`. The runtime P0 checks are represented

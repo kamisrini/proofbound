@@ -35,7 +35,7 @@ func (c Config) normalized() (Config, error) {
 	if c.Root == "" {
 		return Config{}, fmt.Errorf("%w: Root is required", ErrConfig)
 	}
-	if c.AllowReplayImport && !strings.HasPrefix(filepath.Base(c.Root), "vera-twin-") {
+	if c.AllowReplayImport && !strings.HasPrefix(filepath.Base(c.Root), "proofbound-twin-") {
 		return Config{}, fmt.Errorf("%w: replay import requires a temporary twin root", ErrConfig)
 	}
 	root, err := filepath.Abs(c.Root)

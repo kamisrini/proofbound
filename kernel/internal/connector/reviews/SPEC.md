@@ -4,9 +4,16 @@
 
 The reviews connector reads only artifacts supplied by an injected
 `CommittedReader`. It does not inspect the working tree, open a database, or
-modify verdict files. Each valid artifact emits one `review.verdict` event via
+modify verdict files. Each valid schema-bearing artifact emits one `review.verdict` event via
 the normal store appender. The ledger's `(source, native_id, content_sha)` key
 makes unchanged ingestion idempotent and changed content a revision.
+
+The verdict directory also contains documentary adjudications and reviewed exhibits committed under
+`VD-verdicts-are-artifacts-rl0rab`. A valid UTF-8 Markdown file whose first line is neither `---` nor
+`schema:` is counted as documentary and does not claim to implement this wire contract. A file that
+starts either marker is a wire candidate and must parse completely or fail closed. Invalid UTF-8 and
+invalid paths fail before this distinction, so binary or path-hostile artifacts are never silently
+ignored.
 
 ## Artifact contract: `vera.verdict.v1`
 
@@ -82,6 +89,9 @@ func Parse(path string, data []byte) (Verdict, error)
    nil clocks are rejected at construction or sync.
 7. **R-INV-7 — Binding:** event payload retains both the committed artifact path
    and artifact SHA; the reader path must equal front matter `artifact_path`.
+8. **R-INV-8 — Documentary artifacts are not wire verdicts:** valid plain Markdown is counted and
+   skipped without error; anything declaring a front-matter or `schema:` start remains a strict
+   candidate and malformed candidates fail closed.
 
 ## Proving table
 
@@ -94,3 +104,4 @@ func Parse(path string, data []byte) (Verdict, error)
 | R-INV-5 | Processing is sorted and stops on malformed input | reviews_test.go::TestSyncSortsAndFailsClosed |
 | R-INV-6 | Required dependencies are enforced | reviews_test.go::TestNewRequiresDependencies |
 | R-INV-7 | Reader path and payload path remain bound | reviews_test.go::TestParseBindsPathAndDigest |
+| R-INV-8 | Documentary artifacts are distinct from strict wire candidates | reviews_test.go::TestSyncDistinguishesDocumentaryArtifacts |

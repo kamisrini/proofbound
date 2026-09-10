@@ -52,16 +52,16 @@ func TestEmitter_OutputDigestCoversCombinedBytes(t *testing.T) {
 	}
 }
 
-func TestEmitter_WorksWithoutVeraBinary(t *testing.T) {
+func TestEmitter_WorksWithoutProofboundBinary(t *testing.T) {
 	fixture := newEmitterFixture(t)
-	marker := filepath.Join(fixture.root, "vera-was-invoked")
-	writeExecutable(t, filepath.Join(fixture.binDir, "vera"), "#!/usr/bin/env bash\nprintf invoked >\"$VERA_MARKER\"\nexit 99\n")
-	t.Setenv("VERA_MARKER", marker)
+	marker := filepath.Join(fixture.root, "proofbound-was-invoked")
+	writeExecutable(t, filepath.Join(fixture.binDir, "proofbound"), "#!/usr/bin/env bash\nprintf invoked >\"$PROOFBOUND_MARKER\"\nexit 99\n")
+	t.Setenv("PROOFBOUND_MARKER", marker)
 	if _, _, err := fixture.run(t, 0); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(marker); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("vera invocation marker error=%v", err)
+		t.Fatalf("proofbound invocation marker error=%v", err)
 	}
 }
 
@@ -79,7 +79,7 @@ func TestEmitter_RunIDIsUniqueAndSelfConsistent(t *testing.T) {
 		t.Fatalf("run ids %q and %q", first.RunID, second.RunID)
 	}
 	for _, runID := range []string{first.RunID, second.RunID} {
-		if _, err := os.Stat(filepath.Join(fixture.root, ".vera", "spool", runID+".json")); err != nil {
+		if _, err := os.Stat(filepath.Join(fixture.root, ".proofbound", "spool", runID+".json")); err != nil {
 			t.Fatalf("run id %s filename: %v", runID, err)
 		}
 	}
@@ -133,7 +133,7 @@ func TestEmitter_GateGitUsesSanitizedRepository(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(repositoryA, "Makefile"), []byte("check:\n\t@git rev-parse HEAD\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(repositoryA, ".gitignore"), []byte(".vera/\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repositoryA, ".gitignore"), []byte(".proofbound/\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	initializeRepository(t, repositoryA)
@@ -160,7 +160,7 @@ func TestEmitter_GateGitUsesSanitizedRepository(t *testing.T) {
 	if len(files) != 1 {
 		t.Fatalf("witness files=%v", files)
 	}
-	witness, err := readWitness(filepath.Join(repositoryA, ".vera", "spool", files[0]))
+	witness, err := readWitness(filepath.Join(repositoryA, ".proofbound", "spool", files[0]))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestEmitter_FreshCheckoutMakeTarget(t *testing.T) {
 	if len(files) != 1 {
 		t.Fatalf("witness files=%v", files)
 	}
-	if _, err := readWitness(filepath.Join(fixture.root, ".vera", "spool", files[0])); err != nil {
+	if _, err := readWitness(filepath.Join(fixture.root, ".proofbound", "spool", files[0])); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -329,7 +329,7 @@ func TestEmitter_PublicationFailuresAreLoud(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = cmd.Wait()
-	if matches, err := filepath.Glob(filepath.Join(fixture.root, "vera-version-*")); err != nil || len(matches) != 0 {
+	if matches, err := filepath.Glob(filepath.Join(fixture.root, "proofbound-version-*")); err != nil || len(matches) != 0 {
 		t.Fatalf("version temp matches=%v error=%v", matches, err)
 	}
 }
@@ -378,11 +378,11 @@ func TestEmitter_EmptyHelperOutputIsLoud(t *testing.T) {
 
 func TestEmitter_MalformedHelperOutputIsLoud(t *testing.T) {
 	for name, environment := range map[string]string{
-		"truncated od": "FAKE_OD_TRUNCATED=1",
-		"malformed od": "FAKE_OD_MALFORMED=1",
-		"short entropy": "FAKE_OD_ENTROPY_SHORT=1",
+		"truncated od":         "FAKE_OD_TRUNCATED=1",
+		"malformed od":         "FAKE_OD_MALFORMED=1",
+		"short entropy":        "FAKE_OD_ENTROPY_SHORT=1",
 		"impossible timestamp": "FAKE_DATE_IMPOSSIBLE=1",
-		"backward timestamp": "FAKE_DATE_BACKWARD=1",
+		"backward timestamp":   "FAKE_DATE_BACKWARD=1",
 	} {
 		t.Run(name, func(t *testing.T) {
 			fixture := newEmitterFixture(t)
@@ -419,7 +419,7 @@ func newEmitterFixture(t *testing.T) emitterFixture {
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nif [[ -n ${REMOVE_SPOOL:-} ]]; then rm -rf \"$EXPECTED_REPO_ROOT/.vera/spool\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
+	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nif [[ -n ${REMOVE_SPOOL:-} ]]; then rm -rf \"$EXPECTED_REPO_ROOT/.proofbound/spool\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
 	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nfor variable in $(compgen -e); do if [[ $variable == GIT_* ]]; then printf '"+strings.Repeat("b", 40)+"\\n'; exit 0; fi; done\nif [[ ${3:-} == rev-parse ]]; then if [[ ${FAKE_GIT_HEAD_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_HEAD_EXIT\"; fi; printf '%s\\n' \"${FAKE_GIT_HEAD_VALUE:-"+strings.Repeat("a", 40)+"}\"; exit 0; fi\nif [[ ${3:-} == status ]]; then if [[ ${FAKE_GIT_STATUS_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_STATUS_EXIT\"; fi; printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
 	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_BLOCK:-} ]]; then while true; do sleep 1; done; elif [[ -n ${FAKE_GO_NUL:-} ]]; then printf 'go\\000version fixture\\n'; elif [[ -n ${FAKE_GO_INVALID:-} ]]; then printf 'go\\377version fixture\\n'; elif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
 	writeExecutable(t, filepath.Join(binDir, "golangci-lint"), "#!/usr/bin/env bash\nprintf 'golangci-lint fixture\\n'\n")
@@ -452,7 +452,7 @@ func (f emitterFixture) run(t *testing.T, exitCode int) (Witness, []byte, error)
 	if created == "" {
 		t.Fatalf("no new witness: before=%v after=%v", before, after)
 	}
-	witness, readErr := readWitness(filepath.Join(f.root, ".vera", "spool", created))
+	witness, readErr := readWitness(filepath.Join(f.root, ".proofbound", "spool", created))
 	if readErr != nil {
 		t.Fatal(readErr)
 	}
@@ -477,7 +477,7 @@ func (f emitterFixture) command(exitCode int) *exec.Cmd {
 
 func witnessFiles(t *testing.T, root string) []string {
 	t.Helper()
-	entries, err := os.ReadDir(filepath.Join(root, ".vera", "spool"))
+	entries, err := os.ReadDir(filepath.Join(root, ".proofbound", "spool"))
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
