@@ -77,4 +77,40 @@ projects only in a disposable store. Independent acceptance is recorded in
 events remain a later feed-backed extension.
 Decision and acceptance boundary: [VD-p4-twin-replay-calibration-2026-08-26](docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md).
 
+## P5 — Intent provenance (ratified 2026-09-10)
+
+P5 builds the smallest honest, proof-bearing chain from a declared business decision through exact
+requirement obligations, change intent, commit claim, independent verdict, and observed deployment.
+The ratified execution plan is
+[`P5-PROOFBOUND-INTENT-PROVENANCE-v3.md`](docs/plans/P5-PROOFBOUND-INTENT-PROVENANCE-v3.md);
+the semantic decision is
+[`VD-p5-intent-provenance-2026-09-10`](docs/decisions/VD-p5-intent-provenance-2026-09-10.md).
+
+**P5 DoD, in required order:**
+
+1. Ratification artifacts, reviewed exhibit, local baseline, semantic VD, roadmap, and stale README
+   status are durable and mutually linked.
+2. Live product identity migrates to Proofbound while frozen `vera.witness.v1`, `vera.verdict.v1`,
+   `vera.replay.v1`, pinned vectors, and historical artifacts remain byte-compatible; the complete
+   case-insensitive identity inventory has zero unclassified hits and records dated alias removal.
+3. Spec-first contracts freeze the canonical BD/BR/CI model, requirement review and verdict schemas,
+   both digest meanings, provider interface, native-record and `specdir` mappings, hostile fixtures,
+   conformance tests, and the unmappable-provider STOP control before implementation.
+4. `intent.records` and `intent.specdir` ingest immutable revisions idempotently; partial chains stay
+   honest; replay from an empty projection store reconstructs all relation and obligation meaning.
+5. Explicit commit trailers bind exact CI revisions with correct commit-tree/provider point-in-time
+   resolution; missing, withdrawn, ambiguous, wrong-digest, spoofed, and unordered references fail
+   closed while historical citations remain readable.
+6. Disposable projections and reports preserve event proof and distinguish missing, contradictory,
+   superseded, inconclusive, and unverified components. Non-verifiable or absent requirement review
+   caps green without blocking general users.
+7. Verdict v2, requirement-review v1, and deployment joins bind exact commits, revisions,
+   obligations, prior evidence events, and environments; v1 artifacts retain their original meaning.
+8. Reference- and verdict-integrity gates prove bad chains BLOCK and good chains PASS before
+   promotion. Delivery readiness graduates only in Proofbound's own `make delivery-enforce` boundary.
+9. Proofbound self-hosts P5 with a complete BD/BR/CI chain, non-author all-`VERIFIABLE` requirement
+   review, exact commit and evidence binding, v2 verdict, report, and a demonstrated bad-chain block.
+   Bare `make check` and `proofbound verify` pass; calibrated package mutation sweeps are green; and
+   a non-author independent package verdict is committed on receipt.
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

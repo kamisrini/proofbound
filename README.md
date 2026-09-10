@@ -41,9 +41,9 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-08-26, P1 Tasks 0–9, P2 gates-as-data, and P3’s first external connector are implemented
-and accepted under the repository’s independent verification rule. P3 is closed; the next planned
-phase is P4.
+As of 2026-09-10, P1 Tasks 0–9, P2 gates-as-data, P3’s first external connector, and the P4 twin
+spike are implemented and accepted under the repository’s independent verification rule. P5 intent
+provenance is ratified and in progress.
 
 Current project status: P4 twin spike accepted; durable prediction events remain future work.
 
@@ -75,8 +75,10 @@ Currently implemented and verified:
 
 Remaining work:
 
-- P4 bounded replay, isolated PostgreSQL projection, deterministic replay proof, and validated
-  in-memory prediction calibration
+- P5 intent provenance: provider-neutral business-decision, requirement, change-intent, exact-commit,
+  obligation-verdict, and observed-deployment chains
+- Durable prediction events remain deferred until a real prediction feed has its own decision and
+  acceptance evidence
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
