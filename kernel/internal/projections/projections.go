@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
@@ -56,7 +57,7 @@ CREATE TABLE IF NOT EXISTS commits_view (
  sha TEXT PRIMARY KEY, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
  author_name TEXT NOT NULL, author_email TEXT NOT NULL, committer_name TEXT NOT NULL,
  committer_email TEXT NOT NULL, committed_at TIMESTAMPTZ NOT NULL, subject TEXT NOT NULL,
- files_touched JSON NOT NULL, cited_decisions JSON NOT NULL
+ files_touched JSON NOT NULL, cited_decisions JSON NOT NULL, intent_refs JSON
 );
 CREATE TABLE IF NOT EXISTS checks_view (
  run_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
@@ -81,10 +82,59 @@ CREATE TABLE IF NOT EXISTS github_delivery_view (
  environment TEXT NOT NULL, status TEXT NOT NULL, conclusion TEXT NOT NULL,
  occurred_at TIMESTAMPTZ NOT NULL, freshness_at TIMESTAMPTZ NOT NULL, url TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS business_decisions_view (
+ source TEXT NOT NULL, decision_id TEXT NOT NULL, artifact_sha256 TEXT NOT NULL,
+ status TEXT NOT NULL, declared_owner TEXT NOT NULL, declared_approver TEXT NOT NULL,
+ payload JSON NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(source,decision_id,artifact_sha256)
+);
+CREATE TABLE IF NOT EXISTS requirements_view (
+ source TEXT NOT NULL, requirement_id TEXT NOT NULL, artifact_sha256 TEXT NOT NULL,
+ status TEXT NOT NULL, declared_owner TEXT NOT NULL, authorization_declared BOOLEAN NOT NULL,
+ payload JSON NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(source,requirement_id,artifact_sha256)
+);
+CREATE TABLE IF NOT EXISTS requirement_obligations_view (
+ source TEXT NOT NULL, requirement_id TEXT NOT NULL, artifact_sha256 TEXT NOT NULL,
+ obligation_id TEXT NOT NULL, statement TEXT NOT NULL, state TEXT NOT NULL,
+ event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(source,requirement_id,artifact_sha256,obligation_id)
+);
+CREATE TABLE IF NOT EXISTS change_intents_view (
+ source TEXT NOT NULL, intent_id TEXT NOT NULL, artifact_sha256 TEXT NOT NULL,
+ status TEXT NOT NULL, declared_sponsor TEXT NOT NULL, payload JSON NOT NULL,
+ event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(source,intent_id,artifact_sha256)
+);
+CREATE TABLE IF NOT EXISTS intent_targets_view (
+ intent_source TEXT NOT NULL, intent_id TEXT NOT NULL, intent_artifact_sha256 TEXT NOT NULL,
+ requirement_source TEXT NOT NULL, requirement_id TEXT NOT NULL, requirement_artifact_sha256 TEXT NOT NULL,
+ obligation_id TEXT NOT NULL, relation TEXT NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id)
+);
+CREATE TABLE IF NOT EXISTS commit_intents_view (
+ commit_sha TEXT NOT NULL, provider TEXT NOT NULL, intent_id TEXT NOT NULL,
+ intent_artifact_sha256 TEXT NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(commit_sha,provider,intent_id,intent_artifact_sha256)
+);
+CREATE TABLE IF NOT EXISTS obligation_verdicts_view (
+ verdict_id TEXT NOT NULL, commit_sha TEXT NOT NULL, intent_source TEXT NOT NULL,
+ intent_id TEXT NOT NULL, intent_artifact_sha256 TEXT NOT NULL, requirement_source TEXT NOT NULL,
+ requirement_id TEXT NOT NULL, requirement_artifact_sha256 TEXT NOT NULL, obligation_id TEXT NOT NULL,
+ outcome TEXT NOT NULL, evidence_event_ids JSON NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(verdict_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id)
+);
+CREATE TABLE IF NOT EXISTS requirement_reviews_view (
+ review_id TEXT NOT NULL, requirement_source TEXT NOT NULL, requirement_id TEXT NOT NULL,
+ requirement_artifact_sha256 TEXT NOT NULL, obligation_id TEXT NOT NULL, outcome TEXT NOT NULL,
+ finding TEXT NOT NULL, declared_reviewer TEXT NOT NULL, event_id TEXT NOT NULL, seq BIGINT NOT NULL,
+ PRIMARY KEY(review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id)
+);
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS verdict_id TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS status TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_path TEXT;
-ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_sha TEXT;`
+ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_sha TEXT;
+ALTER TABLE commits_view ADD COLUMN IF NOT EXISTS intent_refs JSON;`
 
 func (p *Projector) Ensure(ctx context.Context, s *store.Store) error {
 	return s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error { _, err := tx.Exec(ctx, ddl); return err })
@@ -133,7 +183,7 @@ func validateSequence(checkpoint int64, records []store.Record, seq int64) error
 
 func (p *Projector) Rebuild(ctx context.Context, s *store.Store) error {
 	if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
-		_, err := tx.Exec(ctx, `DROP TABLE IF EXISTS commits_view, checks_view, sessions_view, reviews_view, github_delivery_view, projection_meta`)
+		_, err := tx.Exec(ctx, `DROP TABLE IF EXISTS requirement_reviews_view, obligation_verdicts_view, commit_intents_view, intent_targets_view, requirement_obligations_view, change_intents_view, requirements_view, business_decisions_view, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view, projection_meta`)
 		return err
 	}); err != nil {
 		return err
@@ -156,8 +206,24 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		}
 		files, _ := json.Marshal(v.FilesTouched)
 		cited, _ := json.Marshal(v.CitedDecisions)
-		_, err := tx.Exec(ctx, `INSERT INTO commits_view(sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(sha) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,author_name=EXCLUDED.author_name,author_email=EXCLUDED.author_email,committer_name=EXCLUDED.committer_name,committer_email=EXCLUDED.committer_email,committed_at=EXCLUDED.committed_at,subject=EXCLUDED.subject,files_touched=EXCLUDED.files_touched,cited_decisions=EXCLUDED.cited_decisions WHERE commits_view.seq < EXCLUDED.seq`, v.SHA, r.Event.ID.String(), r.Seq, v.AuthorName, v.AuthorEmail, v.CommitterName, v.CommitterEmail, v.CommittedAt, v.Subject, files, cited)
-		return err
+		intentRefs, _ := json.Marshal(v.IntentRefs)
+		if _, err := tx.Exec(ctx, `INSERT INTO commits_view(sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions,intent_refs) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT(sha) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,author_name=EXCLUDED.author_name,author_email=EXCLUDED.author_email,committer_name=EXCLUDED.committer_name,committer_email=EXCLUDED.committer_email,committed_at=EXCLUDED.committed_at,subject=EXCLUDED.subject,files_touched=EXCLUDED.files_touched,cited_decisions=EXCLUDED.cited_decisions,intent_refs=EXCLUDED.intent_refs WHERE commits_view.seq < EXCLUDED.seq`, v.SHA, r.Event.ID.String(), r.Seq, v.AuthorName, v.AuthorEmail, v.CommitterName, v.CommitterEmail, v.CommittedAt, v.Subject, files, cited, intentRefs); err != nil {
+			return err
+		}
+		for _, ref := range v.IntentRefs {
+			source := "intent." + ref.Provider
+			var exists bool
+			if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM change_intents_view WHERE source=$1 AND intent_id=$2 AND artifact_sha256=$3)`, source, ref.RecordID, ref.ArtifactSHA256).Scan(&exists); err != nil {
+				return err
+			}
+			if !exists {
+				return fmt.Errorf("commit seq %d: dangling intent revision %s:%s@%s", r.Seq, source, ref.RecordID, ref.ArtifactSHA256)
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO commit_intents_view(commit_sha,provider,intent_id,intent_artifact_sha256,event_id,seq) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(commit_sha,provider,intent_id,intent_artifact_sha256) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE commit_intents_view.seq < EXCLUDED.seq`, v.SHA, ref.Provider, ref.RecordID, ref.ArtifactSHA256, r.Event.ID.String(), r.Seq); err != nil {
+				return err
+			}
+		}
+		return nil
 	case eventRoute(r.Event.Source, r.Event.Kind) == routeCheck:
 		var v checkPayload
 		if err := decode(r.Event.Payload, &v); err != nil {
@@ -195,6 +261,8 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		return nil
 	case eventRoute(r.Event.Source, r.Event.Kind) == routeGitHub:
 		return reduceGitHub(ctx, tx, r)
+	case eventRoute(r.Event.Source, r.Event.Kind) == routeIntent:
+		return reduceIntent(ctx, tx, r)
 	default:
 		return nil
 	}
@@ -213,6 +281,7 @@ const (
 	routeSession
 	routeReview
 	routeGitHub
+	routeIntent
 )
 
 func eventRoute(s core.Source, k core.Kind) route {
@@ -231,7 +300,116 @@ func eventRoute(s core.Source, k core.Kind) route {
 	if s == core.SourceGitHub && (k == core.KindGitHubWorkflow || k == core.KindGitHubDeployment) {
 		return routeGitHub
 	}
+	if (s == core.SourceIntentRecords || s == core.SourceIntentSpecdir) && (k == core.KindBusinessDecision || k == core.KindRequirement || k == core.KindChangeIntent) {
+		return routeIntent
+	}
 	return routeUnsupported
+}
+
+func reduceIntent(ctx context.Context, tx *store.Tx, r store.Record) error {
+	revision := connectorintent.Revision{Source: r.Event.Source, Kind: r.Event.Kind, NativeID: r.Event.NativeID, ObservedAt: r.Event.OccurredAt, Payload: r.Event.Payload}
+	switch r.Event.Kind {
+	case core.KindBusinessDecision:
+		var v connectorintent.BusinessDecision
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return err
+		}
+		revision.ArtifactPath, revision.ArtifactSHA256 = v.ArtifactPath, v.ArtifactSHA256
+		if err := connectorintent.ValidateRevision(revision); err != nil {
+			return fmt.Errorf("business decision seq %d: %w", r.Seq, err)
+		}
+		for _, ref := range v.Supersedes {
+			if err := requireExactRecord(ctx, tx, ref); err != nil {
+				return err
+			}
+		}
+		_, err := tx.Exec(ctx, `INSERT INTO business_decisions_view(source,decision_id,artifact_sha256,status,declared_owner,declared_approver,payload,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(source,decision_id,artifact_sha256) DO UPDATE SET status=EXCLUDED.status,declared_owner=EXCLUDED.declared_owner,declared_approver=EXCLUDED.declared_approver,payload=EXCLUDED.payload,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE business_decisions_view.seq < EXCLUDED.seq`, r.Event.Source, v.DecisionID, v.ArtifactSHA256, v.Status, v.DeclaredOwner, v.DeclaredApprover, r.Event.Payload, r.Event.ID.String(), r.Seq)
+		return err
+	case core.KindRequirement:
+		var v connectorintent.Requirement
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return err
+		}
+		revision.ArtifactPath, revision.ArtifactSHA256 = v.ArtifactPath, v.ArtifactSHA256
+		if err := connectorintent.ValidateRevision(revision); err != nil {
+			return fmt.Errorf("requirement seq %d: %w", r.Seq, err)
+		}
+		for _, ref := range append(append([]connectorintent.Reference{}, v.AuthorizedBy...), v.Supersedes...) {
+			if err := requireExactRecord(ctx, tx, ref); err != nil {
+				return err
+			}
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO requirements_view(source,requirement_id,artifact_sha256,status,declared_owner,authorization_declared,payload,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(source,requirement_id,artifact_sha256) DO UPDATE SET status=EXCLUDED.status,declared_owner=EXCLUDED.declared_owner,authorization_declared=EXCLUDED.authorization_declared,payload=EXCLUDED.payload,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE requirements_view.seq < EXCLUDED.seq`, r.Event.Source, v.RequirementID, v.ArtifactSHA256, v.Status, v.DeclaredOwner, len(v.AuthorizedBy) > 0, r.Event.Payload, r.Event.ID.String(), r.Seq); err != nil {
+			return err
+		}
+		for _, o := range v.Obligations {
+			if _, err := tx.Exec(ctx, `INSERT INTO requirement_obligations_view(source,requirement_id,artifact_sha256,obligation_id,statement,state,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(source,requirement_id,artifact_sha256,obligation_id) DO UPDATE SET statement=EXCLUDED.statement,state=EXCLUDED.state,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE requirement_obligations_view.seq < EXCLUDED.seq`, r.Event.Source, v.RequirementID, v.ArtifactSHA256, o.ID, o.Statement, o.State, r.Event.ID.String(), r.Seq); err != nil {
+				return err
+			}
+		}
+		return nil
+	case core.KindChangeIntent:
+		var v connectorintent.ChangeIntent
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return err
+		}
+		revision.ArtifactPath, revision.ArtifactSHA256 = v.ArtifactPath, v.ArtifactSHA256
+		if err := connectorintent.ValidateRevision(revision); err != nil {
+			return fmt.Errorf("change intent seq %d: %w", r.Seq, err)
+		}
+		for _, ref := range append(append(append([]connectorintent.Reference{}, v.Targets...), v.ConstrainedBy...), v.Supersedes...) {
+			if err := requireExactRecord(ctx, tx, ref); err != nil {
+				return err
+			}
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO change_intents_view(source,intent_id,artifact_sha256,status,declared_sponsor,payload,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(source,intent_id,artifact_sha256) DO UPDATE SET status=EXCLUDED.status,declared_sponsor=EXCLUDED.declared_sponsor,payload=EXCLUDED.payload,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE change_intents_view.seq < EXCLUDED.seq`, r.Event.Source, v.IntentID, v.ArtifactSHA256, v.Status, v.DeclaredSponsor, r.Event.Payload, r.Event.ID.String(), r.Seq); err != nil {
+			return err
+		}
+		for _, target := range v.Targets {
+			for _, oid := range target.ObligationIDs {
+				var exists bool
+				if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM requirement_obligations_view WHERE source=$1 AND requirement_id=$2 AND artifact_sha256=$3 AND obligation_id=$4 AND state='active')`, target.Source, target.RecordID, target.ArtifactSHA256, oid).Scan(&exists); err != nil {
+					return err
+				}
+				if !exists {
+					return fmt.Errorf("change intent seq %d: dangling or inactive obligation %s", r.Seq, oid)
+				}
+				if _, err := tx.Exec(ctx, `INSERT INTO intent_targets_view(intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,relation,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET relation=EXCLUDED.relation,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE intent_targets_view.seq < EXCLUDED.seq`, r.Event.Source, v.IntentID, v.ArtifactSHA256, target.Source, target.RecordID, target.ArtifactSHA256, oid, target.Relation, r.Event.ID.String(), r.Seq); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	return errors.New("unsupported intent kind")
+}
+
+func requireExactRecord(ctx context.Context, tx *store.Tx, ref connectorintent.Reference) error {
+	if !strings.HasPrefix(ref.Source, "intent.") {
+		return nil
+	}
+	var table, idColumn string
+	switch ref.RecordKind {
+	case "business_decision":
+		table, idColumn = "business_decisions_view", "decision_id"
+	case "requirement":
+		table, idColumn = "requirements_view", "requirement_id"
+	case "change_intent":
+		table, idColumn = "change_intents_view", "intent_id"
+	case "verification_decision":
+		return nil
+	default:
+		return fmt.Errorf("unknown record kind %s", ref.RecordKind)
+	}
+	var exists bool
+	query := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE source=$1 AND %s=$2 AND artifact_sha256=$3)`, table, idColumn)
+	if err := tx.QueryRow(ctx, query, ref.Source, ref.RecordID, ref.ArtifactSHA256).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("dangling exact record %s:%s@%s", ref.Source, ref.RecordID, ref.ArtifactSHA256)
+	}
+	return nil
 }
 
 type githubWorkflowPayload struct {
@@ -323,15 +501,22 @@ func validExternalName(value string) bool {
 }
 
 type commitPayload struct {
-	SHA            string    `json:"sha"`
-	AuthorName     string    `json:"author_name"`
-	AuthorEmail    string    `json:"author_email"`
-	CommitterName  string    `json:"committer_name"`
-	CommitterEmail string    `json:"committer_email"`
-	CommittedAt    time.Time `json:"committed_at"`
-	Subject        string    `json:"subject"`
-	FilesTouched   []string  `json:"files_touched"`
-	CitedDecisions []string  `json:"cited_decisions"`
+	SHA            string            `json:"sha"`
+	AuthorName     string            `json:"author_name"`
+	AuthorEmail    string            `json:"author_email"`
+	CommitterName  string            `json:"committer_name"`
+	CommitterEmail string            `json:"committer_email"`
+	CommittedAt    time.Time         `json:"committed_at"`
+	Subject        string            `json:"subject"`
+	FilesTouched   []string          `json:"files_touched"`
+	CitedDecisions []string          `json:"cited_decisions"`
+	IntentRefs     []commitIntentRef `json:"intent_refs"`
+}
+
+type commitIntentRef struct {
+	Provider       string `json:"provider"`
+	RecordID       string `json:"record_id"`
+	ArtifactSHA256 string `json:"artifact_sha256"`
 }
 
 func (v commitPayload) validate() error {
@@ -347,6 +532,14 @@ func (v commitPayload) validate() error {
 		if !decisionPattern.MatchString(citation) {
 			return errors.New("invalid cited_decisions")
 		}
+	}
+	last := ""
+	for _, ref := range v.IntentRefs {
+		key := ref.Provider + "\x00" + ref.RecordID + "\x00" + ref.ArtifactSHA256
+		if (ref.Provider != "records" && ref.Provider != "specdir") || !regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`).MatchString(ref.RecordID) || !hexPattern.MatchString(ref.ArtifactSHA256) || key <= last {
+			return errors.New("invalid intent_refs")
+		}
+		last = key
 	}
 	return nil
 }
@@ -487,7 +680,21 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 		return Snapshot{}, fmt.Errorf("snapshot ensure: %w", err)
 	}
 	result := Snapshot{Tables: make(map[string][]string)}
-	queries := map[string]string{"commits_view": "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions FROM commits_view", "checks_view": "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view", "sessions_view": "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view", "reviews_view": "SELECT finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha FROM reviews_view", "github_delivery_view": "SELECT native_id,event_id,seq,kind,repository,commit_sha,workflow_id,workflow,deployment_id,environment,status,conclusion,occurred_at,freshness_at,url FROM github_delivery_view"}
+	queries := map[string]string{
+		"commits_view":                 "SELECT sha,event_id,seq,author_name,author_email,committer_name,committer_email,committed_at,subject,files_touched,cited_decisions,intent_refs FROM commits_view",
+		"checks_view":                  "SELECT run_id,event_id,seq,command,exit_code,started_at,finished_at,duration_ms,output_sha256,git_sha,git_dirty,tool_versions FROM checks_view",
+		"sessions_view":                "SELECT session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage FROM sessions_view",
+		"reviews_view":                 "SELECT finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha FROM reviews_view",
+		"github_delivery_view":         "SELECT native_id,event_id,seq,kind,repository,commit_sha,workflow_id,workflow,deployment_id,environment,status,conclusion,occurred_at,freshness_at,url FROM github_delivery_view",
+		"business_decisions_view":      "SELECT source,decision_id,artifact_sha256,status,declared_owner,declared_approver,payload,event_id,seq FROM business_decisions_view",
+		"requirements_view":            "SELECT source,requirement_id,artifact_sha256,status,declared_owner,authorization_declared,payload,event_id,seq FROM requirements_view",
+		"requirement_obligations_view": "SELECT source,requirement_id,artifact_sha256,obligation_id,statement,state,event_id,seq FROM requirement_obligations_view",
+		"change_intents_view":          "SELECT source,intent_id,artifact_sha256,status,declared_sponsor,payload,event_id,seq FROM change_intents_view",
+		"intent_targets_view":          "SELECT intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,relation,event_id,seq FROM intent_targets_view",
+		"commit_intents_view":          "SELECT commit_sha,provider,intent_id,intent_artifact_sha256,event_id,seq FROM commit_intents_view",
+		"obligation_verdicts_view":     "SELECT verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq FROM obligation_verdicts_view",
+		"requirement_reviews_view":     "SELECT review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,finding,declared_reviewer,event_id,seq FROM requirement_reviews_view",
+	}
 	for name, q := range queries {
 		var rowsData []map[string]any
 		if err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
@@ -526,7 +733,7 @@ func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) 
 		var a []any
 		switch name {
 		case "commits_view":
-			a = make([]any, 11)
+			a = make([]any, 12)
 		case "checks_view":
 			a = make([]any, 12)
 		case "sessions_view":
@@ -535,6 +742,16 @@ func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) 
 			a = make([]any, 10)
 		case "github_delivery_view":
 			a = make([]any, 15)
+		case "business_decisions_view", "requirements_view":
+			a = make([]any, 9)
+		case "requirement_obligations_view", "change_intents_view":
+			a = make([]any, 8)
+		case "intent_targets_view", "requirement_reviews_view":
+			a = make([]any, 10)
+		case "commit_intents_view":
+			a = make([]any, 6)
+		case "obligation_verdicts_view":
+			a = make([]any, 13)
 		default:
 			a = make([]any, 6)
 		}
@@ -575,7 +792,7 @@ func snapshotRowDigest(row map[string]any) (string, error) {
 }
 
 func isJSONColumn(table string, index int) bool {
-	return (table == "commits_view" && (index == 9 || index == 10)) || (table == "checks_view" && index == 11)
+	return (table == "commits_view" && (index == 9 || index == 10 || index == 11)) || (table == "checks_view" && index == 11) || (table == "business_decisions_view" && index == 6) || (table == "requirements_view" && index == 6) || (table == "change_intents_view" && index == 5) || (table == "obligation_verdicts_view" && index == 10)
 }
 
 func canonicalJSONValue(value any) ([]byte, error) {

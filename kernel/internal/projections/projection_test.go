@@ -595,12 +595,13 @@ func TestRebuild_RowSetMatchesIncremental(t *testing.T) {
 func testStore(t *testing.T) *store.Store {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL is required")
-	}
-	s, err := store.Open(context.Background(), store.Config{Root: t.TempDir(), DatabaseURL: url})
+	cfg := store.Config{Root: t.TempDir(), DatabaseURL: url}
+	s, err := store.Open(context.Background(), cfg)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if url == "" {
+		url = "postgres://proofbound:proofbound@127.0.0.1:55432/proofbound?sslmode=disable"
 	}
 	pool, err := pgxpool.New(context.Background(), url)
 	if err != nil {
@@ -610,7 +611,7 @@ func testStore(t *testing.T) *store.Store {
 	if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`); err != nil {
+	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, requirement_reviews_view, obligation_verdicts_view, commit_intents_view, intent_targets_view, requirement_obligations_view, change_intents_view, requirements_view, business_decisions_view, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`); err != nil {
 		t.Fatal(err)
 	}
 	return s

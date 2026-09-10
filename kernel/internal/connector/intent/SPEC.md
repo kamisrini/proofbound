@@ -42,9 +42,10 @@ func (c *Connector) Sync(context.Context, string, Appender) (Result, error)
 func ValidateRevision(Revision) error
 ```
 
-`Sync` accepts one configured provider name or `all`. `all` sorts providers by name, then revisions
-by source, kind, record id, artifact digest, and path before appending. It validates the entire batch
-before the first append, so cross-provider ordering and malformed input cannot create partial trust.
+`Sync` accepts one configured provider name or `all`. It validates the entire batch, then orders it
+dependency-topologically (BD before the BR it authorizes, BR before the CI that targets it, and
+predecessor before successor), with source, kind, record id, artifact digest, and path as stable
+tie-breakers. Cross-provider ordering and malformed input therefore cannot create partial trust.
 
 ## 3. Canonical payload contract
 
@@ -121,4 +122,3 @@ digests are carried in payloads, so projection deletion and ledger replay are so
 | INT-INV-10 | Payloads reconstruct relation and obligation meaning without source files | conformance_test.go::TestReplaySufficiency |
 | INT-INV-11 | The unmappable foreign fixture returns the distinguished STOP error | conformance_test.go::TestUnmappableFixtureStops |
 | INT-INV-12 | No synthetic provider can be selected by a production constructor | intent_test.go::TestSyntheticProviderIsTestOnly |
-

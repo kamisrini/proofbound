@@ -182,6 +182,10 @@ func (c *Connector) Sync(ctx context.Context, selection string, app Appender) (R
 	if err := validateBatch(batch); err != nil {
 		return result, err
 	}
+	batch, err := orderBatch(batch)
+	if err != nil {
+		return result, err
+	}
 	for _, entry := range batch {
 		rev := entry.revision
 		e, err := c.ids.NewEvent(core.NewEventParams{Source: rev.Source, NativeID: rev.NativeID, Kind: rev.Kind, OccurredAt: rev.ObservedAt, Payload: rev.Payload, ConnectorVersion: Version})
@@ -383,4 +387,38 @@ func validateBatch(batch []batchItem) error {
 		}
 	}
 	return nil
+}
+
+func orderBatch(batch []batchItem) ([]batchItem, error) {
+	type key struct{ source, id, digest string }
+	positions := map[key]int{}
+	for i, entry := range batch {
+		positions[key{string(entry.revision.Source), entry.revision.NativeID, entry.revision.ArtifactSHA256}] = i
+	}
+	done := map[int]bool{}
+	out := make([]batchItem, 0, len(batch))
+	for len(out) < len(batch) {
+		progress := false
+		for i, entry := range batch {
+			if done[i] {
+				continue
+			}
+			ready := true
+			for _, ref := range references(entry.revision.Payload, entry.revision.Kind) {
+				if dep, ok := positions[key{ref.Source, ref.RecordID, ref.ArtifactSHA256}]; ok && !done[dep] {
+					ready = false
+					break
+				}
+			}
+			if ready {
+				out = append(out, entry)
+				done[i] = true
+				progress = true
+			}
+		}
+		if !progress {
+			return nil, errors.New("intent connector: cyclic exact-revision relations")
+		}
+	}
+	return out, nil
 }

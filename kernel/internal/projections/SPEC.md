@@ -27,6 +27,9 @@ func (p *Projector) Snapshot(context.Context, *store.Store) (Snapshot, error)
 func CompareSnapshots(Snapshot, Snapshot) error
 func (p *Projector) ReportWeek(context.Context, *store.Store, time.Time, map[string]bool, io.Writer) error
 func (p *Projector) ReportGitHub(context.Context, *store.Store, time.Time, io.Writer) error
+func (p *Projector) ReportIntent(context.Context, *store.Store, string, time.Time, io.Writer) error
+func (p *Projector) ReportRequirement(context.Context, *store.Store, string, io.Writer) error
+func (p *Projector) CheckIntent(context.Context, *store.Store, string, io.Writer) error
 ```
 
 `Apply` consumes events after a derived `projection_meta.last_seq` checkpoint. Row updates and the
@@ -46,6 +49,20 @@ connector does not ingest deployment status. Freshness is the oldest `freshness_
 All tables use natural keys and retain `event_id` and `seq` as proof links. No serial or wall-clock
 mutation columns are permitted. `files_touched`, `cited_decisions`, and `tool_versions` remain
 canonical JSON columns.
+
+P5 adds `business_decisions_view`, `requirements_view`, `requirement_obligations_view`,
+`change_intents_view`, `intent_targets_view`, `commit_intents_view`, `obligation_verdicts_view`, and
+`requirement_reviews_view`. Revision tables key on provider source, record ID, and artifact digest;
+relation tables retain both exact endpoints. `commits_view.intent_refs` is canonical JSON and old
+git/1 payloads remain readable as no-claim commits. Every table row carries its originating event ID
+and sequence.
+
+Intent reports render the exact CI revision, each exact targeted requirement/obligation, declared
+authority or `authorization: undeclared`, claiming commits, obligation verdict/evidence components,
+spec-review component, exact-commit deployments/freshness, and event proof. Component states remain
+distinct. A missing/non-verifiable requirement review caps a chain below green but does not block
+authoring or targeting. `CheckIntent` validates only commits with explicit intent references and
+fails closed on dangling exact revisions or obligations.
 
 ## 4. Invariants
 
@@ -69,6 +86,17 @@ canonical JSON columns.
 18. **P-INV-18 — GitHub delivery rows retain proof.** Each normalized row stores its source event ID and ledger sequence.
 19. **P-INV-19 — GitHub report semantics are explicit.** Missing, failed, observed, and stale states are rendered rather than inferred as success.
 20. **P-INV-20 — GitHub report proof is fail-closed.** A delivery row whose event proof is absent or whose freshness is in the future causes reporting to fail.
+21. **P-INV-21 — Intent revisions retain exact proof.** Every BD, BR, CI, obligation, target, and
+    commit claim row retains provider, exact artifact digest, event ID, and ledger sequence.
+22. **P-INV-22 — Intent references fail closed.** Dangling record revisions, obligation IDs, or
+    commit claims abort the projection transaction.
+23. **P-INV-23 — Intent replay is deterministic.** Incremental and from-genesis projection row sets
+    match across every P5 table without consulting source files.
+24. **P-INV-24 — Chain state is component-honest.** Missing, contradicted, inconclusive,
+    superseded, deployed-unverified, and unreviewed/non-verifiable spec states remain explicit; no
+    aggregate is green while one component is not.
+25. **P-INV-25 — Reports are proof-bearing.** Every rendered record, commit, verdict, evidence, and
+    deployment component includes event ID and sequence; missing proof fails closed.
 
 ## 5. Proving table
 
@@ -94,3 +122,8 @@ canonical JSON columns.
 | P-INV-18 | GitHub rows retain event ID and seq | projection_test.go::TestApply_GitHubDeliveryRetainsNormalizedFieldsAndProof |
 | P-INV-19 | GitHub report renders missing, failed, observed, and stale states | report_test.go::TestRenderGitHubReport_StatesMissingFailedAndStaleExplicitly |
 | P-INV-20 | GitHub report renders proof and rejects missing proof integration path | report_integration_test.go::TestReportGitHub_RendersJoinStatesFreshnessAndProof |
+| P-INV-21 | All intent projection rows retain exact revision and ledger proof | intent_test.go::TestIntentRowsRetainExactRevisionAndProof |
+| P-INV-22 | Dangling intent relations and claims roll back | intent_test.go::TestIntentProjectionRejectsDanglingProof |
+| P-INV-23 | Incremental and rebuilt P5 row sets match | intent_test.go::TestIntentProjectionRebuildMatchesIncremental |
+| P-INV-24 | Report states and spec-review caps never hide a gap | intent_test.go::TestIntentReportRendersComponentStates |
+| P-INV-25 | Intent reports carry proof and reject missing proof | intent_test.go::TestIntentReportProofFailsClosed |

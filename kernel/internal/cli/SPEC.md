@@ -13,6 +13,9 @@ or replay SPECs.
 P5 adds `proofbound sync intent {records|specdir|all}`. Its committed-tree reader uses only
 `git ls-tree` and `git show` at an explicit tree. `sync all` ingests both intent providers before
 Git so an explicit commit claim cannot outrun the exact record revision it names.
+It also routes `proofbound report intent <id>`, `proofbound report requirement <id>`, and
+`proofbound intent check --commit <sha>` to the proof-bearing projection API without interpreting
+chain semantics in the CLI.
 
 ## 2. Interface lock
 
@@ -56,3 +59,4 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-6 | Frozen witness bytes remain accepted without reinterpretation | sync_integration_test.go::TestSyncChecksRebuildAndVerify |
 | CLI-INV-7 | Intent commands select only records, specdir, or both and read committed trees | cli_test.go::TestParseIntentCommandsAndCommittedReader |
 | CLI-INV-8 | Full sync orders all intent providers before commit ingestion | cli_test.go::TestSyncAllOrdersIntentBeforeGit |
+| CLI-INV-9 | Intent report and check identifiers are passed unchanged to projections | cli_test.go::TestParseIntentReportAndCheckCommands |

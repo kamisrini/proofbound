@@ -139,6 +139,21 @@ func TestParseIntentCommandsAndCommittedReader(t *testing.T) {
 	}
 }
 
+func TestParseIntentReportAndCheckCommands(t *testing.T) {
+	for _, tc := range []struct {
+		args []string
+		want command
+	}{
+		{[]string{"report", "intent", "CI-demo-item-acde12"}, commandReportIntent},
+		{[]string{"report", "requirement", "BR-demo-item-acde12"}, commandReportRequirement},
+		{[]string{"intent", "check", "--commit", strings.Repeat("a", 40)}, commandIntentCheck},
+	} {
+		if got := parseCommand(tc.args); got != tc.want {
+			t.Fatalf("args=%v got=%d want=%d", tc.args, got, tc.want)
+		}
+	}
+}
+
 func TestSyncAllOrdersIntentBeforeGit(t *testing.T) {
 	source, err := os.ReadFile("cli.go")
 	if err != nil {

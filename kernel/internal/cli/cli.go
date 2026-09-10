@@ -31,7 +31,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound rebuild | proofbound verify | proofbound report {week|github} | proofbound gates {canary|enforce}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce}"
 
 const legacyAdvisory = "proofbound: deprecated VERA identity alias used; switch to Proofbound before 2026-12-31"
 
@@ -63,6 +63,9 @@ const (
 	commandVerify
 	commandReportWeek
 	commandReportGitHub
+	commandReportIntent
+	commandReportRequirement
+	commandIntentCheck
 	commandGatesCanary
 	commandGatesEnforce
 )
@@ -95,6 +98,12 @@ func parseCommand(args []string) command {
 		return commandReportWeek
 	case len(args) == 2 && args[0] == "report" && args[1] == "github":
 		return commandReportGitHub
+	case len(args) == 3 && args[0] == "report" && args[1] == "intent" && args[2] != "":
+		return commandReportIntent
+	case len(args) == 3 && args[0] == "report" && args[1] == "requirement" && args[2] != "":
+		return commandReportRequirement
+	case len(args) == 4 && args[0] == "intent" && args[1] == "check" && args[2] == "--commit" && args[3] != "":
+		return commandIntentCheck
 	case len(args) == 2 && args[0] == "gates" && args[1] == "canary":
 		return commandGatesCanary
 	case len(args) == 2 && args[0] == "gates" && args[1] == "enforce":
@@ -117,7 +126,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			ctx, cancel = context.WithTimeout(ctx, verifyTimeout)
 			defer cancel()
 		}
-		err = runCommand(ctx, cmd, root, os.Getenv("DATABASE_URL"), stdout)
+		err = runCommand(ctx, cmd, args, root, os.Getenv("DATABASE_URL"), stdout)
 	}
 	if err != nil {
 		if cmd == commandVerify && errors.Is(err, context.DeadlineExceeded) {
@@ -439,7 +448,7 @@ func syncChecks(ctx context.Context, root, databaseURL string, output io.Writer)
 	return err
 }
 
-func runCommand(ctx context.Context, cmd command, root, databaseURL string, output io.Writer) (resultErr error) {
+func runCommand(ctx context.Context, cmd command, args []string, root, databaseURL string, output io.Writer) (resultErr error) {
 	if cmd == commandSyncChecks {
 		return syncChecks(ctx, root, databaseURL, output)
 	}
@@ -616,6 +625,12 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		return projector.ReportWeek(ctx, ledger, time.Now(), reachable, output)
 	case commandReportGitHub:
 		return projector.ReportGitHub(ctx, ledger, time.Now(), output)
+	case commandReportIntent:
+		return projector.ReportIntent(ctx, ledger, args[2], time.Now(), output)
+	case commandReportRequirement:
+		return projector.ReportRequirement(ctx, ledger, args[2], output)
+	case commandIntentCheck:
+		return projector.CheckIntent(ctx, ledger, args[3], output)
 	}
 	return nil
 }

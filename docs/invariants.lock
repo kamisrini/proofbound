@@ -146,6 +146,11 @@ kernel/internal/projections/SPEC.md	P-INV-17	GitHub revisions are last-write-win
 kernel/internal/projections/SPEC.md	P-INV-18	GitHub delivery rows retain proof.
 kernel/internal/projections/SPEC.md	P-INV-19	GitHub report semantics are explicit.
 kernel/internal/projections/SPEC.md	P-INV-20	GitHub report proof is fail-closed.
+kernel/internal/projections/SPEC.md	P-INV-21	Intent revisions retain exact proof.
+kernel/internal/projections/SPEC.md	P-INV-22	Intent references fail closed.
+kernel/internal/projections/SPEC.md	P-INV-23	Intent replay is deterministic.
+kernel/internal/projections/SPEC.md	P-INV-24	Chain state is component-honest.
+kernel/internal/projections/SPEC.md	P-INV-25	Reports are proof-bearing.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.
