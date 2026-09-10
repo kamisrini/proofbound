@@ -80,6 +80,8 @@ Closed statuses and relations are those ratified in
 `VD-p5-intent-provenance-2026-09-10`. References always bind source + kind + id + exact artifact
 digest. Requirement targets carry one or more sorted unique obligation ids; other references carry
 none. Provider-scoped record identity is `(source, record_id)`.
+The closed relation vocabulary is `authorizes`, `implements`, `modifies`, `repairs`, `retires`,
+`supersedes`, `constrained_by`, `reviews`, and `evaluates`.
 
 ## 4. Two digests and point-in-time resolution
 

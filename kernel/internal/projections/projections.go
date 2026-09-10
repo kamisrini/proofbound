@@ -16,6 +16,7 @@ import (
 	"time"
 
 	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
+	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
@@ -246,19 +247,7 @@ func reduce(ctx context.Context, tx *store.Tx, r store.Record) error {
 		_, err := tx.Exec(ctx, `INSERT INTO sessions_view(session_id,event_id,seq,started_at,finished_at,message_count,tool_call_count,files_written_count,parse_coverage) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(session_id) DO UPDATE SET event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,started_at=EXCLUDED.started_at,finished_at=EXCLUDED.finished_at,message_count=EXCLUDED.message_count,tool_call_count=EXCLUDED.tool_call_count,files_written_count=EXCLUDED.files_written_count,parse_coverage=EXCLUDED.parse_coverage WHERE sessions_view.seq < EXCLUDED.seq`, v.SessionID, r.Event.ID.String(), r.Seq, v.StartedAt, v.FinishedAt, v.MessageCount, v.ToolCallCount, v.FilesWrittenCount, v.ParseCoverage)
 		return err
 	case eventRoute(r.Event.Source, r.Event.Kind) == routeReview:
-		var v reviewPayload
-		if err := decode(r.Event.Payload, &v); err != nil {
-			return fmt.Errorf("review seq %d: %w", r.Seq, err)
-		}
-		if err := v.validate(); err != nil {
-			return fmt.Errorf("review seq %d: %w", r.Seq, err)
-		}
-		for _, finding := range v.Findings {
-			if _, err := tx.Exec(ctx, `INSERT INTO reviews_view(finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(finding_id) DO UPDATE SET verdict_id=EXCLUDED.verdict_id,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,status=EXCLUDED.status,severity=EXCLUDED.severity,reviewed_commit=EXCLUDED.reviewed_commit,defect_commit=EXCLUDED.defect_commit,artifact_path=EXCLUDED.artifact_path,artifact_sha=EXCLUDED.artifact_sha WHERE reviews_view.seq < EXCLUDED.seq`, finding.FindingID, v.VerdictID, r.Event.ID.String(), r.Seq, v.Status, finding.Severity, v.ReviewedCommit, nullString(finding.DefectCommit), v.ArtifactPath, v.ArtifactSHA); err != nil {
-				return err
-			}
-		}
-		return nil
+		return reduceReview(ctx, tx, r)
 	case eventRoute(r.Event.Source, r.Event.Kind) == routeGitHub:
 		return reduceGitHub(ctx, tx, r)
 	case eventRoute(r.Event.Source, r.Event.Kind) == routeIntent:
@@ -294,7 +283,7 @@ func eventRoute(s core.Source, k core.Kind) route {
 	if s == core.SourceSessions && k == core.KindSessionObserved {
 		return routeSession
 	}
-	if s == core.SourceReviews && k == core.KindReviewVerdict {
+	if s == core.SourceReviews && (k == core.KindReviewVerdict || k == core.KindRequirementReview) {
 		return routeReview
 	}
 	if s == core.SourceGitHub && (k == core.KindGitHubWorkflow || k == core.KindGitHubDeployment) {
@@ -410,6 +399,197 @@ func requireExactRecord(ctx context.Context, tx *store.Tx, ref connectorintent.R
 		return fmt.Errorf("dangling exact record %s:%s@%s", ref.Source, ref.RecordID, ref.ArtifactSHA256)
 	}
 	return nil
+}
+
+func reduceReview(ctx context.Context, tx *store.Tx, r store.Record) error {
+	var probe struct {
+		Schema string `json:"schema"`
+	}
+	if err := json.Unmarshal(r.Event.Payload, &probe); err != nil {
+		return fmt.Errorf("review seq %d: %w", r.Seq, err)
+	}
+	switch probe.Schema {
+	case "vera.verdict.v1":
+		if r.Event.Kind != core.KindReviewVerdict {
+			return errors.New("v1 verdict has wrong event kind")
+		}
+		var v reviewPayload
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return fmt.Errorf("review seq %d: %w", r.Seq, err)
+		}
+		if err := v.validate(); err != nil {
+			return fmt.Errorf("review seq %d: %w", r.Seq, err)
+		}
+		for _, finding := range v.Findings {
+			if _, err := tx.Exec(ctx, `INSERT INTO reviews_view(finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(finding_id) DO UPDATE SET verdict_id=EXCLUDED.verdict_id,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,status=EXCLUDED.status,severity=EXCLUDED.severity,reviewed_commit=EXCLUDED.reviewed_commit,defect_commit=EXCLUDED.defect_commit,artifact_path=EXCLUDED.artifact_path,artifact_sha=EXCLUDED.artifact_sha WHERE reviews_view.seq < EXCLUDED.seq`, finding.FindingID, v.VerdictID, r.Event.ID.String(), r.Seq, v.Status, finding.Severity, v.ReviewedCommit, nullString(finding.DefectCommit), v.ArtifactPath, v.ArtifactSHA); err != nil {
+				return err
+			}
+		}
+		return nil
+	case "proofbound.obligation-verdict.v2":
+		if r.Event.Kind != core.KindReviewVerdict {
+			return errors.New("v2 verdict has wrong event kind")
+		}
+		var v connectorreviews.ObligationVerdict
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return err
+		}
+		return reduceObligationVerdict(ctx, tx, r, v)
+	case "proofbound.requirement-review.v1":
+		if r.Event.Kind != core.KindRequirementReview {
+			return errors.New("requirement review has wrong event kind")
+		}
+		var v connectorreviews.RequirementReview
+		if err := decode(r.Event.Payload, &v); err != nil {
+			return err
+		}
+		return reduceRequirementReview(ctx, tx, r, v)
+	default:
+		return fmt.Errorf("review seq %d: unknown schema %q", r.Seq, probe.Schema)
+	}
+}
+
+func reduceObligationVerdict(ctx context.Context, tx *store.Tx, r store.Record, v connectorreviews.ObligationVerdict) error {
+	if v.Schema != "proofbound.obligation-verdict.v2" || v.VerdictID != r.Event.NativeID || !gitPattern.MatchString(v.ReviewedCommit) || (v.Status != "ACCEPTABLE" && v.Status != "NEEDS_WORK") || v.DeclaredReviewer == "" || !hexPattern.MatchString(v.ArtifactSHA256) {
+		return errors.New("invalid v2 verdict envelope")
+	}
+	var exists bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM commits_view WHERE sha=$1)`, v.ReviewedCommit).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		return errors.New("v2 verdict reviewed commit is dangling")
+	}
+	provider := strings.TrimPrefix(v.ChangeIntent.Source, "intent.")
+	if provider == v.ChangeIntent.Source {
+		return errors.New("v2 verdict change intent source is invalid")
+	}
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM commit_intents_view WHERE commit_sha=$1 AND provider=$2 AND intent_id=$3 AND intent_artifact_sha256=$4)`, v.ReviewedCommit, provider, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		return errors.New("v2 verdict does not match an exact commit intent claim")
+	}
+	requirements := map[string]bool{}
+	for _, ref := range v.Requirements {
+		key := ref.Source + "\x00" + ref.RecordID + "\x00" + ref.ArtifactSHA256
+		requirements[key] = true
+		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM requirements_view WHERE source=$1 AND requirement_id=$2 AND artifact_sha256=$3)`, ref.Source, ref.RecordID, ref.ArtifactSHA256).Scan(&exists); err != nil {
+			return err
+		}
+		if !exists {
+			return fmt.Errorf("v2 verdict requirement revision is dangling: %s", ref.RecordID)
+		}
+	}
+	targets := map[string]bool{}
+	rows, err := tx.Query(ctx, `SELECT requirement_source,requirement_id,requirement_artifact_sha256,obligation_id FROM intent_targets_view WHERE intent_source=$1 AND intent_id=$2 AND intent_artifact_sha256=$3`, v.ChangeIntent.Source, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var source, id, digest, oid string
+		if err := rows.Scan(&source, &id, &digest, &oid); err != nil {
+			rows.Close()
+			return err
+		}
+		targets[source+"\x00"+id+"\x00"+digest+"\x00"+oid] = true
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return err
+	}
+	rows.Close()
+	if len(targets) != len(v.Obligations) {
+		return errors.New("v2 verdict does not cover every targeted obligation exactly once")
+	}
+	allSatisfied := true
+	for _, outcome := range v.Obligations {
+		requirementKey := outcome.Source + "\x00" + outcome.RequirementID + "\x00" + outcome.ArtifactSHA256
+		if !requirements[requirementKey] || !targets[requirementKey+"\x00"+outcome.ObligationID] {
+			return errors.New("v2 verdict outcome is not an exact CI target")
+		}
+		if outcome.Outcome != "SATISFIED" {
+			allSatisfied = false
+		}
+		if outcome.Outcome != "SATISFIED" && outcome.Outcome != "NOT_SATISFIED" && outcome.Outcome != "INCONCLUSIVE" {
+			return errors.New("v2 verdict outcome is invalid")
+		}
+		for _, eventID := range outcome.EvidenceEventIDs {
+			var evidenceSeq int64
+			if err := tx.QueryRow(ctx, `SELECT seq FROM events WHERE event_id=$1`, eventID).Scan(&evidenceSeq); err != nil {
+				return fmt.Errorf("v2 verdict evidence %s is dangling: %w", eventID, err)
+			}
+			if evidenceSeq > r.Seq {
+				return fmt.Errorf("v2 verdict evidence %s is from the future", eventID)
+			}
+		}
+		evidence, _ := json.Marshal(outcome.EvidenceEventIDs)
+		if _, err := tx.Exec(ctx, `INSERT INTO obligation_verdicts_view(verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(verdict_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET outcome=EXCLUDED.outcome,evidence_event_ids=EXCLUDED.evidence_event_ids,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE obligation_verdicts_view.seq < EXCLUDED.seq`, v.VerdictID, v.ReviewedCommit, v.ChangeIntent.Source, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256, outcome.Source, outcome.RequirementID, outcome.ArtifactSHA256, outcome.ObligationID, outcome.Outcome, evidence, r.Event.ID.String(), r.Seq); err != nil {
+			return err
+		}
+	}
+	if v.Status == "ACCEPTABLE" && !allSatisfied {
+		return errors.New("ACCEPTABLE v2 verdict contains non-satisfied outcome")
+	}
+	for _, finding := range v.Findings {
+		if _, err := tx.Exec(ctx, `INSERT INTO reviews_view(finding_id,verdict_id,event_id,seq,status,severity,reviewed_commit,defect_commit,artifact_path,artifact_sha) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(finding_id) DO UPDATE SET verdict_id=EXCLUDED.verdict_id,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq,status=EXCLUDED.status,severity=EXCLUDED.severity,reviewed_commit=EXCLUDED.reviewed_commit,defect_commit=EXCLUDED.defect_commit,artifact_path=EXCLUDED.artifact_path,artifact_sha=EXCLUDED.artifact_sha WHERE reviews_view.seq < EXCLUDED.seq`, finding.FindingID, v.VerdictID, r.Event.ID.String(), r.Seq, v.Status, finding.Severity, v.ReviewedCommit, nullString(finding.DefectCommit), v.ArtifactPath, v.ArtifactSHA256); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func reduceRequirementReview(ctx context.Context, tx *store.Tx, r store.Record, v connectorreviews.RequirementReview) error {
+	if v.Schema != "proofbound.requirement-review.v1" || v.ReviewID != r.Event.NativeID || v.DeclaredReviewer == "" || !hexPattern.MatchString(v.Requirement.ArtifactSHA256) || !hexPattern.MatchString(v.ArtifactSHA256) {
+		return errors.New("invalid requirement review envelope")
+	}
+	var owner string
+	if err := tx.QueryRow(ctx, `SELECT declared_owner FROM requirements_view WHERE source=$1 AND requirement_id=$2 AND artifact_sha256=$3`, v.Requirement.Source, v.Requirement.RecordID, v.Requirement.ArtifactSHA256).Scan(&owner); err != nil {
+		return fmt.Errorf("requirement review revision is dangling: %w", err)
+	}
+	if owner == v.DeclaredReviewer {
+		return errors.New("requirement review author equals reviewer")
+	}
+	obligations := map[string]bool{}
+	rows, err := tx.Query(ctx, `SELECT obligation_id FROM requirement_obligations_view WHERE source=$1 AND requirement_id=$2 AND artifact_sha256=$3`, v.Requirement.Source, v.Requirement.RecordID, v.Requirement.ArtifactSHA256)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
+			return err
+		}
+		obligations[id] = true
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return err
+	}
+	rows.Close()
+	if len(obligations) != len(v.Outcomes) {
+		return errors.New("requirement review does not cover every obligation exactly once")
+	}
+	seen := map[string]bool{}
+	for _, outcome := range v.Outcomes {
+		if !obligations[outcome.ObligationID] || seen[outcome.ObligationID] || !oneOfString(outcome.Outcome, "VERIFIABLE", "AMBIGUOUS", "UNTESTABLE", "CONTRADICTORY") {
+			return errors.New("requirement review has absent, duplicate, or unknown obligation outcome")
+		}
+		seen[outcome.ObligationID] = true
+		if _, err := tx.Exec(ctx, `INSERT INTO requirement_reviews_view(review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,finding,declared_reviewer,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET outcome=EXCLUDED.outcome,finding=EXCLUDED.finding,declared_reviewer=EXCLUDED.declared_reviewer,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE requirement_reviews_view.seq < EXCLUDED.seq`, v.ReviewID, v.Requirement.Source, v.Requirement.RecordID, v.Requirement.ArtifactSHA256, outcome.ObligationID, outcome.Outcome, outcome.Finding, v.DeclaredReviewer, r.Event.ID.String(), r.Seq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func oneOfString(value string, allowed ...string) bool {
+	for _, item := range allowed {
+		if value == item {
+			return true
+		}
+	}
+	return false
 }
 
 type githubWorkflowPayload struct {

@@ -64,6 +64,13 @@ distinct. A missing/non-verifiable requirement review caps a chain below green b
 authoring or targeting. `CheckIntent` validates only commits with explicit intent references and
 fails closed on dangling exact revisions or obligations.
 
+Review reduction dispatches by schema. `vera.verdict.v1` retains its existing finding-only meaning.
+`proofbound.obligation-verdict.v2` must match one observed commit claim, its exact CI revision, every
+exact targeted BR obligation, and only evidence event IDs whose ledger sequence is at or before the
+verdict. Aggregate `ACCEPTABLE` requires complete `SATISFIED` outcomes. A
+`proofbound.requirement-review.v1` must bind an existing exact requirement revision, cover every
+obligation exactly once, and declare a reviewer different from the revision's declared owner.
+
 ## 4. Invariants
 
 1. **P-INV-1 — Ledger order is projection order.** Reducers consume records in ascending `seq`.
@@ -97,6 +104,20 @@ fails closed on dangling exact revisions or obligations.
     aggregate is green while one component is not.
 25. **P-INV-25 — Reports are proof-bearing.** Every rendered record, commit, verdict, evidence, and
     deployment component includes event ID and sequence; missing proof fails closed.
+26. **P-INV-26 — V1 review compatibility is frozen.** Existing v1 payloads continue to populate
+    only `reviews_view` and never acquire obligation semantics.
+27. **P-INV-27 — V2 verdict chains bind completely.** Commit, CI, BR, target obligation, aggregate
+    status, and evidence sequence are all validated before any verdict row commits.
+28. **P-INV-28 — Requirement review is exact and independent-by-declaration.** Wrong revisions,
+    absent obligations, unknown outcomes, incomplete coverage, and equal owner/reviewer fail closed.
+29. **P-INV-29 — Missing satisfaction is derived.** No stored verdict row represents UNVERIFIED;
+    reports derive it when an exact targeted obligation has no applicable v2 outcome.
+30. **P-INV-30 — Deployments join only by exact commit.** A deployment cannot attach through an
+    intent ID, branch, or neighbouring revision; distinct commits and environments remain distinct.
+31. **P-INV-31 — Deployment gaps are explicit.** Missing and stale deployment evidence render as
+    components, and deployment without complete satisfaction is `DEPLOYED_UNVERIFIED`.
+32. **P-INV-32 — Deployment proof is bounded.** Each joined deployment retains event/seq proof;
+    missing proof or a future freshness timestamp fails closed.
 
 ## 5. Proving table
 
@@ -127,3 +148,10 @@ fails closed on dangling exact revisions or obligations.
 | P-INV-23 | Incremental and rebuilt P5 row sets match | intent_test.go::TestIntentProjectionRebuildMatchesIncremental |
 | P-INV-24 | Report states and spec-review caps never hide a gap | intent_test.go::TestIntentReportRendersComponentStates |
 | P-INV-25 | Intent reports carry proof and reject missing proof | intent_test.go::TestIntentReportProofFailsClosed |
+| P-INV-26 | V1 bytes retain finding-only projection meaning | review_integration_test.go::TestApply_ReviewFindingsRetainProofAndRevision |
+| P-INV-27 | V2 exact chain and evidence sequence fail closed | intent_review_test.go::TestObligationVerdictProjectionValidation |
+| P-INV-28 | Requirement-review revision, coverage, and independence fail closed | intent_review_test.go::TestRequirementReviewProjectionValidation |
+| P-INV-29 | UNVERIFIED is derived rather than stored | intent_review_test.go::TestUnverifiedIsDerived |
+| P-INV-30 | Exact commit joins preserve multiple environments and revisions | intent_review_test.go::TestIntentDeploymentJoinsExactCommit |
+| P-INV-31 | Missing, stale, and deployed-unverified states remain explicit | intent_review_test.go::TestIntentDeploymentStates |
+| P-INV-32 | Deployment proof and freshness fail closed | intent_review_test.go::TestIntentDeploymentProofFailsClosed |

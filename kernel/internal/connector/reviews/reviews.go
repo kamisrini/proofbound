@@ -114,19 +114,56 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 			valid = append(valid, item.Path)
 			continue
 		}
-		v, err := Parse(item.Path, item.Bytes)
+		schema, err := artifactSchema(item.Bytes)
+		if err != nil {
+			out.Malformed++
+			out.Cursor = cursor(valid)
+			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
+		}
+		var value any
+		var nativeID string
+		kind := core.KindReviewVerdict
+		switch schema {
+		case "vera.verdict.v1":
+			v, parseErr := Parse(item.Path, item.Bytes)
+			if parseErr != nil {
+				err = parseErr
+			} else {
+				value = v
+				nativeID = v.VerdictID
+			}
+		case "proofbound.obligation-verdict.v2":
+			v, parseErr := ParseObligationVerdict(item.Path, item.Bytes)
+			if parseErr != nil {
+				err = parseErr
+			} else {
+				value = v
+				nativeID = v.VerdictID
+			}
+		case "proofbound.requirement-review.v1":
+			v, parseErr := ParseRequirementReview(item.Path, item.Bytes)
+			if parseErr != nil {
+				err = parseErr
+			} else {
+				value = v
+				nativeID = v.ReviewID
+				kind = core.KindRequirementReview
+			}
+		default:
+			err = fmt.Errorf("unknown review schema %q", schema)
+		}
 		if err != nil {
 			out.Malformed++
 			out.Cursor = cursor(valid)
 			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
 		}
 		valid = append(valid, item.Path)
-		payload, err := json.Marshal(v)
+		payload, err := json.Marshal(value)
 		if err != nil {
 			out.Cursor = cursor(valid)
 			return out, fmt.Errorf("reviews connector: %s: marshal: %w", item.Path, err)
 		}
-		e, err := c.ids.NewEvent(core.NewEventParams{Source: core.SourceReviews, NativeID: v.VerdictID, Kind: core.KindReviewVerdict, OccurredAt: c.now(), Payload: payload, ConnectorVersion: Version})
+		e, err := c.ids.NewEvent(core.NewEventParams{Source: core.SourceReviews, NativeID: nativeID, Kind: kind, OccurredAt: c.now(), Payload: payload, ConnectorVersion: Version})
 		if err != nil {
 			out.Cursor = cursor(valid)
 			return out, fmt.Errorf("reviews connector: %s: event: %w", item.Path, err)
@@ -144,6 +181,29 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	}
 	out.Cursor = cursor(valid)
 	return out, nil
+}
+
+func artifactSchema(data []byte) (string, error) {
+	lines := strings.Split(string(data), "\n")
+	if len(lines) < 2 || lines[0] != "---" {
+		return "", errors.New("wire artifact must start with front matter")
+	}
+	if strings.HasPrefix(lines[1], "schema: ") {
+		return strings.TrimPrefix(lines[1], "schema: "), nil
+	}
+	if strings.HasPrefix(lines[1], "{") {
+		var probe struct {
+			Schema string `json:"schema"`
+		}
+		if err := json.Unmarshal([]byte(lines[1]), &probe); err != nil {
+			return "", err
+		}
+		if probe.Schema == "" {
+			return "", errors.New("schema is required")
+		}
+		return probe.Schema, nil
+	}
+	return "", errors.New("schema declaration is invalid")
 }
 
 func wireCandidate(path string, data []byte) (bool, error) {

@@ -151,6 +151,13 @@ kernel/internal/projections/SPEC.md	P-INV-22	Intent references fail closed.
 kernel/internal/projections/SPEC.md	P-INV-23	Intent replay is deterministic.
 kernel/internal/projections/SPEC.md	P-INV-24	Chain state is component-honest.
 kernel/internal/projections/SPEC.md	P-INV-25	Reports are proof-bearing.
+kernel/internal/projections/SPEC.md	P-INV-26	V1 review compatibility is frozen.
+kernel/internal/projections/SPEC.md	P-INV-27	V2 verdict chains bind completely.
+kernel/internal/projections/SPEC.md	P-INV-28	Requirement review is exact and independent-by-declaration.
+kernel/internal/projections/SPEC.md	P-INV-29	Missing satisfaction is derived.
+kernel/internal/projections/SPEC.md	P-INV-30	Deployments join only by exact commit.
+kernel/internal/projections/SPEC.md	P-INV-31	Deployment gaps are explicit.
+kernel/internal/projections/SPEC.md	P-INV-32	Deployment proof is bounded.
 kernel/internal/store/SPEC.md	INV-1	First append inserts.
 kernel/internal/store/SPEC.md	INV-2	Re-ingest is a no-op that returns the ORIGINAL row — the row for THAT content, not the newest one for the subject.
 kernel/internal/store/SPEC.md	INV-3	Revision semantics.

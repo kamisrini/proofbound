@@ -61,7 +61,7 @@ func (p *Projector) ReportIntent(ctx context.Context, s *store.Store, id string,
 		return fmt.Errorf("intent report: %s not found", id)
 	}
 	for _, revision := range revisions {
-		targets, commits, err := readIntentComponents(ctx, s, revision)
+		targets, commits, err := readIntentComponents(ctx, s, revision, now.UTC())
 		if err != nil {
 			return err
 		}
@@ -92,11 +92,10 @@ func (p *Projector) ReportIntent(ctx context.Context, s *store.Store, id string,
 			}
 		}
 	}
-	_ = now
 	return nil
 }
 
-func readIntentComponents(ctx context.Context, s *store.Store, revision intentReportRevision) ([]intentTargetReport, []intentCommitReport, error) {
+func readIntentComponents(ctx context.Context, s *store.Store, revision intentReportRevision, now time.Time) ([]intentTargetReport, []intentCommitReport, error) {
 	var targets []intentTargetReport
 	var commits []intentCommitReport
 	err := s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
@@ -145,15 +144,16 @@ func readIntentComponents(ctx context.Context, s *store.Store, revision intentRe
 		}
 		rows.Close()
 		for i := range commits {
-			rows, err = tx.Query(ctx, `SELECT g.environment,g.status,g.event_id,g.seq,e.event_id FROM github_delivery_view g LEFT JOIN events e ON e.event_id=g.event_id WHERE g.kind='github.deployment' AND g.commit_sha=$1 ORDER BY g.environment,g.seq`, commits[i].sha)
+			rows, err = tx.Query(ctx, `SELECT g.environment,g.status,g.event_id,g.seq,g.freshness_at,e.event_id FROM github_delivery_view g LEFT JOIN events e ON e.event_id=g.event_id WHERE g.kind='github.deployment' AND g.commit_sha=$1 ORDER BY g.environment,g.seq`, commits[i].sha)
 			if err != nil {
 				return err
 			}
 			for rows.Next() {
 				var environment, status, eventID string
 				var seq int64
+				var freshness time.Time
 				var proof *string
-				if err := rows.Scan(&environment, &status, &eventID, &seq, &proof); err != nil {
+				if err := rows.Scan(&environment, &status, &eventID, &seq, &freshness, &proof); err != nil {
 					rows.Close()
 					return err
 				}
@@ -161,7 +161,15 @@ func readIntentComponents(ctx context.Context, s *store.Store, revision intentRe
 					rows.Close()
 					return fmt.Errorf("deployment for %s: missing event proof %s", commits[i].sha, eventID)
 				}
-				commits[i].deployments = append(commits[i].deployments, environment+":"+status)
+				if freshness.After(now) {
+					rows.Close()
+					return fmt.Errorf("deployment for %s: freshness is in the future", commits[i].sha)
+				}
+				freshnessState := "fresh"
+				if now.Sub(freshness) > githubFreshnessWindow {
+					freshnessState = "stale"
+				}
+				commits[i].deployments = append(commits[i].deployments, environment+":"+status+":"+freshnessState)
 				commits[i].deploymentProofs = append(commits[i].deploymentProofs, fmt.Sprintf("%s/%d", eventID, seq))
 			}
 			if err := rows.Err(); err != nil {

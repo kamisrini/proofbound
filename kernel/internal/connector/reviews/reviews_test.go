@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -167,6 +168,85 @@ func TestSyncDistinguishesDocumentaryArtifacts(t *testing.T) {
 			result, err := connector(t, &reader{artifacts: []Artifact{candidate}}).Sync(context.Background(), &appender{})
 			if err == nil || result.Malformed != 1 || result.Documentary != 0 {
 				t.Fatalf("result=%+v error=%v", result, err)
+			}
+		})
+	}
+}
+
+func readFixture(t *testing.T, name, path string) Artifact {
+	t.Helper()
+	data, err := os.ReadFile("testdata/" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Artifact{Path: path, Bytes: data}
+}
+func mutateJSONArtifact(t *testing.T, a Artifact, old, new string) Artifact {
+	t.Helper()
+	a.Bytes = []byte(strings.Replace(string(a.Bytes), old, new, 1))
+	needle := []byte(`"artifact_sha256":"`)
+	start := bytes.LastIndex(a.Bytes, needle)
+	if start < 0 {
+		t.Fatal("self digest missing")
+	}
+	start += len(needle)
+	copy(a.Bytes[start:start+64], strings.Repeat("0", 64))
+	digest := ArtifactSHA256(a.Bytes)
+	copy(a.Bytes[start:start+64], digest)
+	return a
+}
+
+func TestSchemaDispatchAndV1Compatibility(t *testing.T) {
+	v1 := artifact("docs/verification/verdicts/v1.md", "ACCEPTABLE")
+	v2 := readFixture(t, "obligation-verdict-v2-valid.md", "docs/verification/verdicts/p5-obligation-verdict-round1.md")
+	rr := readFixture(t, "requirement-review-valid.md", "docs/verification/verdicts/p5-requirement-review-round1.md")
+	app := &appender{}
+	result, err := connector(t, &reader{artifacts: []Artifact{rr, v2, v1}}).Sync(context.Background(), app)
+	if err != nil || result.Appended != 3 || len(app.events) != 3 {
+		t.Fatalf("result=%+v events=%d err=%v", result, len(app.events), err)
+	}
+	kinds := map[core.Kind]int{}
+	for _, event := range app.events {
+		kinds[event.Kind]++
+	}
+	if kinds[core.KindReviewVerdict] != 2 || kinds[core.KindRequirementReview] != 1 {
+		t.Fatalf("kinds=%v", kinds)
+	}
+	parsed, err := Parse(v1.Path, v1.Bytes)
+	if err != nil || parsed.Schema != "vera.verdict.v1" {
+		t.Fatalf("v1 changed: %+v %v", parsed, err)
+	}
+}
+
+func TestObligationVerdictAggregation(t *testing.T) {
+	a := readFixture(t, "obligation-verdict-v2-valid.md", "docs/verification/verdicts/p5-obligation-verdict-round1.md")
+	if _, err := ParseObligationVerdict(a.Path, a.Bytes); err != nil {
+		t.Fatal(err)
+	}
+	bad := mutateJSONArtifact(t, a, `"outcome":"SATISFIED"`, `"outcome":"INCONCLUSIVE"`)
+	if _, err := ParseObligationVerdict(bad.Path, bad.Bytes); err == nil {
+		t.Fatal("ACCEPTABLE with inconclusive obligation accepted")
+	}
+}
+
+func TestObligationVerdictEvidenceValidation(t *testing.T) {
+	a := readFixture(t, "obligation-verdict-v2-valid.md", "docs/verification/verdicts/p5-obligation-verdict-round1.md")
+	bad := mutateJSONArtifact(t, a, `"evidence_event_ids":["01ARZ3NDEKTSV4RRFFQ69G5FAV"]`, `"evidence_event_ids":[]`)
+	if _, err := ParseObligationVerdict(bad.Path, bad.Bytes); err == nil {
+		t.Fatal("satisfied outcome without evidence accepted")
+	}
+}
+
+func TestRequirementReviewValidation(t *testing.T) {
+	a := readFixture(t, "requirement-review-valid.md", "docs/verification/verdicts/p5-requirement-review-round1.md")
+	v, err := ParseRequirementReview(a.Path, a.Bytes)
+	if err != nil || len(v.Outcomes) != 2 {
+		t.Fatalf("review=%+v err=%v", v, err)
+	}
+	for name, bad := range map[string]Artifact{"outcome": mutateJSONArtifact(t, a, `"outcome":"VERIFIABLE"`, `"outcome":"MAYBE"`), "obligation": mutateJSONArtifact(t, a, `"obligation_id":"O-2"`, `"obligation_id":"O-1"`), "digest": mutateJSONArtifact(t, a, `"artifact_sha256":"913d6751b8a3717254beda42ba889061fc2d247fc6a1d8505c69f1c27c314562"`, `"artifact_sha256":"bad"`)} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := ParseRequirementReview(bad.Path, bad.Bytes); err == nil {
+				t.Fatal("hostile review accepted")
 			}
 		})
 	}

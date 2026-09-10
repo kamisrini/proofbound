@@ -322,7 +322,7 @@ func validateReferences(refs []Reference) error {
 		if key <= last || !core.Source(ref.Source).WellFormed() || !recordIDRE.MatchString(ref.RecordID) || !digestRE.MatchString(ref.ArtifactSHA256) {
 			return errors.New("intent: invalid reference")
 		}
-		if !oneOf(ref.RecordKind, "business_decision", "requirement", "change_intent", "verification_decision") || !oneOf(ref.Relation, "authorizes", "implements", "modifies", "repairs", "retires", "supersedes", "constrained_by", "reviews") {
+		if !oneOf(ref.RecordKind, "business_decision", "requirement", "change_intent", "verification_decision") || !oneOf(ref.Relation, "authorizes", "implements", "modifies", "repairs", "retires", "supersedes", "constrained_by", "reviews", "evaluates") {
 			return errors.New("intent: invalid reference type")
 		}
 		if ref.RecordKind == "requirement" && oneOf(ref.Relation, "implements", "modifies", "repairs", "retires") {
