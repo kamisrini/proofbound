@@ -1,0 +1,9 @@
+[
+  {"name":"malformed-utf8","fixture":"malformed-utf8.hex","error":"utf8"},
+  {"name":"unknown-metadata","mutation":"add Priority metadata","error":"metadata"},
+  {"name":"duplicate-owner","mutation":"repeat Owner","error":"duplicate"},
+  {"name":"bad-path","path":"specs/../escape/requirements.md","error":"path"},
+  {"name":"bad-id","mutation":"drop BR prefix","error":"identity"},
+  {"name":"duplicate-obligation","mutation":"repeat O-1","error":"obligation"},
+  {"name":"dangling-target","mutation":"target absent requirement digest","error":"relation"}
+]

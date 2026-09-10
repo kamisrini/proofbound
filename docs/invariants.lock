@@ -82,6 +82,10 @@ kernel/internal/connector/reviews/SPEC.md	R-INV-5	Determinism and preservation:
 kernel/internal/connector/reviews/SPEC.md	R-INV-6	Dependency safety:
 kernel/internal/connector/reviews/SPEC.md	R-INV-7	Binding:
 kernel/internal/connector/reviews/SPEC.md	R-INV-8	Documentary artifacts are not wire verdicts:
+kernel/internal/connector/reviews/SPEC.md	R-INV-9	Schema dispatch is closed:
+kernel/internal/connector/reviews/SPEC.md	R-INV-10	V2 aggregation is honest:
+kernel/internal/connector/reviews/SPEC.md	R-INV-11	Evidence is bounded:
+kernel/internal/connector/reviews/SPEC.md	R-INV-12	Requirement review binds exactly:
 kernel/internal/core/SPEC.md	INV-1	Order and whitespace independence.
 kernel/internal/core/SPEC.md	INV-2	Idempotence.
 kernel/internal/core/SPEC.md	INV-3	Unicode fidelity.

@@ -1,0 +1,14 @@
+[
+  {"name":"malformed-utf8","fixture":"malformed-utf8.hex","error":"utf8"},
+  {"name":"duplicate-field","mutation":"duplicate schema","error":"duplicate"},
+  {"name":"unknown-field","mutation":"append unknown member","error":"unknown"},
+  {"name":"null-field","mutation":"declared_owner=null","error":"null"},
+  {"name":"digest-mismatch","mutation":"artifact_sha256=64 f characters","error":"digest"},
+  {"name":"traversal","path":"docs/intent/records/requirements/../escape/0001.md","error":"path"},
+  {"name":"id-path-mismatch","mutation":"requirement_id=BR-other-record-ffffff","error":"identity"},
+  {"name":"invalid-lifecycle","mutation":"successor reactivates retired lineage","error":"lifecycle"},
+  {"name":"missing-revision","mutation":"revision 0002 without 0001","error":"predecessor"},
+  {"name":"dangling-relation","mutation":"authorized_by digest absent from batch","error":"relation"},
+  {"name":"obligation-renumbering","mutation":"successor removes O-1 and adds O-9","error":"obligation"},
+  {"name":"canonicalization-instability","mutation":"same semantic object with reordered native fields","error":"order"}
+]

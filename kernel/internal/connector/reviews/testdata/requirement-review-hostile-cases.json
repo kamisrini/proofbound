@@ -1,0 +1,6 @@
+[
+  {"name":"author-equals-reviewer","mutation":"declared_reviewer=proofbound-maintainer","error":"independence"},
+  {"name":"wrong-revision-digest","mutation":"requirement artifact_sha256=64 f characters","error":"revision"},
+  {"name":"unknown-outcome","mutation":"VERIFIABLE=MAYBE","error":"outcome"},
+  {"name":"absent-obligation","mutation":"O-2=O-404","error":"obligation"}
+]

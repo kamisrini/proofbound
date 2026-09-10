@@ -50,6 +50,44 @@ Unknown, missing, duplicate, null, malformed, or out-of-order metadata fails
 closed. Content after the closing delimiter is opaque Markdown and is not
 parsed by this connector.
 
+## Artifact contract: `proofbound.obligation-verdict.v2`
+
+V2 is a separate schema, never an interpretation of v1. Its front matter is one compact JSON
+object between `---` delimiters. The object has exactly these fields, in this order:
+`schema`, `verdict_id`, `status`, `declared_reviewer`, `reviewed_commit`, `change_intent`,
+`requirements`, `obligations`, `findings`, `artifact_path`, `artifact_sha256`.
+
+`change_intent` is one canonical intent `Reference`; `requirements` is a non-empty sorted list of
+exact requirement `Reference` values. Each obligation outcome contains exactly `source`,
+`requirement_id`, `artifact_sha256`, `obligation_id`, `outcome`, and `evidence_event_ids`.
+Outcome is `SATISFIED`, `NOT_SATISFIED`, or `INCONCLUSIVE`. Evidence IDs are sorted unique
+canonical event IDs and may be empty only for a non-satisfied or inconclusive outcome. Every CI
+target appears exactly once and no untargeted obligation may appear. `ACCEPTABLE` requires every
+outcome to be `SATISFIED`; `NEEDS_WORK` preserves the complete per-obligation result set.
+
+Findings retain the v1 fields and registries. The artifact digest is SHA-256 over the complete
+artifact after replacing only its own 64-hex `artifact_sha256` value with zeroes. Projection-time
+validation binds the exact commit, CI and BR revisions and requires cited evidence at a ledger
+sequence no later than the verdict. Builder-produced evidence is a claim and cannot by itself
+establish satisfaction; the declared reviewer owns the outcome.
+
+## Artifact contract: `proofbound.requirement-review.v1`
+
+Requirement reviews use the same strict compact-JSON front matter. The exact ordered fields are:
+`schema`, `review_id`, `requirement` (an exact canonical Reference), `declared_reviewer`, `outcomes`,
+`artifact_path`, `artifact_sha256`. Each non-empty outcome contains exactly `obligation_id`,
+`outcome`, and optional `finding`; the closed outcomes are `VERIFIABLE`, `AMBIGUOUS`, `UNTESTABLE`,
+and `CONTRADICTORY`. Every obligation in the bound requirement revision appears exactly once.
+
+The connector performs syntactic validation. Projection validation rejects a dangling or wrong
+revision digest, an absent obligation, and equality between `declared_reviewer` and the bound
+requirement's `declared_owner`. Independence is declared, not authenticated. Reviews emit
+`requirement.reviewed`; their native ID is `review_id`. Their result is a derived soft cap for all
+chains, and is a hard self-hosting acceptance condition only for Proofbound's own P5 chain.
+
+Unknown, duplicate, missing, null, out-of-order, malformed, or non-canonical fields fail closed in
+both new schemas. A v2 or requirement-review artifact can never fall back to the v1 parser.
+
 ## Interface
 
 ```go
@@ -67,6 +105,8 @@ type Connector struct { /* unexported */ }
 func New(*Deps) (*Connector, error)
 func (c *Connector) Sync(context.Context, Appender) (Result, error)
 func Parse(path string, data []byte) (Verdict, error)
+func ParseObligationVerdict(path string, data []byte) (ObligationVerdict, error)
+func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 ```
 
 ## Invariants
@@ -92,6 +132,14 @@ func Parse(path string, data []byte) (Verdict, error)
 8. **R-INV-8 — Documentary artifacts are not wire verdicts:** valid plain Markdown is counted and
    skipped without error; anything declaring a front-matter or `schema:` start remains a strict
    candidate and malformed candidates fail closed.
+9. **R-INV-9 — Schema dispatch is closed:** v1, v2, and requirement-review artifacts dispatch to
+   distinct parsers and event mappings; stored v1 meaning and bytes are unchanged.
+10. **R-INV-10 — V2 aggregation is honest:** exact references and every targeted obligation are
+    present; `ACCEPTABLE` cannot coexist with a non-satisfied outcome.
+11. **R-INV-11 — Evidence is bounded:** every evidence event exists before the verdict and authored
+    evidence cannot grade itself; dangling or future evidence fails projection.
+12. **R-INV-12 — Requirement review binds exactly:** wrong revision digests, unknown outcomes,
+    absent obligations, and equal declared author/reviewer identities fail closed.
 
 ## Proving table
 
@@ -105,3 +153,7 @@ func Parse(path string, data []byte) (Verdict, error)
 | R-INV-6 | Required dependencies are enforced | reviews_test.go::TestNewRequiresDependencies |
 | R-INV-7 | Reader path and payload path remain bound | reviews_test.go::TestParseBindsPathAndDigest |
 | R-INV-8 | Documentary artifacts are distinct from strict wire candidates | reviews_test.go::TestSyncDistinguishesDocumentaryArtifacts |
+| R-INV-9 | Three schemas dispatch separately and v1 remains byte-semantic | reviews_test.go::TestSchemaDispatchAndV1Compatibility |
+| R-INV-10 | V2 exact targets and aggregate status fail closed | reviews_test.go::TestObligationVerdictAggregation |
+| R-INV-11 | Evidence exists, precedes verdict, and does not self-grade | reviews_test.go::TestObligationVerdictEvidenceValidation |
+| R-INV-12 | Requirement reviews bind revision, obligations, and independent identity | reviews_test.go::TestRequirementReviewValidation |
