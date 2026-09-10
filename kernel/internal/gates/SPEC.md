@@ -24,6 +24,16 @@ dependency. They carry a `.yaml` extension and must contain:
 }
 ```
 
+P5 adds an alternative closed `rule` form under the same schema. It contains `schema`, `id`,
+`description`, `expires`, `mode`, and exactly one of `rule` or the existing source/kind/condition
+shape. Closed rules are `intent-reference-integrity`, `intent-verdict-integrity`, and
+`intent-delivery-readiness`. The delivery rule additionally requires `scope_commit`, either an exact
+commit or `HEAD`; the CLI resolves `HEAD` before evaluation. Integrity rules call the strict
+projector and return proof-bearing BLOCKED on a malformed/dangling chain. Delivery readiness is
+PASS only when the scoped commit's every exact target has `SATISFIED` v2 proof and `VERIFIABLE`
+requirement review. For external consumers it remains canary; only a controlled delivery boundary
+may enforce it.
+
 The evaluator selects the highest-sequence event matching `source`, `kind`, and
 the optional `selector`,
 reads the named top-level JSON payload field, and compares it with `equals`.
@@ -43,6 +53,10 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 7. **GATE-INV-7 — Enforcement rejects an empty definition set.**
 8. **GATE-INV-8 — Compound conditions are conjunctive.**
 9. **GATE-INV-9 — Selectors isolate event streams.**
+10. **GATE-INV-10 — Semantic rules are closed and mutually exclusive with field predicates.**
+11. **GATE-INV-11 — Reference and verdict integrity fail closed with the offending ledger proof.**
+12. **GATE-INV-12 — Delivery readiness requires every exact obligation and spec review.**
+13. **GATE-INV-13 — HEAD scope is resolved by the CLI before evaluation.**
 
 | Invariant | Statement | Proving test |
 |---|---|---|
@@ -55,3 +69,7 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-7 | Enforcement rejects an empty definition set | gates_test.go::TestRequireDefinitions |
 | GATE-INV-8 | Compound conditions are conjunctive | gates_test.go::TestEvaluatePayloadRequiresAllPredicates |
 | GATE-INV-9 | Selectors isolate event streams | gates_integration_test.go::TestLoadedIndexGateMatchesCommandAndExitCode |
+| GATE-INV-10 | Semantic gate definitions are closed and exclusive | gates_test.go::TestIntentRuleDefinitionsFailClosed |
+| GATE-INV-11 | Bad and good integrity chains return proof-bearing BLOCKED/PASS | intent_integration_test.go::TestIntentIntegrityGateStatesAndProof |
+| GATE-INV-12 | Readiness requires satisfaction and verifiable spec review | intent_integration_test.go::TestIntentDeliveryReadiness |
+| GATE-INV-13 | CLI resolves HEAD scope before semantic evaluation | cli_test.go::TestResolveIntentGateHeadScope |

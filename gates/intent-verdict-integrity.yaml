@@ -1,0 +1,1 @@
+{"schema":"proofbound.gate.v1","id":"intent-verdict-integrity","description":"Every obligation verdict binds exact prior commit record and evidence proof","expires":"2026-12-31","mode":"canary","rule":"intent-verdict-integrity"}

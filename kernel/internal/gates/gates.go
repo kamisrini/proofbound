@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
+	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
@@ -30,6 +31,8 @@ type Definition struct {
 	Kind        core.Kind   `json:"kind"`
 	Selector    *Predicate  `json:"selector,omitempty"`
 	Condition   Condition   `json:"condition"`
+	Rule        string      `json:"rule,omitempty"`
+	ScopeCommit string      `json:"scope_commit,omitempty"`
 }
 
 type Condition struct {
@@ -116,17 +119,33 @@ func Parse(data []byte) (Definition, error) {
 }
 
 func (d Definition) validate() error {
-	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Expires == "" || (d.Mode != "canary" && d.Mode != "enforce") || !d.Source.WellFormed() || !d.Kind.Registered() {
+	if d.Schema != Version || d.ID == "" || d.Description == "" || d.Expires == "" || (d.Mode != "canary" && d.Mode != "enforce") {
 		return errors.New("invalid gate definition")
 	}
 	if _, err := time.Parse("2006-01-02", d.Expires); err != nil {
 		return errors.New("invalid gate expiry")
 	}
-	if !validCondition(d.Condition) {
-		return errors.New("invalid gate condition")
-	}
-	if d.Selector != nil && !validPredicate(*d.Selector) {
-		return errors.New("invalid gate selector")
+	if d.Rule != "" {
+		if d.Source != "" || d.Kind != "" || d.Selector != nil || d.Condition.Field != "" || len(d.Condition.Equals) != 0 || len(d.Condition.All) != 0 {
+			return errors.New("semantic rule cannot include event predicates")
+		}
+		if d.Rule != "intent-reference-integrity" && d.Rule != "intent-verdict-integrity" && d.Rule != "intent-delivery-readiness" {
+			return errors.New("unknown semantic gate rule")
+		}
+		if d.Rule == "intent-delivery-readiness" {
+			if d.ScopeCommit != "HEAD" && !gitCommit(d.ScopeCommit) {
+				return errors.New("delivery readiness requires HEAD or an exact commit")
+			}
+		} else if d.ScopeCommit != "" {
+			return errors.New("integrity rule cannot have a commit scope")
+		}
+	} else {
+		if d.ScopeCommit != "" || !d.Source.WellFormed() || !d.Kind.Registered() || !validCondition(d.Condition) {
+			return errors.New("invalid gate condition")
+		}
+		if d.Selector != nil && !validPredicate(*d.Selector) {
+			return errors.New("invalid gate selector")
+		}
 	}
 	return nil
 }
@@ -189,6 +208,9 @@ func Evaluate(ctx context.Context, s *store.Store, definition Definition) (Resul
 		return Result{}, err
 	}
 	result := Result{GateID: definition.ID, State: StateUnknown}
+	if definition.Rule != "" {
+		return evaluateIntentRule(ctx, s, definition)
+	}
 	var latest *store.Record
 	if err := s.ReadEvents(ctx, store.Filter{Source: definition.Source, Kind: definition.Kind}, func(record store.Record) error {
 		if definition.Selector != nil {
@@ -224,6 +246,77 @@ func Evaluate(ctx context.Context, s *store.Store, definition Definition) (Resul
 	}
 	result.State, result.WouldBlock = state, wouldBlock
 	return result, nil
+}
+
+func gitCommit(value string) bool {
+	if len(value) != 40 && len(value) != 64 {
+		return false
+	}
+	for _, r := range value {
+		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+func evaluateIntentRule(ctx context.Context, s *store.Store, d Definition) (Result, error) {
+	result := Result{GateID: d.ID, State: StateUnknown}
+	latest, err := latestIntentProof(ctx, s, d.Rule, d.ScopeCommit)
+	if err != nil {
+		return result, err
+	}
+	if latest != nil {
+		result.EventID, result.Seq = latest.Event.ID.String(), latest.Seq
+	}
+	if err := projections.New().Apply(ctx, s); err != nil {
+		if latest == nil {
+			return result, fmt.Errorf("gate %s: projection failed without proof: %w", d.ID, err)
+		}
+		result.State, result.WouldBlock = StateBlocked, true
+		return result, nil
+	}
+	if latest == nil {
+		return result, nil
+	}
+	if d.Rule == "intent-reference-integrity" || d.Rule == "intent-verdict-integrity" {
+		result.State = StatePass
+		return result, nil
+	}
+	var targets, satisfied, reviewed int
+	err = s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
+		return tx.QueryRow(ctx, `WITH targets AS (SELECT ci.commit_sha,t.requirement_source,t.requirement_id,t.requirement_artifact_sha256,t.obligation_id,t.intent_source,t.intent_id,t.intent_artifact_sha256 FROM commit_intents_view ci JOIN intent_targets_view t ON t.intent_source='intent.'||ci.provider AND t.intent_id=ci.intent_id AND t.intent_artifact_sha256=ci.intent_artifact_sha256 WHERE ci.commit_sha=$1), states AS (SELECT t.*, EXISTS(SELECT 1 FROM obligation_verdicts_view ov WHERE ov.commit_sha=t.commit_sha AND ov.intent_source=t.intent_source AND ov.intent_id=t.intent_id AND ov.intent_artifact_sha256=t.intent_artifact_sha256 AND ov.requirement_source=t.requirement_source AND ov.requirement_id=t.requirement_id AND ov.requirement_artifact_sha256=t.requirement_artifact_sha256 AND ov.obligation_id=t.obligation_id AND ov.outcome='SATISFIED') AS satisfied, EXISTS(SELECT 1 FROM requirement_reviews_view rr WHERE rr.requirement_source=t.requirement_source AND rr.requirement_id=t.requirement_id AND rr.requirement_artifact_sha256=t.requirement_artifact_sha256 AND rr.obligation_id=t.obligation_id AND rr.outcome='VERIFIABLE') AS reviewed FROM targets t) SELECT count(*),count(*) FILTER(WHERE satisfied),count(*) FILTER(WHERE reviewed) FROM states`, d.ScopeCommit).Scan(&targets, &satisfied, &reviewed)
+	})
+	if err != nil {
+		return result, err
+	}
+	if targets > 0 && satisfied == targets && reviewed == targets {
+		result.State = StatePass
+	} else {
+		result.State, result.WouldBlock = StateBlocked, true
+	}
+	return result, nil
+}
+
+func latestIntentProof(ctx context.Context, s *store.Store, rule, commit string) (*store.Record, error) {
+	var latest *store.Record
+	err := s.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
+		match := false
+		switch rule {
+		case "intent-reference-integrity":
+			match = (record.Event.Source == core.SourceIntentRecords || record.Event.Source == core.SourceIntentSpecdir || record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded)
+		case "intent-verdict-integrity":
+			match = record.Event.Source == core.SourceReviews && (record.Event.Kind == core.KindReviewVerdict || record.Event.Kind == core.KindRequirementReview)
+		case "intent-delivery-readiness":
+			match = record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded && record.Event.NativeID == commit
+		}
+		if match {
+			copy := record
+			latest = &copy
+		}
+		return nil
+	})
+	return latest, err
 }
 
 func evaluatePayload(payload map[string]json.RawMessage, condition Condition) (State, bool, error) {

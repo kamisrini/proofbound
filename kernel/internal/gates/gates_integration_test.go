@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,15 +23,87 @@ import (
 func gateIntegrationStore(t *testing.T) *store.Store {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL is required")
-	}
 	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: url})
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	return s
+}
+
+func appendGateRaw(t *testing.T, s *store.Store, source core.Source, kind core.Kind, native string, payload []byte) store.Record {
+	t.Helper()
+	ids := testIDs(t)
+	event, err := ids.NewEvent(core.NewEventParams{Source: source, NativeID: native, Kind: kind, OccurredAt: time.Now(), Payload: payload, ConnectorVersion: "test/1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err := s.BeginSync(context.Background(), "intent-gate-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	record, _, err := run.Append(context.Background(), event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := run.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	return record
+}
+
+func TestIntentIntegrityGateStatesAndProof(t *testing.T) {
+	definition := Definition{Schema: Version, ID: "intent-reference-integrity", Description: "test", Expires: "2099-01-01", Mode: "canary", Rule: "intent-reference-integrity"}
+	t.Run("good", func(t *testing.T) {
+		s := gateIntegrationStore(t)
+		sha := strings.Repeat("a", 40)
+		payload := []byte(`{"sha":"` + sha + `","author_name":"A","author_email":"a@example.test","committer_name":"C","committer_email":"c@example.test","committed_at":"2026-09-10T00:00:00Z","subject":"plain","files_touched":null,"cited_decisions":null,"intent_refs":null}`)
+		proof := appendGateRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, payload)
+		result, err := Evaluate(context.Background(), s, definition)
+		if err != nil || result.State != StatePass || result.EventID != proof.Event.ID.String() {
+			t.Fatalf("result=%+v err=%v", result, err)
+		}
+	})
+	t.Run("bad", func(t *testing.T) {
+		s := gateIntegrationStore(t)
+		sha := strings.Repeat("b", 40)
+		payload := []byte(`{"sha":"` + sha + `","author_name":"A","author_email":"a@example.test","committer_name":"C","committer_email":"c@example.test","committed_at":"2026-09-10T00:00:00Z","subject":"bad","files_touched":null,"cited_decisions":null,"intent_refs":[{"provider":"records","record_id":"CI-missing-item-acde12","artifact_sha256":"` + strings.Repeat("c", 64) + `"}]}`)
+		proof := appendGateRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, payload)
+		result, err := Evaluate(context.Background(), s, definition)
+		if err != nil || result.State != StateBlocked || !result.WouldBlock || result.EventID != proof.Event.ID.String() {
+			t.Fatalf("result=%+v err=%v", result, err)
+		}
+	})
+}
+
+func TestIntentDeliveryReadiness(t *testing.T) {
+	s := gateIntegrationStore(t)
+	sha := strings.Repeat("d", 40)
+	payload := []byte(`{"sha":"` + sha + `","author_name":"A","author_email":"a@example.test","committer_name":"C","committer_email":"c@example.test","committed_at":"2026-09-10T00:00:00Z","subject":"delivery","files_touched":null,"cited_decisions":null,"intent_refs":null}`)
+	proof := appendGateRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, payload)
+	definition := Definition{Schema: Version, ID: "intent-delivery-readiness", Description: "test", Expires: "2099-01-01", Mode: "canary", Rule: "intent-delivery-readiness", ScopeCommit: sha}
+	blocked, err := Evaluate(context.Background(), s, definition)
+	if err != nil || blocked.State != StateBlocked || blocked.EventID != proof.Event.ID.String() {
+		t.Fatalf("blocked=%+v err=%v", blocked, err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		statements := []struct {
+			sql  string
+			args []any
+		}{{`INSERT INTO intent_targets_view(intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,relation,event_id,seq) VALUES('intent.records','CI-ready-item-acde12',$1,'intent.records','BR-ready-item-acde12',$2,'O-1','implements',$3,$4)`, []any{strings.Repeat("e", 64), strings.Repeat("f", 64), proof.Event.ID.String(), proof.Seq}}, {`INSERT INTO commit_intents_view(commit_sha,provider,intent_id,intent_artifact_sha256,event_id,seq) VALUES($1,'records','CI-ready-item-acde12',$2,$3,$4)`, []any{sha, strings.Repeat("e", 64), proof.Event.ID.String(), proof.Seq}}, {`INSERT INTO obligation_verdicts_view(verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq) VALUES('OV-ready',$1,'intent.records','CI-ready-item-acde12',$2,'intent.records','BR-ready-item-acde12',$3,'O-1','SATISFIED','[]',$4,$5)`, []any{sha, strings.Repeat("e", 64), strings.Repeat("f", 64), proof.Event.ID.String(), proof.Seq}}, {`INSERT INTO requirement_reviews_view(review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,finding,declared_reviewer,event_id,seq) VALUES('RR-ready','intent.records','BR-ready-item-acde12',$1,'O-1','VERIFIABLE','','reviewer',$2,$3)`, []any{strings.Repeat("f", 64), proof.Event.ID.String(), proof.Seq}}}
+		for _, statement := range statements {
+			if _, err := tx.Exec(ctx, statement.sql, statement.args...); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	pass, err := Evaluate(context.Background(), s, definition)
+	if err != nil || pass.State != StatePass {
+		t.Fatalf("pass=%+v err=%v", pass, err)
+	}
 }
 
 func appendCheckEvent(t *testing.T, s *store.Store, ids *core.IDGenerator, native string, exitCode int) store.Record {

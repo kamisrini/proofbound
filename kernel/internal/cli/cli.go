@@ -537,6 +537,9 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 				return err
 			}
 		}
+		if err := resolveIntentGateHeadScope(ctx, root, definitions); err != nil {
+			return err
+		}
 		blocked := false
 		results := make([]gates.Result, 0, len(definitions))
 		for _, definition := range definitions {
@@ -631,6 +634,29 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return projector.ReportRequirement(ctx, ledger, args[2], output)
 	case commandIntentCheck:
 		return projector.CheckIntent(ctx, ledger, args[3], output)
+	}
+	return nil
+}
+
+func resolveIntentGateHeadScope(ctx context.Context, root string, definitions []gates.Definition) error {
+	needsHead := false
+	for _, definition := range definitions {
+		needsHead = needsHead || (definition.Rule == "intent-delivery-readiness" && definition.ScopeCommit == "HEAD")
+	}
+	if !needsHead {
+		return nil
+	}
+	cmd := exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--verify", "HEAD^{commit}")
+	cmd.Env = repositoryGitEnv()
+	out, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("resolve delivery gate HEAD: %w", err)
+	}
+	sha := strings.TrimSpace(string(out))
+	for i := range definitions {
+		if definitions[i].Rule == "intent-delivery-readiness" && definitions[i].ScopeCommit == "HEAD" {
+			definitions[i].ScopeCommit = sha
+		}
 	}
 	return nil
 }

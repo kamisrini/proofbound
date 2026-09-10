@@ -171,6 +171,22 @@ func TestSyncAllOrdersIntentBeforeGit(t *testing.T) {
 	}
 }
 
+func TestResolveIntentGateHeadScope(t *testing.T) {
+	root := t.TempDir()
+	for _, args := range [][]string{{"init"}, {"config", "user.name", "Test"}, {"config", "user.email", "test@example.invalid"}, {"commit", "--allow-empty", "-m", "head"}} {
+		if out, err := exec.Command("git", append([]string{"-C", root}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	definitions := []gates.Definition{{Rule: "intent-delivery-readiness", ScopeCommit: "HEAD"}, {Rule: "intent-reference-integrity"}}
+	if err := resolveIntentGateHeadScope(context.Background(), root, definitions); err != nil {
+		t.Fatal(err)
+	}
+	if len(definitions[0].ScopeCommit) != 40 || definitions[1].ScopeCommit != "" {
+		t.Fatalf("definitions=%+v", definitions)
+	}
+}
+
 func TestEnforceGateResultsFailsClosed(t *testing.T) {
 	definition := gates.Definition{Schema: gates.Version, ID: "x", Description: "d", Expires: "2099-01-01", Mode: "enforce", Source: "checks", Kind: "check.run", Condition: gates.Condition{Field: "exit_code", Equals: json.RawMessage("0")}}
 	for _, state := range []gates.State{gates.StateBlocked, gates.StateUnknown} {

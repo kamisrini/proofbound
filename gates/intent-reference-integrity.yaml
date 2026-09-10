@@ -1,0 +1,1 @@
+{"schema":"proofbound.gate.v1","id":"intent-reference-integrity","description":"Every explicit commit intent resolves to exact active committed record revisions","expires":"2026-12-31","mode":"canary","rule":"intent-reference-integrity"}

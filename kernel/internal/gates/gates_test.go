@@ -3,6 +3,7 @@ package gates
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -61,6 +62,20 @@ func TestEvaluatePayloadRequiresAllPredicates(t *testing.T) {
 	state, blocked, err = evaluatePayload(map[string]json.RawMessage{"command": json.RawMessage(`"make index-check"`), "exit_code": json.RawMessage("0")}, condition)
 	if err != nil || state != StatePass || blocked {
 		t.Fatalf("state=%s blocked=%v err=%v", state, blocked, err)
+	}
+}
+
+func TestIntentRuleDefinitionsFailClosed(t *testing.T) {
+	valid := []byte(`{"schema":"proofbound.gate.v1","id":"intent","description":"d","expires":"2026-12-31","mode":"canary","rule":"intent-reference-integrity"}`)
+	if _, err := Parse(valid); err != nil {
+		t.Fatal(err)
+	}
+	for name, data := range map[string][]byte{"unknown": []byte(strings.Replace(string(valid), "intent-reference-integrity", "intent-maybe", 1)), "mixed": []byte(strings.Replace(string(valid), `"rule":"intent-reference-integrity"`, `"rule":"intent-reference-integrity","source":"git"`, 1)), "scope": []byte(strings.Replace(string(valid), `"rule":"intent-reference-integrity"`, `"rule":"intent-delivery-readiness","scope_commit":"branch"`, 1))} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Parse(data); err == nil {
+				t.Fatal("invalid semantic gate accepted")
+			}
+		})
 	}
 }
 

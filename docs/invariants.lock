@@ -126,6 +126,10 @@ kernel/internal/gates/SPEC.md	GATE-INV-6	Enforcement rejects BLOCKED and UNKNOWN
 kernel/internal/gates/SPEC.md	GATE-INV-7	Enforcement rejects an empty definition set.
 kernel/internal/gates/SPEC.md	GATE-INV-8	Compound conditions are conjunctive.
 kernel/internal/gates/SPEC.md	GATE-INV-9	Selectors isolate event streams.
+kernel/internal/gates/SPEC.md	GATE-INV-10	Semantic rules are closed and mutually exclusive with field predicates.
+kernel/internal/gates/SPEC.md	GATE-INV-11	Reference and verdict integrity fail closed with the offending ledger proof.
+kernel/internal/gates/SPEC.md	GATE-INV-12	Delivery readiness requires every exact obligation and spec review.
+kernel/internal/gates/SPEC.md	GATE-INV-13	HEAD scope is resolved by the CLI before evaluation.
 kernel/internal/projections/SPEC.md	P-INV-1	Ledger order is projection order.
 kernel/internal/projections/SPEC.md	P-INV-2	Revisions are last-write-wins.
 kernel/internal/projections/SPEC.md	P-INV-3	Projection writes are resumable.
