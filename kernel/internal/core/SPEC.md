@@ -56,6 +56,10 @@ const (
 	KindReviewVerdict    Kind = "review.verdict"
 	KindGitHubWorkflow   Kind = "github.workflow_run"
 	KindGitHubDeployment Kind = "github.deployment"
+	KindBusinessDecision Kind = "business_decision.recorded"
+	KindRequirement      Kind = "requirement.recorded"
+	KindChangeIntent     Kind = "change_intent.recorded"
+	KindRequirementReview Kind = "requirement.reviewed"
 )
 
 // Registered reports whether k is a member of the kinds registry.
@@ -74,9 +78,12 @@ const (
 	SourceSessions Source = "sessions"
 	SourceReviews  Source = "reviews"
 	SourceGitHub   Source = "github"
+	SourceIntentRecords Source = "intent.records"
+	SourceIntentSpecdir Source = "intent.specdir"
 )
 
-// WellFormed reports whether s matches ^[a-z][a-z0-9_]{0,31}$.
+// WellFormed reports whether s matches ^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31})?$.
+// The optional dot segment is reserved for provider-scoped intent sources.
 func (s Source) WellFormed() bool
 ```
 

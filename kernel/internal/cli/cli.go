@@ -20,6 +20,9 @@ import (
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
 	"github.com/kamisrini/proofbound/kernel/internal/connector/git/gitcmd"
 	connectorgithub "github.com/kamisrini/proofbound/kernel/internal/connector/github"
+	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
+	intentrecords "github.com/kamisrini/proofbound/kernel/internal/connector/intent/records"
+	intentspecdir "github.com/kamisrini/proofbound/kernel/internal/connector/intent/specdir"
 	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
@@ -28,7 +31,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound rebuild | proofbound verify | proofbound report {week|github} | proofbound gates {canary|enforce}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound rebuild | proofbound verify | proofbound report {week|github} | proofbound gates {canary|enforce}"
 
 const legacyAdvisory = "proofbound: deprecated VERA identity alias used; switch to Proofbound before 2026-12-31"
 
@@ -53,6 +56,9 @@ const (
 	commandSyncReviews
 	commandSyncGitHub
 	commandSyncAll
+	commandSyncIntentRecords
+	commandSyncIntentSpecdir
+	commandSyncIntentAll
 	commandRebuild
 	commandVerify
 	commandReportWeek
@@ -75,6 +81,12 @@ func parseCommand(args []string) command {
 		return commandSyncGitHub
 	case len(args) == 2 && args[0] == "sync" && args[1] == "all":
 		return commandSyncAll
+	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "records":
+		return commandSyncIntentRecords
+	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "specdir":
+		return commandSyncIntentSpecdir
+	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "all":
+		return commandSyncIntentAll
 	case len(args) == 1 && args[0] == "rebuild":
 		return commandRebuild
 	case len(args) == 1 && args[0] == "verify":
@@ -246,6 +258,82 @@ func repositoryGitEnv() []string {
 
 type reviewsResult struct{ Listed, Appended, Existing, Malformed, Documentary int }
 
+type committedIntentReader struct{ root string }
+
+func (r committedIntentReader) ReadIntentArtifacts(ctx context.Context, tree string) ([]intentrecords.Artifact, error) {
+	items, err := r.read(ctx, tree, "docs/intent/records")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]intentrecords.Artifact, len(items))
+	for i, item := range items {
+		out[i] = intentrecords.Artifact{Path: item.Path, Bytes: item.Bytes}
+	}
+	return out, nil
+}
+
+func (r committedIntentReader) ReadSpecArtifacts(ctx context.Context, tree string) ([]intentspecdir.Artifact, error) {
+	items, err := r.read(ctx, tree, "specs")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]intentspecdir.Artifact, len(items))
+	for i, item := range items {
+		out[i] = intentspecdir.Artifact{Path: item.Path, Bytes: item.Bytes}
+	}
+	return out, nil
+}
+
+func (r committedIntentReader) read(ctx context.Context, tree, prefix string) ([]connectorreviews.Artifact, error) {
+	if tree == "" {
+		return nil, errors.New("committed intent reader: tree is required")
+	}
+	cmd := exec.CommandContext(ctx, "git", "-C", r.root, "ls-tree", "-r", "--name-only", "-z", tree, "--", prefix)
+	cmd.Env = repositoryGitEnv()
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("list committed intent artifacts at %s: %w", tree, err)
+	}
+	var artifacts []connectorreviews.Artifact
+	for _, raw := range bytes.Split(output, []byte{0}) {
+		name := string(raw)
+		if name == "" || (!strings.HasSuffix(name, ".md")) {
+			continue
+		}
+		show := exec.CommandContext(ctx, "git", "-C", r.root, "show", tree+":"+name)
+		show.Env = repositoryGitEnv()
+		data, err := show.Output()
+		if err != nil {
+			return nil, fmt.Errorf("read committed intent artifact %s: %w", name, err)
+		}
+		artifacts = append(artifacts, connectorreviews.Artifact{Path: name, Bytes: data})
+	}
+	return artifacts, nil
+}
+
+func syncIntentOnStore(ctx context.Context, root, selection string, ledger *store.Store, ids *core.IDGenerator) (connectorintent.Result, error) {
+	reader := committedIntentReader{root: root}
+	now := time.Now().UTC()
+	recordsProvider, err := intentrecords.New(reader, now)
+	if err != nil {
+		return connectorintent.Result{}, err
+	}
+	specdirProvider, err := intentspecdir.New(reader, now)
+	if err != nil {
+		return connectorintent.Result{}, err
+	}
+	connector, err := connectorintent.New(&connectorintent.Deps{Providers: []connectorintent.Provider{recordsProvider, specdirProvider}, IDs: ids, Logger: logger()})
+	if err != nil {
+		return connectorintent.Result{}, err
+	}
+	run, err := ledger.BeginSync(ctx, "intent."+selection)
+	if err != nil {
+		return connectorintent.Result{}, err
+	}
+	result, syncErr := connector.Sync(ctx, selection, run)
+	return result, errors.Join(syncErr, run.Finish(ctx, result.Cursor, syncErr))
+}
+
 func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (reviewsResult, error) {
 	connector, err := connectorreviews.New(&connectorreviews.Deps{Reader: committedVerdictReader{root: root}, IDs: ids, Logger: logger()})
 	if err != nil {
@@ -373,6 +461,24 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
 		return err
 	}
+	if cmd == commandSyncIntentRecords || cmd == commandSyncIntentSpecdir || cmd == commandSyncIntentAll {
+		selection := map[command]string{commandSyncIntentRecords: "records", commandSyncIntentSpecdir: "specdir", commandSyncIntentAll: "all"}[cmd]
+		ids, err := newIDs()
+		if err != nil {
+			return err
+		}
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		result, err := syncIntentOnStore(ctx, root, selection, ledger, ids)
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
+		return err
+	}
 	ledger, err := openStore(ctx, root, databaseURL)
 	if err != nil {
 		return err
@@ -427,6 +533,13 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		if err != nil {
 			return err
 		}
+		var intentResult connectorintent.Result
+		if cmd == commandSyncAll {
+			intentResult, err = syncIntentOnStore(ctx, root, "all", ledger, ids)
+			if err != nil {
+				return err
+			}
+		}
 		gitResult, err := syncGit(ctx, root, ledger, ids)
 		if err != nil {
 			return err
@@ -447,7 +560,7 @@ func runCommand(ctx context.Context, cmd command, root, databaseURL string, outp
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprintf(output, "git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended)
+		_, err = fmt.Fprintf(output, "intent appended=%d git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", intentResult.Appended, gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended)
 		return err
 	case commandVerify:
 		ids, err := newIDs()
@@ -493,6 +606,9 @@ func enforceGateResults(definitions []gates.Definition, results []gates.Result) 
 }
 
 func verify(ctx context.Context, root string, ledger *store.Store, projector *projections.Projector, ids *core.IDGenerator) error {
+	if err := verifyStep(ctx, "initial intent sync", func() error { _, err := syncIntentOnStore(ctx, root, "all", ledger, ids); return err }); err != nil {
+		return err
+	}
 	if err := verifyStep(ctx, "initial git sync", func() error { _, err := syncGit(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
@@ -506,6 +622,14 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 		return err
 	}
 	var secondGit connectorgit.Result
+	var secondIntent connectorintent.Result
+	if err := verifyStep(ctx, "idempotence intent sync", func() error {
+		var err error
+		secondIntent, err = syncIntentOnStore(ctx, root, "all", ledger, ids)
+		return err
+	}); err != nil {
+		return err
+	}
 	if err := verifyStep(ctx, "idempotence git sync", func() error { var err error; secondGit, err = syncGit(ctx, root, ledger, ids); return err }); err != nil {
 		return err
 	}
@@ -529,8 +653,8 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	}); err != nil {
 		return err
 	}
-	if secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 || secondReviews.Appended != 0 {
-		return fmt.Errorf("verify: second sync appended git=%d checks=%d sessions=%d reviews=%d", secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended)
+	if secondIntent.Appended != 0 || secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 || secondReviews.Appended != 0 {
+		return fmt.Errorf("verify: second sync appended intent=%d git=%d checks=%d sessions=%d reviews=%d", secondIntent.Appended, secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended)
 	}
 	if err := verifyStep(ctx, "projection apply", func() error { return projector.Apply(ctx, ledger) }); err != nil {
 		return err

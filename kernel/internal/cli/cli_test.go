@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -88,6 +89,9 @@ func TestParseCommand(t *testing.T) {
 		{[]string{"sync", "sessions"}, commandSyncSessions},
 		{[]string{"sync", "github"}, commandSyncGitHub},
 		{[]string{"sync", "all"}, commandSyncAll},
+		{[]string{"sync", "intent", "records"}, commandSyncIntentRecords},
+		{[]string{"sync", "intent", "specdir"}, commandSyncIntentSpecdir},
+		{[]string{"sync", "intent", "all"}, commandSyncIntentAll},
 		{[]string{"rebuild"}, commandRebuild},
 		{[]string{"verify"}, commandVerify},
 		{[]string{"gates", "canary"}, commandGatesCanary},
@@ -98,6 +102,57 @@ func TestParseCommand(t *testing.T) {
 		if got := parseCommand(tt.args); got != tt.want {
 			t.Errorf("parseCommand(%v) = %d, want %d", tt.args, got, tt.want)
 		}
+	}
+}
+
+func TestParseIntentCommandsAndCommittedReader(t *testing.T) {
+	for _, tc := range []struct {
+		provider string
+		command  command
+	}{{"records", commandSyncIntentRecords}, {"specdir", commandSyncIntentSpecdir}, {"all", commandSyncIntentAll}} {
+		if got := parseCommand([]string{"sync", "intent", tc.provider}); got != tc.command {
+			t.Fatalf("provider=%s command=%d", tc.provider, got)
+		}
+	}
+	root := t.TempDir()
+	commands := [][]string{{"init"}, {"config", "user.name", "Test"}, {"config", "user.email", "test@example.invalid"}}
+	for _, args := range commands {
+		if out, err := exec.Command("git", append([]string{"-C", root}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	name := filepath.Join(root, "specs", "demo", "requirements.md")
+	if err := os.MkdirAll(filepath.Dir(name), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(name, []byte("# committed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"add", "specs/demo/requirements.md"}, {"commit", "-m", "fixture"}} {
+		if out, err := exec.Command("git", append([]string{"-C", root}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, out)
+		}
+	}
+	items, err := (committedIntentReader{root: root}).ReadSpecArtifacts(context.Background(), "HEAD")
+	if err != nil || len(items) != 1 || string(items[0].Bytes) != "# committed\n" {
+		t.Fatalf("items=%+v err=%v", items, err)
+	}
+}
+
+func TestSyncAllOrdersIntentBeforeGit(t *testing.T) {
+	source, err := os.ReadFile("cli.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(source)
+	start := strings.Index(body, "case commandSyncGit, commandSyncAll:")
+	if start < 0 {
+		t.Fatal("sync-all case missing")
+	}
+	body = body[start:]
+	intentAt, gitAt := strings.Index(body, "syncIntentOnStore(ctx"), strings.Index(body, "syncGit(ctx")
+	if intentAt < 0 || gitAt < 0 || intentAt > gitAt {
+		t.Fatalf("sync all order intent=%d git=%d", intentAt, gitAt)
 	}
 }
 

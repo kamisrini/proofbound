@@ -21,36 +21,42 @@ import (
 type Kind string
 
 const (
-	KindCommitRecorded   Kind = "commit.recorded"
-	KindCheckRun         Kind = "check.run"
-	KindSessionObserved  Kind = "session.observed"
-	KindReviewVerdict    Kind = "review.verdict"
-	KindGitHubWorkflow   Kind = "github.workflow_run"
-	KindGitHubDeployment Kind = "github.deployment"
+	KindCommitRecorded    Kind = "commit.recorded"
+	KindCheckRun          Kind = "check.run"
+	KindSessionObserved   Kind = "session.observed"
+	KindReviewVerdict     Kind = "review.verdict"
+	KindGitHubWorkflow    Kind = "github.workflow_run"
+	KindGitHubDeployment  Kind = "github.deployment"
+	KindBusinessDecision  Kind = "business_decision.recorded"
+	KindRequirement       Kind = "requirement.recorded"
+	KindChangeIntent      Kind = "change_intent.recorded"
+	KindRequirementReview Kind = "requirement.reviewed"
 )
 
 func (k Kind) Registered() bool {
 	switch k {
-	case KindCommitRecorded, KindCheckRun, KindSessionObserved, KindReviewVerdict, KindGitHubWorkflow, KindGitHubDeployment:
+	case KindCommitRecorded, KindCheckRun, KindSessionObserved, KindReviewVerdict, KindGitHubWorkflow, KindGitHubDeployment, KindBusinessDecision, KindRequirement, KindChangeIntent, KindRequirementReview:
 		return true
 	}
 	return false
 }
 func Kinds() []Kind {
-	return []Kind{KindCheckRun, KindCommitRecorded, KindGitHubDeployment, KindGitHubWorkflow, KindReviewVerdict, KindSessionObserved}
+	return []Kind{KindBusinessDecision, KindChangeIntent, KindCheckRun, KindCommitRecorded, KindGitHubDeployment, KindGitHubWorkflow, KindRequirement, KindRequirementReview, KindReviewVerdict, KindSessionObserved}
 }
 
 type Source string
 
 const (
-	SourceGit      Source = "git"
-	SourceChecks   Source = "checks"
-	SourceSessions Source = "sessions"
-	SourceReviews  Source = "reviews"
-	SourceGitHub   Source = "github"
+	SourceGit           Source = "git"
+	SourceChecks        Source = "checks"
+	SourceSessions      Source = "sessions"
+	SourceReviews       Source = "reviews"
+	SourceGitHub        Source = "github"
+	SourceIntentRecords Source = "intent.records"
+	SourceIntentSpecdir Source = "intent.specdir"
 )
 
-var sourceRE = regexp.MustCompile(`^[a-z][a-z0-9_]{0,31}$`)
+var sourceRE = regexp.MustCompile(`^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31})?$`)
 
 func (s Source) WellFormed() bool { return sourceRE.MatchString(string(s)) }
 
