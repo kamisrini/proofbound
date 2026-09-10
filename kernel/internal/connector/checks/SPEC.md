@@ -6,7 +6,7 @@ The v1 JSON schema lives here; the plan is historical design input, not a second
 ## 1. Purpose and boundary
 
 `kernel/scripts/check-witness.sh` runs the existing gate and writes one immutable witness file to
-`.vera/spool/`. It is shell-only and never invokes `vera`, so evidence emission does not depend on
+`.proofbound/spool/`. It is shell-only and never invokes `proofbound`, so evidence emission does not depend on
 the product being built. This package reads those files, validates them, and mints `check.run`
 events through an injected appender. It never opens a database and never deletes or rewrites spool
 files.
@@ -103,7 +103,7 @@ validated filename list for observability only and is never read as a seen-set.
     file after either success or failure and exits with the witnessed Make target's status.
 11. **C-INV-11 — Output digest covers the full combined gate output.** The stored SHA-256 matches
     the exact stdout+stderr bytes emitted by the wrapper.
-12. **C-INV-12 — Witness emission does not depend on VERA.** The script contains no `vera`
+12. **C-INV-12 — Witness emission does not depend on Proofbound.** The script contains no Proofbound
     invocation and succeeds in a fixture with no kernel binary.
 13. **C-INV-13 — Emitted identity is self-consistent and sortable.** Filename and body contain the
     same newly minted ULID; two runs produce distinct ids.
@@ -151,7 +151,7 @@ validated filename list for observability only and is never read as a seen-set.
 | C-INV-9 | Cursor is sorted observation, never input | checks_test.go::TestSync_CursorIsSortedFilenames |
 | C-INV-10 | Wrapper writes one witness and returns gate status | emitter_test.go::TestEmitter_RecordsSuccessAndFailure |
 | C-INV-11 | Wrapper hashes exact combined output | emitter_test.go::TestEmitter_OutputDigestCoversCombinedBytes |
-| C-INV-12 | Wrapper never invokes vera or requires its binary | emitter_test.go::TestEmitter_WorksWithoutVeraBinary |
+| C-INV-12 | Wrapper never invokes Proofbound or requires its binary | emitter_test.go::TestEmitter_WorksWithoutProofboundBinary |
 | C-INV-13 | Wrapper emits distinct self-consistent ULIDs | emitter_test.go::TestEmitter_RunIDIsUniqueAndSelfConsistent |
 | C-INV-14 | Wrapper records repository and tool observations | emitter_test.go::TestEmitter_RecordsRepositoryAndTools |
 | C-INV-15 | Gate and Git observations bind to the script repository | emitter_test.go::TestEmitter_BindsGateAndGitToRepository |
@@ -171,6 +171,6 @@ validated filename list for observability only and is never read as a seen-set.
 - The wrapper is not a replacement for `make check`; plain `make check` remains independent.
 - The connector does not verify that a passing check asserted the right thing. It records the
   mechanical observation and its calibration context.
-- Spool files are gitignored local state. Wiping `.vera/` before ingestion loses those witnesses;
+- Spool files are gitignored local state. Wiping `.proofbound/` before ingestion loses those witnesses;
   accepted for P1 because checks remain the gate and witnesses are recreatable evidence.
 - No signatures or verifier identities in P1.

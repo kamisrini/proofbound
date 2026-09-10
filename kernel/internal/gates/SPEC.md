@@ -12,7 +12,7 @@ dependency. They carry a `.yaml` extension and must contain:
 
 ```json
 {
-  "schema": "vera.gate.v1",
+  "schema": "proofbound.gate.v1",
   "id": "make-check-success",
   "description": "The latest make check witness succeeded",
   "expires": "2026-10-16",

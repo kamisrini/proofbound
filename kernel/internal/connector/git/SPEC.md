@@ -20,7 +20,7 @@ lists commits, builds one payload per commit, and appends each through a `*store
 | Event identity, canonical JSON, `content_sha`, validation | `internal/core` | the connector fills `NewEventParams` and lets core mint |
 | What "already seen" means | the ledger's UNIQUE index | see INV-2; this connector holds no cursor |
 | Projections, reports, `[superseded]` marking | `internal/projections` | derived state |
-| Deciding WHEN to sync | `cmd/vera` | this package exposes one function and returns |
+| Deciding WHEN to sync | `cmd/proofbound` | this package exposes one function and returns |
 | **Running `git`** | `internal/connector/git/gitcmd` | see the split below — `os/exec` is BANNED here and the ban is tested (INV-15) |
 
 **The two-package split, and why it is not gold-plating.** `package git` is pure: it takes a
@@ -373,7 +373,7 @@ a behaviour with no row is one a future edit can drop with nothing noticing:
   decision-citation trail is what the ledger exists to support, so it earns an invariant rather
   than remaining an incidental test.
 - **INV-17** — a fresh repository has no commits and no refs, and git reports that through an exit
-  code rather than through empty output. `vera sync` runs against whatever it is pointed at, so
+  code rather than through empty output. `proofbound sync` runs against whatever it is pointed at, so
   "no history yet" must be zero events, not a failure.
 
 ### 5.1 Pinned vector

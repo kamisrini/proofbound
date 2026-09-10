@@ -36,6 +36,7 @@ Every check in this repo is listed here with its tier and enforcement point. **L
 | Spec-before-code for kernel packages | BLOCKING | `kernel/internal/specfirst` Go test via `make check` | `kernel/internal/specfirst/specfirst_test.go::TestEveryInternalPackageHasSpecAndProof` | — (graduated 2026-08-26; P1 close) |
 | Meta-tax ≤ 25% bootstrap / ≤ 10% steady (BUDGET HOME) | ADVISORY (measured) | `make meta-tax` | — | 2026-10-16 (P2 target end) — becomes a `make check` threshold. Owner: maintainer |
 | Off-machine backup of this repo | ADVISORY | `make backup` (git bundle → ~/Backups), run at the end of any session with commits — per VD-local-only-backup-mjic4a | — | 2026-10-16 — make the bundle cadence mechanical (freshness assertion in `make check`, or a scheduled job) or delete this row. Owner: maintainer |
+| Proofbound legacy identity aliases | ADVISORY | `cmd/vera` and shipped `VERA_*` fallbacks emit a dated deprecation notice; live surfaces use `proofbound` and `PROOFBOUND_*` | `kernel/internal/cli/cli_test.go` plus `scripts/tests/index-check.test.sh` for the witness target fallback | 2026-12-31 — remove aliases at P6 start or this date, whichever comes first. Owner: maintainer |
 
 ## Known accepted bypasses (named, not silent)
 

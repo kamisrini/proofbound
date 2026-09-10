@@ -1,6 +1,6 @@
 # internal/projections — SPEC
 
-Task 6 contract for rebuildable, ledger-derived projections and the `vera verify` seam.
+Task 6 contract for rebuildable, ledger-derived projections and the `proofbound verify` seam.
 Projection tables are owned by this package and are never added to ledger migrations.
 
 ## 1. Boundary
@@ -12,7 +12,7 @@ access goes through `store.Store` and `store.Tx`.
 Task 6 materializes `commits_view` and `checks_view`. Task 7 adds the best-effort sessions
 connector and materializes `sessions_view`; `reviews_view` remains an empty stable destination
 until verdict ingestion lands. Review events fail closed rather than being silently discarded.
-Task 7 owns `sync sessions`; Task 8 owns `vera report week`; P3 owns the GitHub delivery view and
+Task 7 owns `sync sessions`; Task 8 owns `proofbound report week`; P3 owns the GitHub delivery view and
 `ReportGitHub`.
 
 ## 2. Public API

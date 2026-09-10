@@ -2,7 +2,7 @@
 
 **Status:** authored before implementation (Build Law 6) · P1 Task 2 · 2026-08-08
 **Authority:** [docs/plans/P1-flight-recorder-plan.md](../../../docs/plans/P1-flight-recorder-plan.md) § Architecture · [VD-stack-go-fid9mi](../../../docs/decisions/VD-stack-go-fid9mi.md) (blessed dependency set) · [docs/design/continuity-chain.md](../../../docs/design/continuity-chain.md) (this file is the behavior lock hop)
-**Lock rule:** § 2 is the interface lock. Changing a signature is a reviewed diff to THIS FILE first, then code — never the reverse (`/vera-review` enforces).
+**Lock rule:** § 2 is the interface lock. Changing a signature is a reviewed diff to THIS FILE first, then code — never the reverse (`/proofbound-review` enforces).
 
 ---
 
@@ -11,7 +11,7 @@
 `core` owns the **pure, I/O-free primitives every other kernel package depends on**: the event
 envelope, RFC-8785 (JCS) canonical JSON and content hashing, ULID event identity, the kinds
 registry, envelope validation, and the idempotency key. It is the bottom of the dependency
-graph — `store`, the connectors, `projections`, and `cmd/vera` all import it; it imports none
+graph — `store`, the connectors, `projections`, and `cmd/proofbound` all import it; it imports none
 of them.
 
 **core does NOT own:**
@@ -19,11 +19,11 @@ of them.
 | Not owned | Home | Why not here |
 |---|---|---|
 | `seq` — the replay order | `internal/store` (`events.seq BIGSERIAL`) | Order is a *ledger* fact, assigned at append. An in-memory envelope has no position. |
-| Persistence, the `*pgxpool.Pool`, migrations, the data-dir lock (`.vera/db.lock` — derived from the data directory, store's SPEC § 2.1) | `internal/store` (the ONLY package that opens the DB) | core opens no database, no file, no socket. |
+| Persistence, the `*pgxpool.Pool`, migrations, the data-dir lock (`.proofbound/db.lock` — derived from the data directory, store's SPEC § 2.1) | `internal/store` (the ONLY package that opens the DB) | core opens no database, no file, no socket. |
 | The UNIQUE `(source, native_id, content_sha)` index and the append semantics | `internal/store` SPEC | core *computes* the key; the ledger *enforces* it. |
 | Payload schemas (commit fields, witness v1 JSON, session metadata) | each `internal/connector/*` SPEC | core treats `payload` as opaque JSON. |
 | Projection reducers, `[superseded]` marking, week report | `internal/projections` | derived state, rebuildable. |
-| Wall-clock reading | the composition root (`cmd/vera`) | the clock and the entropy source are injected (§ 2.4). |
+| Wall-clock reading | the composition root (`cmd/proofbound`) | the clock and the entropy source are injected (§ 2.4). |
 
 Per the CLAUDE.md one-home table, `kernel/internal/<pkg>/SPEC.md` is the single home of a
 package contract; code cites the spec, never restates it.
@@ -426,7 +426,7 @@ emitting `0xAB` forever ⇒ first id `01KZFAPQ00NENTQAXBNENTQAXB`.
 ## 5. Invariant table
 
 Format: `| INV-<n> | <statement> | <test file>::<TestName> |` — the pinned rule and its
-rationale live in `.claude/commands/vera-spec.md` § 5 (single home; do not restate it here).
+rationale live in `.claude/commands/proofbound-spec.md` § 5 (single home; do not restate it here).
 One row per invariant; the third cell names a real Go test function in this package.
 **Citation resolution IS enforced today** by `scripts/invariant-lint.sh` — BLOCKING, inside
 `make check` (docs/gates.md): every `<file>.go::<Test…>` citation in this table and every `F<n>` reference
@@ -499,7 +499,7 @@ A reviewer rejects these on sight:
 - **No payload schema knowledge.** core never parses a commit sha, a witness field, or a session
   count out of `payload`. That belongs to each connector's SPEC.
 - **No connector or store constructors, no config file loading, no CLI flags.**
-- **No new dependency.** § 7 is the whole list. Anything else needs a `/vera-decide` record
+- **No new dependency.** § 7 is the whole list. Anything else needs a `/proofbound-decide` record
   first (Build Law 8).
 
 **Known limitation, stated rather than hidden:** RFC 8785 defines JSON numbers as IEEE-754

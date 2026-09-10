@@ -2,7 +2,7 @@
 
 **Status:** authored before implementation (Build Law 6) · P1 Task 3 · 2026-08-08
 **Authority:** [docs/plans/P1-flight-recorder-plan.md](../../../docs/plans/P1-flight-recorder-plan.md) § Architecture / § Ledger rules · [VD-stack-go-fid9mi](../../../docs/decisions/VD-stack-go-fid9mi.md) (blessed dependency set) · [internal/core/SPEC.md](../core/SPEC.md) (the consumed envelope) · [docs/design/continuity-chain.md](../../../docs/design/continuity-chain.md)
-**Lock rule:** § 2 is the interface lock. Changing a signature is a reviewed diff to THIS FILE first, then code — never the reverse (`/vera-review` enforces).
+**Lock rule:** § 2 is the interface lock. Changing a signature is a reviewed diff to THIS FILE first, then code — never the reverse (`/proofbound-review` enforces).
 **Re-confirmation:** Task 3's DoD requires re-confirming the plan's DB/locking design against real embedded-postgres behavior. § 4 is that re-confirmation — every number and every behavior there was **measured on 2026-08-08**, not assumed. Three plan statements did not survive contact and are corrected in place (§ 4 F1, F2, F6).
 **Review hardening (2026-08-09):** an adversarial pass demonstrated that a live lock holder never re-checked that it still held the lock, and that the read seam could not be used from inside its own callback. Both were measured, not argued (§ 4 F14, F15); the lock was rebuilt on an ownership token with an atomic publish and a compare-and-swap takeover, and INV-33 … INV-38 were added. Every change in that pass is recorded here first.
 
@@ -35,7 +35,7 @@ So the exclusion mechanism is no longer hand-rolled. It is an exclusive `flock(2
 `store` is **the only package in the kernel that opens a database.** It owns the append-only
 event ledger (`events`), the sync-run journal (`sync_runs`), the single-data-dir lock, the
 embedded Postgres lifecycle, the one `*pgxpool.Pool`, and the goose-migrated LEDGER schema.
-Everything above it — connectors, projections, `cmd/vera` — receives a `*Store` injected and
+Everything above it — connectors, projections, `cmd/proofbound` — receives a `*Store` injected and
 never imports a driver.
 
 Its read surface is the **P1→P2 seam**: the P2 gates engine is designed to be just another
@@ -49,8 +49,8 @@ Its read surface is the **P1→P2 seam**: the P2 gates engine is designed to be 
 | Payload meaning (commit fields, witness v1 JSON, session metadata) | each `internal/connector/*` SPEC | `payload` is opaque JSON to store; it is stored and returned verbatim (INV-7). |
 | Projection tables, reducers, `[superseded]` marking, the week report | `internal/projections` | derived state. store lends a transaction; projections own the DDL and the rows. **Projection DDL never enters the migration stream** (INV-19). |
 | What to ingest, cursors as correctness | each connector | `sync_runs.cursor_json` is observability only; the UNIQUE index **is** the seen-set. |
-| Deciding *when* to sync, CLI flags, the repo root | `cmd/vera` | `Config.Root` is injected; store never guesses a path from the working directory. |
-| Wall-clock reading | `cmd/vera` (via `Config.Now`) | the clock is injected so `sync_runs` timestamps are deterministic in tests. (It was originally injected to age a lock; lock staleness no longer exists.) |
+| Deciding *when* to sync, CLI flags, the repo root | `cmd/proofbound` | `Config.Root` is injected; store never guesses a path from the working directory. |
+| Wall-clock reading | `cmd/proofbound` (via `Config.Now`) | the clock is injected so `sync_runs` timestamps are deterministic in tests. (It was originally injected to age a lock; lock staleness no longer exists.) |
 
 Per the CLAUDE.md one-home table, `kernel/internal/<pkg>/SPEC.md` is the single home of a
 package contract; code cites the spec, never restates it.
@@ -68,7 +68,7 @@ The complete exported surface of `package store`. Nothing else is exported (INV-
 // defaults beneath it. store never infers a location from the process's working
 // directory — the composition root supplies it.
 type Config struct {
-	// Root is the VERA state directory (conventionally "<repo>/.vera"). Created if absent.
+	// Root is the Proofbound state directory (conventionally "<repo>/.proofbound"). Created if absent.
 	Root string
 
 	// DataDir is the Postgres data directory (default <Root>/db). It and
@@ -128,7 +128,7 @@ type Config struct {
 	MaxConns int
 
 	// AllowReplayImport is a guarded seam for twin's temporary stores. It is
-	// valid only when Root's base name begins with "vera-twin-"; ordinary
+	// valid only when Root's base name begins with "proofbound-twin-"; ordinary
 	// production stores refuse explicit-sequence imports.
 	AllowReplayImport bool
 
@@ -324,7 +324,7 @@ the point.
 
 ```go
 // Tx is the projection-side handle: projections own their tables, store owns the
-// connection. It runs under the least-privilege vera_projection role, so the ledger
+// connection. It runs under the least-privilege proofbound_projection role, so the ledger
 // tables are readable and PHYSICALLY unwritable through it (§ 4, F7; INV-18).
 type Tx struct{ /* unexported */ }
 
@@ -343,7 +343,7 @@ type Row struct{ /* unexported */ }
 
 func (r *Row) Scan(dest ...any) error
 
-// WithTx runs fn in one transaction as vera_projection: commit on nil, rollback on
+// WithTx runs fn in one transaction as proofbound_projection: commit on nil, rollback on
 // error, rollback-and-repanic on panic. This is how projections create and write
 // derived state, and it is the ONLY generic SQL path store exposes.
 func (s *Store) WithTx(ctx context.Context, fn func(context.Context, *Tx) error) error
@@ -420,7 +420,7 @@ Pinned objects — the from-empty test asserts exactly this set plus `goose_db_v
 | `events_source_kind_seq` | `INDEX (source, kind, seq)` | serves every `Filter` shape in seq order. |
 | `events_occurred_at` | `INDEX (occurred_at)` | serves `OccurredAfter`. |
 | `sync_runs` | `(id, connector, cursor_json, started_at, finished_at, events_appended, error)` | observability, never correctness. |
-| role `vera_projection` | `NOLOGIN`; `SELECT` on the ledger, `CREATE` on the schema | the `WithTx` guard (§ 4, F7). |
+| role `proofbound_projection` | `NOLOGIN`; `SELECT` on the ledger, `CREATE` on the schema | the `WithTx` guard (§ 4, F7). |
 
 Migration SQL is generate-once / append-only; a landed migration is never hand-edited. That
 bypass gets its row in [docs/gates.md](../../../docs/gates.md) "Known accepted bypasses" in
@@ -761,7 +761,7 @@ above is thematic (see the note at the top of this section).
     failed.*
 
     *`WithTx` is deliberately NOT re-checked mid-transaction, and the claim above is scoped
-    accordingly: a projection transaction runs as `vera_projection`, which the database
+    accordingly: a projection transaction runs as `proofbound_projection`, which the database
     refuses to let write the ledger at all (INV-18), so its exposure is derived state on a
     connection it already holds — not a second writer.*
     **The acquisition-side half of this guard is NOT proven by a test, and is stated
@@ -889,7 +889,7 @@ command" was wrong in both directions.**
 | **persistent `BinariesDir` outside `RuntimeDir`** | **0.203 / 0.203 / 0.211 / 0.212s** (first 0.369s) | 0.130–0.134s | extraction skipped: `Start()` skips it when `<binariesPath>/bin/pg_ctl` exists |
 
 Opening the pgx pool and running the first query adds 0.018–0.021s. So a warm command pays
-**~0.35s** for open+close, versus ~5.6s in the naive configuration. `vera verify` syncs twice
+**~0.35s** for open+close, versus ~5.6s in the naive configuration. `proofbound verify` syncs twice
 and rebuilds; at 5.6s per open the plan's own revisit trigger (`make check` > ~30s) fires on
 startup alone. Hence `BinariesDir` is a first-class Config field, not an optimisation.
 
@@ -950,7 +950,7 @@ still never re-derives.
 The targeted form is pinned (INV-4). This is the plan's third correction.
 
 **F7 — Postgres can make the ledger append-only for projections.** Inside a transaction
-running `SET LOCAL ROLE vera_projection`:
+running `SET LOCAL ROLE proofbound_projection`:
 
 ```
 SELECT from ledger            ALLOWED
@@ -1025,10 +1025,10 @@ right one.
 **F13 — `information_schema` is PRIVILEGE-FILTERED; `pg_catalog` is not.** Measured the same way:
 adding a projection table to the migration stream *without* a matching `GRANT` left INV-19 and
 INV-30 green, because both listed tables via `information_schema.tables` through `WithTx` — which
-runs as `vera_projection`, and `information_schema` shows a role only the objects it holds a
+runs as `proofbound_projection`, and `information_schema` shows a role only the objects it holds a
 privilege on. The invisible table was exactly the thing the invariant forbids. Both tests now read
 `pg_catalog.pg_tables`, which is not privilege-filtered. This is also why the migration grants
-`SELECT ON goose_db_version` to `vera_projection`: without it the version table is invisible from
+`SELECT ON goose_db_version` to `proofbound_projection`: without it the version table is invisible from
 the projection role's vantage point. That grant is now belt-and-braces for the schema-listing
 tests rather than load-bearing, and is retained because a projection inspecting its own schema
 should still see a truthful picture.
@@ -1048,7 +1048,7 @@ better.
 | Step | Observation |
 |---|---|
 | Process A acquires the lock | `t=973.838` |
-| `.vera/sync.lock` removed (it is gitignored — `git clean -xdf` does exactly this) | the heartbeat's `Chtimes` failed, logged `Warn` to a **discard-by-default** logger, and **continued** |
+| `.proofbound/sync.lock` removed (it is gitignored — `git clean -xdf` does exactly this) | the heartbeat's `Chtimes` failed, logged `Warn` to a **discard-by-default** logger, and **continued** |
 | Process B acquires the same lock | `t=974.821` — the path was free, so nothing refused it |
 | B adopts A's postmaster (correctly: it serves this DataDir, § 4 F4) and later Closes | **the server A was still appending to stopped** |
 | A's next read | `SQLSTATE 57P01` (admin shutdown) |
@@ -1389,7 +1389,7 @@ latent hole that predates F25.
 ## 5. Invariant table
 
 Format: `| INV-<n> | <statement> | <test file>::<TestName> |` — the pinned rule and its
-rationale live in `.claude/commands/vera-spec.md` § 5 (single home; do not restate it here).
+rationale live in `.claude/commands/proofbound-spec.md` § 5 (single home; do not restate it here).
 Most invariants own one row; several own more (see the note below the table). The third cell names a real Go test function in this package — `scripts/invariant-lint.sh` fails the build if any citation here, or any `F<n>` reference anywhere in this document, does not resolve.
 **Citation resolution IS enforced today** by `scripts/invariant-lint.sh` — BLOCKING, inside
 `make check` (docs/gates.md): every `<file>.go::<Test…>` citation in this table and every `F<n>` reference
@@ -1574,7 +1574,7 @@ A reviewer rejects these on sight:
 - **No pgx, goose, or embedded-postgres type in an exported signature** (INV-15). No
   `*pgxpool.Pool` accessor "just for tests".
 - **No daemon, no server management commands, no connection to a remote Postgres by default.**
-  `Close` always stops the server it is talking to; there is no `vera db start`.
+  `Close` always stops the server it is talking to; there is no `proofbound db start`.
 - **No hand-rolled mutual exclusion.** The ledger lock is `flock(2)` and nothing else. No
   staleness window, no takeover, no reclaim marker, no ownership nonce, no pid-liveness
   probe for the lock, and no heartbeat — every one of those was deleted in round 3 after
@@ -1583,7 +1583,7 @@ A reviewer rejects these on sight:
   fails until § 2 is amended.
 - **No lock-timing configuration.** There is nothing to tune, deliberately: a knob is how
   round 2 came to prove its detection latency at 1/2400 of the value users ran.
-- **No new dependency.** § 7 is the whole list; anything else needs a `/vera-decide` record
+- **No new dependency.** § 7 is the whole list; anything else needs a `/proofbound-decide` record
   first (Build Law 8).
 
 **Known limitation, stated rather than hidden.** Adoption (INV-28) trusts
@@ -1610,7 +1610,7 @@ for the same reason. Note that `syscall` moved from a supporting role to a load-
 one: `syscall.Flock` IS the exclusion mechanism, which also pins this package to unix —
 a constraint it already carried through `syscall.Kill` and embedded-postgres.
 
-**Internal** — `vera/kernel/internal/core` (the envelope; store adds `seq` and never anything
+**Internal** — `github.com/kamisrini/proofbound/kernel/internal/core` (the envelope; store adds `seq` and never anything
 core forbade).
 
 **Blessed external dependencies (VD-stack-go-fid9mi) — the three store is permitted to add,
