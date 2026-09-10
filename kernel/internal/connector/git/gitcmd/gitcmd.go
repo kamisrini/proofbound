@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	pathpkg "path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -171,7 +172,42 @@ func (r *Repo) readCommit(ctx context.Context, sha string) (connectorgit.Commit,
 		Subject:        string(fields[6]),
 		FilesTouched:   files,
 		CitedDecisions: citations,
+		IntentTrailers: intentTrailers(string(fields[7])),
 	}, nil
+}
+
+var trailerLineRE = regexp.MustCompile(`^([A-Za-z0-9-]+): (.+)$`)
+
+func intentTrailers(body string) []string {
+	lines := strings.Split(strings.TrimRight(body, "\n"), "\n")
+	if len(lines) < 3 {
+		return nil
+	}
+	var values []string
+	i := len(lines) - 1
+	for ; i >= 0; i-- {
+		match := trailerLineRE.FindStringSubmatch(lines[i])
+		if match == nil {
+			break
+		}
+		if match[1] == "Intent" {
+			values = append(values, match[2])
+		}
+	}
+	if i < 0 || lines[i] != "" {
+		return nil
+	}
+	sort.Strings(values)
+	if len(values) == 0 {
+		return nil
+	}
+	unique := values[:0]
+	for _, value := range values {
+		if len(unique) == 0 || unique[len(unique)-1] != value {
+			unique = append(unique, value)
+		}
+	}
+	return unique
 }
 
 func parseScalars(out []byte) ([][]byte, error) {

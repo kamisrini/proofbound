@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,6 +38,36 @@ type memoryAppender struct {
 	seen   map[string]struct{}
 	failAt int
 	err    error
+}
+
+type fakeIntentResolver struct {
+	calls [][4]string
+	ref   IntentRef
+	err   error
+}
+
+func (r *fakeIntentResolver) Resolve(_ context.Context, sha, provider, id string) (IntentRef, error) {
+	r.calls = append(r.calls, [4]string{sha, provider, id, ""})
+	if r.err != nil {
+		return IntentRef{}, r.err
+	}
+	ref := r.ref
+	if ref.Provider == "" {
+		ref = IntentRef{Provider: provider, RecordID: id, ArtifactSHA256: strings.Repeat("a", 64)}
+	}
+	return ref, nil
+}
+func connectorWithResolver(t *testing.T, repo Repo, resolver IntentResolver) *Connector {
+	t.Helper()
+	ids, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: bytes.NewReader(bytes.Repeat([]byte{3}, 4096)), Now: func() time.Time { return time.Unix(2, 0).UTC() }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := New(&Deps{Repo: repo, IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Resolver: resolver})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c
 }
 
 func (a *memoryAppender) Append(_ context.Context, event core.Event) (store.Record, bool, error) {
@@ -129,7 +160,7 @@ func TestPayload_EmptySlicesArePinnedToNull(t *testing.T) {
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
 		t.Fatal(err)
 	}
-	if payload["files_touched"] != nil || payload["cited_decisions"] != nil {
+	if payload["files_touched"] != nil || payload["cited_decisions"] != nil || payload["intent_refs"] != nil {
 		t.Fatalf("payload=%s", event.Payload)
 	}
 }
@@ -147,8 +178,8 @@ func TestPayload_PinnedVector(t *testing.T) {
 		CitedDecisions: []string{"VD-fixture-aaaaaa", "VD-fixture-aaaaaa"},
 	}
 	event := syncOne(t, commit)
-	wantPayload := `{"author_email":"author@example.test","author_name":"A Author","cited_decisions":["VD-fixture-aaaaaa"],"committed_at":"2026-08-12T09:00:00Z","committer_email":"committer@example.test","committer_name":"C Committer","files_touched":["a.go","b.go"],"sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c","subject":"pin the vector"}`
-	if string(event.Payload) != wantPayload || event.ContentSHA != "eaaf4869ccfa6491f2da707db289c4f3a72aa851a9d2c7db8dcb07e9af6be7ad" {
+	wantPayload := `{"author_email":"author@example.test","author_name":"A Author","cited_decisions":["VD-fixture-aaaaaa"],"committed_at":"2026-08-12T09:00:00Z","committer_email":"committer@example.test","committer_name":"C Committer","files_touched":["a.go","b.go"],"intent_refs":null,"sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c","subject":"pin the vector"}`
+	if string(event.Payload) != wantPayload || event.ContentSHA != "0d92fa427917851ea2c6976d41694c58485ef0ca1211530e6fe918f901176262" {
 		t.Fatalf("payload=%s\nsha=%s", event.Payload, event.ContentSHA)
 	}
 }
@@ -196,8 +227,69 @@ func TestSync_CursorIsTheRepositoryTips(t *testing.T) {
 }
 
 func TestVersion_IsPinned(t *testing.T) {
-	if Version != "git/1" {
+	if Version != "git/2" {
 		t.Fatalf("version=%q", Version)
+	}
+}
+
+func TestSync_OnlyExplicitIntentTrailersCreateClaims(t *testing.T) {
+	commit := testCommit("abc")
+	commit.Subject = "mentions CI-sample-item-acde12"
+	resolver := &fakeIntentResolver{}
+	app := &memoryAppender{}
+	if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, resolver).Sync(context.Background(), app); err != nil {
+		t.Fatal(err)
+	}
+	if len(resolver.calls) != 0 {
+		t.Fatal("subject mention resolved")
+	}
+	var payload Commit
+	if err := json.Unmarshal(app.events[0].Payload, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.IntentRefs != nil {
+		t.Fatalf("claims=%+v", payload.IntentRefs)
+	}
+}
+
+func TestSync_IntentReferencesBindExactRevision(t *testing.T) {
+	commit := testCommit("abc")
+	commit.IntentTrailers = []string{"specdir:CI-sample-item-acde12"}
+	resolver := &fakeIntentResolver{}
+	app := &memoryAppender{}
+	if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, resolver).Sync(context.Background(), app); err != nil {
+		t.Fatal(err)
+	}
+	if len(resolver.calls) != 1 || resolver.calls[0][0] != "abc" || resolver.calls[0][1] != "specdir" {
+		t.Fatalf("calls=%v", resolver.calls)
+	}
+	for _, bad := range []string{"unknown:CI-sample-item-acde12", "intent.specdir:CI-sample-item-acde12", "not-an-id"} {
+		commit.IntentTrailers = []string{bad}
+		if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, resolver).Sync(context.Background(), &memoryAppender{}); err == nil {
+			t.Fatalf("accepted %q", bad)
+		}
+	}
+	commit.IntentTrailers = []string{"CI-sample-item-acde12"}
+	spoof := &fakeIntentResolver{ref: IntentRef{Provider: "specdir", RecordID: "CI-sample-item-acde12", ArtifactSHA256: strings.Repeat("a", 64)}}
+	if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, spoof).Sync(context.Background(), &memoryAppender{}); err == nil {
+		t.Fatal("spoofed resolver result accepted")
+	}
+}
+
+func TestPayload_IntentRefsAndLegacyCitationsArePinned(t *testing.T) {
+	commit := testCommit("abc")
+	commit.CitedDecisions = []string{"VD-old-aaaaaa"}
+	commit.IntentTrailers = []string{"CI-sample-item-acde12", "CI-sample-item-acde12"}
+	app := &memoryAppender{}
+	if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, &fakeIntentResolver{}).Sync(context.Background(), app); err != nil {
+		t.Fatal(err)
+	}
+	var payload Commit
+	if err := json.Unmarshal(app.events[0].Payload, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if len(payload.CitedDecisions) != 1 || payload.CitedDecisions[0] != "VD-old-aaaaaa" || len(payload.IntentRefs) != 1 || payload.IntentRefs[0].ArtifactSHA256 != strings.Repeat("a", 64) {
+		t.Fatalf("payload=%s", app.events[0].Payload)
 	}
 }
 

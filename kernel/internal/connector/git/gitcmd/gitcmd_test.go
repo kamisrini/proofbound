@@ -57,6 +57,20 @@ func TestTokenBoundariesAndRefClasses(t *testing.T) {
 	}
 }
 
+func TestCommits_ExtractsOnlyExplicitIntentTrailers(t *testing.T) {
+	body := "subject mentions CI-fake-item-acde12\n\nordinary prose\n\nIntent: CI-real-item-acde12\nIntent: specdir:CI-other-item-acde12\nIntent: CI-real-item-acde12\nSigned-off-by: Test <test@example.invalid>\n"
+	got := intentTrailers(body)
+	want := []string{"CI-real-item-acde12", "specdir:CI-other-item-acde12"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got=%v want=%v", got, want)
+	}
+	for _, text := range []string{"subject CI-real-item-acde12\n", "subject\n\nIntent: CI-real-item-acde12\nthen prose\n", "Intent: CI-real-item-acde12\n"} {
+		if got := intentTrailers(text); got != nil {
+			t.Fatalf("text=%q got=%v", text, got)
+		}
+	}
+}
+
 func TestCommits_EmptyRepositoryIsNotAnError(t *testing.T) {
 	fixture := newFixture(t)
 	repo, err := New(fixture.root)

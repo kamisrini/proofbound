@@ -38,6 +38,10 @@ cannot become partial after construction.
 - Decision citations are resolved against exact direct files in the commit's own
   `docs/decisions/VD-*.md` directory; nested paths do not qualify. A token
   that is only a prefix of a real id, or merely looks id-shaped, is never emitted.
+- Intent claims come only from exact `Intent:` keys in the commit's final contiguous trailer block.
+  Values are passed verbatim to the parent connector for closed grammar and committed-tree
+  resolution. An ID-shaped subject or body mention, and a trailer-like line followed by ordinary
+  body prose, do not create a claim.
 - Tips are peeled commit ids for every ref/HEAD route admitted by `Commits`; excluded refs never
   appear. A failure from Git is always an error except the documented unborn-HEAD/empty-repository
   cases.
@@ -84,6 +88,8 @@ cannot become partial after construction.
     are included even when repository or user configuration says to ignore submodules.
 21. **G-INV-21 — Detached HEAD immediately names a commit object.** Missing, blob, tree, and tag
     objects are refused even when an annotated tag could peel to a valid commit.
+22. **G-INV-22 — Intent trailers are explicit.** Only exact keys in the terminal Git trailer block
+    are emitted, in sorted unique order; arbitrary mentions and interrupted blocks are ignored.
 
 Legacy graft refusal is a route to G-INV-5's harm: grafts make a boundary commit appear to change
 its whole tree, producing contradictory payloads for one SHA. Both `New` and `Commits` therefore
@@ -121,6 +127,7 @@ refuse a non-empty `.git/info/grafts` with `ErrShallow`.
 | G-INV-19 | Git environment cannot redirect the requested root and linked worktrees still work | gitcmd_test.go::TestRepo_RootCannotBeRedirectedByGitEnvironment |
 | G-INV-20 | Repository and user submodule-ignore config cannot change root/non-root gitlink paths | gitcmd_test.go::TestCommits_GitlinkPayloadIgnoresSubmoduleConfig |
 | G-INV-21 | Detached HEAD rejects every immediate non-commit object including annotated tags | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
+| G-INV-22 | Only terminal explicit Intent trailers become claims | gitcmd_test.go::TestCommits_ExtractsOnlyExplicitIntentTrailers |
 
 ## 6. Dependencies
 

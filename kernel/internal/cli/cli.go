@@ -191,7 +191,18 @@ func syncGit(ctx context.Context, root string, ledger *store.Store, ids *core.ID
 	if err != nil {
 		return connectorgit.Result{}, err
 	}
-	connector, err := connectorgit.New(&connectorgit.Deps{Repo: repo, IDs: ids, Logger: logger()})
+	reader := committedIntentReader{root: root}
+	now := time.Now().UTC()
+	recordsProvider, err := intentrecords.New(reader, now)
+	if err != nil {
+		return connectorgit.Result{}, err
+	}
+	specdirProvider, err := intentspecdir.New(reader, now)
+	if err != nil {
+		return connectorgit.Result{}, err
+	}
+	resolver := commitIntentResolver{records: recordsProvider, specdir: specdirProvider}
+	connector, err := connectorgit.New(&connectorgit.Deps{Repo: repo, IDs: ids, Logger: logger(), Resolver: resolver})
 	if err != nil {
 		return connectorgit.Result{}, err
 	}
@@ -201,6 +212,28 @@ func syncGit(ctx context.Context, root string, ledger *store.Store, ids *core.ID
 	}
 	result, syncErr := connector.Sync(ctx, run)
 	return result, errors.Join(syncErr, run.Finish(ctx, result.Cursor, syncErr))
+}
+
+type commitIntentResolver struct {
+	records *intentrecords.Provider
+	specdir *intentspecdir.Provider
+}
+
+func (r commitIntentResolver) Resolve(ctx context.Context, commitSHA, provider, recordID string) (connectorgit.IntentRef, error) {
+	var revision connectorintent.Revision
+	var err error
+	switch provider {
+	case "records":
+		revision, err = r.records.Resolve(ctx, commitSHA, recordID)
+	case "specdir":
+		revision, err = r.specdir.Resolve(ctx, commitSHA, recordID)
+	default:
+		return connectorgit.IntentRef{}, fmt.Errorf("unknown intent provider %q", provider)
+	}
+	if err != nil {
+		return connectorgit.IntentRef{}, err
+	}
+	return connectorgit.IntentRef{Provider: provider, RecordID: revision.NativeID, ArtifactSHA256: revision.ArtifactSHA256}, nil
 }
 
 type checksResult struct{ Listed, Appended, Existing int }

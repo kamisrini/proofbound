@@ -7,14 +7,18 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const Version = "git/1"
+const Version = "git/2"
+
+var intentIDRE = regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`)
 
 type Repo interface {
 	Commits(context.Context) ([]Commit, error)
@@ -22,15 +26,27 @@ type Repo interface {
 }
 
 type Commit struct {
-	SHA            string    `json:"sha"`
-	AuthorName     string    `json:"author_name"`
-	AuthorEmail    string    `json:"author_email"`
-	CommitterName  string    `json:"committer_name"`
-	CommitterEmail string    `json:"committer_email"`
-	CommittedAt    time.Time `json:"committed_at"`
-	Subject        string    `json:"subject"`
-	FilesTouched   []string  `json:"files_touched"`
-	CitedDecisions []string  `json:"cited_decisions"`
+	SHA            string      `json:"sha"`
+	AuthorName     string      `json:"author_name"`
+	AuthorEmail    string      `json:"author_email"`
+	CommitterName  string      `json:"committer_name"`
+	CommitterEmail string      `json:"committer_email"`
+	CommittedAt    time.Time   `json:"committed_at"`
+	Subject        string      `json:"subject"`
+	FilesTouched   []string    `json:"files_touched"`
+	CitedDecisions []string    `json:"cited_decisions"`
+	IntentRefs     []IntentRef `json:"intent_refs"`
+	IntentTrailers []string    `json:"-"`
+}
+
+type IntentRef struct {
+	Provider       string `json:"provider"`
+	RecordID       string `json:"record_id"`
+	ArtifactSHA256 string `json:"artifact_sha256"`
+}
+
+type IntentResolver interface {
+	Resolve(context.Context, string, string, string) (IntentRef, error)
 }
 
 type Appender interface {
@@ -38,15 +54,17 @@ type Appender interface {
 }
 
 type Deps struct {
-	Repo   Repo
-	IDs    *core.IDGenerator
-	Logger *slog.Logger
+	Repo     Repo
+	IDs      *core.IDGenerator
+	Logger   *slog.Logger
+	Resolver IntentResolver
 }
 
 type Connector struct {
-	repo   Repo
-	ids    *core.IDGenerator
-	logger *slog.Logger
+	repo     Repo
+	ids      *core.IDGenerator
+	logger   *slog.Logger
+	resolver IntentResolver
 }
 
 type Result struct {
@@ -69,7 +87,7 @@ func New(d *Deps) (*Connector, error) {
 	if d.Logger == nil {
 		return nil, errors.New("git connector: Logger is required")
 	}
-	return &Connector{repo: d.Repo, ids: d.IDs, logger: d.Logger}, nil
+	return &Connector{repo: d.Repo, ids: d.IDs, logger: d.Logger, resolver: d.Resolver}, nil
 }
 
 func isNilRepo(repo Repo) bool {
@@ -107,7 +125,10 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	result.Cursor = cursor
 
 	for _, commit := range commits {
-		commit = normalizedCommit(commit)
+		commit, err = c.resolvedCommit(ctx, commit)
+		if err != nil {
+			return result, fmt.Errorf("git connector: commit %q intent: %w", commit.SHA, err)
+		}
 		payload, marshalErr := json.Marshal(commit)
 		if marshalErr != nil {
 			return result, fmt.Errorf("git connector: marshal commit %q: %w", commit.SHA, marshalErr)
@@ -140,7 +161,60 @@ func normalizedCommit(commit Commit) Commit {
 	commit.CommittedAt = commit.CommittedAt.UTC()
 	commit.FilesTouched = sortedUnique(commit.FilesTouched)
 	commit.CitedDecisions = sortedUnique(commit.CitedDecisions)
+	commit.IntentTrailers = sortedUnique(commit.IntentTrailers)
+	if len(commit.IntentRefs) == 0 {
+		commit.IntentRefs = nil
+	} else {
+		sort.Slice(commit.IntentRefs, func(i, j int) bool { return intentRefKey(commit.IntentRefs[i]) < intentRefKey(commit.IntentRefs[j]) })
+		unique := commit.IntentRefs[:0]
+		for _, ref := range commit.IntentRefs {
+			if len(unique) == 0 || intentRefKey(unique[len(unique)-1]) != intentRefKey(ref) {
+				unique = append(unique, ref)
+			}
+		}
+		commit.IntentRefs = unique
+	}
 	return commit
+}
+
+func (c *Connector) resolvedCommit(ctx context.Context, commit Commit) (Commit, error) {
+	commit = normalizedCommit(commit)
+	if len(commit.IntentTrailers) == 0 {
+		return commit, nil
+	}
+	if c.resolver == nil {
+		return Commit{}, errors.New("resolver is required for an Intent trailer")
+	}
+	commit.IntentRefs = nil
+	for _, raw := range commit.IntentTrailers {
+		provider, id := "records", raw
+		if strings.Contains(raw, ":") {
+			parts := strings.Split(raw, ":")
+			if len(parts) != 2 {
+				return Commit{}, fmt.Errorf("malformed trailer %q", raw)
+			}
+			provider, id = parts[0], parts[1]
+		}
+		if provider != "records" && provider != "specdir" {
+			return Commit{}, fmt.Errorf("unknown provider %q", provider)
+		}
+		if !intentIDRE.MatchString(id) {
+			return Commit{}, fmt.Errorf("malformed change intent %q", id)
+		}
+		ref, err := c.resolver.Resolve(ctx, commit.SHA, provider, id)
+		if err != nil {
+			return Commit{}, err
+		}
+		if ref.Provider != provider || ref.RecordID != id || !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(ref.ArtifactSHA256) {
+			return Commit{}, errors.New("resolver returned a spoofed or malformed exact revision")
+		}
+		commit.IntentRefs = append(commit.IntentRefs, ref)
+	}
+	return normalizedCommit(commit), nil
+}
+
+func intentRefKey(r IntentRef) string {
+	return r.Provider + "\x00" + r.RecordID + "\x00" + r.ArtifactSHA256
 }
 
 func sortedUnique(values []string) []string {

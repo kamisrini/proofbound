@@ -109,6 +109,18 @@ type Commit struct {
 	Subject        string    `json:"subject"`
 	FilesTouched   []string  `json:"files_touched"`
 	CitedDecisions []string  `json:"cited_decisions"`
+	IntentRefs      []IntentRef `json:"intent_refs"`
+	IntentTrailers  []string `json:"-"`
+}
+
+type IntentRef struct {
+	Provider       string `json:"provider"`
+	RecordID       string `json:"record_id"`
+	ArtifactSHA256 string `json:"artifact_sha256"`
+}
+
+type IntentResolver interface {
+	Resolve(ctx context.Context, commitSHA, provider, recordID string) (IntentRef, error)
 }
 
 // Appender is the store surface this connector needs — declared at the consumer, and
@@ -122,6 +134,7 @@ type Deps struct {
 	Repo   Repo            // required
 	IDs    *core.IDGenerator // required
 	Logger *slog.Logger    // required
+	Resolver IntentResolver // optional only while no commit has an Intent trailer
 }
 
 type Connector struct{ /* unexported */ }
@@ -131,7 +144,7 @@ func New(d *Deps) (*Connector, error)
 // Version is the connector_version stamped on every event this package mints. It is a
 // CONSTANT, not derived from the build, so a replayed ledger says which code shape wrote a
 // row (core INV-25 requires a non-empty value).
-const Version = "git/1"
+const Version = "git/2"
 
 // Result is what one Sync reports. Counts are DERIVED from the appends, never accumulated by
 // the caller.
@@ -151,6 +164,13 @@ func (c *Connector) Sync(ctx context.Context, a Appender) (Result, error)
 tree. This gives merges one deterministic meaning instead of Git's mode-dependent empty output.
 Paths that are not valid UTF-8 are refused because JSON strings cannot reversibly preserve their
 Git byte identity.
+
+`IntentTrailers` is adapter input and is excluded from JSON. Only a final Git trailer block may
+populate it. Unqualified `CI-*` values resolve as provider `records`; qualified values are exactly
+`records:<CI-id>` or `specdir:<CI-id>`. Resolution uses the commit's own tree and the returned
+provider, record ID, and artifact digest become sorted unique `IntentRefs`. Missing, malformed,
+withdrawn, ambiguous, unknown-provider, spoofed-prefix, or digest-inconsistent references fail the
+entire sync. An arbitrary ID-shaped mention outside the trailer block is not a claim.
 
 **Not exported, deliberately:** the payload struct is marshalled from `Commit` itself, so
 there is no second shape to keep in step (Law 2 — one home per datum). A caller that wants
@@ -353,6 +373,9 @@ adversarial review, and that has been got wrong three times in this repo.
 | INV-14b | § 2's struct FIELDS are the complete exported field set | surface_test.go::TestExportedStructFieldsMatchTheSpec |
 | INV-16 | Decision ids are read from the commit BODY, sorted and de-duplicated | rewrite_test.go::TestSync_CitedDecisionsAreReadFromTheCommitBody |
 | INV-17 | An empty repository syncs to zero events and is not an error | rewrite_test.go::TestSync_EmptyRepositoryIsNotAnError |
+| INV-28 | Only explicit Intent trailers create claims | connector_test.go::TestSync_OnlyExplicitIntentTrailersCreateClaims |
+| INV-29 | Claims resolve at the commit tree and hostile references fail closed | connector_test.go::TestSync_IntentReferencesBindExactRevision |
+| INV-30 | Legacy citations and deterministic v2 payload remain compatible | connector_test.go::TestPayload_IntentRefsAndLegacyCitationsArePinned |
 
 **INV-19 through INV-22, INV-24 and INV-25 are `gitcmd`'s and live in
 [`gitcmd/SPEC.md`](gitcmd/SPEC.md)** under that package's own numbering — the ref scope, the shallow
@@ -375,6 +398,13 @@ a behaviour with no row is one a future edit can drop with nothing noticing:
 - **INV-17** — a fresh repository has no commits and no refs, and git reports that through an exit
   code rather than through empty output. `proofbound sync` runs against whatever it is pointed at, so
   "no history yet" must be zero events, not a failure.
+- **INV-28 — Explicit intent claims only.** Only `Intent:` entries returned by the Git adapter are
+  resolved; subject/body mentions never create an `intent_refs` entry.
+- **INV-29 — Exact point-in-time binding.** Every trailer resolves against its commit SHA and stores
+  the returned provider, CI id, and exact artifact digest. Missing, malformed, withdrawn,
+  ambiguous, unknown-provider, and spoofed-prefix values fail closed.
+- **INV-30 — Compatibility and determinism.** `cited_decisions` is unchanged; intent references are
+  sorted and de-duplicated, empty references pin to `null`, and the wire version is `git/2`.
 
 ### 5.1 Pinned vector
 
@@ -389,19 +419,21 @@ INPUT   Commit{
           CommitterName:  "C Committer", CommitterEmail: "committer@example.test",
           CommittedAt:    2026-08-12T09:00:00Z,
           Subject:        "pin the vector",
-          FilesTouched:   ["b.go","a.go","b.go"],
-          CitedDecisions: ["VD-fixture-aaaaaa","VD-fixture-aaaaaa"],
+         FilesTouched:   ["b.go","a.go","b.go"],
+         CitedDecisions: ["VD-fixture-aaaaaa","VD-fixture-aaaaaa"],
+         IntentRefs:     nil,
         }
 
 BYTES   {"author_email":"author@example.test","author_name":"A Author",
          "cited_decisions":["VD-fixture-aaaaaa"],"committed_at":"2026-08-12T09:00:00Z",
          "committer_email":"committer@example.test","committer_name":"C Committer",
-         "files_touched":["a.go","b.go"],"sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
+         "files_touched":["a.go","b.go"],"intent_refs":null,
+         "sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
          "subject":"pin the vector"}
 
         ^ ONE line, no whitespace — the breaks above are for reading only.
 
-SHA256  eaaf4869ccfa6491f2da707db289c4f3a72aa851a9d2c7db8dcb07e9af6be7ad
+SHA256  0d92fa427917851ea2c6976d41694c58485ef0ca1211530e6fe918f901176262
 ```
 
 Read the bytes against the input: keys alphabetical (RFC 8785), `files_touched` sorted with the
@@ -421,15 +453,16 @@ equals itself. The consts sat empty and the test sat red until there was a real 
 decision it most needed to pin:
 
 ```
-INPUT   the same Commit, with FilesTouched and CitedDecisions both empty
+INPUT   the same Commit, with FilesTouched, CitedDecisions, and IntentRefs empty
 
 BYTES   {"author_email":"author@example.test","author_name":"A Author",
          "cited_decisions":null,"committed_at":"2026-08-12T09:00:00Z",
          "committer_email":"committer@example.test","committer_name":"C Committer",
-         "files_touched":null,"sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
+         "files_touched":null,"intent_refs":null,
+         "sha":"9f2b7c1d8e5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
          "subject":"pin the vector"}
 
-SHA256  32074ae0364663ee0a8c9b4afb5fa5900f7c8c152cf0c3423568f9da67fdda31
+SHA256  94445dfc604d0d2d6687636a44c1dfab96bfd3f25c1ae2ae9fb417a4f83239a2
 ```
 
 An empty slice normalises to `null`, never `[]`. A nil slice and an empty slice must produce
