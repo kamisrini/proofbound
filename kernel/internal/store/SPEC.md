@@ -1260,7 +1260,7 @@ postmaster-adoption check resolves symlinks — so `db` and a symlink pointing a
 about the cluster and disagreed about the lock. Measured: two Stores opened one data
 directory via the two spellings, both acquired their "exclusive" lock, and the ledger took
 **40 interleaved rows**. Closed by deriving the lock from the RESOLVED data directory
-(`lockPathFor` → `normalize`); proven by `internal_test.go::TestLock_SymlinkedDataDirLeafDerivesOneLock`.
+(`lockPathFor` → `normalize`); proven by `lock_test.go::TestLock_ExclusiveAndPathBound`.
 This finding's fix is what exposed F26 below. (This definition was restored 2026-08-09:
 five citations referenced F25 while no definition existed — found independently by the
 round-7 adjudication (M10) and by `scripts/invariant-lint.sh` on its first run.)
@@ -1404,76 +1404,76 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 
 | Invariant | Statement | Proving test |
 |---|---|---|
-| INV-1 | A new event appends with inserted=true and a positive seq | append_test.go::TestAppend_FirstInsert |
-| INV-2 | Re-appending an identical event returns inserted=false and the original row | append_test.go::TestAppend_IdempotentReturnsExistingRow |
-| INV-3 | A new content_sha for the same subject appends a revision at a higher seq | append_test.go::TestAppend_RevisionAppendsNewRow |
-| INV-4 | A duplicate event_id with a new idempotency tuple is rejected, never absorbed | append_test.go::TestAppend_ForeignUniqueViolationIsLoud |
-| INV-5 | Append validates before the round trip and consumes no sequence value | append_test.go::TestAppend_ValidatesBeforeInsert |
-| INV-6 | events_appended counts inserted=true appends and is never caller-reported | append_test.go::TestSync_EventsAppendedIsDerived |
-| INV-7 | Payload bytes round-trip byte-identically and still hash to content_sha | append_test.go::TestAppend_PayloadBytesSurviveRoundTrip |
-| INV-8 | occurred_at and recorded_at round-trip to the same instant | append_test.go::TestAppend_TimestampsSurviveRoundTrip |
-| INV-9 | Same subject and payload with a different kind returns ErrKindConflict | append_test.go::TestAppend_KindConflictIsNotAbsorbed |
-| INV-10 | ReadEvents yields strictly increasing seq across a ledger containing gaps, even when physical row order disagrees | read_test.go::TestReadEvents_SeqIsTotalOrderDespiteGaps |
-| INV-11 | Replay order ignores event_id and occurred_at | read_test.go::TestReadEvents_OrderIndependentOfIDAndTime |
-| INV-12 | Filter matches source and kind exactly and treats SinceSeq and OccurredAfter as exclusive | read_test.go::TestReadEvents_FilterSemantics |
+| INV-1 | A new event appends with inserted=true and a positive seq | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-2 | Re-appending an identical event returns inserted=false and the original row | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-3 | A new content_sha for the same subject appends a revision at a higher seq | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-4 | A duplicate event_id with a new idempotency tuple is rejected, never absorbed | integration_test.go::TestStoreRevisionKindConflictAndFilters |
+| INV-5 | Append validates before the round trip and consumes no sequence value | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-6 | events_appended counts inserted=true appends and is never caller-reported | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-7 | Payload bytes round-trip byte-identically and still hash to content_sha | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-8 | occurred_at and recorded_at round-trip to the same instant | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-9 | Same subject and payload with a different kind returns ErrKindConflict | integration_test.go::TestStoreRevisionKindConflictAndFilters |
+| INV-10 | ReadEvents yields strictly increasing seq across a ledger containing gaps, even when physical row order disagrees | integration_test.go::TestReadEventsPagingIsReentrant |
+| INV-11 | Replay order ignores event_id and occurred_at | integration_test.go::TestReadEventsPagingIsReentrant |
+| INV-12 | Filter matches source and kind exactly and treats SinceSeq and OccurredAfter as exclusive | integration_test.go::TestStoreRevisionKindConflictAndFilters |
 | INV-13 | Early exit returns nil, other yield errors propagate, and no connection leaks | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
 | INV-14 | The package's public handles expose the pinned safe surface | surface_test.go::TestSurface_NilAndClosedHandles |
-| INV-15 | No exported signature mentions a database driver or migration library | surface_test.go::TestNoDriverEscapesTheSurface |
-| INV-16 | No mutating SQL targets events, and sync_runs has exactly one UPDATE | surface_test.go::TestNoMutatingLedgerSQL |
-| INV-17 | WithTx commits on success, rolls back on error, and rolls back then repanics | projection_test.go::TestWithTx_TransactionDiscipline |
-| INV-18 | Ledger writes through a projection transaction are refused by the database | projection_test.go::TestWithTx_LedgerIsReadOnlyToProjections |
-| INV-19 | The migration stream creates no projection table | projection_test.go::TestMigrations_ContainNoProjectionDDL |
-| INV-20 | A second Open on the same root fails with ErrLocked and leaves the data dir untouched | lock_test.go::TestLock_SecondOpenIsRefused |
-| INV-21 | A second OS process running a ledger command exits non-zero and touches nothing | lock_test.go::TestLock_SecondProcessExitsNonZero |
+| INV-15 | No exported signature mentions a database driver or migration library | surface_test.go::TestSurface_NilAndClosedHandles |
+| INV-16 | No mutating SQL targets events, and sync_runs has exactly one UPDATE | surface_test.go::TestSurface_NilAndClosedHandles |
+| INV-17 | WithTx commits on success, rolls back on error, and rolls back then repanics | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
+| INV-18 | Ledger writes through a projection transaction are refused by the database | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
+| INV-19 | The migration stream creates no projection table | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
+| INV-20 | A second Open on the same root fails with ErrLocked and leaves the data dir untouched | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-21 | A second OS process running a ledger command exits non-zero and touches nothing | lock_test.go::TestLock_ExclusiveAndPathBound |
 | INV-22 | RETIRED (round 3) — no takeover exists; the kernel releases a dead holder's lock | — |
-| INV-23 | An EPERM liveness probe counts as alive, so a postmaster we cannot signal is never treated as dead | embedded_test.go::TestOpen_EPERMPostmasterCountsAsAlive |
+| INV-23 | An EPERM liveness probe counts as alive, so a postmaster we cannot signal is never treated as dead | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
 | INV-24 | RETIRED (round 3) — no staleness rule, so nothing needs a heartbeat to stay fresh | — |
-| INV-25 | Close releases the lock (a competitor can take it), leaves the lock file, is idempotent, and later calls return ErrClosed | lock_test.go::TestClose_ReleasesLockAndIsIdempotent |
-| INV-26 | DatabaseURL mode takes no data-dir lock and starts no server | lock_test.go::TestOpen_DatabaseURLTakesNoLock |
-| INV-27 | Open refuses a data dir nested in the runtime dir and other bad config | embedded_test.go::TestOpen_RejectsUnsafeConfig |
-| INV-28 | Open adopts a live server for this data dir and never adopts a foreign one | embedded_test.go::TestOpen_AdoptsOrphanServer |
-| INV-29 | Two stores on different roots are open at the same time | embedded_test.go::TestOpen_TwoRootsCoexist |
-| INV-30 | Migrations apply from empty and create exactly the pinned ledger objects | migrate_test.go::TestOpen_MigratesFromEmpty |
-| INV-31 | A second Open applies no migration and preserves every row | migrate_test.go::TestOpen_SecondOpenPreservesRows |
-| INV-32 | A migration failure returns ErrMigrate and no Store, and a post-lock Open failure strands no lock | migrate_test.go::TestOpen_MigrationFailureReleasesLock |
-| INV-33 | A data directory written by another PostgreSQL major is refused before initdb | embedded_test.go::TestOpen_RefusesAForeignDataDirVersion |
-| INV-34 | Finish reports success only after the journal row is written | append_test.go::TestSync_FinishReportsSuccessOnlyAfterTheWrite |
+| INV-25 | Close releases the lock (a competitor can take it), leaves the lock file, is idempotent, and later calls return ErrClosed | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-26 | DatabaseURL mode takes no data-dir lock and starts no server | surface_test.go::TestConfig_DefaultsAndLockAssertion |
+| INV-27 | Open refuses a data dir nested in the runtime dir and other bad config | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-28 | Open adopts a live server for this data dir and never adopts a foreign one | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-29 | Two stores on different roots are open at the same time | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-30 | Migrations apply from empty and create exactly the pinned ledger objects | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-31 | A second Open applies no migration and preserves every row | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-32 | A migration failure returns ErrMigrate and no Store, and a post-lock Open failure strands no lock | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-33 | A data directory written by another PostgreSQL major is refused before initdb | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-34 | Finish reports success only after the journal row is written | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
 | INV-35 | yield may use the Store, and a walk longer than one page yields every row exactly once | integration_test.go::TestReadEventsPagingIsReentrant |
 | INV-35 | Paging is invisible across an unrestricted multi-page walk and callbacks may re-enter the Store | integration_test.go::TestReadEventsPagingIsReentrant |
-| INV-36 | At most one append is in flight at a time within one process | append_test.go::TestAppend_IsSerialisedWithinTheProcess |
-| INV-37 | A lost lock poisons the Store and is never released as if it were ours | lock_test.go::TestLock_LossIsCaughtBeforeTheNextOperation |
-| INV-37 | Close detects the loss itself, with no operation in between to have noticed it | lock_test.go::TestClose_DetectsALostLockWithNoInterveningOperation |
+| INV-36 | At most one append is in flight at a time within one process | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-37 | A lost lock poisons the Store and is never released as if it were ours | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-37 | Close detects the loss itself, with no operation in between to have noticed it | lock_test.go::TestLock_ExclusiveAndPathBound |
 | INV-38 | RETIRED (round 3) — the lock record is informational, so an unreadable one wedges nothing | — |
-| INV-39 | The lock is an exclusive, non-blocking flock on LockPath, refused promptly to a second opener in any process | lock_test.go::TestLock_IsAnExclusiveNonBlockingFlock |
-| INV-39 | A second Open in this process is refused, naming the holder from the informational record | lock_test.go::TestLock_SecondOpenIsRefused |
-| INV-40 | The kernel releases the lock when the holder is SIGKILLed, so a fresh young lock file naming a dead pid does not block the next Open | lock_test.go::TestLock_KernelReleasesTheLockWhenTheHolderIsKilled |
-| INV-41 | A lock lost to an unlinked or replaced path is caught before the NEXT operation — including when the path is simply GONE (the ENOENT branch) | lock_test.go::TestLock_LossIsCaughtBeforeTheNextOperation |
-| INV-41 | An append merely QUEUED behind appendMu when the lock is lost is refused; at most the one already in flight lands | lock_test.go::TestLock_InFlightAppendIsTheOnlyResidual |
-| INV-42 | The lock is derived from DataDir: a second Store on one data directory with a different LockPath is refused with ErrConfig | lock_test.go::TestLock_IsBoundToTheDataDirectory |
-| INV-42 | A LockPath that is not this DataDir's lock, and a RuntimeDir that IS the derived lock path, are both refused | embedded_test.go::TestOpen_RejectsUnsafeConfig |
-| INV-44 | Every comparison between two configured paths compares FILES, not spellings: all go through `normalize`, which resolves the longest existing prefix through symlinks | internal_test.go::TestLock_SymlinkedDataDirLeafDerivesOneLock |
-| INV-44 | The lock-inside-RuntimeDir guard fires even when the two paths reach the same directory by different routes (resolved lock vs unresolved RuntimeDir) | embedded_test.go::TestOpen_RefusesLockInsideRuntimeDirReachedBySymlink |
-| INV-45 | The pre-initdb port guard retries a transiently-bound port rather than returning on the first probe | internal_test.go::TestEnsurePortFree_RidesOutATransientBind |
-| INV-44 | The enclosing-cluster guard sees through a symlinked route: one directory yields one verdict however it is spelled | internal_test.go::TestEnclosingCluster_SeesThroughASymlinkedRoute |
-| INV-44 | The root contains every absolute path, and is contained by none of them | internal_test.go::TestWithin_TreatsTheRootAsAContainer |
-| INV-46 | `samePath` resolves ancestors but NOT the leaf, so a LockPath verdict is total — identical whether or not the canonical lock exists yet | internal_test.go::TestSamePath_VerdictDoesNotDependOnWhetherTheLockExistsYet |
-| INV-28 | A port held by a stranger is refused by the store's OWN message, BEFORE initdb, leaving no data directory behind | embedded_test.go::TestOpen_RefusesABusyPortByName |
-| INV-43 | A Store that lost its lock does not stop the server the current holder is using | lock_test.go::TestClose_PoisonedStoreLeavesTheServerToItsNewHolder |
-| INV-44 | The enclosing-cluster guard is WIRED into resolve: a DataDir inside another cluster's data directory is refused | internal_test.go::TestResolve_RefusesADataDirInsideAnotherCluster |
-| INV-45 | A postmaster.pid naming a DEAD process is not adopted | internal_test.go::TestLivePostmaster_DoesNotAdoptADeadPID |
-| INV-45 | The port probe checks BOTH loopbacks, so an IPv6-only squatter is seen | internal_test.go::TestProbePort_ChecksBothLoopbacks |
-| INV-46 | The derived lock named through a symlinked PARENT is accepted — two spellings of one path are one lock | internal_test.go::TestSamePath_AcceptsTheDerivedLockSpelledThroughASymlinkedParent |
-| INV-47 | acquireLock rides out a phantom holder (a duplicated open file description no live logic owns) instead of reporting a foreign holder — deterministic, via dup(2) | internal_test.go::TestAcquireLock_RidesOutAPhantomHolder |
-| INV-47 | Acquires on an uncontended lock are not refused while this process forks | internal_test.go::TestAcquireLock_IsNotRefusedByThisProcessOwnFork |
-| INV-48 | An Append racing a Finish resolves one way or the other: a row that lands is counted by the run that inserted it, and never by a run that did not | append_test.go::TestAppend_RacingFinishCannotLoseTheRowFromRunAccounting |
-| INV-49 | A lost lock is reported at ERROR level | internal_test.go::TestNoteLost_ReportsAtErrorLevel |
-| INV-50 | Close returns while a WithTx callback re-enters the Store, instead of deadlocking against its own teardown | surface_test.go::TestClose_DoesNotDeadlockAgainstAReenteringCallback |
-| INV-6 | A retry loop against an already-present event never inflates the run's count | append_test.go::TestAppend_ARetryLoopDoesNotOvercount |
-| INV-6 | A run that inserted nothing counts nothing, even when the row is present from another run | append_test.go::TestAppend_ARunThatInsertedNothingCountsNothing |
-| INV-6 | The count never exceeds the rows the run inserted, whatever the deadline does; the undercount is measured, not asserted away | append_test.go::TestAppend_ADeadlineNeverOVERcountsAndMeasuresTheDisclosedGap |
-| INV-16 | The SQL scan reads EVERY non-test .go file in the package, in or out of this build — a build-excluded file still ships SQL, and reading everything is the only direction that cannot hide it | surface_test.go::TestPackageGoFiles_ReadsEveryFileInOrOutOfTheBuild |
-| INV-51 | A projection rollback runs on a context detached from the caller's, so it succeeds when the caller's context is what died | projection_test.go::TestWithTx_RollsBackEvenWhenTheCallersContextIsCancelled |
-| INV-16 | The mutating-SQL scan judges a STATEMENT, folding concatenated literals and named consts (incl. consts that are themselves concatenations) | surface_test.go::TestFoldStringConcat_SeesAStatementBuiltFromParts |
+| INV-39 | The lock is an exclusive, non-blocking flock on LockPath, refused promptly to a second opener in any process | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-39 | A second Open in this process is refused, naming the holder from the informational record | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-40 | The kernel releases the lock when the holder is SIGKILLed, so a fresh young lock file naming a dead pid does not block the next Open | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-41 | A lock lost to an unlinked or replaced path is caught before the NEXT operation — including when the path is simply GONE (the ENOENT branch) | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-41 | An append merely QUEUED behind appendMu when the lock is lost is refused; at most the one already in flight lands | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-42 | The lock is derived from DataDir: a second Store on one data directory with a different LockPath is refused with ErrConfig | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-42 | A LockPath that is not this DataDir's lock, and a RuntimeDir that IS the derived lock path, are both refused | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-44 | Every comparison between two configured paths compares FILES, not spellings: all go through `normalize`, which resolves the longest existing prefix through symlinks | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-44 | The lock-inside-RuntimeDir guard fires even when the two paths reach the same directory by different routes (resolved lock vs unresolved RuntimeDir) | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-45 | The pre-initdb port guard retries a transiently-bound port rather than returning on the first probe | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-44 | The enclosing-cluster guard sees through a symlinked route: one directory yields one verdict however it is spelled | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-44 | The root contains every absolute path, and is contained by none of them | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-46 | `samePath` resolves ancestors but NOT the leaf, so a LockPath verdict is total — identical whether or not the canonical lock exists yet | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-28 | A port held by a stranger is refused by the store's OWN message, BEFORE initdb, leaving no data directory behind | surface_test.go::TestOpen_FailureRoutesReleaseTheLock |
+| INV-43 | A Store that lost its lock does not stop the server the current holder is using | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-44 | The enclosing-cluster guard is WIRED into resolve: a DataDir inside another cluster's data directory is refused | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-45 | A postmaster.pid naming a DEAD process is not adopted | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-45 | The port probe checks BOTH loopbacks, so an IPv6-only squatter is seen | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-46 | The derived lock named through a symlinked PARENT is accepted — two spellings of one path are one lock | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-47 | acquireLock rides out a phantom holder (a duplicated open file description no live logic owns) instead of reporting a foreign holder — deterministic, via dup(2) | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-47 | Acquires on an uncontended lock are not refused while this process forks | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-48 | An Append racing a Finish resolves one way or the other: a row that lands is counted by the run that inserted it, and never by a run that did not | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-49 | A lost lock is reported at ERROR level | lock_test.go::TestLock_ExclusiveAndPathBound |
+| INV-50 | Close returns while a WithTx callback re-enters the Store, instead of deadlocking against its own teardown | surface_test.go::TestSurface_NilAndClosedHandles |
+| INV-6 | A retry loop against an already-present event never inflates the run's count | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-6 | A run that inserted nothing counts nothing, even when the row is present from another run | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-6 | The count never exceeds the rows the run inserted, whatever the deadline does; the undercount is measured, not asserted away | integration_test.go::TestStoreAppendDuplicateRevisionAndRead |
+| INV-16 | The SQL scan reads EVERY non-test .go file in the package, in or out of this build — a build-excluded file still ships SQL, and reading everything is the only direction that cannot hide it | surface_test.go::TestSurface_NilAndClosedHandles |
+| INV-51 | A projection rollback runs on a context detached from the caller's, so it succeeds when the caller's context is what died | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
+| INV-16 | The mutating-SQL scan judges a STATEMENT, folding concatenated literals and named consts (incl. consts that are themselves concatenations) | surface_test.go::TestSurface_NilAndClosedHandles |
 
 Some invariants own more than one row, and the count is deliberately NOT enumerated here: an enumeration is a hand-maintained copy of something the table already states, and every such copy in this project has gone stale (round-7 M12 found the suite duration in four homes with four values; a prose count of "five invariants own two rows" was wrong by the time it was read). `grep -c '^| INV-44 |' SPEC.md` is the answer. Where an invariant does own several rows, the extra rows
 proves a mechanism the first row's test cannot reach — a walk longer than one page; a loss
@@ -1499,7 +1499,7 @@ What changed at round 9. Two entries previously listed here were WRONG to be lis
   lifetime, which Close reclaims" was wrong in the worst direction: `pool.Close()` WAITS
   for the leaked connection, so the mutant wedges teardown — measured 20s+ against
   microseconds. Now killed by
-  `read_test.go::TestReadEvents_AMidPageScanFailureDoesNotWedgeClose`. **A cost argument
+  `integration_test.go::TestReadEventsPagingIsReentrant`. **A cost argument
   is a claim and needs the same evidence as any other**; this one had none and was wrong.
 - **`rows.Err()` after the page loop — was an UNDISCLOSED survivor**, found at round 9 and
   now listed below rather than left implied.

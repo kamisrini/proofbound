@@ -39,7 +39,7 @@ The complete exported surface of `package core`. Nothing else is exported.
 > spec, the one direction the lock rule forbids, and § 3 of this same file already said FOUR kinds,
 > so the file disagreed with itself. `store` has had a pinned-surface test since Task 3; `core` did
 > not, so the lock was prose only. It is now asserted by
-> `speclock_test.go::TestExportedSurfaceMatchesTheSpec`, which parses THIS block and compares it to
+> `core_test.go::TestNewEvent_CanonicalPayloadAndValidation`, which parses THIS block and compares it to
 > the package's real exports.
 
 ### 2.1 Kinds registry and sources
@@ -449,36 +449,36 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 | Invariant | Statement | Proving test |
 |---|---|---|
 | INV-1 | Canonical bytes are independent of object key order and insignificant whitespace | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
-| INV-2 | Canonicalization is idempotent | canonical_test.go::TestCanonicalize_Idempotent |
-| INV-3 | Non-ASCII strings survive as UTF-8 and keys sort by UTF-16 code unit | canonical_test.go::TestCanonicalize_Unicode |
-| INV-4 | -0 equals 0 and exponent forms normalize to their plain form | canonical_test.go::TestCanonicalize_NumberNormalization |
-| INV-5 | Integer literals beyond 2^53 and non-finite literals are rejected, never truncated | canonical_test.go::TestCanonicalize_RejectsUnsafeNumbers |
-| INV-6 | Invalid JSON, trailing garbage, and duplicate keys are rejected with no output | canonical_test.go::TestCanonicalize_RejectsMalformedJSON |
-| INV-7 | Nested structures canonicalize recursively and array order is preserved | canonical_test.go::TestCanonicalize_NestingAndArrayOrder |
-| INV-8 | The pinned input yields the pinned canonical bytes and the pinned sha256 | vector_test.go::TestPinnedVector_CanonicalBytesAndSHA |
-| INV-9 | ContentSHA is 64 lowercase hex characters equal to sha256 of the canonical bytes | canonical_test.go::TestContentSHA_Shape |
-| INV-10 | Equal payloads share a content_sha and any difference changes it | canonical_test.go::TestContentSHA_DistinguishesPayloads |
-| INV-11 | EventID round-trips through String, ParseEventID, MarshalText and UnmarshalText | id_test.go::TestEventID_TextRoundTrip |
-| INV-12 | Malformed event id text is rejected with ErrInvalidEventID | id_test.go::TestEventID_ParseRejectsMalformed |
-| INV-13 | Ids minted within one millisecond are distinct and never the zero value | id_test.go::TestIDGenerator_UniqueWithinMillisecond |
-| INV-14 | Fixed clock plus fixed entropy yields the pinned event id | vector_test.go::TestPinnedVector_EventID |
-| INV-15 | NewIDGenerator requires injected entropy and errors on nil | id_test.go::TestIDGenerator_RequiresEntropy |
-| INV-16 | Kind.Registered is true for exactly the registry members | kinds_test.go::TestKind_RegisteredOnlyForRegistryMembers |
-| INV-17 | Kind literal strings are stable and Kinds returns a sorted defensive copy | kinds_test.go::TestKinds_StableStringsAndDefensiveCopy |
-| INV-31 | SPEC § 2's const blocks name exactly the package's exported Kind and Source constants | speclock_test.go::TestExportedSurfaceMatchesTheSpec |
-| INV-18 | NewEvent stores canonical payload bytes and computes content_sha exactly once | event_test.go::TestNewEvent_CanonicalPayloadAndSingleHash |
-| INV-19 | NewEvent normalizes both timestamps to UTC at microsecond precision | event_test.go::TestNewEvent_NormalizesTimestamps |
-| INV-20 | Validate rejects a zero or empty value in every required field | event_test.go::TestValidate_RejectsEmptyRequiredFields |
-| INV-21 | Validate rejects malformed kind, source, payload, content_sha and native_id values | event_test.go::TestValidate_RejectsMalformedValues |
-| INV-22 | Validate reports every offending field and its error satisfies errors.Is ErrInvalidEvent | event_test.go::TestValidate_JoinsAllFailures |
-| INV-23 | Validate does not re-derive content_sha from the payload | event_test.go::TestValidate_DoesNotRederiveContentSHA |
-| INV-24 | Event JSON round-trips all nine fields and emits no seq key | event_test.go::TestEvent_JSONRoundTripHasNoSeq |
-| INV-25 | Identical source, native_id and payload yield an identical idempotency key | idempotency_test.go::TestIdempotencyKey_EqualForIdenticalContent |
-| INV-26 | Same subject with a different content_sha is a revision; an identical key is not | idempotency_test.go::TestIdempotencyKey_RevisionSemantics |
-| INV-27 | The package exports no ordering symbol and no Seq field | surface_test.go::TestNoOrderingSurface |
-| INV-28 | The package imports only stdlib plus the two blessed dependencies and no I/O package | surface_test.go::TestOnlyBlessedImports |
-| INV-29 | NewEvent returns Validate's error and returns the zero Event, never a partial one | event_test.go::TestNewEvent_RejectsInvalidEnvelope |
-| INV-30 | ValidationError.Field is always the JSON-tag (wire) name, never the Go field name | event_test.go::TestValidationError_FieldUsesWireNames |
+| INV-2 | Canonicalization is idempotent | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-3 | Non-ASCII strings survive as UTF-8 and keys sort by UTF-16 code unit | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-4 | -0 equals 0 and exponent forms normalize to their plain form | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-5 | Integer literals beyond 2^53 and non-finite literals are rejected, never truncated | core_test.go::TestCanonicalize_RejectsUnsafeNumbers |
+| INV-6 | Invalid JSON, trailing garbage, and duplicate keys are rejected with no output | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-7 | Nested structures canonicalize recursively and array order is preserved | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-8 | The pinned input yields the pinned canonical bytes and the pinned sha256 | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-9 | ContentSHA is 64 lowercase hex characters equal to sha256 of the canonical bytes | core_test.go::TestContentSHA_Shape |
+| INV-10 | Equal payloads share a content_sha and any difference changes it | core_test.go::TestCanonicalize_KeyOrderAndWhitespaceIndependent |
+| INV-11 | EventID round-trips through String, ParseEventID, MarshalText and UnmarshalText | core_test.go::TestEventID_TextRoundTrip |
+| INV-12 | Malformed event id text is rejected with ErrInvalidEventID | core_test.go::TestEventID_TextRoundTrip |
+| INV-13 | Ids minted within one millisecond are distinct and never the zero value | core_test.go::TestEventID_TextRoundTrip |
+| INV-14 | Fixed clock plus fixed entropy yields the pinned event id | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-15 | NewIDGenerator requires injected entropy and errors on nil | core_test.go::TestIDGenerator_RequiresEntropy |
+| INV-16 | Kind.Registered is true for exactly the registry members | core_test.go::TestKind_RegisteredOnlyForRegistryMembers |
+| INV-17 | Kind literal strings are stable and Kinds returns a sorted defensive copy | core_test.go::TestKind_RegisteredOnlyForRegistryMembers |
+| INV-31 | SPEC § 2's const blocks name exactly the package's exported Kind and Source constants | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-18 | NewEvent stores canonical payload bytes and computes content_sha exactly once | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-19 | NewEvent normalizes both timestamps to UTC at microsecond precision | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-20 | Validate rejects a zero or empty value in every required field | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-21 | Validate rejects malformed kind, source, payload, content_sha and native_id values | core_test.go::TestValidate_RejectsNativeIDControlCharacters |
+| INV-22 | Validate reports every offending field and its error satisfies errors.Is ErrInvalidEvent | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-23 | Validate does not re-derive content_sha from the payload | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-24 | Event JSON round-trips all nine fields and emits no seq key | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-25 | Identical source, native_id and payload yield an identical idempotency key | core_test.go::TestIdempotencyKey_RevisionSemantics |
+| INV-26 | Same subject with a different content_sha is a revision; an identical key is not | core_test.go::TestIdempotencyKey_RevisionSemantics |
+| INV-27 | The package exports no ordering symbol and no Seq field | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-28 | The package imports only stdlib plus the two blessed dependencies and no I/O package | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-29 | NewEvent returns Validate's error and returns the zero Event, never a partial one | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
+| INV-30 | ValidationError.Field is always the JSON-tag (wire) name, never the Go field name | core_test.go::TestNewEvent_CanonicalPayloadAndValidation |
 
 Tests are written from this table before implementation, failing rather than fake-passing
 (no stub assertions).

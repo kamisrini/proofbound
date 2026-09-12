@@ -2,7 +2,7 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=188 open=161 closed=27 unclassified=0.
+Counts: total=188 open=160 closed=28 unclassified=0.
 Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
@@ -76,7 +76,7 @@ Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C2-033 | C2 | gate-row:Proofbound legacy identity aliases | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-034 | C2 | gate-row:Identity inventory has zero unclassified legacy-name hits | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-035 | C2 | make-short-useful | make short previously ran only hooks-test and now includes the short Go suite. | shell-test:scripts/tests/make-contract.test.sh | closed | close-in-P6 | — | Makefile,scripts/tests/make-contract.test.sh |
-| C2-036 | C2 | full-invariant-citation-resolution | The current invariant-table lint checks citation shape but not file and test resolution. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
+| C2-036 | C2 | full-invariant-citation-resolution | Every current package-SPEC citation now resolves to an exact current file and test function. | shell-test:scripts/invariant-lint.sh | closed | close-in-P6 | — | scripts/invariant-lint.sh,kernel/internal/core/SPEC.md,kernel/internal/gates/SPEC.md,kernel/internal/store/SPEC.md |
 | C2-037 | C2 | legacy-alias-due | The legacy Proofbound aliases became due at P6 start and require explicit removal or decision. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-038 | C2 | undocumented-gate:gates/intent-delivery-readiness.yaml | A tracked gate definition is not named by exact path in docs/gates.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-039 | C2 | undocumented-gate:gates/intent-reference-integrity.yaml | A tracked gate definition is not named by exact path in docs/gates.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |

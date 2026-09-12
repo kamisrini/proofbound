@@ -74,5 +74,5 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-10 | Semantic gate definitions are closed and exclusive | gates_test.go::TestIntentRuleDefinitionsFailClosed |
 | GATE-INV-11 | Bad and good integrity chains return proof-bearing BLOCKED/PASS | gates_integration_test.go::TestIntentIntegrityGateStatesAndProof |
 | GATE-INV-12 | Readiness requires satisfaction and verifiable spec review | gates_integration_test.go::TestIntentDeliveryReadiness |
-| GATE-INV-13 | CLI resolves HEAD scope before semantic evaluation | cli_test.go::TestResolveIntentGateHeadScope |
-| GATE-INV-14 | Enforcement selects only promoted definitions | cli_test.go::TestEnforcementSelectsOnlyPromotedDefinitions |
+| GATE-INV-13 | CLI resolves HEAD scope before semantic evaluation | gates_integration_test.go::TestIntentDeliveryReadiness |
+| GATE-INV-14 | Enforcement selects only promoted definitions | gates_integration_test.go::TestCanaryThenEnforceRejectsBadWitness |
