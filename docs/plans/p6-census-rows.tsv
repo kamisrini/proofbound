@@ -14,21 +14,21 @@ C1-008	C1	mechanism:.claude/hooks/block-generated-edit.sh	A live authority names
 C1-009	C1	mechanism:.claude/hooks/block-secrets.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/block-secrets.sh	close-in-P6	—	—
 C1-010	C1	mechanism:.claude/hooks/lint-on-write.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/lint-on-write.sh	close-in-P6	—	—
 C1-011	C1	mechanism:.claude/hooks/stop-check.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/stop-check.sh	close-in-P6	—	—
-C1-012	C1	mechanism:scripts/cleanroom-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/cleanroom-lint.sh	close-in-P6	—	—
+C1-012	C1	mechanism:scripts/cleanroom-lint.sh	A live authority named an exact path that has now been restored.	path:scripts/cleanroom-lint.sh	close-in-P6	—	scripts/cleanroom-lint.sh,scripts/tests/cleanroom-lint.test.sh
 C1-013	C1	mechanism:scripts/commit-cadence.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/commit-cadence.sh	close-in-P6	—	scripts/commit-cadence.sh,scripts/tests/commit-cadence.test.sh
-C1-014	C1	mechanism:scripts/figure-provenance.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/figure-provenance.sh	close-in-P6	—	—
+C1-014	C1	mechanism:scripts/figure-provenance.sh	A live authority named an exact path that has now been restored.	path:scripts/figure-provenance.sh	close-in-P6	—	scripts/figure-provenance.sh,scripts/tests/figure-provenance.test.sh
 C1-015	C1	mechanism:scripts/gen-state.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/gen-state.sh	close-in-P6	—	scripts/gen-state.sh,scripts/tests/operational-tools.test.sh
-C1-016	C1	mechanism:scripts/invariant-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/invariant-lint.sh	close-in-P6	—	—
-C1-017	C1	mechanism:scripts/lesson-recurrence.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/lesson-recurrence.sh	close-in-P6	—	—
-C1-018	C1	mechanism:scripts/prescription-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/prescription-lint.sh	close-in-P6	—	—
-C1-019	C1	mechanism:scripts/skip-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/skip-lint.sh	close-in-P6	—	—
+C1-016	C1	mechanism:scripts/invariant-lint.sh	A live authority named an exact path that has now been restored.	path:scripts/invariant-lint.sh	close-in-P6	—	scripts/invariant-lint.sh,scripts/tests/invariant-lint.test.sh
+C1-017	C1	mechanism:scripts/lesson-recurrence.sh	A live authority named an exact path that has now been restored.	path:scripts/lesson-recurrence.sh	close-in-P6	—	scripts/lesson-recurrence.sh,scripts/tests/lesson-recurrence.test.sh
+C1-018	C1	mechanism:scripts/prescription-lint.sh	A live authority named an exact path that has now been restored.	path:scripts/prescription-lint.sh	close-in-P6	—	scripts/prescription-lint.sh,scripts/tests/prescription-lint.test.sh
+C1-019	C1	mechanism:scripts/skip-lint.sh	A live authority named an exact path that has now been restored.	path:scripts/skip-lint.sh	close-in-P6	—	scripts/skip-lint.sh,scripts/tests/skip-lint.test.sh
 C1-020	C1	mechanism:scripts/state-freshness.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/state-freshness.sh	close-in-P6	—	scripts/state-freshness.sh,scripts/tests/state-freshness.test.sh
-C1-021	C1	mechanism:scripts/tests/cleanroom-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/cleanroom-lint.test.sh	close-in-P6	—	—
+C1-021	C1	mechanism:scripts/tests/cleanroom-lint.test.sh	A live authority named an exact path that has now been restored.	path:scripts/tests/cleanroom-lint.test.sh	close-in-P6	—	scripts/tests/cleanroom-lint.test.sh
 C1-022	C1	mechanism:scripts/tests/commit-cadence.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/commit-cadence.test.sh	close-in-P6	—	scripts/tests/commit-cadence.test.sh
-C1-023	C1	mechanism:scripts/tests/figure-provenance.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/figure-provenance.test.sh	close-in-P6	—	—
-C1-024	C1	mechanism:scripts/tests/lesson-recurrence.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/lesson-recurrence.test.sh	close-in-P6	—	—
-C1-025	C1	mechanism:scripts/tests/prescription-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/prescription-lint.test.sh	close-in-P6	—	—
-C1-026	C1	mechanism:scripts/tests/skip-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/skip-lint.test.sh	close-in-P6	—	—
+C1-023	C1	mechanism:scripts/tests/figure-provenance.test.sh	A live authority named an exact path that has now been restored.	path:scripts/tests/figure-provenance.test.sh	close-in-P6	—	scripts/tests/figure-provenance.test.sh
+C1-024	C1	mechanism:scripts/tests/lesson-recurrence.test.sh	A live authority named an exact path that has now been restored.	path:scripts/tests/lesson-recurrence.test.sh	close-in-P6	—	scripts/tests/lesson-recurrence.test.sh
+C1-025	C1	mechanism:scripts/tests/prescription-lint.test.sh	A live authority named an exact path that has now been restored.	path:scripts/tests/prescription-lint.test.sh	close-in-P6	—	scripts/tests/prescription-lint.test.sh
+C1-026	C1	mechanism:scripts/tests/skip-lint.test.sh	A live authority named an exact path that has now been restored.	path:scripts/tests/skip-lint.test.sh	close-in-P6	—	scripts/tests/skip-lint.test.sh
 C1-027	C1	mechanism:scripts/tests/state-freshness.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/state-freshness.test.sh	close-in-P6	—	scripts/tests/state-freshness.test.sh
 C1-028	C1	undocumented-make:check-witnessed	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
 C1-029	C1	undocumented-make:verify	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—

@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
-.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint identity-inventory commit-cadence state-freshness meta-tax backup state wrap-verify
-check: hooks-test commit-cadence state-freshness link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint identity-inventory kernel-check
+.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint invariant-lint spec-numbering-lint link-lint law-citation-lint identity-inventory commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint meta-tax backup state wrap-verify
+check: hooks-test commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint identity-inventory kernel-check
 check-witnessed:
 	@bash kernel/scripts/check-witness.sh
 index-check-witnessed:
@@ -37,6 +37,8 @@ laws-lock:
 	@scripts/gen-laws-lock.sh
 invariant-table-lint:
 	@scripts/invariant-table-lint.sh
+invariant-lint:
+	@scripts/invariant-lint.sh
 spec-numbering-lint:
 	@scripts/spec-numbering-lint.sh
 link-lint:
@@ -49,6 +51,14 @@ commit-cadence:
 	@scripts/commit-cadence.sh
 state-freshness:
 	@scripts/state-freshness.sh
+cleanroom-lint:
+	@scripts/cleanroom-lint.sh
+lesson-recurrence:
+	@scripts/lesson-recurrence.sh
+figure-provenance:
+	@scripts/figure-provenance.sh
+prescription-lint:
+	@scripts/prescription-lint.sh
 meta-tax:
 	@scripts/meta-tax.sh
 backup:
@@ -60,4 +70,4 @@ wrap-verify:
 mutants:
 	@scripts/mutants.sh "$${PKG:?set PKG, e.g. PKG=internal/store}"
 kernel-check:
-	@cd kernel && GOCACHE=$${GOCACHE:-/tmp/proofbound-go-build} GOLANGCI_LINT_CACHE=$${GOLANGCI_LINT_CACHE:-/tmp/proofbound-golangci} go build ./... && GOCACHE=$${GOCACHE:-/tmp/proofbound-go-build} go test ./... -count=1 && GOCACHE=$${GOCACHE:-/tmp/proofbound-go-build} GOLANGCI_LINT_CACHE=$${GOLANGCI_LINT_CACHE:-/tmp/proofbound-golangci} golangci-lint run ./...
+	@scripts/kernel-check.sh
