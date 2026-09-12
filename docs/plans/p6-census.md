@@ -2,7 +2,7 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=188 open=165 closed=23 unclassified=0.
+Counts: total=188 open=161 closed=27 unclassified=0.
 Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
@@ -14,10 +14,10 @@ Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C1-005 | C1 | mechanism:make laws-lock | A live authority names a Make target absent from the current Makefile. | make-target:laws-lock | closed | close-in-P6 | — | scripts/gen-laws-lock.sh,scripts/tests/law-citation-lint.test.sh |
 | C1-006 | C1 | mechanism:make state | A live authority names a Make target absent from the current Makefile. | make-target:state | closed | close-in-P6 | — | scripts/gen-state.sh,scripts/tests/operational-tools.test.sh |
 | C1-007 | C1 | mechanism:make vera | A live authority names a Make target absent from the current Makefile. | make-target:vera | open | close-in-P6 | — | — |
-| C1-008 | C1 | mechanism:.claude/hooks/block-generated-edit.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/block-generated-edit.sh | open | close-in-P6 | — | — |
-| C1-009 | C1 | mechanism:.claude/hooks/block-secrets.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/block-secrets.sh | open | close-in-P6 | — | — |
-| C1-010 | C1 | mechanism:.claude/hooks/lint-on-write.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/lint-on-write.sh | open | close-in-P6 | — | — |
-| C1-011 | C1 | mechanism:.claude/hooks/stop-check.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/stop-check.sh | open | close-in-P6 | — | — |
+| C1-008 | C1 | mechanism:.claude/hooks/block-generated-edit.sh | The generated-file edit hook and hostile self-test are tracked and wired. | path:.claude/hooks/block-generated-edit.sh | closed | close-in-P6 | — | scripts/tests/claude-hooks.test.sh |
+| C1-009 | C1 | mechanism:.claude/hooks/block-secrets.sh | The secret and force-push hook fails closed on missing jq and has hostile controls. | path:.claude/hooks/block-secrets.sh | closed | close-in-P6 | — | scripts/tests/claude-hooks.test.sh |
+| C1-010 | C1 | mechanism:.claude/hooks/lint-on-write.sh | The Markdown feedback hook is tracked, wired, and self-tested. | path:.claude/hooks/lint-on-write.sh | closed | close-in-P6 | — | scripts/tests/claude-hooks.test.sh |
+| C1-011 | C1 | mechanism:.claude/hooks/stop-check.sh | The stop feedback hook reports dirty and stale state without claiming an ambient block. | path:.claude/hooks/stop-check.sh | closed | close-in-P6 | — | scripts/tests/claude-hooks.test.sh |
 | C1-012 | C1 | mechanism:scripts/cleanroom-lint.sh | A live authority named an exact path that has now been restored. | path:scripts/cleanroom-lint.sh | closed | close-in-P6 | — | scripts/cleanroom-lint.sh,scripts/tests/cleanroom-lint.test.sh |
 | C1-013 | C1 | mechanism:scripts/commit-cadence.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/commit-cadence.sh | closed | close-in-P6 | — | scripts/commit-cadence.sh,scripts/tests/commit-cadence.test.sh |
 | C1-014 | C1 | mechanism:scripts/figure-provenance.sh | A live authority named an exact path that has now been restored. | path:scripts/figure-provenance.sh | closed | close-in-P6 | — | scripts/figure-provenance.sh,scripts/tests/figure-provenance.test.sh |

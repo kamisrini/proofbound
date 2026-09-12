@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": ".claude/hooks/block-secrets.sh"}]},
+      {"matcher": "Write|Edit", "hooks": [{"type": "command", "command": ".claude/hooks/block-generated-edit.sh"}]}
+    ],
+    "PostToolUse": [
+      {"matcher": "Write|Edit", "hooks": [{"type": "command", "command": ".claude/hooks/lint-on-write.sh"}]}
+    ],
+    "Stop": [
+      {"hooks": [{"type": "command", "command": ".claude/hooks/stop-check.sh"}]}
+    ]
+  }
+}

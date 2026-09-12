@@ -10,10 +10,10 @@ C1-004	C1	mechanism:make wrap-verify	A live authority names a Make target absent
 C1-005	C1	mechanism:make laws-lock	A live authority names a Make target absent from the current Makefile.	make-target:laws-lock	close-in-P6	—	scripts/gen-laws-lock.sh,scripts/tests/law-citation-lint.test.sh
 C1-006	C1	mechanism:make state	A live authority names a Make target absent from the current Makefile.	make-target:state	close-in-P6	—	scripts/gen-state.sh,scripts/tests/operational-tools.test.sh
 C1-007	C1	mechanism:make vera	A live authority names a Make target absent from the current Makefile.	make-target:vera	close-in-P6	—	—
-C1-008	C1	mechanism:.claude/hooks/block-generated-edit.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/block-generated-edit.sh	close-in-P6	—	—
-C1-009	C1	mechanism:.claude/hooks/block-secrets.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/block-secrets.sh	close-in-P6	—	—
-C1-010	C1	mechanism:.claude/hooks/lint-on-write.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/lint-on-write.sh	close-in-P6	—	—
-C1-011	C1	mechanism:.claude/hooks/stop-check.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/stop-check.sh	close-in-P6	—	—
+C1-008	C1	mechanism:.claude/hooks/block-generated-edit.sh	The generated-file edit hook and hostile self-test are tracked and wired.	path:.claude/hooks/block-generated-edit.sh	close-in-P6	—	scripts/tests/claude-hooks.test.sh
+C1-009	C1	mechanism:.claude/hooks/block-secrets.sh	The secret and force-push hook fails closed on missing jq and has hostile controls.	path:.claude/hooks/block-secrets.sh	close-in-P6	—	scripts/tests/claude-hooks.test.sh
+C1-010	C1	mechanism:.claude/hooks/lint-on-write.sh	The Markdown feedback hook is tracked, wired, and self-tested.	path:.claude/hooks/lint-on-write.sh	close-in-P6	—	scripts/tests/claude-hooks.test.sh
+C1-011	C1	mechanism:.claude/hooks/stop-check.sh	The stop feedback hook reports dirty and stale state without claiming an ambient block.	path:.claude/hooks/stop-check.sh	close-in-P6	—	scripts/tests/claude-hooks.test.sh
 C1-012	C1	mechanism:scripts/cleanroom-lint.sh	A live authority named an exact path that has now been restored.	path:scripts/cleanroom-lint.sh	close-in-P6	—	scripts/cleanroom-lint.sh,scripts/tests/cleanroom-lint.test.sh
 C1-013	C1	mechanism:scripts/commit-cadence.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/commit-cadence.sh	close-in-P6	—	scripts/commit-cadence.sh,scripts/tests/commit-cadence.test.sh
 C1-014	C1	mechanism:scripts/figure-provenance.sh	A live authority named an exact path that has now been restored.	path:scripts/figure-provenance.sh	close-in-P6	—	scripts/figure-provenance.sh,scripts/tests/figure-provenance.test.sh
