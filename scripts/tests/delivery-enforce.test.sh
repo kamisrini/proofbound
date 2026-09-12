@@ -17,6 +17,28 @@ if bash scripts/delivery-enforce.sh >"$tmp/second.out" 2>&1; then
 fi
 wait "$first"
 if [[ -d .proofbound/delivery.lock ]]; then echo 'lock was not cleaned after success' >&2; exit 1; fi
+mapfile -t actual <"$tmp/log"
+expected=(
+  'make index-check-witnessed'
+  'make law-citation-witnessed'
+  'make spec-numbering-witnessed'
+  'make invariant-table-witnessed'
+  'make link-witnessed'
+  'make kernel-check-witnessed'
+  'make check-witnessed'
+  'go all'
+  'go enforce'
+)
+if [[ ${#actual[@]} -ne ${#expected[@]} ]]; then
+  printf 'delivery command count mismatch: %s\n' "${actual[*]}" >&2
+  exit 1
+fi
+for i in "${!expected[@]}"; do
+  if [[ ${actual[$i]} != "${expected[$i]}" ]]; then
+    printf 'delivery order mismatch at %d: got %s want %s\n' "$i" "${actual[$i]}" "${expected[$i]}" >&2
+    exit 1
+  fi
+done
 
 mkdir .proofbound/delivery.lock
 printf '999999\n' >.proofbound/delivery.lock/pid

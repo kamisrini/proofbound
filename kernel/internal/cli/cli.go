@@ -35,6 +35,8 @@ const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} |
 
 const verifyTimeout = 15 * time.Minute
 
+var workingDirectory = os.Getwd
+
 // Run executes the shared command implementation for the live Proofbound executable.
 func Run(ctx context.Context, _ string, args []string, stdout, stderr io.Writer) int {
 	return run(ctx, args, stdout, stderr)
@@ -135,7 +137,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 func isVerificationCommand(cmd command) bool { return cmd == commandVerify }
 
 func repositoryRoot() (string, error) {
-	dir, err := os.Getwd()
+	dir, err := workingDirectory()
 	if err != nil {
 		return "", err
 	}

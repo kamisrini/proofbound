@@ -30,7 +30,9 @@ func TestRunRejectsUnknownCommand(t *testing.T) {
 }
 
 func TestRunStopsWhenRepositoryRootIsMissing(t *testing.T) {
-	t.Chdir(t.TempDir())
+	old := workingDirectory
+	workingDirectory = func() (string, error) { return "/proofbound-no-repository/child", nil }
+	t.Cleanup(func() { workingDirectory = old })
 	var stdout, stderr bytes.Buffer
 	if code := run(context.Background(), []string{"verify"}, &stdout, &stderr); code != 1 {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())

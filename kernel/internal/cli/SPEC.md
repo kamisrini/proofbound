@@ -57,3 +57,4 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-7 | Intent commands select only records, specdir, or both and read committed trees | cli_test.go::TestParseIntentCommandsAndCommittedReader |
 | CLI-INV-8 | Full sync orders all intent providers before commit ingestion | cli_test.go::TestSyncAllOrdersIntentBeforeGit |
 | CLI-INV-9 | Intent report and check identifiers are passed unchanged to projections | cli_test.go::TestParseIntentReportAndCheckCommands |
+| CLI-INV-10 | Commands outside a repository fail before opening product state | cli_test.go::TestRunStopsWhenRepositoryRootIsMissing |

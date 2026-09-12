@@ -17,6 +17,8 @@ Invariants:
 6. Authorization is sent only as a request header and is never persisted or logged.
 7. The HTTP client accepts only HTTP(S) base URLs and non-2xx responses fail closed.
 8. The connector is bounded to at most 100 records per upstream collection in v1.
+9. Equal upstream IDs from different configured repositories retain distinct repository-qualified
+   native IDs and payload identities.
 
 | Invariant | Harm | Proving test |
 |---|---|---|
@@ -28,3 +30,4 @@ Invariants:
 | GITHUB-INV-6 | API records are emitted with normalized upstream fields | github_test.go::TestSyncEmitsQualifiedWorkflowAndDeploymentEvents |
 | GITHUB-INV-7 | malformed repository configuration fails before sync | github_test.go::TestNewRejectsUnsafeRepository |
 | GITHUB-INV-8 | authorization remains transport-only | github_test.go::TestHTTPClientPreservesQueryAndUsesHeaderAuth |
+| GITHUB-INV-9 | multi-repository fixtures retain tenant identity | github_test.go::TestSyncRetainsIdentityAcrossRepositories |

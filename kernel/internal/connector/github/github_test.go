@@ -71,6 +71,36 @@ func TestSyncEmitsQualifiedWorkflowAndDeploymentEvents(t *testing.T) {
 	}
 }
 
+func TestSyncRetainsIdentityAcrossRepositories(t *testing.T) {
+	ids, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: rand.Reader, Now: func() time.Time { return time.Unix(10, 0) }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := New(&Deps{API: fakeAPI{}, Owner: "github", Repos: []string{"docs", "roadmap"}, IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Now: func() time.Time { return time.Unix(20, 0) }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var a appendFake
+	got, err := c.Sync(context.Background(), &a)
+	if err != nil || got.Appended != 4 || len(a.events) != 4 {
+		t.Fatalf("result=%+v events=%d err=%v", got, len(a.events), err)
+	}
+	want := []string{
+		"github/docs/workflow/7", "github/docs/deployment/9",
+		"github/roadmap/workflow/7", "github/roadmap/deployment/9",
+	}
+	for i, event := range a.events {
+		if event.NativeID != want[i] {
+			t.Fatalf("event %d native_id=%q want=%q", i, event.NativeID, want[i])
+		}
+		repository := strings.Split(want[i], "/workflow/")[0]
+		repository = strings.Split(repository, "/deployment/")[0]
+		if !strings.Contains(string(event.Payload), `"repository":"`+repository+`"`) {
+			t.Fatalf("event %d lost repository identity: %s", i, event.Payload)
+		}
+	}
+}
+
 func TestNewRejectsUnsafeRepository(t *testing.T) {
 	ids, _ := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: rand.Reader})
 	if _, err := New(&Deps{API: fakeAPI{}, Owner: "github", Repos: []string{"docs/actions"}, IDs: ids, Logger: slog.Default()}); err == nil {
