@@ -3,16 +3,21 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 draft 2 awaiting founder ratification; implementation not authorized)
+**As of:** 2026-09-12 (P6 authorized; Task 0 census generated)
 
 ## Exact resume point
 
-P5 is accepted and must not be restarted. The off-machine P6 consolidation draft 1 and the
-build-machine non-author `NEEDS_WORK` adjudication are preserved in `ceeae16`. Draft 2 folds all ten
-findings and is awaiting exactly four founder inputs: phase number, the closed path-based intent
-applicability rule (including its canary tolerance), snapshot-provider feed or explicit skip, and a
-countable stop-early effort ceiling. STOP here: do not mint the semantic VD, amend `ROADMAP.md`, or
-begin Task 0 until those four inputs are ratified and recorded.
+P5 is accepted and must not be restarted. The founder ratified all four recommended P6 inputs:
+P6 is consolidation/deep completion; the exact draft-2 path predicate and zero-false-negative /
+greater-than-10%-false-positive threshold govern; the snapshot provider is skipped until P7+; and
+the stop-early ceiling is 40 active execution hours after Task 0. The record is durable in
+`28d8716`; the semantic VD and roadmap authorization are durable in `708ad12`.
+
+Task 0 followed spec-first order. The census SPEC is `1ba2336`; the closed scanner and hostile
+fixtures are `7046b42` plus discovery-universe tightening in `7bb9a66`. The first generated census
+contains 188 classified rows across C1–C8: 187 open `close-in-P6` rows and one closed P7 deferral
+(the ratified snapshot-provider skip), with zero unclassified subjects. The next task is Task 1:
+close C1/C2 documentation, gate, and P0/P1 mechanism-truth rows without adding product capability.
 
 Current verification results:
 
@@ -46,16 +51,14 @@ suites pass. The mutation runner exports the original repository root for scratc
 
 ## Worktree ownership and cautions
 
-- The tracked changes are P5 hardening work: fail-closed tests and simplifications in intent,
-  records, specdir, reviews, projections, gates, CLI, delivery enforcement, invariant lock, and the
-  calibrated mutation harness.
-- `docs/verification/p5-independent-verifier-handoff.md` records the frozen reviewed commit and
-  independent-verifier instructions.
+- The P6 work queue is `docs/plans/p6-census.md`; its stable classified source is
+  `docs/plans/p6-census-rows.tsv`. Never hand-edit the generated Markdown result; regenerate it with
+  `scripts/p6-census.sh --write` and prove freshness with `--check`.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.
-- P6 authority is currently draft-only: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` plus
-  `docs/verification/verdicts/p6-consolidation-plan-round1.md`. No P6 execution task is authorized.
+- P6 authority is `docs/decisions/VD-p6-consolidation-2026-09-12.md`, citing the founder record,
+  round-1 adjudication, and exact draft-2 digest. Wider vision capability remains P7+.
 - Preserve the frozen wire identities `vera.witness.v1`, `vera.verdict.v1`, and `vera.replay.v1`,
   and all pinned vector bytes. Live product identity is Proofbound.
 - Run `make check` bare. Use `PATH=/home/thamm/go/bin:$PATH` so the installed linter is found. The

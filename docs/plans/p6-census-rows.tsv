@@ -1,0 +1,193 @@
+# universe-profile	proofbound
+# accepted-plan	docs/plans/P1-flight-recorder-plan.md
+# accepted-plan	docs/plans/P5-PROOFBOUND-INTENT-PROVENANCE-v3.md
+# accepted-plan	docs/plans/P6-CONSOLIDATION-PLAN-draft2.md
+row_id	category	subject	observation	probe	disposition	decision	evidence
+C1-001	C1	README-phase-status	README phase status does not yet state accepted P5 and active P6 consolidation.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-002	C1	mechanism:make backup	A live authority names a Make target absent from the current Makefile.	make-target:backup	close-in-P6	—	—
+C1-003	C1	mechanism:make meta-tax	A live authority names a Make target absent from the current Makefile.	make-target:meta-tax	close-in-P6	—	—
+C1-004	C1	mechanism:make wrap-verify	A live authority names a Make target absent from the current Makefile.	make-target:wrap-verify	close-in-P6	—	—
+C1-005	C1	mechanism:make laws-lock	A live authority names a Make target absent from the current Makefile.	make-target:laws-lock	close-in-P6	—	—
+C1-006	C1	mechanism:make state	A live authority names a Make target absent from the current Makefile.	make-target:state	close-in-P6	—	—
+C1-007	C1	mechanism:make vera	A live authority names a Make target absent from the current Makefile.	make-target:vera	close-in-P6	—	—
+C1-008	C1	mechanism:.claude/hooks/block-generated-edit.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/block-generated-edit.sh	close-in-P6	—	—
+C1-009	C1	mechanism:.claude/hooks/block-secrets.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/block-secrets.sh	close-in-P6	—	—
+C1-010	C1	mechanism:.claude/hooks/lint-on-write.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/lint-on-write.sh	close-in-P6	—	—
+C1-011	C1	mechanism:.claude/hooks/stop-check.sh	A live authority names an exact path absent from the tracked tree.	path:.claude/hooks/stop-check.sh	close-in-P6	—	—
+C1-012	C1	mechanism:scripts/cleanroom-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/cleanroom-lint.sh	close-in-P6	—	—
+C1-013	C1	mechanism:scripts/commit-cadence.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/commit-cadence.sh	close-in-P6	—	—
+C1-014	C1	mechanism:scripts/figure-provenance.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/figure-provenance.sh	close-in-P6	—	—
+C1-015	C1	mechanism:scripts/gen-state.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/gen-state.sh	close-in-P6	—	—
+C1-016	C1	mechanism:scripts/invariant-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/invariant-lint.sh	close-in-P6	—	—
+C1-017	C1	mechanism:scripts/lesson-recurrence.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/lesson-recurrence.sh	close-in-P6	—	—
+C1-018	C1	mechanism:scripts/prescription-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/prescription-lint.sh	close-in-P6	—	—
+C1-019	C1	mechanism:scripts/skip-lint.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/skip-lint.sh	close-in-P6	—	—
+C1-020	C1	mechanism:scripts/state-freshness.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/state-freshness.sh	close-in-P6	—	—
+C1-021	C1	mechanism:scripts/tests/cleanroom-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/cleanroom-lint.test.sh	close-in-P6	—	—
+C1-022	C1	mechanism:scripts/tests/commit-cadence.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/commit-cadence.test.sh	close-in-P6	—	—
+C1-023	C1	mechanism:scripts/tests/figure-provenance.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/figure-provenance.test.sh	close-in-P6	—	—
+C1-024	C1	mechanism:scripts/tests/lesson-recurrence.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/lesson-recurrence.test.sh	close-in-P6	—	—
+C1-025	C1	mechanism:scripts/tests/prescription-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/prescription-lint.test.sh	close-in-P6	—	—
+C1-026	C1	mechanism:scripts/tests/skip-lint.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/skip-lint.test.sh	close-in-P6	—	—
+C1-027	C1	mechanism:scripts/tests/state-freshness.test.sh	A live authority names an exact path absent from the tracked tree.	path:scripts/tests/state-freshness.test.sh	close-in-P6	—	—
+C1-028	C1	undocumented-make:check-witnessed	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-029	C1	undocumented-make:verify	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-030	C1	undocumented-make:gates-canary	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-031	C1	undocumented-make:gates-enforce	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-032	C1	undocumented-make:invariants-lock	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-033	C1	undocumented-make:identity-inventory	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C1-034	C1	undocumented-make:mutants	A public Make target is not documented in README.md or CLAUDE.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-001	C2	gate-row:Secrets / force-push / Bash-writes to INDEX.md	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-002	C2	gate-row:Hand-edit of `@generated` files (Write/Edit channel)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-003	C2	gate-row:Broken `VD-` refs in repo .md just written	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-004	C2	gate-row:Repo-wide link-lint (VD- refs resolve; advisory rows dated & unexpired)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-005	C2	gate-row:Generated-files freshness (regenerate = no diff)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-006	C2	gate-row:Generated-files freshness (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-007	C2	gate-row:Law citation lint (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-008	C2	gate-row:SPEC invariant numbering (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-009	C2	gate-row:Invariant table lint (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-010	C2	gate-row:Link lint (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-011	C2	gate-row:Kernel build/test/lint (data-gate witness)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-012	C2	gate-row:Kernel build + tests + lint (`go build ./...`, `go test ./... -count=1`, `golangci-lint run ./...`)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-013	C2	gate-row:Witness emission preserves the real gate result without depending on Proofbound	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-014	C2	gate-row:Projection rebuild and ledger verification	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-015	C2	gate-row:P2 data-gate canary/enforcement (`make-check-success`)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-016	C2	gate-row:Hooks actually fire	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-017	C2	gate-row:state.md TOUCHED-IN-HEAD + clean worktree at session end	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-018	C2	gate-row:Commit cadence — uncommitted work must not outlive the window	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-019	C2	gate-row:SPEC proving-test cells contain one machine-readable `file_test.go::TestName` token (or a retired `—`)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-020	C2	gate-row:Cleanroom — tracked content matches no forbidden pattern	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-021	C2	gate-row:Law 7 has a mechanical trigger — a lesson class seen twice has a compiled response	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-022	C2	gate-row:Figure provenance in the residual list	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-023	C2	gate-row:`make check` never passes `-short`	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-024	C2	gate-row:Build Law numbers are permanent — no insert, re-order or re-use	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-025	C2	gate-row:A skipped test is declared, or it is not coverage	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-026	C2	gate-row:A SPEC must not prescribe an invocation the code does not make	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-027	C2	gate-row:Resume note is live state (Law 10)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-028	C2	gate-row:Mutation sweep — every survivor is declared	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-029	C2	gate-row:SPEC invariant IDs are permanent — no insert, re-order, re-use or silent retitle	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-030	C2	gate-row:Spec-before-code for kernel packages	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-031	C2	gate-row:Meta-tax ≤ 25% bootstrap / ≤ 10% steady (BUDGET HOME)	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-032	C2	gate-row:Off-machine backup of this repo	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-033	C2	gate-row:Proofbound legacy identity aliases	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-034	C2	gate-row:Identity inventory has zero unclassified legacy-name hits	The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-035	C2	make-short-useful	make short currently runs only hooks-test and is not a useful Go inner loop.	make-useful-short	close-in-P6	—	—
+C2-036	C2	full-invariant-citation-resolution	The current invariant-table lint checks citation shape but not file and test resolution.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-037	C2	legacy-alias-due	The legacy Proofbound aliases became due at P6 start and require explicit removal or decision.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-038	C2	undocumented-gate:gates/intent-delivery-readiness.yaml	A tracked gate definition is not named by exact path in docs/gates.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-039	C2	undocumented-gate:gates/intent-reference-integrity.yaml	A tracked gate definition is not named by exact path in docs/gates.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-040	C2	undocumented-gate:gates/intent-verdict-integrity.yaml	A tracked gate definition is not named by exact path in docs/gates.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C2-041	C2	undocumented-gate:gates/make-check-success.yaml	A tracked gate definition is not named by exact path in docs/gates.md.	artifact:docs/verification/p6-c1-c2-closure.md	close-in-P6	—	—
+C3-001	C3	package:internal/cli	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/cli	close-in-P6	—	—
+C3-002	C3	package:internal/connector/checks	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/checks	close-in-P6	—	—
+C3-003	C3	package:internal/connector/git	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/git	close-in-P6	—	—
+C3-004	C3	package:internal/connector/git/gitcmd	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/git/gitcmd	close-in-P6	—	—
+C3-005	C3	package:internal/connector/github	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/github	close-in-P6	—	—
+C3-006	C3	package:internal/connector/intent	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/intent	close-in-P6	—	—
+C3-007	C3	package:internal/connector/intent/records	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/intent/records	close-in-P6	—	—
+C3-008	C3	package:internal/connector/intent/specdir	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/intent/specdir	close-in-P6	—	—
+C3-009	C3	package:internal/connector/reviews	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/reviews	close-in-P6	—	—
+C3-010	C3	package:internal/connector/sessions	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/connector/sessions	close-in-P6	—	—
+C3-011	C3	package:internal/core	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/core	close-in-P6	—	—
+C3-012	C3	package:internal/gates	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/gates	close-in-P6	—	—
+C3-013	C3	package:internal/projections	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/projections	close-in-P6	—	—
+C3-014	C3	package:internal/store	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/store	close-in-P6	—	—
+C3-015	C3	package:internal/twin	Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance.	acceptance:internal/twin	close-in-P6	—	—
+C4-001	C4	connector:checks	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:checks	close-in-P6	—	—
+C4-002	C4	connector:git	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:git	close-in-P6	—	—
+C4-003	C4	connector:git/gitcmd	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:git/gitcmd	close-in-P6	—	—
+C4-004	C4	connector:github	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:github	close-in-P6	—	—
+C4-005	C4	connector:intent	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:intent	close-in-P6	—	—
+C4-006	C4	connector:intent/records	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:intent/records	close-in-P6	—	—
+C4-007	C4	connector:intent/specdir	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:intent/specdir	close-in-P6	—	—
+C4-008	C4	connector:reviews	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:reviews	close-in-P6	—	—
+C4-009	C4	connector:sessions	Production connector surface needs current live, synthetic, or none classification with exact evidence.	connector:sessions	close-in-P6	—	—
+C4-010	C4	sessions-live-corpus	Sessions lacks the ratified genuine quiescent JSONL acceptance, zero-append replay, and parsed/skipped counts.	artifact:docs/verification/p6-connector-reality.md	close-in-P6	—	—
+C4-011	C4	github-narrowness	GitHub allowlist, bound, scope, exact-commit join, missing-data behavior, and tenant identity need current re-proof.	artifact:docs/verification/p6-connector-reality.md	close-in-P6	—	—
+C4-012	C4	delivery-boundary-order	The explicit delivery boundary needs a self-test proving all promoted witnesses refresh and ingest before enforcement.	artifact:docs/verification/p6-connector-reality.md	close-in-P6	—	—
+C5-001	C5	route:git:commit.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:git:commit.recorded:projection	close-in-P6	—	—
+C5-002	C5	route:git:commit.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:git:commit.recorded:verify	close-in-P6	—	—
+C5-003	C5	route:git:commit.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:git:commit.recorded:twin	close-in-P6	—	—
+C5-004	C5	route:git:commit.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:git:commit.recorded:gates	close-in-P6	—	—
+C5-005	C5	route:checks:check.run:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:checks:check.run:projection	close-in-P6	—	—
+C5-006	C5	route:checks:check.run:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:checks:check.run:verify	close-in-P6	—	—
+C5-007	C5	route:checks:check.run:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:checks:check.run:twin	close-in-P6	—	—
+C5-008	C5	route:checks:check.run:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:checks:check.run:gates	close-in-P6	—	—
+C5-009	C5	route:sessions:session.observed:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:sessions:session.observed:projection	close-in-P6	—	—
+C5-010	C5	route:sessions:session.observed:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:sessions:session.observed:verify	close-in-P6	—	—
+C5-011	C5	route:sessions:session.observed:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:sessions:session.observed:twin	close-in-P6	—	—
+C5-012	C5	route:sessions:session.observed:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:sessions:session.observed:gates	close-in-P6	—	—
+C5-013	C5	route:reviews:review.verdict:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:review.verdict:projection	close-in-P6	—	—
+C5-014	C5	route:reviews:review.verdict:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:review.verdict:verify	close-in-P6	—	—
+C5-015	C5	route:reviews:review.verdict:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:review.verdict:twin	close-in-P6	—	—
+C5-016	C5	route:reviews:review.verdict:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:review.verdict:gates	close-in-P6	—	—
+C5-017	C5	route:reviews:requirement.reviewed:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:requirement.reviewed:projection	close-in-P6	—	—
+C5-018	C5	route:reviews:requirement.reviewed:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:requirement.reviewed:verify	close-in-P6	—	—
+C5-019	C5	route:reviews:requirement.reviewed:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:requirement.reviewed:twin	close-in-P6	—	—
+C5-020	C5	route:reviews:requirement.reviewed:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:reviews:requirement.reviewed:gates	close-in-P6	—	—
+C5-021	C5	route:github:github.workflow_run:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.workflow_run:projection	close-in-P6	—	—
+C5-022	C5	route:github:github.workflow_run:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.workflow_run:verify	close-in-P6	—	—
+C5-023	C5	route:github:github.workflow_run:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.workflow_run:twin	close-in-P6	—	—
+C5-024	C5	route:github:github.workflow_run:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.workflow_run:gates	close-in-P6	—	—
+C5-025	C5	route:github:github.deployment:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.deployment:projection	close-in-P6	—	—
+C5-026	C5	route:github:github.deployment:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.deployment:verify	close-in-P6	—	—
+C5-027	C5	route:github:github.deployment:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.deployment:twin	close-in-P6	—	—
+C5-028	C5	route:github:github.deployment:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:github:github.deployment:gates	close-in-P6	—	—
+C5-029	C5	route:intent.records:business_decision.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:business_decision.recorded:projection	close-in-P6	—	—
+C5-030	C5	route:intent.records:business_decision.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:business_decision.recorded:verify	close-in-P6	—	—
+C5-031	C5	route:intent.records:business_decision.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:business_decision.recorded:twin	close-in-P6	—	—
+C5-032	C5	route:intent.records:business_decision.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:business_decision.recorded:gates	close-in-P6	—	—
+C5-033	C5	route:intent.records:requirement.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:requirement.recorded:projection	close-in-P6	—	—
+C5-034	C5	route:intent.records:requirement.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:requirement.recorded:verify	close-in-P6	—	—
+C5-035	C5	route:intent.records:requirement.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:requirement.recorded:twin	close-in-P6	—	—
+C5-036	C5	route:intent.records:requirement.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:requirement.recorded:gates	close-in-P6	—	—
+C5-037	C5	route:intent.records:change_intent.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:change_intent.recorded:projection	close-in-P6	—	—
+C5-038	C5	route:intent.records:change_intent.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:change_intent.recorded:verify	close-in-P6	—	—
+C5-039	C5	route:intent.records:change_intent.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:change_intent.recorded:twin	close-in-P6	—	—
+C5-040	C5	route:intent.records:change_intent.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.records:change_intent.recorded:gates	close-in-P6	—	—
+C5-041	C5	route:intent.specdir:business_decision.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:business_decision.recorded:projection	close-in-P6	—	—
+C5-042	C5	route:intent.specdir:business_decision.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:business_decision.recorded:verify	close-in-P6	—	—
+C5-043	C5	route:intent.specdir:business_decision.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:business_decision.recorded:twin	close-in-P6	—	—
+C5-044	C5	route:intent.specdir:business_decision.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:business_decision.recorded:gates	close-in-P6	—	—
+C5-045	C5	route:intent.specdir:requirement.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:requirement.recorded:projection	close-in-P6	—	—
+C5-046	C5	route:intent.specdir:requirement.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:requirement.recorded:verify	close-in-P6	—	—
+C5-047	C5	route:intent.specdir:requirement.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:requirement.recorded:twin	close-in-P6	—	—
+C5-048	C5	route:intent.specdir:requirement.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:requirement.recorded:gates	close-in-P6	—	—
+C5-049	C5	route:intent.specdir:change_intent.recorded:projection	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:change_intent.recorded:projection	close-in-P6	—	—
+C5-050	C5	route:intent.specdir:change_intent.recorded:verify	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:change_intent.recorded:verify	close-in-P6	—	—
+C5-051	C5	route:intent.specdir:change_intent.recorded:twin	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:change_intent.recorded:twin	close-in-P6	—	—
+C5-052	C5	route:intent.specdir:change_intent.recorded:gates	Registered event route needs consume, ignore, or reject classification with a proving test.	route:intent.specdir:change_intent.recorded:gates	close-in-P6	—	—
+C6-001	C6	intent-commit:1d1112df2622abd54f07837335a7805c3c69145d	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:1d1112df2622abd54f07837335a7805c3c69145d	close-in-P6	—	—
+C6-002	C6	intent-commit:1e5e96cd25c78f2628e4e9f80fe312c42a240203	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:1e5e96cd25c78f2628e4e9f80fe312c42a240203	close-in-P6	—	—
+C6-003	C6	intent-commit:ceeae16e12805ae439ab2823b6071a016176f2a0	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:ceeae16e12805ae439ab2823b6071a016176f2a0	close-in-P6	—	—
+C6-004	C6	intent-commit:67a3259db7860d44c0494bd30eb60349f564f060	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:67a3259db7860d44c0494bd30eb60349f564f060	close-in-P6	—	—
+C6-005	C6	intent-commit:28d87167f972206e0436db09936038b82350b6b8	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:28d87167f972206e0436db09936038b82350b6b8	close-in-P6	—	—
+C6-006	C6	intent-commit:708ad123912f55c3b64514ca59b033b046b59fb5	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:708ad123912f55c3b64514ca59b033b046b59fb5	close-in-P6	—	—
+C6-007	C6	intent-commit:1ba2336e310dc7cb1487648fa6a36ac7adc0cff6	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:1ba2336e310dc7cb1487648fa6a36ac7adc0cff6	close-in-P6	—	—
+C6-008	C6	intent-commit:7046b425d6de32062a451e574f8c6372aff167b7	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:7046b425d6de32062a451e574f8c6372aff167b7	close-in-P6	—	—
+C6-009	C6	intent-commit:7bb9a66df00ce4c5e1acc7a418db412884dcbcdf	Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable.	intent-history:7bb9a66df00ce4c5e1acc7a418db412884dcbcdf	close-in-P6	—	—
+C6-010	C6	active-requirements	Current self-hosted intent state needs complete exact-revision enumeration and proof.	artifact:docs/verification/p6-intent-coverage.md	close-in-P6	—	—
+C6-011	C6	active-obligations	Current self-hosted intent state needs complete exact-revision enumeration and proof.	artifact:docs/verification/p6-intent-coverage.md	close-in-P6	—	—
+C6-012	C6	exact-revision-reviews	Current self-hosted intent state needs complete exact-revision enumeration and proof.	artifact:docs/verification/p6-intent-coverage.md	close-in-P6	—	—
+C6-013	C6	self-hosted-delivery-chain	Current self-hosted intent state needs complete exact-revision enumeration and proof.	artifact:docs/verification/p6-intent-coverage.md	close-in-P6	—	—
+C7-001	C7	measurement:artifact-authoring-minutes	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:artifact-authoring-minutes	close-in-P6	—	—
+C7-002	C7	measurement:independent-review-field-change-rate	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:independent-review-field-change-rate	close-in-P6	—	—
+C7-003	C7	measurement:ambiguous-obligations-preimplementation	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:ambiguous-obligations-preimplementation	close-in-P6	—	—
+C7-004	C7	measurement:false-or-missing-commit-intent-links	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:false-or-missing-commit-intent-links	close-in-P6	—	—
+C7-005	C7	measurement:verdict-evidence-mismatches	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:verdict-evidence-mismatches	close-in-P6	—	—
+C7-006	C7	measurement:gate-canary-false-block-pass	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:gate-canary-false-block-pass	close-in-P6	—	—
+C7-007	C7	measurement:empty-store-reconstruction-time	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:empty-store-reconstruction-time	close-in-P6	—	—
+C7-008	C7	measurement:provider-mapping-conformance	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:provider-mapping-conformance	close-in-P6	—	—
+C7-009	C7	measurement:requirement-review-findings	P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance.	p5-result:measurement:requirement-review-findings	close-in-P6	—	—
+C7-010	C7	falsifier:chain-maintenance-cost	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:chain-maintenance-cost	close-in-P6	—	—
+C7-011	C7	falsifier:artifact-role-confusion	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:artifact-role-confusion	close-in-P6	—	—
+C7-012	C7	falsifier:subjective-obligation-outcomes	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:subjective-obligation-outcomes	close-in-P6	—	—
+C7-013	C7	falsifier:old-meaning-reconstruction	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:old-meaning-reconstruction	close-in-P6	—	—
+C7-014	C7	falsifier:applicability-boundary	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:applicability-boundary	close-in-P6	—	—
+C7-015	C7	falsifier:foreign-provider-schema-change	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:foreign-provider-schema-change	close-in-P6	—	—
+C7-016	C7	falsifier:requirement-review-rubber-stamp	P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action.	p5-result:falsifier:requirement-review-rubber-stamp	close-in-P6	—	—
+C8-001	C8	fresh-clone-linux	A fresh Linux clone needs check, double sync, verify, rebuild equality, and self-hosted reports.	fresh-clone:linux	close-in-P6	—	—
+C8-002	C8	platform-windows	Windows scripts imply a platform path that needs a real Windows run or an accepted narrowing decision.	fresh-clone:windows	close-in-P6	—	—
+C8-003	C8	artifact-integrity	Verdict digests, commit references, and acceptance artifact paths need a complete integrity audit.	artifact:docs/verification/p6-artifact-integrity.md	close-in-P6	—	—
+C8-004	C8	vision-progress-assessment	The motivating vision-progress assessment is only in ignored local status and needs preservation or classification.	artifact:docs/verification/p6-vision-progress-assessment.md	close-in-P6	—	—
+C8-005	C8	snapshot-provider	The conditional snapshot provider is skipped for P6 and retained for P7+.	decision-skip:docs/decisions/VD-p6-consolidation-2026-09-12.md:snapshot-provider	defer-to-P7	docs/decisions/VD-p6-consolidation-2026-09-12.md	docs/decisions/VD-p6-consolidation-2026-09-12.md

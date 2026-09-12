@@ -4,16 +4,20 @@ cd "$(git rev-parse --show-toplevel)"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/docs/decisions" "$tmp/kernel/cmd/vera"
+mkdir -p "$tmp/docs/decisions" "$tmp/docs/plans" "$tmp/scripts" "$tmp/kernel/cmd/vera"
 printf 'historical VERA name\n' >"$tmp/docs/decisions/VD-old.md"
 printf 'schema vera.witness.v1\n' >"$tmp/wire.txt"
 printf 'VERA_OWNER fallback\n' >"$tmp/alias.txt"
+printf 'mechanism:make vera\n' >"$tmp/docs/plans/p6-census-rows.tsv"
+printf 'mechanism:make vera\n' >"$tmp/scripts/p6-census.sh"
 
 output=$(bash scripts/identity-inventory.sh "$tmp")
 [[ $output == *$'frozen-history\tdocs/decisions/VD-old.md:1'* ]] || exit 1
 [[ $output == *$'frozen-wire\twire.txt:1'* ]] || exit 1
 [[ $output == *$'deprecated-alias\talias.txt:1'* ]] || exit 1
 [[ $output == *$'deprecated-alias\tkernel/cmd/vera\tpath component'* ]] || exit 1
+[[ $output == *$'baseline-quote\tdocs/plans/p6-census-rows.tsv:1'* ]] || exit 1
+[[ $output == *$'baseline-quote\tscripts/p6-census.sh:1'* ]] || exit 1
 [[ $output == *'unclassified=0'* ]] || exit 1
 
 printf 'VERA is still the live product\n' >"$tmp/unclassified.txt"
