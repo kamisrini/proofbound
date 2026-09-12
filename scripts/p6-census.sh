@@ -29,6 +29,8 @@ registry=$root/docs/plans/p6-census-rows.tsv
 canonical=$root/docs/plans/p6-census.md
 [[ -f $registry ]] || die "missing registry: $registry"
 git -C "$root" rev-parse --git-dir >/dev/null 2>&1 || die "not a Git worktree: $root"
+input_commit=$(git -C "$root" log -1 --format=%H -- scripts/p6-census.sh 2>/dev/null || true)
+[[ -n $input_commit ]] || input_commit=uncommitted
 
 profile=$(awk -F '\t' '$1 == "# universe-profile" {print $2}' "$registry")
 [[ $profile == proofbound || $profile == fixture ]] || die 'registry must declare one universe-profile'
@@ -181,6 +183,19 @@ if [[ $profile == proofbound ]]; then
   done
   for subject in make-short-useful full-invariant-citation-resolution legacy-alias-due; do require_subject C2 "$subject"; done
 
+  public_targets=(check check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock identity-inventory mutants kernel-check)
+  for target in "${public_targets[@]}"; do
+    if make_target "$target" && ! rg -q --fixed-strings "make $target" "$root/README.md" "$root/CLAUDE.md"; then
+      require_subject C1 "undocumented-make:$target"
+    fi
+  done
+  while IFS= read -r check_name; do
+    require_subject C2 "gate-row:$check_name"
+  done < <(awk -F'|' '/^\|/ {x=$2; gsub(/^[[:space:]]+|[[:space:]]+$/, "", x); if (x != "Check" && x !~ /^---/) print x}' "$root/docs/gates.md")
+  while IFS= read -r gate_path; do
+    rg -q --fixed-strings "$gate_path" "$root/docs/gates.md" || require_subject C2 "undocumented-gate:$gate_path"
+  done < <(git -C "$root" ls-files 'gates/*.yaml')
+
   while IFS= read -r dir; do
     pkg=${dir#kernel/}
     require_subject C3 "package:$pkg"
@@ -188,9 +203,9 @@ if [[ $profile == proofbound ]]; then
 
   while IFS= read -r dir; do
     name=${dir#kernel/internal/connector/}
-    [[ $name == */* ]] && continue
     require_subject C4 "connector:$name"
   done < <(git -C "$root" ls-files 'kernel/internal/connector/**/*.go' | rg -v '_test\.go$' | sed 's#/[^/]*$##' | LC_ALL=C sort -u)
+  for subject in sessions-live-corpus github-narrowness delivery-boundary-order; do require_subject C4 "$subject"; done
 
   pairs=(
     git,commit.recorded checks,check.run sessions,session.observed reviews,review.verdict
@@ -206,11 +221,11 @@ if [[ $profile == proofbound ]]; then
     done
   done
 
-  while IFS= read -r sha; do require_subject C6 "intent-commit:$sha"; done < <(git -C "$root" rev-list --reverse f426ca8..HEAD)
+  while IFS= read -r sha; do require_subject C6 "intent-commit:$sha"; done < <(git -C "$root" rev-list --reverse "f426ca8..$input_commit")
   for subject in active-requirements active-obligations exact-revision-reviews self-hosted-delivery-chain; do require_subject C6 "$subject"; done
 
-  measurements=(census-rows intent-self-coverage witnessed-run-coverage advisory-counts package-acceptance active-review-gaps authoring-time evidence-time false-block-rate)
-  falsifiers=(old-meaning-unrecoverable subjective-verdicts unusable-applicability authoring-cost specdir-schema-change review-rubber-stamp census-scope-blindness)
+  measurements=(artifact-authoring-minutes independent-review-field-change-rate ambiguous-obligations-preimplementation false-or-missing-commit-intent-links verdict-evidence-mismatches gate-canary-false-block-pass empty-store-reconstruction-time provider-mapping-conformance requirement-review-findings)
+  falsifiers=(chain-maintenance-cost artifact-role-confusion subjective-obligation-outcomes old-meaning-reconstruction applicability-boundary foreign-provider-schema-change requirement-review-rubber-stamp)
   for subject in "${measurements[@]}"; do require_subject C7 "measurement:$subject"; done
   for subject in "${falsifiers[@]}"; do require_subject C7 "falsifier:$subject"; done
 
@@ -219,8 +234,6 @@ fi
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
-input_commit=$(git -C "$root" log -1 --format=%H -- scripts/p6-census.sh docs/plans/p6-census-rows.tsv 2>/dev/null || true)
-[[ -n $input_commit ]] || input_commit=uncommitted
 open=0
 closed=0
 declare -A rendered=()
