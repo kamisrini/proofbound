@@ -3,16 +3,32 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-11 (P5 accepted; post-acceptance verification complete)
+**As of:** 2026-09-12 (P5 accepted; resumed close-out verification complete)
 
 ## Exact resume point
 
 P5 implementation and hardening are durable in `c29bb3b`; the independent requirement review and
 obligation verdict are committed verbatim in `12c1952`; the promoted delivery gate is scoped to the
-reviewed implementation commit in `6e66643`. `make delivery-enforce` passes with readiness proof
-event `01M29HMPE5V977AR3VMW47DVDE` (seq 1834), and the bad-chain BLOCKED control is recorded.
-Do not restart P5. The remaining close-out is to run the final ledger reports/checks and record
-their results in the journal.
+reviewed implementation commit in `6e66643`; the close-out record is durable in `f426ca8`; and the
+resumed handoff is durably recorded in the documentation commit immediately after it.
+Do not restart P5. Final ledger verification, reports, exact commit intent check, and the promoted
+`make delivery-enforce` boundary all passed on 2026-09-12.
+
+Current verification results:
+
+- `git log -1 --oneline`: the documentation close-out commit immediately after `f426ca8`.
+- Bare `PATH=/home/thamm/go/bin:$PATH make check`: exit 0; all packages and `golangci-lint: 0 issues`.
+  The sandbox-only invocation still fails before Go starts because Snap lacks `cap_dac_override`;
+  host execution is required on this machine.
+- `make verify`: exit 0 against the moved `.proofbound` ledger.
+- `make delivery-enforce`: exit 0; all configured gates PASS, including
+  `intent-delivery-readiness` at proof event `01M29HMPE5V977AR3VMW47DVDE` (seq 1834); the bad-chain
+  BLOCKED control remains recorded.
+- Intent report for `CI-implement-p5-0a1b2c`: `SATISFIED`; `O-1` and `O-2` are independently
+  reviewed `VERIFIABLE` and `SATISFIED`.
+- Requirement report for `BR-intent-chain-d4e5f6`: exact active revision, declared authorization.
+- Exact commit check for reviewed commit `c29bb3b`: resolves to the exact CI revision and proof
+  event `01M29HMPE5V977AR3VMW47DVDE/1834`.
 
 ## Active mutation evidence
 
