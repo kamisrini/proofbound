@@ -131,6 +131,7 @@ kernel/internal/gates/SPEC.md	GATE-INV-11	Reference and verdict integrity fail c
 kernel/internal/gates/SPEC.md	GATE-INV-12	Delivery readiness requires every exact obligation and spec review.
 kernel/internal/gates/SPEC.md	GATE-INV-13	HEAD scope is resolved by the CLI before evaluation.
 kernel/internal/gates/SPEC.md	GATE-INV-14	Canary coexistence:
+kernel/internal/gates/SPEC.md	GATE-INV-15	Current event routes:
 kernel/internal/projections/SPEC.md	P-INV-1	Ledger order is projection order.
 kernel/internal/projections/SPEC.md	P-INV-2	Revisions are last-write-wins.
 kernel/internal/projections/SPEC.md	P-INV-3	Projection writes are resumable.
@@ -223,3 +224,4 @@ kernel/internal/twin/SPEC.md	TWIN-INV-7	Fail closed.
 kernel/internal/twin/SPEC.md	TWIN-INV-8	Ephemeral isolation.
 kernel/internal/twin/SPEC.md	TWIN-INV-9	Bound proof.
 kernel/internal/twin/SPEC.md	TWIN-INV-10	Honest calibration.
+kernel/internal/twin/SPEC.md	TWIN-INV-11	Complete route proof.
