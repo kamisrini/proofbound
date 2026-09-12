@@ -41,11 +41,12 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-09-10, P1 Tasks 0–9, P2 gates-as-data, P3’s first external connector, and the P4 twin
-spike are implemented and accepted under the repository’s independent verification rule. P5 intent
-provenance is ratified and in progress.
+As of 2026-09-12, P1 Tasks 0–9, P2 gates-as-data, P3’s first external connector, the P4 twin spike,
+and P5 intent provenance are implemented and accepted under the repository’s independent
+verification rule. P6 consolidation is active: it adds no capability and instead closes the
+remaining mechanically inventoried P1–P5 debt before P7+ begins.
 
-Current project status: P4 twin spike accepted; durable prediction events remain future work.
+Current project status: P5 accepted; P6 consolidation active.
 
 Currently implemented and verified:
 
@@ -73,12 +74,12 @@ Currently implemented and verified:
 - P3 live GitHub sync/report acceptance evidence
 - Verification and mutation-testing infrastructure
 
-Remaining work:
+Remaining work in P6:
 
-- P5 intent provenance: provider-neutral business-decision, requirement, change-intent, exact-commit,
-  obligation-verdict, and observed-deployment chains
-- Durable prediction events remain deferred until a real prediction feed has its own decision and
-  acceptance evidence
+- Close the ratified C1–C8 consolidation census with cited command and artifact evidence.
+- Re-prove connector, event-universe, reproducibility, intent-coverage, measurement, and package
+  acceptance claims already within P1–P5 scope.
+- Keep durable prediction events deferred until P7+ and a real prediction feed decision.
 
 The mutation harness’s report-package integration calibration currently exceeds its 30-second
 ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
@@ -112,6 +113,12 @@ make short
 To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It serializes
 the workflow, emits fresh witnesses for every promoted target, ingests them, and then runs
 `proofbound gates enforce`.
+
+Additional operator targets are `make check-witnessed`, `make verify`, `make gates-canary`,
+`make gates-enforce`, `make invariants-lock`, `make identity-inventory`, and
+`make mutants PKG=internal/<package>`. Witnessed and delivery targets require a configured local
+ledger; mutation sweeps are package-acceptance evidence and intentionally stay outside
+`make check`.
 
 The current command-line entry point is a scaffold while the product workflow is being built. The
 working implementation and tests live under [`kernel/`](kernel/).

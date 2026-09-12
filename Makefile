@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
-.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint invariant-lint spec-numbering-lint link-lint law-citation-lint identity-inventory commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint meta-tax backup state wrap-verify
-check: hooks-test commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint link-lint index-check law-citation-lint invariant-table-lint invariant-lint spec-numbering-lint identity-inventory kernel-check
+.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint invariant-lint spec-numbering-lint link-lint law-citation-lint identity-inventory p6-task1-close commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint meta-tax backup state wrap-verify
+check: hooks-test commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint link-lint index-check law-citation-lint invariant-table-lint invariant-lint spec-numbering-lint identity-inventory p6-task1-close kernel-check
 check-witnessed:
 	@bash kernel/scripts/check-witness.sh
 index-check-witnessed:
@@ -47,6 +47,8 @@ law-citation-lint:
 	@scripts/law-citation-lint.sh
 identity-inventory:
 	@bash scripts/identity-inventory.sh --require-no-live-aliases >/dev/null
+p6-task1-close:
+	@bash scripts/p6-task1-close.sh --check
 commit-cadence:
 	@scripts/commit-cadence.sh
 state-freshness:
