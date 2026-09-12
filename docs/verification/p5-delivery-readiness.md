@@ -12,7 +12,8 @@ that Task 8 had not yet received.
 
 ## Wiring under test
 
-`gates/intent-delivery-readiness.yaml` is explicitly `mode: enforce` and scopes `HEAD`.
+`gates/intent-delivery-readiness.yaml` is explicitly `mode: enforce` and scopes the frozen
+reviewed implementation commit `c29bb3b78899f54588f9cbad6e6ecf50333d787c`.
 `scripts/delivery-enforce.sh` refreshes every required witness, runs `proofbound sync all`, and only
 then runs `proofbound gates enforce`. The CLI resolves `HEAD` to an exact commit, selects only
 promoted definitions for enforcement, and makes readiness PASS only when every exact target has
@@ -59,3 +60,10 @@ exit status 1
 Thus every ordinary promoted delivery prerequisite was green, while the readiness rule alone
 stopped the controlled boundary and retained the exact commit-event proof. External-consumer
 posture is unchanged: promotion is claimed only for Proofbound's own `make delivery-enforce`.
+
+After the independent requirement review and obligation verdict were committed verbatim, the
+same `PATH=/home/thamm/go/bin:$PATH make delivery-enforce` boundary was rerun. It returned zero;
+`intent-delivery-readiness` was `PASS` at sequence 1834 with proof event
+`01M29HMPE5V977AR3VMW47DVDE`, and index-check, invariant-table, kernel-check, law-citation,
+link, make-check, and spec-numbering all returned `PASS`. Readiness is therefore bound to the
+exact reviewed implementation commit rather than the later artifact-receipt tip.

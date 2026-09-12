@@ -3,31 +3,16 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-11 (P5 Task 8 acceptance hardening in progress)
+**As of:** 2026-09-11 (P5 accepted; post-acceptance verification complete)
 
 ## Exact resume point
 
-P5 Tasks 0 through 8 are implemented through commit `01f41d6` (`docs: bind P5 self-hosting
-delivery`). The ratified plan, received adjudication/exhibit/founder record, baseline evidence,
-semantic VD, roadmap DoD, Proofbound identity migration, schemas/providers, commit binding,
-projections/reports, verdict/review contracts, gates, and self-host chain are already durable in the
-preceding P5 commits. The current worktree is the uncommitted final hardening and acceptance packet.
-
-Do not restart P5. Resume with these steps:
-
-1. Finish the three integration-tagged mutation sweeps already being hardened:
-   `internal/projections`, `internal/gates`, and `internal/cli`.
-2. Record all final calibrated green counts in
-   `docs/verification/p5-mutation-evidence.md`.
-3. Demonstrate that the promoted `intent-delivery-readiness` gate BLOCKS an intentionally bad
-   self-hosted chain at the real `make delivery-enforce` boundary and record the isolated,
-   reproducible result in `docs/verification/p5-delivery-readiness.md`.
-4. Run bare `make check`, freeze the author implementation/evidence commit with trailer
-   `Intent: CI-implement-p5-0a1b2c`, then request a genuinely non-author requirement review and v2
-   obligation verdict against that exact commit.
-5. Commit both independent artifacts verbatim on receipt under `docs/verification/verdicts/`, sync
-   the complete chain, run `proofbound verify`, the intent report, and the exact commit intent check,
-   then close the roadmap/state/journal without rewriting received verdicts.
+P5 implementation and hardening are durable in `c29bb3b`; the independent requirement review and
+obligation verdict are committed verbatim in `12c1952`; the promoted delivery gate is scoped to the
+reviewed implementation commit in `6e66643`. `make delivery-enforce` passes with readiness proof
+event `01M29HMPE5V977AR3VMW47DVDE` (seq 1834), and the bad-chain BLOCKED control is recorded.
+Do not restart P5. The remaining close-out is to run the final ledger reports/checks and record
+their results in the journal.
 
 ## Active mutation evidence
 
@@ -39,22 +24,17 @@ Already green, with calibrated positive/neutral controls and no survivors:
 - `internal/connector/git`: 34/34 killed.
 - `internal/connector/reviews`: 114/114 killed.
 
-Projection continuation began at global candidate 127 after adding a direct test for the prior
-`isJSONColumn` survivor at `projections.go:975#69`; candidates through the resumed early range are
-being killed. Gates and CLI need their final counts. The mutation runner now exports the original
-repository root to scratch-tree integration tests because the gates package reads the real
-top-level gate definitions; its clean integration suite passes.
-
-Disposable PostgreSQL instances from the resumed run listen on localhost ports 55434
-(projections), 55435 (gates), and 55436 (CLI). They are temporary test infrastructure only.
+Final mutation evidence is recorded in `docs/verification/p5-mutation-evidence.md`: all connector,
+projection, gate, and CLI candidates were killed with calibrated controls; focused integration
+suites pass. The mutation runner exports the original repository root for scratch-tree fixtures.
 
 ## Worktree ownership and cautions
 
 - The tracked changes are P5 hardening work: fail-closed tests and simplifications in intent,
   records, specdir, reviews, projections, gates, CLI, delivery enforcement, invariant lock, and the
   calibrated mutation harness.
-- `docs/verification/p5-independent-verifier-handoff.md` is intentional untracked P5 work and must
-  be completed with the frozen reviewed commit before the independent handoff.
+- `docs/verification/p5-independent-verifier-handoff.md` records the frozen reviewed commit and
+  independent-verifier instructions.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.
