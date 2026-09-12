@@ -3,16 +3,16 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P5 accepted; resumed close-out verification complete)
+**As of:** 2026-09-12 (P6 draft 2 awaiting founder ratification; implementation not authorized)
 
 ## Exact resume point
 
-P5 implementation and hardening are durable in `c29bb3b`; the independent requirement review and
-obligation verdict are committed verbatim in `12c1952`; the promoted delivery gate is scoped to the
-reviewed implementation commit in `6e66643`; the close-out record is durable in `f426ca8`; and the
-resumed handoff is durably recorded in the documentation commit immediately after it.
-Do not restart P5. Final ledger verification, reports, exact commit intent check, and the promoted
-`make delivery-enforce` boundary all passed on 2026-09-12.
+P5 is accepted and must not be restarted. The off-machine P6 consolidation draft 1 and the
+build-machine non-author `NEEDS_WORK` adjudication are preserved in `ceeae16`. Draft 2 folds all ten
+findings and is awaiting exactly four founder inputs: phase number, the closed path-based intent
+applicability rule (including its canary tolerance), snapshot-provider feed or explicit skip, and a
+countable stop-early effort ceiling. STOP here: do not mint the semantic VD, amend `ROADMAP.md`, or
+begin Task 0 until those four inputs are ratified and recorded.
 
 Current verification results:
 
@@ -54,6 +54,8 @@ suites pass. The mutation runner exports the original repository root for scratc
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.
+- P6 authority is currently draft-only: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` plus
+  `docs/verification/verdicts/p6-consolidation-plan-round1.md`. No P6 execution task is authorized.
 - Preserve the frozen wire identities `vera.witness.v1`, `vera.verdict.v1`, and `vera.replay.v1`,
   and all pinned vector bytes. Live product identity is Proofbound.
 - Run `make check` bare. Use `PATH=/home/thamm/go/bin:$PATH` so the installed linter is found. The
