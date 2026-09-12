@@ -3,7 +3,7 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 Task 0 complete; Task 1 in progress)
+**As of:** 2026-09-12 (P6 Task 1 in progress; legacy-storage decision required)
 
 ## Exact resume point
 
@@ -18,10 +18,19 @@ fixtures are `7046b42` plus discovery-universe tightening in `7bb9a66`. The firs
 contains 188 classified rows across C1–C8, with zero unclassified subjects. Task 1's mechanism
 contract is durable in `cce0a5d`. Its first implementation slice is `dd6154e`: `make short` now runs
 the short Go suite, and cadence, state freshness/rendering, laws-lock generation, meta-tax, explicit
-bundle backup, and wrap verification exist with hostile tests. The census is now 176 open / 12
-closed. Task 1 remains active; next restore the cleanroom, lesson recurrence, figure provenance,
-skip, prescription, exact invariant-resolution, and Claude-hook mechanisms, then reconcile all live
-gate and command documentation.
+bundle backup, and wrap verification exist with hostile tests. Commits `7fd328d`, `7d840ba`, and
+`4de1439` then restored cleanroom, lesson recurrence, figure provenance, skip/prescription lint,
+skip-aware kernel checking, the four Claude hooks, and blocking exact package-SPEC citation
+resolution. The full host gate passed after each code-bearing slice. The census is now 160 open / 28
+closed.
+
+STOP at the legacy-alias row before changing storage. The only local ledger is the migrated embedded
+cluster `.proofbound/db`, whose private identity marker is `vera-v1`. The accepted P5 migration
+document says this private compatibility identity is removed with the aliases at P6 start, but
+removing support makes the existing ledger inaccessible. Founder choice required: either
+(recommended) retain this private on-disk identity as frozen migration compatibility while removing
+all external CLI/environment aliases, or authorize a one-time in-place PostgreSQL role/database
+migration before removing it.
 
 Current verification results:
 
@@ -61,6 +70,8 @@ suites pass. The mutation runner exports the original repository root for scratc
 - Task 1 is only partially complete. Do not treat the presence of its closure-artifact pathname in
   open-row probes as evidence; `docs/verification/p6-c1-c2-closure.md` does not exist yet and may be
   created only after its checker proves every C1/C2 row.
+- No storage mutation or alias deletion has been performed while the private legacy-identity choice
+  is unresolved.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.
