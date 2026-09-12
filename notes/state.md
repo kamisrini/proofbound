@@ -3,7 +3,7 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 Task 1 in progress; legacy-storage decision required)
+**As of:** 2026-09-12 (P6 Task 1 complete; Task 2 is next)
 
 ## Exact resume point
 
@@ -16,26 +16,25 @@ the stop-early ceiling is 40 active execution hours after Task 0. The record is 
 Task 0 followed spec-first order. The census SPEC is `1ba2336`; the closed scanner and hostile
 fixtures are `7046b42` plus discovery-universe tightening in `7bb9a66`. The first generated census
 contains 188 classified rows across C1–C8, with zero unclassified subjects. Task 1's mechanism
-contract is durable in `cce0a5d`. Its first implementation slice is `dd6154e`: `make short` now runs
-the short Go suite, and cadence, state freshness/rendering, laws-lock generation, meta-tax, explicit
-bundle backup, and wrap verification exist with hostile tests. Commits `7fd328d`, `7d840ba`, and
-`4de1439` then restored cleanroom, lesson recurrence, figure provenance, skip/prescription lint,
-skip-aware kernel checking, the four Claude hooks, and blocking exact package-SPEC citation
-resolution. The full host gate passed after each code-bearing slice. The census is now 160 open / 28
-closed.
+contract is durable in `cce0a5d`. Commits `dd6154e`, `7fd328d`, `7d840ba`, and `4de1439` restored the
+promised operational tools, lexical gates, Claude hooks, skip-aware kernel gate, useful short loop,
+and exact package-SPEC citation resolution.
 
-STOP at the legacy-alias row before changing storage. The only local ledger is the migrated embedded
-cluster `.proofbound/db`, whose private identity marker is `vera-v1`. The accepted P5 migration
-document says this private compatibility identity is removed with the aliases at P6 start, but
-removing support makes the existing ledger inaccessible. Founder choice required: either
-(recommended) retain this private on-disk identity as frozen migration compatibility while removing
-all external CLI/environment aliases, or authorize a one-time in-place PostgreSQL role/database
-migration before removing it.
+The founder ratified retaining the migrated cluster's private legacy database identity while
+removing only external command/environment aliases; the receipt and semantic decision are `d4b240c`
+and `a128ac0`. Commit `8e287ac` removed those external aliases and made zero shipped aliases a
+blocking identity-inventory condition. Commit `0729da5` added the generated Task 1 checker/artifact,
+reconciled README and gate-registry truth, documented all gate definitions, and proved all 34 gate
+rows have mechanisms and self-tests. After evidence binding, the census is 112 open / 76 closed,
+with all 75 C1/C2 rows closed. The next authorized work is Task 2: C4 connector reality and the
+controlled witness boundary.
 
 Current verification results:
 
-- `git log -1 --oneline`: the documentation close-out commit immediately after `f426ca8`.
-- Bare `PATH=/home/thamm/go/bin:$PATH make check`: exit 0; all packages and `golangci-lint: 0 issues`.
+- `git log -1 --oneline`: `0729da5 build: close P6 documentation and gate truth` before the current
+  census/state checkpoint.
+- Bare `PATH=/home/thamm/go/bin:$PATH make check`: exit 0 after Task 1; all packages and
+  `golangci-lint: 0 issues`.
   The sandbox-only invocation still fails before Go starts because Snap lacks `cap_dac_override`;
   host execution is required on this machine.
 - `make verify`: exit 0 against the moved `.proofbound` ledger.
@@ -67,11 +66,10 @@ suites pass. The mutation runner exports the original repository root for scratc
 - The P6 work queue is `docs/plans/p6-census.md`; its stable classified source is
   `docs/plans/p6-census-rows.tsv`. Never hand-edit the generated Markdown result; regenerate it with
   `scripts/p6-census.sh --write` and prove freshness with `--check`.
-- Task 1 is only partially complete. Do not treat the presence of its closure-artifact pathname in
-  open-row probes as evidence; `docs/verification/p6-c1-c2-closure.md` does not exist yet and may be
-  created only after its checker proves every C1/C2 row.
-- No storage mutation or alias deletion has been performed while the private legacy-identity choice
-  is unresolved.
+- Task 1 is complete. Its generated closure artifact is accepted only through
+  `scripts/p6-task1-close.sh --check`; the census additionally requires that evidence to be tracked.
+- The migrated private store identity is frozen by `VD-p6-private-storage-compat-2026-09-12`; do not
+  rewrite it automatically. External legacy command and environment aliases are removed.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.

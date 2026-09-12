@@ -8,13 +8,13 @@ The checker resolved the exact 34-row C1 and 41-row C2 universes. Gate-registry 
 
 | Row | Probe | Exit | Evidence |
 |---|---|---:|---|
-| C1-001 | `fixed-string README phase assertion` | 0 | scripts/p6-task1-close.sh |
+| C1-001 | `fixed-string README phase assertion` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C1-002 | `make-target:backup` | 0 | scripts/backup.sh,scripts/tests/operational-tools.test.sh |
 | C1-003 | `make-target:meta-tax` | 0 | scripts/meta-tax.sh,scripts/tests/operational-tools.test.sh |
 | C1-004 | `make-target:wrap-verify` | 0 | scripts/wrap-verify.sh,scripts/tests/operational-tools.test.sh |
 | C1-005 | `make-target:laws-lock` | 0 | scripts/gen-laws-lock.sh,scripts/tests/law-citation-lint.test.sh |
 | C1-006 | `make-target:state` | 0 | scripts/gen-state.sh,scripts/tests/operational-tools.test.sh |
-| C1-007 | `absent Make target plus ratified retirement` | 0 | scripts/p6-task1-close.sh |
+| C1-007 | `absent Make target plus ratified retirement` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C1-008 | `path:.claude/hooks/block-generated-edit.sh` | 0 | scripts/tests/claude-hooks.test.sh |
 | C1-009 | `path:.claude/hooks/block-secrets.sh` | 0 | scripts/tests/claude-hooks.test.sh |
 | C1-010 | `path:.claude/hooks/lint-on-write.sh` | 0 | scripts/tests/claude-hooks.test.sh |
@@ -35,53 +35,53 @@ The checker resolved the exact 34-row C1 and 41-row C2 universes. Gate-registry 
 | C1-025 | `path:scripts/tests/prescription-lint.test.sh` | 0 | scripts/tests/prescription-lint.test.sh |
 | C1-026 | `path:scripts/tests/skip-lint.test.sh` | 0 | scripts/tests/skip-lint.test.sh |
 | C1-027 | `path:scripts/tests/state-freshness.test.sh` | 0 | scripts/tests/state-freshness.test.sh |
-| C1-028 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-029 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-030 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-031 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-032 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-033 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C1-034 | `Make target exists and README names it` | 0 | scripts/p6-task1-close.sh |
-| C2-001 | `gate-registry audit row 001` | 0 | scripts/p6-task1-close.sh |
-| C2-002 | `gate-registry audit row 002` | 0 | scripts/p6-task1-close.sh |
-| C2-003 | `gate-registry audit row 003` | 0 | scripts/p6-task1-close.sh |
-| C2-004 | `gate-registry audit row 004` | 0 | scripts/p6-task1-close.sh |
-| C2-005 | `gate-registry audit row 005` | 0 | scripts/p6-task1-close.sh |
-| C2-006 | `gate-registry audit row 006` | 0 | scripts/p6-task1-close.sh |
-| C2-007 | `gate-registry audit row 007` | 0 | scripts/p6-task1-close.sh |
-| C2-008 | `gate-registry audit row 008` | 0 | scripts/p6-task1-close.sh |
-| C2-009 | `gate-registry audit row 009` | 0 | scripts/p6-task1-close.sh |
-| C2-010 | `gate-registry audit row 010` | 0 | scripts/p6-task1-close.sh |
-| C2-011 | `gate-registry audit row 011` | 0 | scripts/p6-task1-close.sh |
-| C2-012 | `gate-registry audit row 012` | 0 | scripts/p6-task1-close.sh |
-| C2-013 | `gate-registry audit row 013` | 0 | scripts/p6-task1-close.sh |
-| C2-014 | `gate-registry audit row 014` | 0 | scripts/p6-task1-close.sh |
-| C2-015 | `gate-registry audit row 015` | 0 | scripts/p6-task1-close.sh |
-| C2-016 | `gate-registry audit row 016` | 0 | scripts/p6-task1-close.sh |
-| C2-017 | `gate-registry audit row 017` | 0 | scripts/p6-task1-close.sh |
-| C2-018 | `gate-registry audit row 018` | 0 | scripts/p6-task1-close.sh |
-| C2-019 | `gate-registry audit row 019` | 0 | scripts/p6-task1-close.sh |
-| C2-020 | `gate-registry audit row 020` | 0 | scripts/p6-task1-close.sh |
-| C2-021 | `gate-registry audit row 021` | 0 | scripts/p6-task1-close.sh |
-| C2-022 | `gate-registry audit row 022` | 0 | scripts/p6-task1-close.sh |
-| C2-023 | `gate-registry audit row 023` | 0 | scripts/p6-task1-close.sh |
-| C2-024 | `gate-registry audit row 024` | 0 | scripts/p6-task1-close.sh |
-| C2-025 | `gate-registry audit row 025` | 0 | scripts/p6-task1-close.sh |
-| C2-026 | `gate-registry audit row 026` | 0 | scripts/p6-task1-close.sh |
-| C2-027 | `gate-registry audit row 027` | 0 | scripts/p6-task1-close.sh |
-| C2-028 | `gate-registry audit row 028` | 0 | scripts/p6-task1-close.sh |
-| C2-029 | `gate-registry audit row 029` | 0 | scripts/p6-task1-close.sh |
-| C2-030 | `gate-registry audit row 030` | 0 | scripts/p6-task1-close.sh |
-| C2-031 | `gate-registry audit row 031` | 0 | scripts/p6-task1-close.sh |
-| C2-032 | `gate-registry audit row 032` | 0 | scripts/p6-task1-close.sh |
-| C2-033 | `gate-registry audit row 033` | 0 | scripts/p6-task1-close.sh |
-| C2-034 | `gate-registry audit row 034` | 0 | scripts/p6-task1-close.sh |
+| C1-028 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-029 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-030 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-031 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-032 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-033 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-034 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-001 | `gate-registry audit row 001` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-002 | `gate-registry audit row 002` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-003 | `gate-registry audit row 003` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-004 | `gate-registry audit row 004` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-005 | `gate-registry audit row 005` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-006 | `gate-registry audit row 006` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-007 | `gate-registry audit row 007` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-008 | `gate-registry audit row 008` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-009 | `gate-registry audit row 009` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-010 | `gate-registry audit row 010` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-011 | `gate-registry audit row 011` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-012 | `gate-registry audit row 012` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-013 | `gate-registry audit row 013` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-014 | `gate-registry audit row 014` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-015 | `gate-registry audit row 015` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-016 | `gate-registry audit row 016` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-017 | `gate-registry audit row 017` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-018 | `gate-registry audit row 018` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-019 | `gate-registry audit row 019` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-020 | `gate-registry audit row 020` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-021 | `gate-registry audit row 021` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-022 | `gate-registry audit row 022` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-023 | `gate-registry audit row 023` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-024 | `gate-registry audit row 024` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-025 | `gate-registry audit row 025` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-026 | `gate-registry audit row 026` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-027 | `gate-registry audit row 027` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-028 | `gate-registry audit row 028` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-029 | `gate-registry audit row 029` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-030 | `gate-registry audit row 030` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-031 | `gate-registry audit row 031` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-032 | `gate-registry audit row 032` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-033 | `gate-registry audit row 033` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-034 | `gate-registry audit row 034` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C2-035 | `shell-test:scripts/tests/make-contract.test.sh` | 0 | Makefile,scripts/tests/make-contract.test.sh |
 | C2-036 | `shell-test:scripts/invariant-lint.sh` | 0 | scripts/invariant-lint.sh,kernel/internal/core/SPEC.md,kernel/internal/gates/SPEC.md,kernel/internal/store/SPEC.md |
-| C2-037 | `strict identity inventory plus private-storage VD` | 0 | scripts/p6-task1-close.sh |
-| C2-038 | `tracked gate path named exactly in registry` | 0 | scripts/p6-task1-close.sh |
-| C2-039 | `tracked gate path named exactly in registry` | 0 | scripts/p6-task1-close.sh |
-| C2-040 | `tracked gate path named exactly in registry` | 0 | scripts/p6-task1-close.sh |
-| C2-041 | `tracked gate path named exactly in registry` | 0 | scripts/p6-task1-close.sh |
+| C2-037 | `strict identity inventory plus private-storage VD` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-038 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-039 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-040 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C2-041 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
 
 Acceptance commands: `scripts/p6-task1-close.sh --check`, `scripts/p6-census.sh --check`, and bare `make check`.
