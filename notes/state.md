@@ -3,7 +3,7 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 Task 1 complete; Task 2 is next)
+**As of:** 2026-09-12 (P6 Tasks 0–2 complete; Task 3 is next)
 
 ## Exact resume point
 
@@ -25,15 +25,22 @@ removing only external command/environment aliases; the receipt and semantic dec
 and `a128ac0`. Commit `8e287ac` removed those external aliases and made zero shipped aliases a
 blocking identity-inventory condition. Commit `0729da5` added the generated Task 1 checker/artifact,
 reconciled README and gate-registry truth, documented all gate definitions, and proved all 34 gate
-rows have mechanisms and self-tests. After evidence binding, the census is 112 open / 76 closed,
-with all 75 C1/C2 rows closed. The next authorized work is Task 2: C4 connector reality and the
-controlled witness boundary.
+rows have mechanisms and self-tests. After evidence binding, all 75 C1/C2 rows are closed.
+
+Task 2's spec is `5e17c95`; current-code proof tests are `8ccf593`; and the generated, checked
+connector-reality artifact is `8c1381e`. A genuine quiescent Claude JSONL file produced one
+metadata-only session event and a zero-append replay (2 valid lines, 0 skipped). GitHub's P3 live
+run was explicitly retained while current tests re-proved allowlisting, the 200-record bound,
+workflow/deployment scope, exact-commit/missing-data behavior, and two-repository identity. The
+delivery self-test now pins all witnesses before `sync all` before enforcement, while plain
+`make check` remains product-independent. All 12 C4 rows are closed; census is 100 open / 88 closed.
+The next authorized work is Task 3: C5/C8 event-universe and reproducibility re-proof.
 
 Current verification results:
 
-- `git log -1 --oneline`: `0729da5 build: close P6 documentation and gate truth` before the current
+- `git log -1 --oneline`: `8c1381e docs: record P6 connector reality evidence` before the current
   census/state checkpoint.
-- Bare `PATH=/home/thamm/go/bin:$PATH make check`: exit 0 after Task 1; all packages and
+- Bare `PATH=/home/thamm/go/bin:$PATH make check`: exit 0 after Task 2; all packages and
   `golangci-lint: 0 issues`.
   The sandbox-only invocation still fails before Go starts because Snap lacks `cap_dac_override`;
   host execution is required on this machine.
@@ -68,6 +75,8 @@ suites pass. The mutation runner exports the original repository root for scratc
   `scripts/p6-census.sh --write` and prove freshness with `--check`.
 - Task 1 is complete. Its generated closure artifact is accepted only through
   `scripts/p6-task1-close.sh --check`; the census additionally requires that evidence to be tracked.
+- Task 2 is complete. Its exact code commit is bound in `docs/verification/p6-connector-reality.md`;
+  the live session source bytes remain outside Git and only their digest/counts are recorded.
 - The migrated private store identity is frozen by `VD-p6-private-storage-compat-2026-09-12`; do not
   rewrite it automatically. External legacy command and environment aliases are removed.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix

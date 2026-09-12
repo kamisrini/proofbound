@@ -2,7 +2,7 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=188 open=112 closed=76 unclassified=0.
+Counts: total=188 open=100 closed=88 unclassified=0.
 Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
@@ -97,18 +97,18 @@ Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C3-013 | C3 | package:internal/projections | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/projections | open | close-in-P6 | — | — |
 | C3-014 | C3 | package:internal/store | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/store | open | close-in-P6 | — | — |
 | C3-015 | C3 | package:internal/twin | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/twin | open | close-in-P6 | — | — |
-| C4-001 | C4 | connector:checks | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:checks | open | close-in-P6 | — | — |
-| C4-002 | C4 | connector:git | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:git | open | close-in-P6 | — | — |
-| C4-003 | C4 | connector:git/gitcmd | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:git/gitcmd | open | close-in-P6 | — | — |
-| C4-004 | C4 | connector:github | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:github | open | close-in-P6 | — | — |
-| C4-005 | C4 | connector:intent | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:intent | open | close-in-P6 | — | — |
-| C4-006 | C4 | connector:intent/records | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:intent/records | open | close-in-P6 | — | — |
-| C4-007 | C4 | connector:intent/specdir | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:intent/specdir | open | close-in-P6 | — | — |
-| C4-008 | C4 | connector:reviews | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:reviews | open | close-in-P6 | — | — |
-| C4-009 | C4 | connector:sessions | Production connector surface needs current live, synthetic, or none classification with exact evidence. | connector:sessions | open | close-in-P6 | — | — |
-| C4-010 | C4 | sessions-live-corpus | Sessions lacks the ratified genuine quiescent JSONL acceptance, zero-append replay, and parsed/skipped counts. | artifact:docs/verification/p6-connector-reality.md | open | close-in-P6 | — | — |
-| C4-011 | C4 | github-narrowness | GitHub allowlist, bound, scope, exact-commit join, missing-data behavior, and tenant identity need current re-proof. | artifact:docs/verification/p6-connector-reality.md | open | close-in-P6 | — | — |
-| C4-012 | C4 | delivery-boundary-order | The explicit delivery boundary needs a self-test proving all promoted witnesses refresh and ingest before enforcement. | artifact:docs/verification/p6-connector-reality.md | open | close-in-P6 | — | — |
+| C4-001 | C4 | connector:checks | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-002 | C4 | connector:git | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-003 | C4 | connector:git/gitcmd | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-004 | C4 | connector:github | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-005 | C4 | connector:intent | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-006 | C4 | connector:intent/records | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-007 | C4 | connector:intent/specdir | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-008 | C4 | connector:reviews | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-009 | C4 | connector:sessions | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-010 | C4 | sessions-live-corpus | Sessions lacks the ratified genuine quiescent JSONL acceptance, zero-append replay, and parsed/skipped counts. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-011 | C4 | github-narrowness | GitHub allowlist, bound, scope, exact-commit join, missing-data behavior, and tenant identity need current re-proof. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
+| C4-012 | C4 | delivery-boundary-order | The explicit delivery boundary needs a self-test proving all promoted witnesses refresh and ingest before enforcement. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
 | C5-001 | C5 | route:git:commit.recorded:projection | Registered event route needs consume, ignore, or reject classification with a proving test. | route:git:commit.recorded:projection | open | close-in-P6 | — | — |
 | C5-002 | C5 | route:git:commit.recorded:verify | Registered event route needs consume, ignore, or reject classification with a proving test. | route:git:commit.recorded:verify | open | close-in-P6 | — | — |
 | C5-003 | C5 | route:git:commit.recorded:twin | Registered event route needs consume, ignore, or reject classification with a proving test. | route:git:commit.recorded:twin | open | close-in-P6 | — | — |
