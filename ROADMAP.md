@@ -113,4 +113,26 @@ the semantic decision is
    Bare `make check` and `proofbound verify` pass; calibrated package mutation sweeps are green; and
    a non-author independent package verdict is committed on receipt.
 
+## P6 — Consolidation: deep completion of P1–P5 (ratified 2026-09-12)
+
+Depth before width. P6 closes a mechanically generated C1–C8 census covering live documentation,
+gate/build-law estate, current package acceptance, connector reality, the full source-kind event
+universe, Proofbound intent self-coverage, P5 measurements, and clean-clone/platform/artifact
+integrity. Every live P1–P5 promise is either evidenced or explicitly superseded, narrowed, or
+retired; deferral alone is not completion. The ratified plan is
+[`P6-CONSOLIDATION-PLAN-draft2.md`](docs/plans/P6-CONSOLIDATION-PLAN-draft2.md), and the semantic
+authority is
+[`VD-p6-consolidation-2026-09-12`](docs/decisions/VD-p6-consolidation-2026-09-12.md).
+
+**DoD:** committed census with zero unclassified rows and zero open `close-in-P6` rows; no live
+promise hidden by defer/wontfix; all production packages mutation-green and non-author accepted on
+one frozen final implementation commit; zero expired advisories; full event-route and clean-clone
+proof; round-C non-author verdict ACCEPTABLE and committed; bare `make check` and
+`proofbound verify` green. P7+ capability planning begins only after P6 closes.
+
+**Ratified boundaries:** no new capability; the conditional snapshot provider is skipped and its
+contract remains pinned for P7+; intent applicability uses the closed path rule in the semantic VD,
+with zero known false negatives and a greater-than-10% false-positive redesign trigger; the
+stop-early ceiling is 40 active execution hours after Task 0, excluding founder/verifier wait time.
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
