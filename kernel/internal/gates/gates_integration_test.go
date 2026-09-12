@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -117,6 +118,54 @@ func TestLatestIntentVerdictProofSelectsReviewsAndExcludesUnrelatedEvents(t *tes
 	}
 	if latest == nil || latest.Event.ID != review.Event.ID {
 		t.Fatalf("latest=%+v review=%+v", latest, review)
+	}
+}
+
+func TestCurrentGateEstateEventRoutes(t *testing.T) {
+	pairs := []struct {
+		source  core.Source
+		kind    core.Kind
+		consume bool
+	}{
+		{core.SourceGit, core.KindCommitRecorded, true},
+		{core.SourceChecks, core.KindCheckRun, true},
+		{core.SourceSessions, core.KindSessionObserved, false},
+		{core.SourceReviews, core.KindReviewVerdict, true},
+		{core.SourceReviews, core.KindRequirementReview, true},
+		{core.SourceGitHub, core.KindGitHubWorkflow, false},
+		{core.SourceGitHub, core.KindGitHubDeployment, false},
+		{core.SourceIntentRecords, core.KindBusinessDecision, true},
+		{core.SourceIntentRecords, core.KindRequirement, true},
+		{core.SourceIntentRecords, core.KindChangeIntent, true},
+		{core.SourceIntentSpecdir, core.KindBusinessDecision, true},
+		{core.SourceIntentSpecdir, core.KindRequirement, true},
+		{core.SourceIntentSpecdir, core.KindChangeIntent, true},
+	}
+	definitions, err := LoadDir("../../../gates")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := gateIntegrationStore(t)
+	for i, pair := range pairs {
+		record := appendGateRaw(t, s, pair.source, pair.kind, fmt.Sprintf("route-%d", i), []byte(`{"route":true}`))
+		selected := false
+		for _, definition := range definitions {
+			if definition.Rule == "" && definition.Source == pair.source && definition.Kind == pair.kind {
+				selected = true
+			}
+			if definition.Rule != "" {
+				latest, err := latestIntentProof(context.Background(), s, definition.Rule, record.Event.NativeID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if latest != nil && latest.Event.ID == record.Event.ID {
+					selected = true
+				}
+			}
+		}
+		if selected != pair.consume {
+			t.Errorf("route %s/%s consume=%v want %v", pair.source, pair.kind, selected, pair.consume)
+		}
 	}
 }
 

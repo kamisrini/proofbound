@@ -86,6 +86,50 @@ func TestReplayProofBindsPayloadBytes(t *testing.T) {
 	}
 }
 
+func TestReplayProofCoversEveryRegisteredEventPair(t *testing.T) {
+	pairs := []struct {
+		source core.Source
+		kind   core.Kind
+	}{
+		{core.SourceGit, core.KindCommitRecorded},
+		{core.SourceChecks, core.KindCheckRun},
+		{core.SourceSessions, core.KindSessionObserved},
+		{core.SourceReviews, core.KindReviewVerdict},
+		{core.SourceReviews, core.KindRequirementReview},
+		{core.SourceGitHub, core.KindGitHubWorkflow},
+		{core.SourceGitHub, core.KindGitHubDeployment},
+		{core.SourceIntentRecords, core.KindBusinessDecision},
+		{core.SourceIntentRecords, core.KindRequirement},
+		{core.SourceIntentRecords, core.KindChangeIntent},
+		{core.SourceIntentSpecdir, core.KindBusinessDecision},
+		{core.SourceIntentSpecdir, core.KindRequirement},
+		{core.SourceIntentSpecdir, core.KindChangeIntent},
+	}
+	candidates := make([]Candidate, 0, len(pairs))
+	for i, pair := range pairs {
+		payload := json.RawMessage(fmt.Sprintf(`{"pair":%d}`, i))
+		digest := sha256.Sum256(payload)
+		candidates = append(candidates, Candidate{Seq: int64(i + 1), Event: core.Event{
+			ID: core.EventID{byte(i + 1)}, Source: pair.source, NativeID: fmt.Sprintf("pair-%d", i),
+			Kind: pair.kind, OccurredAt: time.Unix(int64(i+1), 0), RecordedAt: time.Unix(int64(i+1), 0),
+			Payload: payload, ContentSHA: hex.EncodeToString(digest[:]), ConnectorVersion: "route-proof/1",
+		}})
+	}
+	var seen []string
+	result, err := Replay(context.Background(), testStore(t), Request{ThroughSeq: 0, Candidate: candidates}, projections.Snapshot{}, func(_ context.Context, records []store.Record) (projections.Snapshot, error) {
+		for _, record := range records {
+			seen = append(seen, string(record.Event.Source)+"/"+string(record.Event.Kind))
+		}
+		return projections.Snapshot{}, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(seen) != len(pairs) || result.CandidateEvents != len(pairs) || result.Proof.Schema != "vera.replay.v1" || result.Proof.CandidateDigest == "" {
+		t.Fatalf("seen=%v result=%+v", seen, result)
+	}
+}
+
 func TestReplayDetectsChangedProjection(t *testing.T) {
 	s := testStore(t)
 	baseline := projections.Snapshot{Tables: map[string][]string{"x": {"base"}}}

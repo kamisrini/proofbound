@@ -48,6 +48,8 @@ func Calibrate([]Forecast) (Calibration, error)
 7. **TWIN-INV-8 — Ephemeral isolation.** `ReplayIsolated` projects only in a temporary store and removes it on return.
 8. **TWIN-INV-9 — Bound proof.** Every successful replay result carries a deterministic `vera.replay.v1` digest for its source, candidates, and snapshots.
 9. **TWIN-INV-10 — Honest calibration.** Calibration rejects empty, malformed, duplicate, or out-of-range feed records and computes the Brier score over the supplied outcomes.
+10. **TWIN-INV-11 — Complete route proof.** The frozen replay proof binds every registered
+    source-kind pair without rewriting its identity.
 
 ## Non-goals
 
@@ -66,3 +68,4 @@ predictions. Those require a separate decision and acceptance evidence.
 | TWIN-INV-8 | isolated replay preserves gapped multi-event sequence identity | replay_test.go::TestReplayIsolatedSupportsMultipleGappedCandidates |
 | TWIN-INV-9 | successful replay includes deterministic proof metadata | replay_test.go::TestReplayIsDeterministic |
 | TWIN-INV-10 | calibration validates records and computes the Brier score | calibration_test.go::TestCalibrateComputesBrierScoreAndRates |
+| TWIN-INV-11 | frozen proof covers every registered source-kind pair | replay_test.go::TestReplayProofCoversEveryRegisteredEventPair |
