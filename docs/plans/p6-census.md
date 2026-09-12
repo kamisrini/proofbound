@@ -2,38 +2,38 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=188 open=187 closed=1 unclassified=0.
+Counts: total=188 open=176 closed=12 unclassified=0.
 Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
 |---|---|---|---|---|---|---|---|---|
 | C1-001 | C1 | README-phase-status | README phase status does not yet state accepted P5 and active P6 consolidation. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
-| C1-002 | C1 | mechanism:make backup | A live authority names a Make target absent from the current Makefile. | make-target:backup | open | close-in-P6 | — | — |
-| C1-003 | C1 | mechanism:make meta-tax | A live authority names a Make target absent from the current Makefile. | make-target:meta-tax | open | close-in-P6 | — | — |
-| C1-004 | C1 | mechanism:make wrap-verify | A live authority names a Make target absent from the current Makefile. | make-target:wrap-verify | open | close-in-P6 | — | — |
-| C1-005 | C1 | mechanism:make laws-lock | A live authority names a Make target absent from the current Makefile. | make-target:laws-lock | open | close-in-P6 | — | — |
-| C1-006 | C1 | mechanism:make state | A live authority names a Make target absent from the current Makefile. | make-target:state | open | close-in-P6 | — | — |
+| C1-002 | C1 | mechanism:make backup | A live authority names a Make target absent from the current Makefile. | make-target:backup | closed | close-in-P6 | — | scripts/backup.sh,scripts/tests/operational-tools.test.sh |
+| C1-003 | C1 | mechanism:make meta-tax | A live authority names a Make target absent from the current Makefile. | make-target:meta-tax | closed | close-in-P6 | — | scripts/meta-tax.sh,scripts/tests/operational-tools.test.sh |
+| C1-004 | C1 | mechanism:make wrap-verify | A live authority names a Make target absent from the current Makefile. | make-target:wrap-verify | closed | close-in-P6 | — | scripts/wrap-verify.sh,scripts/tests/operational-tools.test.sh |
+| C1-005 | C1 | mechanism:make laws-lock | A live authority names a Make target absent from the current Makefile. | make-target:laws-lock | closed | close-in-P6 | — | scripts/gen-laws-lock.sh,scripts/tests/law-citation-lint.test.sh |
+| C1-006 | C1 | mechanism:make state | A live authority names a Make target absent from the current Makefile. | make-target:state | closed | close-in-P6 | — | scripts/gen-state.sh,scripts/tests/operational-tools.test.sh |
 | C1-007 | C1 | mechanism:make vera | A live authority names a Make target absent from the current Makefile. | make-target:vera | open | close-in-P6 | — | — |
 | C1-008 | C1 | mechanism:.claude/hooks/block-generated-edit.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/block-generated-edit.sh | open | close-in-P6 | — | — |
 | C1-009 | C1 | mechanism:.claude/hooks/block-secrets.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/block-secrets.sh | open | close-in-P6 | — | — |
 | C1-010 | C1 | mechanism:.claude/hooks/lint-on-write.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/lint-on-write.sh | open | close-in-P6 | — | — |
 | C1-011 | C1 | mechanism:.claude/hooks/stop-check.sh | A live authority names an exact path absent from the tracked tree. | path:.claude/hooks/stop-check.sh | open | close-in-P6 | — | — |
 | C1-012 | C1 | mechanism:scripts/cleanroom-lint.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/cleanroom-lint.sh | open | close-in-P6 | — | — |
-| C1-013 | C1 | mechanism:scripts/commit-cadence.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/commit-cadence.sh | open | close-in-P6 | — | — |
+| C1-013 | C1 | mechanism:scripts/commit-cadence.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/commit-cadence.sh | closed | close-in-P6 | — | scripts/commit-cadence.sh,scripts/tests/commit-cadence.test.sh |
 | C1-014 | C1 | mechanism:scripts/figure-provenance.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/figure-provenance.sh | open | close-in-P6 | — | — |
-| C1-015 | C1 | mechanism:scripts/gen-state.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/gen-state.sh | open | close-in-P6 | — | — |
+| C1-015 | C1 | mechanism:scripts/gen-state.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/gen-state.sh | closed | close-in-P6 | — | scripts/gen-state.sh,scripts/tests/operational-tools.test.sh |
 | C1-016 | C1 | mechanism:scripts/invariant-lint.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/invariant-lint.sh | open | close-in-P6 | — | — |
 | C1-017 | C1 | mechanism:scripts/lesson-recurrence.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/lesson-recurrence.sh | open | close-in-P6 | — | — |
 | C1-018 | C1 | mechanism:scripts/prescription-lint.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/prescription-lint.sh | open | close-in-P6 | — | — |
 | C1-019 | C1 | mechanism:scripts/skip-lint.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/skip-lint.sh | open | close-in-P6 | — | — |
-| C1-020 | C1 | mechanism:scripts/state-freshness.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/state-freshness.sh | open | close-in-P6 | — | — |
+| C1-020 | C1 | mechanism:scripts/state-freshness.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/state-freshness.sh | closed | close-in-P6 | — | scripts/state-freshness.sh,scripts/tests/state-freshness.test.sh |
 | C1-021 | C1 | mechanism:scripts/tests/cleanroom-lint.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/cleanroom-lint.test.sh | open | close-in-P6 | — | — |
-| C1-022 | C1 | mechanism:scripts/tests/commit-cadence.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/commit-cadence.test.sh | open | close-in-P6 | — | — |
+| C1-022 | C1 | mechanism:scripts/tests/commit-cadence.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/commit-cadence.test.sh | closed | close-in-P6 | — | scripts/tests/commit-cadence.test.sh |
 | C1-023 | C1 | mechanism:scripts/tests/figure-provenance.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/figure-provenance.test.sh | open | close-in-P6 | — | — |
 | C1-024 | C1 | mechanism:scripts/tests/lesson-recurrence.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/lesson-recurrence.test.sh | open | close-in-P6 | — | — |
 | C1-025 | C1 | mechanism:scripts/tests/prescription-lint.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/prescription-lint.test.sh | open | close-in-P6 | — | — |
 | C1-026 | C1 | mechanism:scripts/tests/skip-lint.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/skip-lint.test.sh | open | close-in-P6 | — | — |
-| C1-027 | C1 | mechanism:scripts/tests/state-freshness.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/state-freshness.test.sh | open | close-in-P6 | — | — |
+| C1-027 | C1 | mechanism:scripts/tests/state-freshness.test.sh | A live authority names an exact path absent from the tracked tree. | path:scripts/tests/state-freshness.test.sh | closed | close-in-P6 | — | scripts/tests/state-freshness.test.sh |
 | C1-028 | C1 | undocumented-make:check-witnessed | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C1-029 | C1 | undocumented-make:verify | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C1-030 | C1 | undocumented-make:gates-canary | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
@@ -75,7 +75,7 @@ Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C2-032 | C2 | gate-row:Off-machine backup of this repo | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-033 | C2 | gate-row:Proofbound legacy identity aliases | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-034 | C2 | gate-row:Identity inventory has zero unclassified legacy-name hits | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
-| C2-035 | C2 | make-short-useful | make short currently runs only hooks-test and is not a useful Go inner loop. | make-useful-short | open | close-in-P6 | — | — |
+| C2-035 | C2 | make-short-useful | make short previously ran only hooks-test and now includes the short Go suite. | shell-test:scripts/tests/make-contract.test.sh | closed | close-in-P6 | — | Makefile,scripts/tests/make-contract.test.sh |
 | C2-036 | C2 | full-invariant-citation-resolution | The current invariant-table lint checks citation shape but not file and test resolution. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-037 | C2 | legacy-alias-due | The legacy Proofbound aliases became due at P6 start and require explicit removal or decision. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |
 | C2-038 | C2 | undocumented-gate:gates/intent-delivery-readiness.yaml | A tracked gate definition is not named by exact path in docs/gates.md. | artifact:docs/verification/p6-c1-c2-closure.md | open | close-in-P6 | — | — |

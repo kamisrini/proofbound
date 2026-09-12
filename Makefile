@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
-.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint identity-inventory
-check: hooks-test link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint identity-inventory kernel-check
+.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint spec-numbering-lint link-lint law-citation-lint identity-inventory commit-cadence state-freshness meta-tax backup state wrap-verify
+check: hooks-test commit-cadence state-freshness link-lint index-check law-citation-lint invariant-table-lint spec-numbering-lint identity-inventory kernel-check
 check-witnessed:
 	@bash kernel/scripts/check-witness.sh
 index-check-witnessed:
@@ -24,6 +24,7 @@ gates-canary:
 gates-enforce:
 	@cd kernel && go run ./cmd/proofbound gates enforce
 short: hooks-test
+	@cd kernel && GOCACHE=$${GOCACHE:-/tmp/proofbound-go-build} go test ./... -short -count=1
 hooks-test:
 	@for f in scripts/tests/*.test.sh; do bash "$$f"; done
 index:
@@ -32,6 +33,8 @@ index-check:
 	@scripts/index-check.sh
 invariants-lock:
 	@scripts/gen-invariants-lock.sh
+laws-lock:
+	@scripts/gen-laws-lock.sh
 invariant-table-lint:
 	@scripts/invariant-table-lint.sh
 spec-numbering-lint:
@@ -42,6 +45,18 @@ law-citation-lint:
 	@scripts/law-citation-lint.sh
 identity-inventory:
 	@bash scripts/identity-inventory.sh >/dev/null
+commit-cadence:
+	@scripts/commit-cadence.sh
+state-freshness:
+	@scripts/state-freshness.sh
+meta-tax:
+	@scripts/meta-tax.sh
+backup:
+	@scripts/backup.sh
+state:
+	@scripts/gen-state.sh
+wrap-verify:
+	@scripts/wrap-verify.sh
 mutants:
 	@scripts/mutants.sh "$${PKG:?set PKG, e.g. PKG=internal/store}"
 kernel-check:

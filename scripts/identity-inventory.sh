@@ -20,7 +20,7 @@ classify() {
     *)
       if [[ $lower == *"${needle}.witness.v1"* || $lower == *"${needle}.verdict.v1"* || $lower == *"${needle}.replay.v1"* ]]; then
         category=frozen-wire
-      elif [[ $text == *"${upper}_"* || $lower == *".${needle}"* || $lower == *"cmd/${needle}"* || $lower == *"\"${needle}\""* || $lower == *"\`${needle}\`"* || $lower == *" ${needle} "* || $lower == *"${needle}:"* || $lower == *"usage: ${needle}"* || $lower == *"/${needle}?"* || $lower == *"${needle}-v1"* ]]; then
+      elif [[ $text == *"${upper}_"* || $lower == *".${needle}"* || $lower == *"cmd/${needle}"* || $lower == *"make ${needle}"* || $lower == *"\"${needle}\""* || $lower == *"\`${needle}\`"* || $lower == *" ${needle} "* || $lower == *"${needle}:"* || $lower == *"usage: ${needle}"* || $lower == *"/${needle}?"* || $lower == *"${needle}-v1"* ]]; then
         category=deprecated-alias
       fi
       ;;

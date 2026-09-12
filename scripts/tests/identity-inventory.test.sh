@@ -8,6 +8,7 @@ mkdir -p "$tmp/docs/decisions" "$tmp/docs/plans" "$tmp/scripts" "$tmp/kernel/cmd
 printf 'historical VERA name\n' >"$tmp/docs/decisions/VD-old.md"
 printf 'schema vera.witness.v1\n' >"$tmp/wire.txt"
 printf 'VERA_OWNER fallback\n' >"$tmp/alias.txt"
+printf 'retire make vera alias\n' >"$tmp/make-alias.txt"
 printf 'mechanism:make vera\n' >"$tmp/docs/plans/p6-census-rows.tsv"
 printf 'mechanism:make vera\n' >"$tmp/scripts/p6-census.sh"
 
@@ -15,6 +16,7 @@ output=$(bash scripts/identity-inventory.sh "$tmp")
 [[ $output == *$'frozen-history\tdocs/decisions/VD-old.md:1'* ]] || exit 1
 [[ $output == *$'frozen-wire\twire.txt:1'* ]] || exit 1
 [[ $output == *$'deprecated-alias\talias.txt:1'* ]] || exit 1
+[[ $output == *$'deprecated-alias\tmake-alias.txt:1'* ]] || exit 1
 [[ $output == *$'deprecated-alias\tkernel/cmd/vera\tpath component'* ]] || exit 1
 [[ $output == *$'baseline-quote\tdocs/plans/p6-census-rows.tsv:1'* ]] || exit 1
 [[ $output == *$'baseline-quote\tscripts/p6-census.sh:1'* ]] || exit 1
