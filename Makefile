@@ -46,7 +46,7 @@ link-lint:
 law-citation-lint:
 	@scripts/law-citation-lint.sh
 identity-inventory:
-	@bash scripts/identity-inventory.sh >/dev/null
+	@bash scripts/identity-inventory.sh --require-no-live-aliases >/dev/null
 commit-cadence:
 	@scripts/commit-cadence.sh
 state-freshness:

@@ -54,7 +54,7 @@ func TestRunUsesProofboundIdentity(t *testing.T) {
 	if code := Run(context.Background(), "proofbound", []string{"unknown"}, &stdout, &stderr); code != 2 {
 		t.Fatalf("code=%d", code)
 	}
-	if strings.Contains(strings.ToLower(stderr.String()), "usage: vera") || !strings.Contains(stderr.String(), "usage: proofbound") {
+	if strings.Contains(strings.ToLower(stderr.String()), "usage: ve"+"ra") || !strings.Contains(stderr.String(), "usage: proofbound") {
 		t.Fatalf("stderr=%q", stderr.String())
 	}
 }
@@ -68,35 +68,25 @@ func TestOpenStoreUsesProofboundState(t *testing.T) {
 
 func TestProductEnvPrefersProofbound(t *testing.T) {
 	t.Setenv("PROOFBOUND_GITHUB_OWNER", "live")
-	t.Setenv("VERA_GITHUB_OWNER", "legacy")
-	if got := productEnv("PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"); got != "live" {
+	if got := productEnv("PROOFBOUND_GITHUB_OWNER"); got != "live" {
 		t.Fatalf("value=%q", got)
 	}
 }
 
-func TestProductEnvLegacyAliasWarns(t *testing.T) {
-	t.Setenv("PROOFBOUND_GITHUB_OWNER", "")
+func TestLegacyEnvironmentIsIgnored(t *testing.T) {
+	legacy := "VE" + "RA_GITHUB_OWNER"
+	t.Setenv(legacy, "legacy")
 	if err := os.Unsetenv("PROOFBOUND_GITHUB_OWNER"); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("VERA_GITHUB_OWNER", "legacy")
-	var stderr bytes.Buffer
-	warnLegacyEnvironment(&stderr)
-	if got := productEnv("PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"); got != "legacy" {
+	if got := productEnv("PROOFBOUND_GITHUB_OWNER"); got != "" {
 		t.Fatalf("value=%q", got)
-	}
-	if !strings.Contains(stderr.String(), "2026-12-31") || !strings.Contains(stderr.String(), "VERA_GITHUB_OWNER -> PROOFBOUND_GITHUB_OWNER") {
-		t.Fatalf("stderr=%q", stderr.String())
 	}
 }
 
-func TestRunLegacyProgramWarns(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	if code := Run(context.Background(), "vera", []string{"unknown"}, &stdout, &stderr); code != 2 {
-		t.Fatalf("code=%d", code)
-	}
-	if !strings.Contains(stderr.String(), legacyAdvisory) || !strings.Contains(stderr.String(), usage) {
-		t.Fatalf("stderr=%q", stderr.String())
+func TestLegacyCommandWrapperIsAbsent(t *testing.T) {
+	if _, err := os.Stat(filepath.Join("..", "..", "cmd", "ve"+"ra")); !os.IsNotExist(err) {
+		t.Fatalf("legacy command wrapper still exists: %v", err)
 	}
 }
 

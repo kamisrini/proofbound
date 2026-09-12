@@ -1,7 +1,7 @@
 # Proofbound identity migration
 
 **Effective:** 2026-09-10  
-**Compatibility removal date:** 2026-12-31 (or P6 start, whichever comes first)
+**External compatibility removed:** P6 start, 2026-09-12
 
 Proofbound is the live product name. Historical artifacts and the frozen wire schemas
 `vera.witness.v1`, `vera.verdict.v1`, and `vera.replay.v1` retain their original bytes and meaning.
@@ -22,29 +22,15 @@ store lock remains derived from the data directory, so moving the root does not 
 ownership.
 
 An already-initialized embedded PostgreSQL cluster retains its legacy internal database/user name so
-the directory move does not destroy access to its ledger. That private storage identity is a
-deprecated compatibility alias, not a live product surface; newly initialized stores use Proofbound
-identity, and the alias is removed with the rest of the P5 compatibility window.
+the directory move does not destroy access to its ledger. Per
+`VD-p6-private-storage-compat-2026-09-12`, that private identity is frozen migration compatibility,
+not a live product surface. New stores use only the Proofbound private identity.
 
-## Compatibility aliases
+## Removed external aliases
 
-The live executable is `proofbound`. The `vera` executable remains a deprecated delegating alias
-through the removal date above. It emits a dated advisory and executes the same command path.
-
-Live environment names use the `PROOFBOUND_*` prefix. During the same compatibility window, these
-old names remain fallback aliases and emit the advisory when consumed:
-
-| Live name | Deprecated alias |
-|---|---|
-| `PROOFBOUND_CHECK_TARGET` | `VERA_CHECK_TARGET` |
-| `PROOFBOUND_GITHUB_OWNER` | `VERA_GITHUB_OWNER` |
-| `PROOFBOUND_GITHUB_REPOS` | `VERA_GITHUB_REPOS` |
-| `PROOFBOUND_GITHUB_API_BASE_URL` | `VERA_GITHUB_API_BASE_URL` |
-| `PROOFBOUND_VERIFY_TRACE` | `VERA_VERIFY_TRACE` |
-| `PROOFBOUND_CLEANROOM_PATTERNS` | `VERA_CLEANROOM_PATTERNS` |
-
-When both forms are present, the live name wins. Standard external names such as `DATABASE_URL` and
-`GITHUB_TOKEN` are unchanged.
+The live executable is `proofbound`; the former delegating executable was removed at P6 start.
+Product environment names use only `PROOFBOUND_*`; former product-prefixed fallbacks are ignored.
+Standard external names such as `DATABASE_URL` and `GITHUB_TOKEN` are unchanged.
 
 ## Frozen bytes
 

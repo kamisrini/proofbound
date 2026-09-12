@@ -2,6 +2,8 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+bash scripts/identity-inventory.sh --require-no-live-aliases >/dev/null
+
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 mkdir -p "$tmp/docs/decisions" "$tmp/docs/plans" "$tmp/scripts" "$tmp/kernel/cmd/vera"
@@ -21,6 +23,13 @@ output=$(bash scripts/identity-inventory.sh "$tmp")
 [[ $output == *$'baseline-quote\tdocs/plans/p6-census-rows.tsv:1'* ]] || exit 1
 [[ $output == *$'baseline-quote\tscripts/p6-census.sh:1'* ]] || exit 1
 [[ $output == *'unclassified=0'* ]] || exit 1
+
+if bash scripts/identity-inventory.sh --require-no-live-aliases "$tmp" >/dev/null; then
+  echo 'live legacy alias was accepted by strict mode' >&2
+  exit 1
+fi
+rm -rf "$tmp/kernel/cmd/vera"
+bash scripts/identity-inventory.sh --require-no-live-aliases "$tmp" >/dev/null
 
 printf 'VERA is still the live product\n' >"$tmp/unclassified.txt"
 if bash scripts/identity-inventory.sh "$tmp" >/dev/null; then

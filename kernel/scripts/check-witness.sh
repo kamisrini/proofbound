@@ -236,9 +236,6 @@ fi
 
 if [[ ${PROOFBOUND_CHECK_TARGET+x} ]]; then
   check_target=$PROOFBOUND_CHECK_TARGET
-elif [[ ${VERA_CHECK_TARGET+x} ]]; then
-  printf 'proofbound: deprecated VERA_CHECK_TARGET alias used; switch to PROOFBOUND_CHECK_TARGET before 2026-12-31\n' >&2
-  check_target=$VERA_CHECK_TARGET
 else
   check_target=check
 fi
@@ -247,7 +244,7 @@ if [[ ! $check_target =~ ^[A-Za-z][A-Za-z0-9._-]*$ ]]; then
   exit 1
 fi
 check_command="make $check_target"
-if (cd "$repo_root" && env "${git_env_args[@]}" -u PROOFBOUND_CHECK_TARGET -u VERA_CHECK_TARGET make "$check_target") >"$output_file" 2>&1; then
+if (cd "$repo_root" && env "${git_env_args[@]}" -u PROOFBOUND_CHECK_TARGET make "$check_target") >"$output_file" 2>&1; then
   exit_code=0
 else
   exit_code=$?

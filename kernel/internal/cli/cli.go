@@ -33,16 +33,10 @@ import (
 
 const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce}"
 
-const legacyAdvisory = "proofbound: deprecated VERA identity alias used; switch to Proofbound before 2026-12-31"
-
 const verifyTimeout = 15 * time.Minute
 
-// Run executes the shared command implementation for the live executable or its one-phase alias.
-func Run(ctx context.Context, program string, args []string, stdout, stderr io.Writer) int {
-	if strings.EqualFold(filepath.Base(program), "vera") {
-		fmt.Fprintln(stderr, legacyAdvisory)
-	}
-	warnLegacyEnvironment(stderr)
+// Run executes the shared command implementation for the live Proofbound executable.
+func Run(ctx context.Context, _ string, args []string, stdout, stderr io.Writer) int {
 	return run(ctx, args, stdout, stderr)
 }
 
@@ -169,27 +163,7 @@ func openStore(ctx context.Context, root, databaseURL string) (*store.Store, err
 
 func stateRoot(root string) string { return filepath.Join(root, ".proofbound") }
 
-func productEnv(live, legacy string) string {
-	if value, ok := os.LookupEnv(live); ok {
-		return value
-	}
-	return os.Getenv(legacy)
-}
-
-func warnLegacyEnvironment(stderr io.Writer) {
-	for _, names := range [][2]string{
-		{"PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"},
-		{"PROOFBOUND_GITHUB_REPOS", "VERA_GITHUB_REPOS"},
-		{"PROOFBOUND_GITHUB_API_BASE_URL", "VERA_GITHUB_API_BASE_URL"},
-		{"PROOFBOUND_VERIFY_TRACE", "VERA_VERIFY_TRACE"},
-	} {
-		if _, liveSet := os.LookupEnv(names[0]); !liveSet {
-			if _, legacySet := os.LookupEnv(names[1]); legacySet {
-				fmt.Fprintf(stderr, "%s (%s -> %s)\n", legacyAdvisory, names[1], names[0])
-			}
-		}
-	}
-}
+func productEnv(live string) string { return os.Getenv(live) }
 
 func newIDs() (*core.IDGenerator, error) {
 	return core.NewIDGenerator(core.IDGeneratorConfig{Entropy: crand.Reader, Now: time.Now})
@@ -395,15 +369,15 @@ func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, i
 type githubResult struct{ Listed, Appended, Existing int }
 
 func syncGitHubOnStore(ctx context.Context, ledger *store.Store, ids *core.IDGenerator) (githubResult, error) {
-	owner := strings.TrimSpace(productEnv("PROOFBOUND_GITHUB_OWNER", "VERA_GITHUB_OWNER"))
+	owner := strings.TrimSpace(productEnv("PROOFBOUND_GITHUB_OWNER"))
 	var repos []string
-	for _, repo := range strings.Split(productEnv("PROOFBOUND_GITHUB_REPOS", "VERA_GITHUB_REPOS"), ",") {
+	for _, repo := range strings.Split(productEnv("PROOFBOUND_GITHUB_REPOS"), ",") {
 		if repo = strings.TrimSpace(repo); repo != "" {
 			repos = append(repos, repo)
 		}
 	}
 	connector, err := connectorgithub.New(&connectorgithub.Deps{
-		API:   &connectorgithub.HTTPClient{BaseURL: productEnv("PROOFBOUND_GITHUB_API_BASE_URL", "VERA_GITHUB_API_BASE_URL"), Token: os.Getenv("GITHUB_TOKEN")},
+		API:   &connectorgithub.HTTPClient{BaseURL: productEnv("PROOFBOUND_GITHUB_API_BASE_URL"), Token: os.Getenv("GITHUB_TOKEN")},
 		Owner: owner, Repos: repos, IDs: ids, Logger: logger(),
 	})
 	if err != nil {
@@ -780,7 +754,7 @@ func verifyStep(ctx context.Context, name string, fn func() error) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("verify: %s: %w", name, err)
 	}
-	if productEnv("PROOFBOUND_VERIFY_TRACE", "VERA_VERIFY_TRACE") == "1" {
+	if productEnv("PROOFBOUND_VERIFY_TRACE") == "1" {
 		fmt.Fprintf(os.Stderr, "verify: begin %s\n", name)
 	}
 	if err := fn(); err != nil {
