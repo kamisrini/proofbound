@@ -3,7 +3,7 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 authorized; Task 0 census generated)
+**As of:** 2026-09-12 (P6 Task 0 complete; Task 1 in progress)
 
 ## Exact resume point
 
@@ -15,9 +15,13 @@ the stop-early ceiling is 40 active execution hours after Task 0. The record is 
 
 Task 0 followed spec-first order. The census SPEC is `1ba2336`; the closed scanner and hostile
 fixtures are `7046b42` plus discovery-universe tightening in `7bb9a66`. The first generated census
-contains 188 classified rows across C1–C8: 187 open `close-in-P6` rows and one closed P7 deferral
-(the ratified snapshot-provider skip), with zero unclassified subjects. The next task is Task 1:
-close C1/C2 documentation, gate, and P0/P1 mechanism-truth rows without adding product capability.
+contains 188 classified rows across C1–C8, with zero unclassified subjects. Task 1's mechanism
+contract is durable in `cce0a5d`. Its first implementation slice is `dd6154e`: `make short` now runs
+the short Go suite, and cadence, state freshness/rendering, laws-lock generation, meta-tax, explicit
+bundle backup, and wrap verification exist with hostile tests. The census is now 176 open / 12
+closed. Task 1 remains active; next restore the cleanroom, lesson recurrence, figure provenance,
+skip, prescription, exact invariant-resolution, and Claude-hook mechanisms, then reconcile all live
+gate and command documentation.
 
 Current verification results:
 
@@ -54,6 +58,9 @@ suites pass. The mutation runner exports the original repository root for scratc
 - The P6 work queue is `docs/plans/p6-census.md`; its stable classified source is
   `docs/plans/p6-census-rows.tsv`. Never hand-edit the generated Markdown result; regenerate it with
   `scripts/p6-census.sh --write` and prove freshness with `--check`.
+- Task 1 is only partially complete. Do not treat the presence of its closure-artifact pathname in
+  open-row probes as evidence; `docs/verification/p6-c1-c2-closure.md` does not exist yet and may be
+  created only after its checker proves every C1/C2 row.
 - `docs/plans/P5-intent-provenance-plan.md` is an older untracked draft with digest prefix
   `eacb`; it is not the committed adjudicated exhibit (digest prefix `9d203`). Treat it as
   pre-existing user material and do not delete or commit it without resolving its ownership.
