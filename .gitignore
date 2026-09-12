@@ -3,6 +3,7 @@
 # Deprecated local-state path; remove with the P5 identity aliases.
 .vera/
 notes/tmp/
+/status/
 
 # Go/build output
 bin/
