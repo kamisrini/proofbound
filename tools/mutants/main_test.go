@@ -45,3 +45,34 @@ func TestCopyTreeIncludesRepositoryMakefile(t *testing.T) {
 		t.Fatalf("makefile=%q error=%v", data, err)
 	}
 }
+
+func TestCollectStaysWithinNamedPackage(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "root.go"), []byte("package root\nvar rootValue = 1 == 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	child := filepath.Join(root, "child")
+	if err := os.Mkdir(child, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(child, "child.go"), []byte("package child\nvar childValue = 1 == 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mutants := collect(root)
+	if len(mutants) != 1 || filepath.Base(mutants[0].file) != "root.go" {
+		t.Fatalf("mutants=%+v", mutants)
+	}
+}
+
+func TestValidateRange(t *testing.T) {
+	for _, valid := range [][2]int{{1, 1}, {2, 4}, {4, 4}} {
+		if err := validateRange(valid[0], valid[1], 4); err != nil {
+			t.Fatalf("range %v rejected: %v", valid, err)
+		}
+	}
+	for _, invalid := range [][2]int{{0, 1}, {5, 5}, {3, 2}, {1, 5}} {
+		if err := validateRange(invalid[0], invalid[1], 4); err == nil {
+			t.Fatalf("range %v accepted", invalid)
+		}
+	}
+}

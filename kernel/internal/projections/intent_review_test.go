@@ -121,6 +121,54 @@ func TestObligationVerdictProjectionValidation(t *testing.T) {
 			t.Fatal("wrong commit accepted")
 		}
 	})
+	for _, tc := range []struct {
+		name    string
+		status  string
+		wantErr bool
+	}{{"acceptable aggregate mismatch", "ACCEPTABLE", true}, {"needs work preserves outcome", "NEEDS_WORK", false}} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			intentFixtureEvents(t, s, true)
+			evidence := evidenceEvent(t)
+			appendEvents(t, s, evidence)
+			verdict := obligationVerdictFixture(shaFor("intent-commit"), evidence.ID.String())
+			verdict.Status = tc.status
+			verdict.Obligations[0].Outcome = "INCONCLUSIVE"
+			verdict.Obligations[0].EvidenceEventIDs = nil
+			appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, verdict.VerdictID, verdict))
+			err := New().Apply(context.Background(), s)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("error=%v wantErr=%t", err, tc.wantErr)
+			}
+		})
+	}
+	for _, tc := range []struct {
+		name   string
+		mutate func(*connectorreviews.ObligationVerdict)
+	}{
+		{"schema", func(v *connectorreviews.ObligationVerdict) { v.Schema = "proofbound.obligation-verdict.v1" }},
+		{"verdict id", func(v *connectorreviews.ObligationVerdict) { v.VerdictID = "other" }},
+		{"reviewed commit", func(v *connectorreviews.ObligationVerdict) { v.ReviewedCommit = "not-a-commit" }},
+		{"status", func(v *connectorreviews.ObligationVerdict) { v.Status = "UNKNOWN" }},
+		{"reviewer", func(v *connectorreviews.ObligationVerdict) { v.DeclaredReviewer = "" }},
+		{"artifact digest", func(v *connectorreviews.ObligationVerdict) { v.ArtifactSHA256 = "not-a-digest" }},
+	} {
+		t.Run("invalid envelope "+tc.name, func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			intentFixtureEvents(t, s, true)
+			evidence := evidenceEvent(t)
+			appendEvents(t, s, evidence)
+			verdict := obligationVerdictFixture(shaFor("intent-commit"), evidence.ID.String())
+			nativeID := verdict.VerdictID
+			tc.mutate(&verdict)
+			appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, nativeID, verdict))
+			if err := New().Apply(context.Background(), s); err == nil {
+				t.Fatal("invalid v2 envelope accepted")
+			}
+		})
+	}
 }
 
 func TestRequirementReviewProjectionValidation(t *testing.T) {

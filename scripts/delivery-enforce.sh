@@ -35,5 +35,5 @@ make invariant-table-witnessed
 make link-witnessed
 make kernel-check-witnessed
 PROOFBOUND_CHECK_TARGET=check make check-witnessed
-(cd kernel && go run ./cmd/proofbound sync checks)
+(cd kernel && go run ./cmd/proofbound sync all)
 (cd kernel && go run ./cmd/proofbound gates enforce)

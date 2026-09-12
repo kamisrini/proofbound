@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"time"
 
@@ -235,9 +234,7 @@ func specState(targets []intentTargetReport) string {
 		case "CONTRADICTORY":
 			return "contradictory"
 		case "UNTESTABLE":
-			if state != "contradictory" {
-				state = "untestable"
-			}
+			state = "untestable"
 		case "AMBIGUOUS":
 			if state == "verifiable" || state == "unreviewed" {
 				state = "ambiguous"
@@ -335,5 +332,3 @@ func (p *Projector) CheckIntent(ctx context.Context, s *store.Store, sha string,
 	}
 	return nil
 }
-
-func sortedStrings(values []string) []string { sort.Strings(values); return values }

@@ -107,10 +107,7 @@ func Parse(data []byte) (Definition, error) {
 	}
 	var trailing any
 	if err := decoder.Decode(&trailing); err != io.EOF {
-		if err == nil {
-			return definition, errors.New("trailing JSON")
-		}
-		return definition, fmt.Errorf("trailing JSON: %w", err)
+		return definition, errors.New("trailing JSON")
 	}
 	if err := definition.validate(); err != nil {
 		return definition, err
@@ -253,7 +250,7 @@ func gitCommit(value string) bool {
 		return false
 	}
 	for _, r := range value {
-		if !(r >= '0' && r <= '9' || r >= 'a' && r <= 'f') {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
 			return false
 		}
 	}

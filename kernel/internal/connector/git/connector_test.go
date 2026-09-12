@@ -274,6 +274,26 @@ func TestSync_IntentReferencesBindExactRevision(t *testing.T) {
 	if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, spoof).Sync(context.Background(), &memoryAppender{}); err == nil {
 		t.Fatal("spoofed resolver result accepted")
 	}
+	for name, ref := range map[string]IntentRef{
+		"record id": {Provider: "records", RecordID: "CI-other-item-acde12", ArtifactSHA256: strings.Repeat("a", 64)},
+		"digest":    {Provider: "records", RecordID: "CI-sample-item-acde12", ArtifactSHA256: "bad"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			resolver := &fakeIntentResolver{ref: ref}
+			if _, err := connectorWithResolver(t, &fakeRepo{commits: []Commit{commit}, tips: map[string]string{}}, resolver).Sync(context.Background(), &memoryAppender{}); err == nil {
+				t.Fatal("malformed resolver result accepted")
+			}
+		})
+	}
+}
+
+func TestNormalizedCommitIntentRefsSortsAndDeduplicates(t *testing.T) {
+	a := IntentRef{Provider: "records", RecordID: "CI-a-item-acde12", ArtifactSHA256: strings.Repeat("a", 64)}
+	b := IntentRef{Provider: "specdir", RecordID: "CI-b-item-acde12", ArtifactSHA256: strings.Repeat("b", 64)}
+	got := normalizedCommit(Commit{IntentRefs: []IntentRef{b, a, b}}).IntentRefs
+	if len(got) != 2 || got[0] != a || got[1] != b {
+		t.Fatalf("intent refs=%+v", got)
+	}
 }
 
 func TestPayload_IntentRefsAndLegacyCitationsArePinned(t *testing.T) {

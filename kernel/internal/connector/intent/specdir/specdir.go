@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -135,7 +134,7 @@ func (p *Provider) parseAll(artifacts []Artifact) ([]intent.Revision, error) {
 
 func parse(a Artifact, observed time.Time) (intent.Revision, error) {
 	m := pathRE.FindStringSubmatch(a.Path)
-	if m == nil || path.Clean(a.Path) != a.Path || strings.ContainsAny(a.Path, "\\\x00") {
+	if m == nil {
 		return intent.Revision{}, errors.New("invalid artifact path")
 	}
 	if !utf8.Valid(a.Bytes) {
@@ -163,7 +162,7 @@ func parseRequirement(artifactPath, digest string, lines []string, observed time
 	}
 	status := strings.TrimPrefix(lines[1], "Status: ")
 	owner := strings.TrimPrefix(lines[2], "Owner: ")
-	if !oneOf(status, "proposed", "active", "superseded", "retired") || strings.TrimSpace(owner) == "" {
+	if strings.TrimSpace(owner) == "" {
 		return intent.Revision{}, errors.New("invalid requirement metadata")
 	}
 	var obligations []intent.Obligation
@@ -199,7 +198,7 @@ func parseIntent(artifactPath, digest string, lines []string, observed time.Time
 	}
 	status := strings.TrimPrefix(lines[1], "Status: ")
 	sponsor := strings.TrimPrefix(lines[2], "Sponsor: ")
-	if !oneOf(status, "proposed", "accepted", "superseded", "withdrawn") || strings.TrimSpace(sponsor) == "" {
+	if strings.TrimSpace(sponsor) == "" {
 		return intent.Revision{}, errors.New("invalid change intent metadata")
 	}
 	var targets []intent.Reference
@@ -213,11 +212,6 @@ func parseIntent(artifactPath, digest string, lines []string, observed time.Time
 		targets = append(targets, intent.Reference{RecordKind: "requirement", Source: match[2], RecordID: match[3], ArtifactSHA256: match[4], Relation: match[1], ObligationIDs: ids})
 	}
 	sort.Slice(targets, func(i, j int) bool { return refKey(targets[i]) < refKey(targets[j]) })
-	for i := 1; i < len(targets); i++ {
-		if refKey(targets[i]) == refKey(targets[i-1]) {
-			return intent.Revision{}, errors.New("duplicate target")
-		}
-	}
 	v := intent.ChangeIntent{Schema: "proofbound.change-intent.v1", IntentID: h[1], Status: status, DeclaredSponsor: sponsor, Targets: targets, ConstrainedBy: []intent.Reference{}, Supersedes: []intent.Reference{}, ArtifactPath: artifactPath, ArtifactSHA256: digest}
 	raw, _ := json.Marshal(v)
 	canonical, _ := core.Canonicalize(raw)
@@ -226,14 +220,6 @@ func parseIntent(artifactPath, digest string, lines []string, observed time.Time
 		return intent.Revision{}, err
 	}
 	return r, nil
-}
-func oneOf(v string, values ...string) bool {
-	for _, x := range values {
-		if v == x {
-			return true
-		}
-	}
-	return false
 }
 func refKey(r intent.Reference) string {
 	return r.Source + "\x00" + r.RecordID + "\x00" + r.ArtifactSHA256 + "\x00" + r.Relation + "\x00" + strings.Join(r.ObligationIDs, ",")

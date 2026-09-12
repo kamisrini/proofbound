@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -22,11 +23,15 @@ type mutant struct {
 
 var testTags string
 var mutationPattern = "./..."
+var sourceRepositoryRoot string
 
 func main() {
 	pkg := flag.String("pkg", "", "kernel package directory, e.g. internal/store")
 	rootFlag := flag.String("root", "", "repository root")
 	tags := flag.String("tags", "", "go test build tags")
+	failFast := flag.Bool("fail-fast", false, "stop after the first surviving mutant")
+	start := flag.Int("start", 1, "one-based candidate ordinal to start from")
+	end := flag.Int("end", 0, "one-based candidate ordinal to stop after (default: final candidate)")
 	flag.Parse()
 	testTags = *tags
 	if *pkg == "" {
@@ -40,6 +45,7 @@ func main() {
 	if err != nil {
 		fail(err.Error())
 	}
+	sourceRepositoryRoot = filepath.Dir(root)
 	target := filepath.Join(root, filepath.FromSlash(*pkg))
 	if _, err := os.Stat(target); err != nil {
 		fail(err.Error())
@@ -48,14 +54,27 @@ func main() {
 	if len(mutants) == 0 {
 		fail("no mutation candidates found")
 	}
+	if *end == 0 {
+		*end = len(mutants)
+	}
+	if err := validateRange(*start, *end, len(mutants)); err != nil {
+		fail(err.Error())
+	}
 	mutationPattern = "./" + filepath.ToSlash(*pkg)
 	if err := calibrate(root, *pkg); err != nil {
 		fail("calibration: " + err.Error())
 	}
 	mutationPattern = "./" + filepath.ToSlash(*pkg)
 	fmt.Println("calibration neutral=survived invalid=invalid lethal=killed")
-	var killed, invalid, survived int
-	for _, m := range mutants {
+	var attempted, killed, invalid, survived int
+	for index, m := range mutants {
+		if index+1 < *start {
+			continue
+		}
+		if index+1 > *end {
+			break
+		}
+		attempted++
 		status := runMutant(root, m)
 		switch status {
 		case "killed":
@@ -66,22 +85,41 @@ func main() {
 			survived++
 		}
 		fmt.Printf("%s:%d#%d %s\n", filepath.ToSlash(m.file), m.line, m.ordinal, status)
+		if status == "survived" && *failFast {
+			fmt.Printf("summary candidates=%d killed=%d invalid=%d survived=%d stopped_early=true\n", attempted, killed, invalid, survived)
+			os.Exit(1)
+		}
 	}
-	fmt.Printf("summary candidates=%d killed=%d invalid=%d survived=%d\n", len(mutants), killed, invalid, survived)
+	fmt.Printf("summary candidates=%d killed=%d invalid=%d survived=%d\n", attempted, killed, invalid, survived)
 	if survived > 0 {
 		os.Exit(1)
 	}
 }
 
+func validateRange(start, end, candidates int) error {
+	if start < 1 || start > candidates {
+		return errors.New("-start is outside the candidate range")
+	}
+	if end < start || end > candidates {
+		return errors.New("-end is outside the candidate range")
+	}
+	return nil
+}
+
 func collect(dir string) []mutant {
 	var out []mutant
-	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
-			return nil
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return out
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
 		}
+		path := filepath.Join(dir, entry.Name())
 		b, err := os.ReadFile(path)
 		if err != nil {
-			return nil
+			continue
 		}
 		text := string(b)
 		ordinal := 0
@@ -98,8 +136,7 @@ func collect(dir string) []mutant {
 				start = i + len(op.before)
 			}
 		}
-		return nil
-	})
+	}
 	return out
 }
 
@@ -132,7 +169,7 @@ func runMutant(root string, m mutant) string {
 	cmd.Dir = tmp
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache")
+	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache", "PROOFBOUND_TEST_REPO_ROOT="+sourceRepositoryRoot)
 	err = cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
 		return "killed"
@@ -226,7 +263,7 @@ func runTests(dir string) string {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stderr
-	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache")
+	cmd.Env = append(os.Environ(), "GOCACHE=/tmp/proofbound-mutant-cache", "PROOFBOUND_TEST_REPO_ROOT="+sourceRepositoryRoot)
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
 		return "killed"
@@ -237,7 +274,11 @@ func runTests(dir string) string {
 	if bytes.Contains(stderr.Bytes(), []byte("undefined")) || bytes.Contains(stderr.Bytes(), []byte("syntax error")) {
 		return "invalid"
 	}
-	_ = os.WriteFile("/tmp/proofbound-mutant-last.log", stderr.Bytes(), 0o644)
+	logPath := os.Getenv("MUTANT_LAST_LOG")
+	if logPath == "" {
+		logPath = "/tmp/proofbound-mutant-last.log"
+	}
+	_ = os.WriteFile(logPath, stderr.Bytes(), 0o644)
 	return "killed"
 }
 

@@ -378,7 +378,7 @@ func validateBatch(batch []batchItem) error {
 	}
 	for _, entry := range batch {
 		for _, ref := range references(entry.revision.Payload, entry.revision.Kind) {
-			if !strings.HasPrefix(ref.Source, "intent.") || !loadedSources[ref.Source] {
+			if !loadedSources[ref.Source] {
 				continue
 			}
 			if _, ok := available[key{ref.Source, ref.RecordID, ref.ArtifactSHA256}]; !ok {

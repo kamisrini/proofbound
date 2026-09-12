@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
@@ -28,6 +29,19 @@ func gateIntegrationStore(t *testing.T) *store.Store {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = s.Close() })
+	if url != "" {
+		pool, err := pgxpool.New(context.Background(), url)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer pool.Close()
+		if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, requirement_reviews_view, obligation_verdicts_view, commit_intents_view, intent_targets_view, requirement_obligations_view, change_intents_view, requirements_view, business_decisions_view, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`); err != nil {
+			t.Fatal(err)
+		}
+	}
 	return s
 }
 
@@ -74,6 +88,51 @@ func TestIntentIntegrityGateStatesAndProof(t *testing.T) {
 			t.Fatalf("result=%+v err=%v", result, err)
 		}
 	})
+}
+
+func TestLatestIntentReferenceProofSelectsRecordsAndExcludesUnrelatedEvents(t *testing.T) {
+	s := gateIntegrationStore(t)
+	intent := appendGateRaw(t, s, core.SourceIntentRecords, core.KindBusinessDecision, "BD-proof-acde12", []byte(`{}`))
+	appendGateRaw(t, s, core.SourceSessions, core.KindSessionObserved, "unrelated", []byte(`{}`))
+	appendGateRaw(t, s, core.SourceGit, core.KindCheckRun, "wrong-git-kind", []byte(`{}`))
+	appendGateRaw(t, s, core.SourceChecks, core.KindCommitRecorded, "wrong-commit-source", []byte(`{}`))
+	latest, err := latestIntentProof(context.Background(), s, "intent-reference-integrity", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if latest == nil || latest.Event.ID != intent.Event.ID {
+		t.Fatalf("latest=%+v intent=%+v", latest, intent)
+	}
+}
+
+func TestLatestIntentVerdictProofSelectsReviewsAndExcludesUnrelatedEvents(t *testing.T) {
+	s := gateIntegrationStore(t)
+	appendGateRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "OV-proof-acde12", []byte(`{}`))
+	review := appendGateRaw(t, s, core.SourceReviews, core.KindRequirementReview, "RR-proof-acde12", []byte(`{}`))
+	appendGateRaw(t, s, core.SourceSessions, core.KindSessionObserved, "unrelated", []byte(`{}`))
+	appendGateRaw(t, s, core.SourceChecks, core.KindRequirementReview, "wrong-review-source", []byte(`{}`))
+	latest, err := latestIntentProof(context.Background(), s, "intent-verdict-integrity", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if latest == nil || latest.Event.ID != review.Event.ID {
+		t.Fatalf("latest=%+v review=%+v", latest, review)
+	}
+}
+
+func TestLatestDeliveryProofRequiresExactSourceKindAndCommit(t *testing.T) {
+	s := gateIntegrationStore(t)
+	commit := appendGateRaw(t, s, core.SourceGit, core.KindCommitRecorded, "target-commit", []byte(`{"case":"target"}`))
+	appendGateRaw(t, s, core.SourceChecks, core.KindCommitRecorded, "target-commit", []byte(`{"case":"source"}`))
+	appendGateRaw(t, s, core.SourceGit, core.KindCheckRun, "target-commit", []byte(`{"case":"kind"}`))
+	appendGateRaw(t, s, core.SourceGit, core.KindCommitRecorded, "other-commit", []byte(`{"case":"native"}`))
+	latest, err := latestIntentProof(context.Background(), s, "intent-delivery-readiness", "target-commit")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if latest == nil || latest.Event.ID != commit.Event.ID {
+		t.Fatalf("latest=%+v commit=%+v", latest, commit)
+	}
 }
 
 func TestIntentDeliveryReadiness(t *testing.T) {
@@ -131,14 +190,23 @@ func appendCheckEventWithCommand(t *testing.T, s *store.Store, ids *core.IDGener
 	return record
 }
 
-func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
-	s := gateIntegrationStore(t)
-	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
+func testRepositoryRoot(t *testing.T) string {
+	t.Helper()
+	root := os.Getenv("PROOFBOUND_TEST_REPO_ROOT")
+	if root == "" {
+		workingDirectory, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		root = filepath.Join(workingDirectory, "..", "..", "..")
 	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "index-check-success.yaml"))
+	return root
+}
+
+func loadedGateDefinition(t *testing.T, name string) Definition {
+	t.Helper()
+	root := testRepositoryRoot(t)
+	data, err := os.ReadFile(filepath.Join(root, "gates", name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,13 +214,20 @@ func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return definition
+}
+
+func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
+	s := gateIntegrationStore(t)
+	ids := testIDs(t)
+	definition := loadedGateDefinition(t, "index-check-success.yaml")
 	appendCheckEventWithCommand(t, s, ids, "index-bad", "make index-check", 1)
 	appendCheckEventWithCommand(t, s, ids, "other", "make check", 0)
 	result, err := Evaluate(context.Background(), s, definition)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.State != StateUnknown || result.WouldBlock || result.EventID != "" {
+	if result.State != StateBlocked || !result.WouldBlock || result.EventID == "" {
 		t.Fatalf("result=%+v", result)
 	}
 	pass := appendCheckEventWithCommand(t, s, ids, "index-good", "make index-check", 0)
@@ -168,18 +243,7 @@ func TestLoadedIndexGateMatchesCommandAndExitCode(t *testing.T) {
 func TestLoadedSpecNumberingGateMatchesCommandAndExitCode(t *testing.T) {
 	s := gateIntegrationStore(t)
 	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "spec-numbering-success.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	definition := loadedGateDefinition(t, "spec-numbering-success.yaml")
 	wrong := appendCheckEventWithCommand(t, s, ids, "spec-wrong", "make law-citation-lint", 0)
 	result, err := Evaluate(context.Background(), s, definition)
 	if err != nil {
@@ -201,18 +265,7 @@ func TestLoadedSpecNumberingGateMatchesCommandAndExitCode(t *testing.T) {
 func TestLoadedInvariantTableGateMatchesCommandAndExitCode(t *testing.T) {
 	s := gateIntegrationStore(t)
 	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "invariant-table-success.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	definition := loadedGateDefinition(t, "invariant-table-success.yaml")
 	wrong := appendCheckEventWithCommand(t, s, ids, "table-wrong", "make spec-numbering-lint", 0)
 	result, err := Evaluate(context.Background(), s, definition)
 	if err != nil {
@@ -234,18 +287,7 @@ func TestLoadedInvariantTableGateMatchesCommandAndExitCode(t *testing.T) {
 func TestLoadedLinkGateMatchesCommandAndExitCode(t *testing.T) {
 	s := gateIntegrationStore(t)
 	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "link-success.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	definition := loadedGateDefinition(t, "link-success.yaml")
 	wrong := appendCheckEventWithCommand(t, s, ids, "link-wrong", "make law-citation-lint", 0)
 	result, err := Evaluate(context.Background(), s, definition)
 	if err != nil {
@@ -267,18 +309,7 @@ func TestLoadedLinkGateMatchesCommandAndExitCode(t *testing.T) {
 func TestLoadedKernelCheckGateMatchesCommandAndExitCode(t *testing.T) {
 	s := gateIntegrationStore(t)
 	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "kernel-check-success.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	definition := loadedGateDefinition(t, "kernel-check-success.yaml")
 	wrong := appendCheckEventWithCommand(t, s, ids, "kernel-wrong", "make check", 0)
 	result, err := Evaluate(context.Background(), s, definition)
 	if err != nil {
@@ -367,10 +398,7 @@ func TestEvaluateIsReadOnly(t *testing.T) {
 func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
 	s := gateIntegrationStore(t)
 	ids := testIDs(t)
-	root, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := testRepositoryRoot(t)
 	repo := t.TempDir()
 	write := func(name, content string) {
 		if err := os.WriteFile(filepath.Join(repo, name), []byte(content), 0o644); err != nil {
@@ -386,7 +414,7 @@ func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
 			t.Fatalf("git %v: %v\n%s", args, err, output)
 		}
 	}
-	copyScript, err := os.ReadFile(filepath.Join(root, "..", "..", "scripts", "check-witness.sh"))
+	copyScript, err := os.ReadFile(filepath.Join(root, "kernel", "scripts", "check-witness.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,6 +427,7 @@ func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
 	}
 	cmd := exec.Command("bash", script)
 	cmd.Dir = repo
+	cmd.Env = append(os.Environ(), "PROOFBOUND_CHECK_TARGET=kernel-check")
 	if output, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("bad kernel-check unexpectedly passed: %s", output)
 	}
@@ -416,14 +445,7 @@ func TestCanaryThenEnforceRejectsBadWitness(t *testing.T) {
 	if err := run.Finish(context.Background(), nil, nil); err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(root, "..", "..", "..", "gates", "kernel-check-success.yaml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	definition, err := Parse(data)
-	if err != nil {
-		t.Fatal(err)
-	}
+	definition := loadedGateDefinition(t, "kernel-check-success.yaml")
 	definition.Mode = "canary"
 	canary, err := Evaluate(context.Background(), s, definition)
 	if err != nil {

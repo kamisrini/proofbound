@@ -105,9 +105,6 @@ func (p *Projector) ReportGitHub(ctx context.Context, s *store.Store, now time.T
 				row.tested = true
 				state := workflowState(status, conclusion)
 				row.workflows = append(row.workflows, workflow+":"+state)
-				if state == "failed" {
-					row.testFailed = true
-				}
 			case string(core.KindGitHubDeployment):
 				row.deployed = true
 				row.deployments = append(row.deployments, environment+":"+status)
@@ -158,7 +155,7 @@ type githubReportRow struct {
 	repository, commitSHA          string
 	freshness                      time.Time
 	workflows, deployments, proofs []string
-	tested, deployed, testFailed   bool
+	tested, deployed               bool
 }
 
 func workflowState(status, conclusion string) string {

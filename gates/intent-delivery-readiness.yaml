@@ -1,1 +1,1 @@
-{"schema":"proofbound.gate.v1","id":"intent-delivery-readiness","description":"The controlled Proofbound delivery commit has satisfied obligations and verifiable requirement reviews","expires":"2026-12-31","mode":"canary","rule":"intent-delivery-readiness","scope_commit":"HEAD"}
+{"schema":"proofbound.gate.v1","id":"intent-delivery-readiness","description":"The controlled Proofbound delivery commit has satisfied obligations and verifiable requirement reviews","expires":"2026-12-31","mode":"enforce","rule":"intent-delivery-readiness","scope_commit":"HEAD"}

@@ -43,6 +43,37 @@ func provider(t *testing.T, r Reader) *Provider {
 	}
 	return p
 }
+func TestNewRequiresReaderAndObservationTime(t *testing.T) {
+	reader := &fixtureReader{}
+	if _, err := New(nil, time.Unix(1, 0)); err == nil {
+		t.Fatal("nil reader accepted")
+	}
+	if _, err := New(reader, time.Time{}); err == nil {
+		t.Fatal("zero observation time accepted")
+	}
+}
+func TestProviderMethodsRejectInvalidInputs(t *testing.T) {
+	var nilProvider *Provider
+	if _, err := nilProvider.Revisions(context.Background()); err == nil {
+		t.Fatal("nil provider accepted")
+	}
+	if _, err := (&Provider{}).Revisions(context.Background()); err == nil {
+		t.Fatal("provider without reader accepted")
+	}
+	p := provider(t, &fixtureReader{artifacts: fixtures(t)})
+	if _, err := nilProvider.Resolve(context.Background(), "HEAD", "CI-payments-receipts-acde12"); err == nil {
+		t.Fatal("nil provider resolved intent")
+	}
+	if _, err := (&Provider{}).Resolve(context.Background(), "HEAD", "CI-payments-receipts-acde12"); err == nil {
+		t.Fatal("provider without reader resolved intent")
+	}
+	if _, err := p.Resolve(context.Background(), "", "CI-payments-receipts-acde12"); err == nil {
+		t.Fatal("empty tree accepted")
+	}
+	if _, err := p.Resolve(context.Background(), "HEAD", "CI-missing-item-acde12"); err == nil {
+		t.Fatal("missing intent resolved")
+	}
+}
 func TestValidVectors(t *testing.T) {
 	revs, err := provider(t, &fixtureReader{artifacts: fixtures(t)}).Revisions(context.Background())
 	if err != nil {
@@ -75,6 +106,56 @@ func TestHostileFixturesFailClosed(t *testing.T) {
 				t.Fatal("hostile fixture accepted")
 			}
 		})
+	}
+}
+func TestRequirementShapeFieldsFailIndependently(t *testing.T) {
+	valid := fixtures(t)[0]
+	for name, replacement := range map[string][2]string{
+		"header":      {"# Requirement:", "# Requirements:"},
+		"status":      {"Status: active", "State: active"},
+		"owner":       {"Owner: payments-owner", "Maintainer: payments-owner"},
+		"separator":   {"Owner: payments-owner\n\n## Obligations", "Owner: payments-owner\nnot blank\n## Obligations"},
+		"obligations": {"## Obligations", "## Acceptance"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			a := valid
+			a.Bytes = []byte(strings.Replace(string(valid.Bytes), replacement[0], replacement[1], 1))
+			if _, err := parse(a, time.Unix(1, 0)); err == nil {
+				t.Fatal("malformed requirement shape accepted")
+			}
+		})
+	}
+}
+func TestChangeIntentShapeFieldsFailIndependently(t *testing.T) {
+	valid := fixtures(t)[1]
+	for name, replacement := range map[string][2]string{
+		"header":    {"# Change Intent:", "# Change:"},
+		"status":    {"Status: accepted", "State: accepted"},
+		"sponsor":   {"Sponsor: payments-sponsor", "Owner: payments-sponsor"},
+		"separator": {"Sponsor: payments-sponsor\n\n## Targets", "Sponsor: payments-sponsor\nnot blank\n## Targets"},
+		"targets":   {"## Targets", "## Requirements"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			a := valid
+			a.Bytes = []byte(strings.Replace(string(valid.Bytes), replacement[0], replacement[1], 1))
+			if _, err := parse(a, time.Unix(1, 0)); err == nil {
+				t.Fatal("malformed change-intent shape accepted")
+			}
+		})
+	}
+}
+func TestDuplicateTargetFailsClosed(t *testing.T) {
+	a := fixtures(t)[1]
+	line := "- implements intent.specdir:BR-payments-flow-acde12@820ccdd89938e169b063b95955b417eb90e206214f6f9086ce9951a148f64d1e#O-1,O-2\n"
+	a.Bytes = append(a.Bytes, []byte(line)...)
+	if _, err := parse(a, time.Unix(1, 0)); err == nil {
+		t.Fatal("duplicate target accepted")
+	}
+}
+func TestDanglingTargetFailsClosed(t *testing.T) {
+	artifacts := fixtures(t)
+	if _, err := provider(t, &fixtureReader{artifacts: artifacts[1:]}).Revisions(context.Background()); err == nil {
+		t.Fatal("change intent without its requirement accepted")
 	}
 }
 func TestCanonicalizationStability(t *testing.T) {

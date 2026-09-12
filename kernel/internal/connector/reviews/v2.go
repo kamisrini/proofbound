@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"sort"
 	"strings"
 	"unicode/utf8"
 
@@ -66,19 +65,46 @@ func ParseObligationVerdict(path string, data []byte) (ObligationVerdict, error)
 	if err := decodeExactOrdered(raw, want, &v); err != nil {
 		return v, err
 	}
-	if v.Schema != "proofbound.obligation-verdict.v2" || !idRE.MatchString(v.VerdictID) || (v.Status != "ACCEPTABLE" && v.Status != "NEEDS_WORK") || strings.TrimSpace(v.DeclaredReviewer) == "" || !commitRE.MatchString(v.ReviewedCommit) || v.ArtifactPath != path || !validPath(v.ArtifactPath) || !digestRE.MatchString(v.ArtifactSHA256) || v.ArtifactSHA256 != ArtifactSHA256(data) {
-		return v, errors.New("obligation verdict identity, status, commit, path, or digest is invalid")
+	if v.Schema != "proofbound.obligation-verdict.v2" {
+		return v, errors.New("obligation verdict schema is invalid")
 	}
-	if err := validateReference(v.ChangeIntent, "change_intent", "evaluates", false); err != nil {
+	if !idRE.MatchString(v.VerdictID) {
+		return v, errors.New("obligation verdict id is invalid")
+	}
+	if !oneOf(v.Status, "ACCEPTABLE", "NEEDS_WORK") {
+		return v, errors.New("obligation verdict status is invalid")
+	}
+	if strings.TrimSpace(v.DeclaredReviewer) == "" {
+		return v, errors.New("obligation verdict reviewer is invalid")
+	}
+	if !commitRE.MatchString(v.ReviewedCommit) {
+		return v, errors.New("obligation verdict commit is invalid")
+	}
+	if v.ArtifactPath != path {
+		return v, errors.New("obligation verdict path does not match")
+	}
+	if !validPath(v.ArtifactPath) {
+		return v, errors.New("obligation verdict path is invalid")
+	}
+	if !digestRE.MatchString(v.ArtifactSHA256) {
+		return v, errors.New("obligation verdict digest shape is invalid")
+	}
+	if v.ArtifactSHA256 != ArtifactSHA256(data) {
+		return v, errors.New("obligation verdict digest is invalid")
+	}
+	if err := validateReference(v.ChangeIntent, "change_intent", "evaluates"); err != nil {
 		return v, err
 	}
-	if len(v.Requirements) == 0 || len(v.Obligations) == 0 {
-		return v, errors.New("obligation verdict requires revisions and outcomes")
+	if len(v.Requirements) == 0 {
+		return v, errors.New("obligation verdict requires revisions")
+	}
+	if len(v.Obligations) == 0 {
+		return v, errors.New("obligation verdict requires outcomes")
 	}
 	last := ""
 	requirements := map[string]bool{}
 	for _, ref := range v.Requirements {
-		if err := validateReference(ref, "requirement", "evaluates", false); err != nil {
+		if err := validateReference(ref, "requirement", "evaluates"); err != nil {
 			return v, err
 		}
 		key := referenceKey(ref)
@@ -92,8 +118,17 @@ func ParseObligationVerdict(path string, data []byte) (ObligationVerdict, error)
 	allSatisfied := true
 	for _, outcome := range v.Obligations {
 		key := outcome.Source + "\x00" + outcome.RequirementID + "\x00" + outcome.ArtifactSHA256 + "\x00" + outcome.ObligationID
-		if key <= last || !requirements[outcome.Source+"\x00"+outcome.RequirementID+"\x00"+outcome.ArtifactSHA256] || !digestRE.MatchString(outcome.ArtifactSHA256) || !idRE.MatchString(outcome.ObligationID) || !oneOf(outcome.Outcome, "SATISFIED", "NOT_SATISFIED", "INCONCLUSIVE") {
-			return v, errors.New("invalid, untargeted, or duplicate obligation outcome")
+		if key <= last {
+			return v, errors.New("obligation outcomes are not sorted and unique")
+		}
+		if !requirements[outcome.Source+"\x00"+outcome.RequirementID+"\x00"+outcome.ArtifactSHA256] {
+			return v, errors.New("obligation outcome is not targeted")
+		}
+		if !digestRE.MatchString(outcome.ArtifactSHA256) || !idRE.MatchString(outcome.ObligationID) {
+			return v, errors.New("obligation outcome identity is invalid")
+		}
+		if !oneOf(outcome.Outcome, "SATISFIED", "NOT_SATISFIED", "INCONCLUSIVE") {
+			return v, errors.New("obligation outcome is invalid")
 		}
 		last = key
 		if outcome.Outcome != "SATISFIED" {
@@ -131,10 +166,28 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 	if err := decodeExactOrdered(raw, want, &v); err != nil {
 		return v, err
 	}
-	if v.Schema != "proofbound.requirement-review.v1" || !idRE.MatchString(v.ReviewID) || strings.TrimSpace(v.DeclaredReviewer) == "" || v.ArtifactPath != path || !validPath(v.ArtifactPath) || !digestRE.MatchString(v.ArtifactSHA256) || v.ArtifactSHA256 != ArtifactSHA256(data) {
-		return v, errors.New("requirement review identity, path, or digest is invalid")
+	if v.Schema != "proofbound.requirement-review.v1" {
+		return v, errors.New("requirement review schema is invalid")
 	}
-	if err := validateReference(v.Requirement, "requirement", "reviews", false); err != nil {
+	if !idRE.MatchString(v.ReviewID) {
+		return v, errors.New("requirement review id is invalid")
+	}
+	if strings.TrimSpace(v.DeclaredReviewer) == "" {
+		return v, errors.New("requirement review reviewer is invalid")
+	}
+	if v.ArtifactPath != path {
+		return v, errors.New("requirement review path does not match")
+	}
+	if !validPath(v.ArtifactPath) {
+		return v, errors.New("requirement review path is invalid")
+	}
+	if !digestRE.MatchString(v.ArtifactSHA256) {
+		return v, errors.New("requirement review digest shape is invalid")
+	}
+	if v.ArtifactSHA256 != ArtifactSHA256(data) {
+		return v, errors.New("requirement review digest is invalid")
+	}
+	if err := validateReference(v.Requirement, "requirement", "reviews"); err != nil {
 		return v, err
 	}
 	if len(v.Outcomes) == 0 {
@@ -142,8 +195,14 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 	}
 	last := ""
 	for _, outcome := range v.Outcomes {
-		if !idRE.MatchString(outcome.ObligationID) || outcome.ObligationID <= last || !oneOf(outcome.Outcome, "VERIFIABLE", "AMBIGUOUS", "UNTESTABLE", "CONTRADICTORY") || strings.ContainsAny(outcome.Finding, "\r\n") {
-			return v, errors.New("invalid, unsorted, duplicate, or unknown requirement-review outcome")
+		if !idRE.MatchString(outcome.ObligationID) || outcome.ObligationID <= last {
+			return v, errors.New("requirement-review outcomes are invalid, unsorted, or duplicate")
+		}
+		if !oneOf(outcome.Outcome, "VERIFIABLE", "AMBIGUOUS", "UNTESTABLE", "CONTRADICTORY") {
+			return v, errors.New("requirement-review outcome is unknown")
+		}
+		if strings.ContainsAny(outcome.Finding, "\r\n") {
+			return v, errors.New("requirement-review finding is not one line")
 		}
 		last = outcome.ObligationID
 	}
@@ -158,7 +217,13 @@ func strictJSONFrontMatter(path string, data []byte) ([]byte, error) {
 		return nil, errors.New("artifact path is invalid")
 	}
 	lines := strings.Split(string(data), "\n")
-	if len(lines) < 3 || lines[0] != "---" || lines[2] != "---" || !strings.HasPrefix(lines[1], "{") || strings.TrimSpace(lines[1]) != lines[1] {
+	if len(lines) < 3 {
+		return nil, errors.New("JSON front matter is incomplete")
+	}
+	if lines[0] != "---" || lines[2] != "---" {
+		return nil, errors.New("JSON front matter delimiters are invalid")
+	}
+	if !strings.HasPrefix(lines[1], "{") || strings.TrimSpace(lines[1]) != lines[1] {
 		return nil, errors.New("JSON front matter must be one compact line between delimiters")
 	}
 	return []byte(lines[1]), nil
@@ -188,7 +253,10 @@ func decodeExactOrdered(raw []byte, want []string, target any) error {
 func topLevelKeys(raw []byte) ([]string, error) {
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	token, err := dec.Token()
-	if err != nil || token != json.Delim('{') {
+	if err != nil {
+		return nil, err
+	}
+	if token != json.Delim('{') {
 		return nil, errors.New("front matter must be an object")
 	}
 	var keys []string
@@ -212,9 +280,24 @@ func topLevelKeys(raw []byte) ([]string, error) {
 	}
 	return keys, nil
 }
-func validateReference(ref connectorintent.Reference, kind, relation string, obligations bool) error {
-	if ref.RecordKind != kind || ref.Relation != relation || !core.Source(ref.Source).WellFormed() || !idRE.MatchString(ref.RecordID) || !digestRE.MatchString(ref.ArtifactSHA256) || (obligations && len(ref.ObligationIDs) == 0) || (!obligations && len(ref.ObligationIDs) != 0) {
-		return errors.New("exact record reference is invalid")
+func validateReference(ref connectorintent.Reference, kind, relation string) error {
+	if ref.RecordKind != kind {
+		return errors.New("exact record reference kind is invalid")
+	}
+	if ref.Relation != relation {
+		return errors.New("exact record reference kind or relation is invalid")
+	}
+	if !core.Source(ref.Source).WellFormed() {
+		return errors.New("exact record reference source is invalid")
+	}
+	if !idRE.MatchString(ref.RecordID) {
+		return errors.New("exact record reference id is invalid")
+	}
+	if !digestRE.MatchString(ref.ArtifactSHA256) {
+		return errors.New("exact record reference identity is invalid")
+	}
+	if len(ref.ObligationIDs) != 0 {
+		return errors.New("exact record reference cannot name obligations")
 	}
 	return nil
 }
@@ -250,15 +333,4 @@ func ArtifactSHA256(data []byte) string {
 	}
 	sum := sha256.Sum256(normalized)
 	return hex.EncodeToString(sum[:])
-}
-
-func sortedUniqueStrings(values []string) []string {
-	sort.Strings(values)
-	out := values[:0]
-	for _, value := range values {
-		if len(out) == 0 || out[len(out)-1] != value {
-			out = append(out, value)
-		}
-	}
-	return out
 }

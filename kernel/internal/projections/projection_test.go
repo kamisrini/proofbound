@@ -164,6 +164,21 @@ func TestSessionPayloadRejectsInvalidCounters(t *testing.T) {
 	}
 }
 
+func TestSessionPayloadAcceptsClosedBoundariesAndNullString(t *testing.T) {
+	for _, coverage := range []float64{0, 1} {
+		v := sessionPayload{SessionID: "session-1", ParseCoverage: coverage}
+		if err := v.validate(); err != nil {
+			t.Fatalf("coverage %v: %v", coverage, err)
+		}
+	}
+	if got := nullString(""); got != nil {
+		t.Fatalf("empty string=%#v", got)
+	}
+	if got := nullString("value"); got != "value" {
+		t.Fatalf("non-empty string=%#v", got)
+	}
+}
+
 func TestApply_CheckRun(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
@@ -245,41 +260,103 @@ func TestGitHubWorkflowValidationAllowsInProgressWithoutConclusion(t *testing.T)
 	}
 }
 
+func TestExternalRepositoryNameAlphabetAndShape(t *testing.T) {
+	for _, value := range []string{"A", "Z", "a", "z", "0", "9", "-", "_", "x.y", "GitHub-9_repo.name"} {
+		if !validExternalName(value) {
+			t.Errorf("valid external name rejected: %q", value)
+		}
+	}
+	for _, value := range []string{"", ".", "..", strings.Repeat("a", 101), "a/b", "a:b", "é"} {
+		if validExternalName(value) {
+			t.Errorf("invalid external name accepted: %q", value)
+		}
+	}
+	for _, value := range []string{"github/docs", "A-1/z_9"} {
+		if !validRepository(value) {
+			t.Errorf("valid repository rejected: %q", value)
+		}
+	}
+	for _, value := range []string{"github", "github/docs/extra", "/docs", "github/", "git:hub/docs"} {
+		if validRepository(value) {
+			t.Errorf("invalid repository accepted: %q", value)
+		}
+	}
+}
+
+func TestReviewPayloadValidationClosedRegistries(t *testing.T) {
+	valid := reviewPayload{Schema: "vera.verdict.v1", VerdictID: "task-round1", Status: "ACCEPTABLE", ReviewedCommit: strings.Repeat("a", 40), Findings: []reviewFinding{}, ArtifactPath: "docs/verification/verdicts/task-round1.md", ArtifactSHA: strings.Repeat("b", 64)}
+	if err := valid.validate(); err != nil {
+		t.Fatal(err)
+	}
+	for _, severity := range []string{"HIGH", "MED", "LOW"} {
+		candidate := valid
+		candidate.Status = "NEEDS_WORK"
+		candidate.Findings = []reviewFinding{{FindingID: "F-1", Severity: severity}}
+		if err := candidate.validate(); err != nil {
+			t.Fatalf("severity %s: %v", severity, err)
+		}
+	}
+	for name, mutate := range map[string]func(*reviewPayload){
+		"schema":           func(v *reviewPayload) { v.Schema = "other" },
+		"id":               func(v *reviewPayload) { v.VerdictID = " \t" },
+		"status":           func(v *reviewPayload) { v.Status = "MAYBE" },
+		"commit":           func(v *reviewPayload) { v.ReviewedCommit = "bad" },
+		"path prefix":      func(v *reviewPayload) { v.ArtifactPath = "elsewhere/a.md" },
+		"path suffix":      func(v *reviewPayload) { v.ArtifactPath = "docs/verification/verdicts/a.txt" },
+		"digest":           func(v *reviewPayload) { v.ArtifactSHA = "bad" },
+		"empty needs work": func(v *reviewPayload) { v.Status = "NEEDS_WORK" },
+		"finding id":       func(v *reviewPayload) { v.Findings = []reviewFinding{{Severity: "LOW"}} },
+		"finding severity": func(v *reviewPayload) { v.Findings = []reviewFinding{{FindingID: "F-1", Severity: "MAYBE"}} },
+		"finding commit": func(v *reviewPayload) {
+			v.Findings = []reviewFinding{{FindingID: "F-1", Severity: "LOW", DefectCommit: "bad"}}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := valid
+			mutate(&candidate)
+			if err := candidate.validate(); err == nil {
+				t.Fatal("invalid review payload accepted")
+			}
+		})
+	}
+}
+
 func TestSupportedEventMatrix(t *testing.T) {
 	cases := []struct {
-		source core.Source
-		kind   core.Kind
-		want   bool
+		source    core.Source
+		kind      core.Kind
+		wantRoute route
 	}{
-		{core.SourceGit, core.KindCommitRecorded, true},
-		{core.SourceChecks, core.KindCheckRun, true},
-		{core.SourceGit, core.KindCheckRun, false},
-		{core.SourceChecks, core.KindCommitRecorded, false},
-		{core.SourceSessions, core.KindSessionObserved, true},
-		{core.SourceSessions, core.KindCheckRun, false},
-		{core.SourceGit, core.KindSessionObserved, false},
-		{core.SourceChecks, core.KindSessionObserved, false},
-		{core.SourceReviews, core.KindReviewVerdict, true},
+		{core.SourceGit, core.KindCommitRecorded, routeCommit},
+		{core.SourceChecks, core.KindCheckRun, routeCheck},
+		{core.SourceSessions, core.KindSessionObserved, routeSession},
+		{core.SourceReviews, core.KindReviewVerdict, routeReview},
+		{core.SourceReviews, core.KindRequirementReview, routeReview},
+		{core.SourceGitHub, core.KindGitHubWorkflow, routeGitHub},
+		{core.SourceGitHub, core.KindGitHubDeployment, routeGitHub},
+		{core.SourceIntentRecords, core.KindBusinessDecision, routeIntent},
+		{core.SourceIntentRecords, core.KindRequirement, routeIntent},
+		{core.SourceIntentRecords, core.KindChangeIntent, routeIntent},
+		{core.SourceIntentSpecdir, core.KindBusinessDecision, routeIntent},
+		{core.SourceIntentSpecdir, core.KindRequirement, routeIntent},
+		{core.SourceIntentSpecdir, core.KindChangeIntent, routeIntent},
+		{core.SourceGit, core.KindCheckRun, routeUnsupported},
+		{core.SourceChecks, core.KindCommitRecorded, routeUnsupported},
+		{core.SourceSessions, core.KindCheckRun, routeUnsupported},
+		{core.SourceGit, core.KindSessionObserved, routeUnsupported},
+		{core.SourceReviews, core.KindGitHubDeployment, routeUnsupported},
+		{core.SourceGitHub, core.KindRequirementReview, routeUnsupported},
+		{core.SourceIntentRecords, core.KindCommitRecorded, routeUnsupported},
+		{core.SourceGit, core.KindBusinessDecision, routeUnsupported},
+		{core.SourceIntentSpecdir, core.KindReviewVerdict, routeUnsupported},
 	}
 	for _, tc := range cases {
-		if got := supported(tc.source, tc.kind); got != tc.want {
-			t.Errorf("supported(%s,%s)=%v want %v", tc.source, tc.kind, got, tc.want)
+		wantSupported := tc.wantRoute != routeUnsupported
+		if got := supported(tc.source, tc.kind); got != wantSupported {
+			t.Errorf("supported(%s,%s)=%v want %v", tc.source, tc.kind, got, wantSupported)
 		}
-		wantRoute := routeUnsupported
-		if tc.source == core.SourceGit && tc.kind == core.KindCommitRecorded {
-			wantRoute = routeCommit
-		}
-		if tc.source == core.SourceChecks && tc.kind == core.KindCheckRun {
-			wantRoute = routeCheck
-		}
-		if tc.source == core.SourceSessions && tc.kind == core.KindSessionObserved {
-			wantRoute = routeSession
-		}
-		if tc.source == core.SourceReviews && tc.kind == core.KindReviewVerdict {
-			wantRoute = routeReview
-		}
-		if got := eventRoute(tc.source, tc.kind); got != wantRoute {
-			t.Errorf("eventRoute(%s,%s)=%v want %v", tc.source, tc.kind, got, wantRoute)
+		if got := eventRoute(tc.source, tc.kind); got != tc.wantRoute {
+			t.Errorf("eventRoute(%s,%s)=%v want %v", tc.source, tc.kind, got, tc.wantRoute)
 		}
 	}
 }
@@ -363,8 +440,13 @@ func TestJSONColumnMatrix(t *testing.T) {
 		index int
 		want  bool
 	}{
-		{"commits_view", 9, true}, {"commits_view", 10, true}, {"commits_view", 8, false},
-		{"checks_view", 11, true}, {"checks_view", 10, false}, {"sessions_view", 8, false},
+		{"commits_view", 9, true}, {"commits_view", 10, true}, {"commits_view", 11, true}, {"commits_view", 8, false},
+		{"checks_view", 11, true}, {"checks_view", 10, false},
+		{"business_decisions_view", 6, true}, {"business_decisions_view", 5, false},
+		{"requirements_view", 6, true}, {"requirements_view", 5, false},
+		{"change_intents_view", 5, true}, {"change_intents_view", 4, false},
+		{"obligation_verdicts_view", 10, true}, {"obligation_verdicts_view", 9, false},
+		{"sessions_view", 8, false},
 	} {
 		if got := isJSONColumn(tc.table, tc.index); got != tc.want {
 			t.Errorf("isJSONColumn(%q,%d)=%v want %v", tc.table, tc.index, got, tc.want)

@@ -18,6 +18,35 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
+func TestSyncGitUsesRepository(t *testing.T) {
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		t.Fatal("DATABASE_URL is required for integration tests")
+	}
+	resetIntegrationDatabase(t, databaseURL)
+	root := t.TempDir()
+	for _, args := range [][]string{{"init"}, {"config", "user.name", "Test"}, {"config", "user.email", "test@example.invalid"}, {"commit", "--allow-empty", "-m", "observed commit"}} {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = root
+		if output, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", args, err, output)
+		}
+	}
+	ledger, err := openStore(context.Background(), root, databaseURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ledger.Close()
+	ids, err := newIDs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := syncGit(context.Background(), root, ledger, ids)
+	if err != nil || result.Listed != 1 || result.Appended != 1 {
+		t.Fatalf("result=%+v err=%v", result, err)
+	}
+}
+
 func TestSyncChecksIngestsAndDeduplicates(t *testing.T) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {

@@ -27,7 +27,19 @@ failure_status=$?
 set -e
 if [[ $failure_status -eq 0 ]]; then echo 'failed witness was accepted' >&2; exit 1; fi
 if [[ -d .proofbound/delivery.lock ]]; then echo 'lock was not cleaned after failure' >&2; exit 1; fi
-if grep -Eq 'delivery-shim\.sh (checks|enforce)$' "$tmp/log"; then
+if grep -Eq '^go (all|enforce)$' "$tmp/log"; then
   echo 'failure did not stop before sync or enforcement' >&2
   exit 1
 fi
+
+: >"$tmp/log"
+set +e
+PROOFBOUND_TEST_FAIL_TARGET=enforce bash scripts/delivery-enforce.sh >"$tmp/readiness.out" 2>&1
+readiness_status=$?
+set -e
+if [[ $readiness_status -eq 0 ]]; then echo 'blocked readiness gate was accepted' >&2; exit 1; fi
+if ! grep -Eq '^go all$' "$tmp/log" || ! grep -Eq '^go enforce$' "$tmp/log"; then
+  echo 'delivery boundary did not sync the complete chain before readiness enforcement' >&2
+  exit 1
+fi
+if [[ -d .proofbound/delivery.lock ]]; then echo 'lock was not cleaned after readiness block' >&2; exit 1; fi

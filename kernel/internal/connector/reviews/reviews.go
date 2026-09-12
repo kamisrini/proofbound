@@ -71,7 +71,10 @@ type Result struct {
 }
 
 func New(d *Deps) (*Connector, error) {
-	if d == nil || d.Reader == nil || isNil(d.Reader) {
+	if d == nil {
+		return nil, errors.New("reviews connector: dependencies are required")
+	}
+	if d.Reader == nil || isNil(d.Reader) {
 		return nil, errors.New("reviews connector: Reader is required")
 	}
 	if d.IDs == nil {
@@ -89,7 +92,10 @@ func New(d *Deps) (*Connector, error) {
 
 func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error) {
 	var out Result
-	if c == nil || c.reader == nil || c.ids == nil || c.now == nil {
+	if c == nil {
+		return out, errors.New("reviews connector: connector is not initialized")
+	}
+	if c.reader == nil || c.ids == nil || c.now == nil {
 		return out, errors.New("reviews connector: connector is not initialized")
 	}
 	if appender == nil || isNil(appender) {
@@ -185,7 +191,10 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 
 func artifactSchema(data []byte) (string, error) {
 	lines := strings.Split(string(data), "\n")
-	if len(lines) < 2 || lines[0] != "---" {
+	if len(lines) < 2 {
+		return "", errors.New("wire artifact front matter is incomplete")
+	}
+	if lines[0] != "---" {
 		return "", errors.New("wire artifact must start with front matter")
 	}
 	if strings.HasPrefix(lines[1], "schema: ") {
@@ -227,7 +236,10 @@ func Parse(path string, data []byte) (Verdict, error) {
 		return v, errors.New("artifact path is not under docs/verification/verdicts and does not end in .md")
 	}
 	lines := strings.Split(string(data), "\n")
-	if len(lines) < 3 || lines[0] != "---" {
+	if len(lines) < 3 {
+		return v, errors.New("front matter is incomplete")
+	}
+	if lines[0] != "---" {
 		return v, errors.New("front matter must start with ---")
 	}
 	end := -1
@@ -251,11 +263,25 @@ func Parse(path string, data []byte) (Verdict, error) {
 			continue
 		}
 		key, rawVal, ok := strings.Cut(line, ":")
-		if !ok || strings.TrimSpace(key) != key || key == "" {
+		if !ok {
 			return v, fmt.Errorf("invalid front matter line %q", line)
 		}
-		if (rawVal == "" && key != "findings") || (rawVal != "" && (!strings.HasPrefix(rawVal, " ") || strings.HasPrefix(rawVal, "  "))) {
+		if strings.TrimSpace(key) != key {
+			return v, fmt.Errorf("invalid front matter line %q", line)
+		}
+		if key == "" {
+			return v, fmt.Errorf("invalid front matter line %q", line)
+		}
+		if rawVal == "" && key != "findings" {
 			return v, fmt.Errorf("invalid front matter value %q", line)
+		}
+		if rawVal != "" {
+			if !strings.HasPrefix(rawVal, " ") {
+				return v, fmt.Errorf("invalid front matter value %q", line)
+			}
+			if strings.HasPrefix(rawVal, "  ") {
+				return v, fmt.Errorf("invalid front matter value %q", line)
+			}
 		}
 		val := strings.TrimPrefix(rawVal, " ")
 		if strings.TrimSpace(val) != val {
@@ -295,10 +321,12 @@ func Parse(path string, data []byte) (Verdict, error) {
 			}
 		}
 	}
-	if !seen["schema"] || !seen["verdict_id"] || !seen["status"] || !seen["reviewed_commit"] || !seen["findings"] || !seen["artifact_path"] || !seen["artifact_sha"] {
-		return v, errors.New("front matter must contain exactly the required fields")
+	for _, required := range []string{"schema", "verdict_id", "status", "reviewed_commit", "findings", "artifact_path", "artifact_sha"} {
+		if !seen[required] {
+			return v, errors.New("front matter must contain exactly the required fields")
+		}
 	}
-	if len(findingLines) > 0 && len(v.Findings) == 0 {
+	if len(findingLines) > 0 {
 		parsed, err := parseFindings(findingLines)
 		if err != nil {
 			return v, err
@@ -329,13 +357,28 @@ func parseFindings(lines []string) ([]Finding, error) {
 			cur = &Finding{}
 			seen = map[string]bool{}
 			line = strings.TrimPrefix(line, "  - ")
-		} else if cur == nil || !strings.HasPrefix(line, "    ") {
-			return nil, errors.New("invalid findings list")
 		} else {
+			if cur == nil {
+				return nil, errors.New("invalid findings list")
+			}
+			if !strings.HasPrefix(line, "    ") {
+				return nil, errors.New("invalid findings list")
+			}
 			line = strings.TrimSpace(line)
 		}
 		key, rawVal, ok := strings.Cut(line, ":")
-		if !ok || strings.TrimSpace(key) != key || (rawVal != "" && !strings.HasPrefix(rawVal, " ")) || seen[key] {
+		if !ok {
+			return nil, errors.New("invalid finding field")
+		}
+		if strings.TrimSpace(key) != key {
+			return nil, errors.New("invalid finding field")
+		}
+		if rawVal != "" {
+			if !strings.HasPrefix(rawVal, " ") {
+				return nil, errors.New("invalid finding field")
+			}
+		}
+		if seen[key] {
 			return nil, errors.New("invalid or duplicate finding field")
 		}
 		val := strings.TrimPrefix(rawVal, " ")
@@ -364,30 +407,52 @@ func parseFindings(lines []string) ([]Finding, error) {
 }
 
 func (v Verdict) validate(path string) error {
-	if v.Schema != "vera.verdict.v1" || !idRE.MatchString(v.VerdictID) {
-		return errors.New("schema or verdict_id is invalid")
+	if v.Schema != "vera.verdict.v1" {
+		return errors.New("schema is invalid")
+	}
+	if !idRE.MatchString(v.VerdictID) {
+		return errors.New("verdict_id is invalid")
 	}
 	if v.Status != "ACCEPTABLE" && v.Status != "NEEDS_WORK" {
 		return errors.New("status is invalid")
 	}
-	if !commitRE.MatchString(v.ReviewedCommit) || !validPath(v.ArtifactPath) || v.ArtifactPath != path || !digestRE.MatchString(v.ArtifactSHA) {
-		return errors.New("commit, artifact path, or artifact sha is invalid")
+	if !commitRE.MatchString(v.ReviewedCommit) {
+		return errors.New("commit is invalid")
 	}
-	for _, f := range v.Findings {
-		if err := validateFinding(f); err != nil {
-			return err
-		}
+	if !validPath(v.ArtifactPath) {
+		return errors.New("artifact path is invalid")
+	}
+	if v.ArtifactPath != path {
+		return errors.New("artifact path does not match")
+	}
+	if !digestRE.MatchString(v.ArtifactSHA) {
+		return errors.New("artifact sha is invalid")
 	}
 	return nil
 }
 func validateFinding(f Finding) error {
-	if !idRE.MatchString(f.FindingID) || (f.Severity != "HIGH" && f.Severity != "MED" && f.Severity != "LOW") || (f.DefectCommit != "" && !commitRE.MatchString(f.DefectCommit)) {
+	if !idRE.MatchString(f.FindingID) {
+		return errors.New("finding id is invalid")
+	}
+	if f.Severity != "HIGH" && f.Severity != "MED" && f.Severity != "LOW" {
+		return errors.New("finding severity is invalid")
+	}
+	if f.DefectCommit != "" && !commitRE.MatchString(f.DefectCommit) {
 		return errors.New("finding is invalid")
 	}
 	return nil
 }
 func validPath(p string) bool {
-	return strings.HasPrefix(p, "docs/verification/verdicts/") && strings.HasSuffix(p, ".md") && !strings.Contains(p, "..") && !strings.Contains(p, "\\")
+	if !strings.HasPrefix(p, "docs/verification/verdicts/") {
+		return false
+	}
+	if !strings.HasSuffix(p, ".md") {
+		return false
+	}
+	if strings.Contains(p, "..") || strings.Contains(p, "\\") {
+		return false
+	}
+	return true
 }
 func cursor(p []string) json.RawMessage { b, _ := json.Marshal(p); return b }
 func isNil(v any) bool {

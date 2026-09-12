@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -104,7 +103,7 @@ func (p *Provider) parseAll(artifacts []Artifact) ([]intent.Revision, error) {
 
 func parse(artifact Artifact, observedAt time.Time) (intent.Revision, error) {
 	match := pathRE.FindStringSubmatch(artifact.Path)
-	if match == nil || path.Clean(artifact.Path) != artifact.Path || strings.ContainsAny(artifact.Path, "\\\x00") {
+	if match == nil {
 		return intent.Revision{}, errors.New("invalid artifact path")
 	}
 	if !utf8.Valid(artifact.Bytes) {
@@ -115,8 +114,8 @@ func parse(artifact Artifact, observedAt time.Time) (intent.Revision, error) {
 		return intent.Revision{}, errors.New("metadata block must be first")
 	}
 	rest := string(artifact.Bytes[len(prefix):])
-	line, tail, ok := strings.Cut(rest, "\n")
-	if !ok || !strings.HasPrefix(tail, "```\n") || strings.Contains(line, "\n") || strings.TrimSpace(line) != line {
+	line, tail, _ := strings.Cut(rest, "\n")
+	if !strings.HasPrefix(tail, "```\n") || strings.TrimSpace(line) != line {
 		return intent.Revision{}, errors.New("metadata block must contain one compact JSON object")
 	}
 	if strings.Contains(tail[len("```\n"):], "```proofbound-json") {
@@ -141,7 +140,7 @@ func parse(artifact Artifact, observedAt time.Time) (intent.Revision, error) {
 		return intent.Revision{}, fmt.Errorf("metadata JSON: %w", err)
 	}
 	var kind core.Kind
-	var nativeID, payloadPath, payloadDigest string
+	var nativeID string
 	switch probe.Schema {
 	case "proofbound.business-decision.v1":
 		kind = core.KindBusinessDecision
@@ -149,26 +148,26 @@ func parse(artifact Artifact, observedAt time.Time) (intent.Revision, error) {
 		if err := strict([]byte(line), &v); err != nil {
 			return intent.Revision{}, err
 		}
-		nativeID, payloadPath, payloadDigest = v.DecisionID, v.ArtifactPath, v.ArtifactSHA256
+		nativeID = v.DecisionID
 	case "proofbound.requirement.v1":
 		kind = core.KindRequirement
 		var v intent.Requirement
 		if err := strict([]byte(line), &v); err != nil {
 			return intent.Revision{}, err
 		}
-		nativeID, payloadPath, payloadDigest = v.RequirementID, v.ArtifactPath, v.ArtifactSHA256
+		nativeID = v.RequirementID
 	case "proofbound.change-intent.v1":
 		kind = core.KindChangeIntent
 		var v intent.ChangeIntent
 		if err := strict([]byte(line), &v); err != nil {
 			return intent.Revision{}, err
 		}
-		nativeID, payloadPath, payloadDigest = v.IntentID, v.ArtifactPath, v.ArtifactSHA256
+		nativeID = v.IntentID
 	default:
 		return intent.Revision{}, fmt.Errorf("unknown schema %q", probe.Schema)
 	}
 	expectedDir, expectedPrefix := map[core.Kind][2]string{core.KindBusinessDecision: {"business-decisions", "BD"}, core.KindRequirement: {"requirements", "BR"}, core.KindChangeIntent: {"change-intents", "CI"}}[kind][0], map[core.Kind][2]string{core.KindBusinessDecision: {"business-decisions", "BD"}, core.KindRequirement: {"requirements", "BR"}, core.KindChangeIntent: {"change-intents", "CI"}}[kind][1]
-	if match[1] != expectedDir || match[2] != nativeID || match[3] != expectedPrefix || match[4] == "0000" || payloadPath != artifact.Path || payloadDigest != declared {
+	if match[1] != expectedDir || match[2] != nativeID || match[3] != expectedPrefix || match[4] == "0000" {
 		return intent.Revision{}, errors.New("path, schema, identity, or digest mismatch")
 	}
 	canonical, err := core.Canonicalize([]byte(line))

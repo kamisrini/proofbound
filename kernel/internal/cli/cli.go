@@ -121,7 +121,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	root, err := repositoryRoot()
 	if err == nil {
-		if cmd == commandVerify {
+		if isVerificationCommand(cmd) {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, verifyTimeout)
 			defer cancel()
@@ -129,7 +129,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		err = runCommand(ctx, cmd, args, root, os.Getenv("DATABASE_URL"), stdout)
 	}
 	if err != nil {
-		if cmd == commandVerify && errors.Is(err, context.DeadlineExceeded) {
+		if isVerificationCommand(cmd) && errors.Is(err, context.DeadlineExceeded) {
 			err = fmt.Errorf("verify: timed out after %s: %w", verifyTimeout, err)
 		}
 		fmt.Fprintf(stderr, "proofbound: %v\n", err)
@@ -137,6 +137,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	}
 	return 0
 }
+
+func isVerificationCommand(cmd command) bool { return cmd == commandVerify }
 
 func repositoryRoot() (string, error) {
 	dir, err := os.Getwd()
@@ -274,7 +276,7 @@ func (r committedVerdictReader) ReadCommittedVerdicts(ctx context.Context) ([]co
 	}
 	var artifacts []connectorreviews.Artifact
 	for _, name := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-		if name == "" || !strings.HasSuffix(name, ".md") {
+		if !strings.HasSuffix(name, ".md") {
 			continue
 		}
 		show := exec.CommandContext(ctx, "git", "-C", r.root, "show", "HEAD:"+name)
@@ -532,22 +534,15 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		if cmd == commandGatesEnforce {
-			if err := gates.RequireDefinitions(definitions); err != nil {
-				return err
-			}
+		definitions, err = gateDefinitionsForCommand(cmd, definitions)
+		if err != nil {
+			return err
 		}
 		if err := resolveIntentGateHeadScope(ctx, root, definitions); err != nil {
 			return err
 		}
-		blocked := false
 		results := make([]gates.Result, 0, len(definitions))
 		for _, definition := range definitions {
-			if cmd == commandGatesEnforce {
-				if err := definition.EnforceReady(); err != nil {
-					return err
-				}
-			}
 			result, err := gates.Evaluate(ctx, ledger, definition)
 			if err != nil {
 				return err
@@ -555,18 +550,12 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock); err != nil {
 				return err
 			}
-			if cmd == commandGatesEnforce && gates.Enforce(result) != nil {
-				blocked = true
-			}
 			results = append(results, result)
 		}
 		if cmd == commandGatesEnforce {
 			if err := enforceGateResults(definitions, results); err != nil {
 				return err
 			}
-		}
-		if blocked {
-			return errors.New("gate enforcement blocked: a gate is BLOCKED or UNKNOWN")
 		}
 		return nil
 	}
@@ -636,6 +625,32 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return projector.CheckIntent(ctx, ledger, args[3], output)
 	}
 	return nil
+}
+
+func enforceDefinitions(definitions []gates.Definition) []gates.Definition {
+	promoted := make([]gates.Definition, 0, len(definitions))
+	for _, definition := range definitions {
+		if definition.Mode == "enforce" {
+			promoted = append(promoted, definition)
+		}
+	}
+	return promoted
+}
+
+func gateDefinitionsForCommand(cmd command, definitions []gates.Definition) ([]gates.Definition, error) {
+	if cmd != commandGatesEnforce {
+		return definitions, nil
+	}
+	promoted := enforceDefinitions(definitions)
+	if err := gates.RequireDefinitions(promoted); err != nil {
+		return nil, err
+	}
+	for _, definition := range promoted {
+		if err := definition.EnforceReady(); err != nil {
+			return nil, err
+		}
+	}
+	return promoted, nil
 }
 
 func resolveIntentGateHeadScope(ctx context.Context, root string, definitions []gates.Definition) error {

@@ -32,7 +32,8 @@ commit or `HEAD`; the CLI resolves `HEAD` before evaluation. Integrity rules cal
 projector and return proof-bearing BLOCKED on a malformed/dangling chain. Delivery readiness is
 PASS only when the scoped commit's every exact target has `SATISFIED` v2 proof and `VERIFIABLE`
 requirement review. For external consumers it remains canary; only a controlled delivery boundary
-may enforce it.
+may enforce it. `gates enforce` selects only definitions explicitly promoted to `enforce`, so
+canary definitions remain observable while promoted definitions protect the same boundary.
 
 The evaluator selects the highest-sequence event matching `source`, `kind`, and
 the optional `selector`,
@@ -57,6 +58,7 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 11. **GATE-INV-11 — Reference and verdict integrity fail closed with the offending ledger proof.**
 12. **GATE-INV-12 — Delivery readiness requires every exact obligation and spec review.**
 13. **GATE-INV-13 — HEAD scope is resolved by the CLI before evaluation.**
+14. **GATE-INV-14 — Canary coexistence:** enforcement evaluates only explicitly promoted definitions and never treats an observational definition as promoted.
 
 | Invariant | Statement | Proving test |
 |---|---|---|
@@ -70,6 +72,7 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-8 | Compound conditions are conjunctive | gates_test.go::TestEvaluatePayloadRequiresAllPredicates |
 | GATE-INV-9 | Selectors isolate event streams | gates_integration_test.go::TestLoadedIndexGateMatchesCommandAndExitCode |
 | GATE-INV-10 | Semantic gate definitions are closed and exclusive | gates_test.go::TestIntentRuleDefinitionsFailClosed |
-| GATE-INV-11 | Bad and good integrity chains return proof-bearing BLOCKED/PASS | intent_integration_test.go::TestIntentIntegrityGateStatesAndProof |
-| GATE-INV-12 | Readiness requires satisfaction and verifiable spec review | intent_integration_test.go::TestIntentDeliveryReadiness |
+| GATE-INV-11 | Bad and good integrity chains return proof-bearing BLOCKED/PASS | gates_integration_test.go::TestIntentIntegrityGateStatesAndProof |
+| GATE-INV-12 | Readiness requires satisfaction and verifiable spec review | gates_integration_test.go::TestIntentDeliveryReadiness |
 | GATE-INV-13 | CLI resolves HEAD scope before semantic evaluation | cli_test.go::TestResolveIntentGateHeadScope |
+| GATE-INV-14 | Enforcement selects only promoted definitions | cli_test.go::TestEnforcementSelectsOnlyPromotedDefinitions |
