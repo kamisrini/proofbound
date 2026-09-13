@@ -16,6 +16,7 @@ if (-not (Test-Path 'Makefile')) {
 }
 $gitBash = Join-Path ${env:ProgramFiles} 'Git\bin\bash.exe'
 if (-not (Test-Path $gitBash)) { throw "Git Bash is required at $gitBash; WSL is not native Windows evidence." }
-$bashRepo = $((Resolve-Path '.').Path).Replace('\', '/')
-& $gitBash -lc "cd '$bashRepo' && make check"
+$repoPath = (Resolve-Path '.').Path -replace '^Microsoft\.PowerShell\.Core\\FileSystem::', ''
+$bashRepo = $repoPath.Replace('\', '/')
+& $gitBash -lc "cd '$bashRepo' && make -f Makefile check"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

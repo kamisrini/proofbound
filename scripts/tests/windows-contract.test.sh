@@ -13,5 +13,5 @@ rg -q '\$packages = @\(' "$setup"
 rg -q 'if \(-not \(Get-Command \$package\.Command' "$setup"
 rg -q "ProgramFiles.*Git\\\\bin\\\\bash\.exe" "$check"
 rg -q "WSL is not native Windows evidence" "$check"
-rg -q "make check" "$check"
+rg -q "make (-f Makefile )?check" "$check"
 echo 'ok windows-contract'

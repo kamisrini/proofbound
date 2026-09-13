@@ -17,7 +17,7 @@ if ($InstallTools) {
         @{ Id = 'GoLang.Go'; Command = 'go' },
         @{ Id = 'jqlang.jq'; Command = 'jq' },
         @{ Id = 'GnuWin32.Make'; Command = 'make' },
-        @{ Id = 'golangci.golangci-lint'; Command = 'golangci-lint' },
+        @{ Id = 'GolangCI.golangci-lint'; Command = 'golangci-lint' },
         @{ Id = 'BurntSushi.ripgrep.MSVC'; Command = 'rg' }
     )
     foreach ($package in $packages) {
