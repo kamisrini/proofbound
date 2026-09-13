@@ -11,11 +11,12 @@ The founder ratified dual-platform execution on 2026-09-13: retain Linux and nat
 Git Bash/MSYS2 behind the PowerShell entry point. The receipt, semantic VD, SPEC contract, and
 roadmap update are committed. The store lock is platform-native (`flock`/`LockFileEx`), Claude
 session paths are legal on Windows, and Windows-only filesystem assertions are bounded in SPECs.
-The latest native gate reached the full kernel suite but failed only because the generated connector
-artifact named the prior connector commit and `skip-lint` had no declarations for the new Windows
-and POSIX-bound skips; both are now corrected in the working tree. Exact next action: commit this
-state/journal/artifact refresh, create a fresh bundle and Windows-filesystem checkout at that
-commit, rerun `check-windows.ps1`, and record the final C8-002 result. C8-001's historical-evidence
+The latest native gate reached the full kernel suite but its witnessed sync then exposed a real
+detached-HEAD validation bug: valid detached checkouts were rejected after `git show-ref` returned
+the expected no-named-ref status. SPEC, code, regression test, and generated connector evidence are
+now committed in `01e0dc9`. Exact next action: create a fresh bundle and Windows-filesystem
+checkout at `01e0dc9`, rerun the native full gate, then run the complete witnessed sync/verify/
+rebuild/report acceptance sequence and record the final C8-002 result. C8-001's historical-evidence
 portability decision remains separate and must be resolved before Task 4.
 
 If the founder explicitly authorizes pushing branch `main` to
@@ -25,7 +26,7 @@ report its exact result; do not infer destination approval from read access.
 ## Branch and repository status
 
 - Branch: `main`.
-- `HEAD` is `59814ad`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Local is
+- `HEAD` is `01e0dc9`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Local is
   ahead and 0 behind; the exact ahead count must be refreshed after the next commit.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
@@ -75,11 +76,10 @@ report its exact result; do not infer destination approval from read access.
   `01M28TPW9C8R7ND19MNDCJ9GDG`, which is not source-recoverable from Git. A newly witnessed check
   did not repair the historical ID. Rebuild equality and fresh-store self-hosted reports remain
   unverified. Evidence: `docs/verification/p6-fresh-clone-linux.md`.
-- **C8-002 / Task 3 blocker:** native Windows has the required toolchain and the gate has passed
-  compilation and repository checks in clean Windows-filesystem clones. The latest run reached the
-  PostgreSQL-backed kernel suite and stopped at `skip-lint` because platform skips were not yet
-  allowlisted; the allowlist and generated connector artifact are now corrected but unverified in a
-  fresh checkout. No final green Windows gate result exists yet. Evidence:
+- **C8-002 / Task 3 blocker:** native Windows has the required toolchain and the bare gate is green
+  at `9bd8b35`. The witnessed acceptance then failed on valid detached-HEAD Git sync; the fix is
+  committed at `01e0dc9` but the fresh native full gate and complete witnessed acceptance are
+  unverified. No final green C8-002 result exists yet. Evidence:
   `docs/verification/p6-windows-platform.md`.
 - The dual-platform decision is now received and recorded in
   `docs/verification/verdicts/p6-dual-platform-ratification.md`, with semantic VD
