@@ -23,7 +23,7 @@ trap 'rm -f "$tmp"' EXIT
         print "$path\t$id\t$title\n";
       }
     ' "$rel" "$spec"
-  done < <(find "$repo/kernel" -name SPEC.md -type f -print0 | sort -z)
+  done < <(find "$repo/kernel" -name SPEC.md -type f -print0 | LC_ALL=C sort -z)
 } > "$tmp"
 
 duplicates=$(awk -F '\t' 'NF == 3 { key=$1 FS $2; count[key]++ } END { for (key in count) if (count[key] > 1) print key }' "$tmp")

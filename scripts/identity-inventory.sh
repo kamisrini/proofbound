@@ -6,7 +6,7 @@ if [[ ${1:-} == --require-no-live-aliases ]]; then
   require_no_live_aliases=true
   shift
 fi
-root=${1:-$(git rev-parse --show-toplevel)}
+root=$(cd "${1:-$(git rev-parse --show-toplevel)}" && pwd -P)
 needle='v''era'
 upper=${needle^^}
 regex="(^|[^[:alnum:]])${needle}([^[:alnum:]]|$)"
