@@ -202,7 +202,7 @@ kernel/internal/store/SPEC.md	INV-35	The read seam is re-entrant, and paging is 
 kernel/internal/store/SPEC.md	INV-36	One appender at a time within a process.
 kernel/internal/store/SPEC.md	INV-37	Losing the lock poisons the Store.
 kernel/internal/store/SPEC.md	INV-38	RETIRED (2026-08-09, round 3).
-kernel/internal/store/SPEC.md	INV-39	The lock is an exclusive, NON-BLOCKING flock on `LockPath`.
+kernel/internal/store/SPEC.md	INV-39	The lock is an exclusive, NON-BLOCKING platform-native file lock on `LockPath`.
 kernel/internal/store/SPEC.md	INV-40	The kernel releases the lock when the holder dies, however it dies.
 kernel/internal/store/SPEC.md	INV-41	Identity is checked at the OPERATION choke point AND again inside the append critical section, so a lost lock is caught before the next operation and an in-flight one is bounded by a single write round trip.
 kernel/internal/store/SPEC.md	INV-42	The lock is DERIVED from the data directory it protects, so two Stores cannot disagree about which lock guards a ledger.
