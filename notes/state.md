@@ -20,15 +20,15 @@ Task 3 acceptance has passed on both platforms at frozen commit
 sync with zero second-pass appends, witnessed/bare `make check`, verify, rebuild, and the two
 self-hosted reports. C8-001 and C8-002 are now mechanically closed by their committed artifacts.
 
-**Exact next action:** generate the C6 intent-coverage artifact from the complete canary and current
-self-hosted ledger, then run the final Task 4 acceptance checks. The applicability boundary and
-seeded missing-intent test are committed; the canary now covers 69 commits, 40 applicable, zero
-exact claims, no known false negatives, and no threshold trigger. Do not start Task 5 or widen P6
-scope.
+**Exact next action:** run the final Task 4 acceptance checks after committing the C6 intent-coverage
+packet and regenerated census. The packet closes all 13 C6 rows and records the historical `0 / 40`
+applicable-commit claim coverage honestly; the canary and boundary tests are passing. If the gate is
+green, begin Task 5 in order. Do not widen P6 scope.
 
 ## Branch and repository status
 
-- Branch: `main`; Task 3 closure and the Task 4 matcher/canary/boundary slices are committed. Local history is ahead of
+- Branch: `main`; Task 3 closure and the Task 4 matcher/canary/boundary slices are committed; the
+  C6 coverage packet and census refresh are pending commit. Local history is ahead of
   `origin/main`; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
@@ -56,8 +56,8 @@ scope.
 ## Open work
 
 - P6 Tasks 4, 5, 6, 8, and 9 remain open; Task 7 is deferred to P7+ by ratified decision.
-- Census categories C3, C6, and C7 still contain open `close-in-P6` rows, including package
-  acceptance, review completion, and measurements/falsifier evaluation.
+- Census categories C3 and C7 still contain open `close-in-P6` rows, including package acceptance
+  and measurements/falsifier evaluation. C6 is closed by the intent-coverage packet.
 - Final P6 package acceptance, mutation sweep, non-author current-code verdict, final census with
   zero open `close-in-P6` rows, and round-C close remain outstanding.
 
@@ -67,8 +67,8 @@ scope.
   and missing-`env` PATH issue were resolved by disposable-process cleanup and explicit tool PATH;
   neither changed repository behavior.
 - C6 intent-history coverage still needs its complete artifact: the canary is observation-only and
-  current active requirements, obligations, reviews, and delivery-chain states must be enumerated
-  with exact evidence before Task 4 can close.
+  current active requirements, obligations, reviews, and delivery-chain states are now enumerated
+  with exact evidence. Task 4’s final gate rerun remains unverified.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
 
