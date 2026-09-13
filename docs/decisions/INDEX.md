@@ -12,6 +12,7 @@
 - [VD-p5-intent-provenance-2026-09-10: adopt the P5 Proofbound intent-provenance semantics](VD-p5-intent-provenance-2026-09-10.md) — Accepted (2026-09-10)
 - [VD-p6-consolidation-2026-09-12: consolidate and deeply complete P1–P5 before adding width](VD-p6-consolidation-2026-09-12.md) — Accepted (2026-09-12)
 - [VD-p6-dual-platform-2026-09-13: retain Linux and native Windows execution](VD-p6-dual-platform-2026-09-13.md) — Accepted (2026-09-13)
+- [VD-p6-historical-evidence-portability-2026-09-13: strict migration-only historical evidence](VD-p6-historical-evidence-portability-2026-09-13.md) — Accepted (2026-09-13)
 - [VD-p6-private-storage-compat-2026-09-12: freeze migrated private storage identity, retire external aliases](VD-p6-private-storage-compat-2026-09-12.md) — Accepted (2026-09-12)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
 - [VD-review-ceremony-tiers-v2b6kp: review ceremony is tiered by package class, and the parallel round comes EARLY](VD-review-ceremony-tiers-v2b6kp.md) — Accepted (2026-08-10)
