@@ -6,7 +6,15 @@ if [[ ${1:-} == --require-no-live-aliases ]]; then
   require_no_live_aliases=true
   shift
 fi
-root=$(cd "${1:-$(git rev-parse --show-toplevel)}" && pwd -P)
+normalize_path() {
+  local path=${1//\\//}
+  if [[ $path =~ ^([A-Za-z]):/(.*)$ ]]; then
+    path="/${BASH_REMATCH[1],,}/${BASH_REMATCH[2]}"
+  fi
+  printf '%s' "$path"
+}
+
+root=$(normalize_path "$(cd "${1:-$(git rev-parse --show-toplevel)}" && pwd -P)")
 needle='v''era'
 upper=${needle^^}
 regex="(^|[^[:alnum:]])${needle}([^[:alnum:]]|$)"
@@ -47,17 +55,19 @@ classify() {
 
 while IFS= read -r match; do
   [[ -n $match ]] || continue
-  absolute=${match%%:*}
-  rest=${match#*:}
-  line=${rest%%:*}
-  content=${rest#*:}
+  [[ $match =~ ^(.+\.[^:]+):([0-9]+):(.*)$ ]] || continue
+  absolute=$(normalize_path "${BASH_REMATCH[1]}")
+  line=${BASH_REMATCH[2]}
+  content=${BASH_REMATCH[3]}
   path=${absolute#"$root"/}
   path=${path#./}
   classify "$path:$line" "$content"
 done < <(cd "$root" && rg -n -i --no-heading --color never --hidden -g '!.git/**' "$regex" . || true)
 
 while IFS= read -r path; do
-  relative=${path#./}
+  relative=$(normalize_path "$path")
+  relative=${relative#"$root"/}
+  relative=${relative#./}
   if [[ ${relative##*/} == "$needle" ]]; then
     counts[deprecated-alias]=$((counts[deprecated-alias] + 1))
     if [[ $relative == kernel/cmd/* || $relative == kernel/internal/* || $relative == kernel/scripts/* ]]; then
