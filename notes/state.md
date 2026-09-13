@@ -20,16 +20,14 @@ Task 3 acceptance has passed on both platforms at frozen commit
 sync with zero second-pass appends, witnessed/bare `make check`, verify, rebuild, and the two
 self-hosted reports. C8-001 and C8-002 are now mechanically closed by their committed artifacts.
 
-**Exact next action:** commit the coherent Task 3 closure set (Windows evidence, refreshed Linux
-evidence, census, artifact-integrity record, and this state/journal update; exclude the pre-existing
-untracked P5 draft), then run the repository bare `make check` and inspect its result. If green,
-begin Task 4 in order: write the ratified applicability SPEC and invariant tests before any
-implementation. Do not start Task 5 or widen P6 scope.
+**Exact next action:** begin Task 4 in order: write the ratified applicability SPEC and invariant
+tests before any implementation. The Task 3 closure is committed, and the post-change bare
+`make check` passed with exit 0. Do not start Task 5 or widen P6 scope.
 
 ## Branch and repository status
 
-- Branch: `main`; HEAD is `b3303100f649c3987003a959668a261ae9b7b3f6`; Task 3 closure edits are currently
-  uncommitted. Local history is ahead of `origin/main`; no push is being attempted in this turn.
+- Branch: `main`; Task 3 closure and this resume state are committed. Local history is ahead of
+  `origin/main`; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
   remain uncommitted without ownership resolution.
@@ -47,7 +45,8 @@ implementation. Do not start Task 5 or widen P6 scope.
   five-record migration, two sync passes, verify, rebuild, and both reports. The earlier failures
   were recorded as process/PATH diagnostics, not allowed as evidence.
 - Derived census and artifact-integrity outputs have been regenerated; C8-001 and C8-002 are
-  evidence-bound. The pre-existing untracked P5 draft remains untouched.
+  evidence-bound. The post-change bare `make check` passed with expected negative diagnostics
+  separated from actual failures. The pre-existing untracked P5 draft remains untouched.
 
 ## Open work
 
@@ -62,8 +61,8 @@ implementation. Do not start Task 5 or widen P6 scope.
 - No current implementation blocker remains for Task 3. The native Windows fixed-port collision
   and missing-`env` PATH issue were resolved by disposable-process cleanup and explicit tool PATH;
   neither changed repository behavior.
-- The final repository-level bare `make check` after these documentation/generated-artifact edits
-  is not yet rerun. Task 4 has not started.
+- Task 4 has not started. Its applicability path matcher and effort-ceiling decisions are ratified,
+  but the SPEC, invariant tests, implementation, and canary evidence remain undone.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
 
