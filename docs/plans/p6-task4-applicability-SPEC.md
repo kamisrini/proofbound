@@ -1,0 +1,78 @@
+# P6 Task 4 — intent applicability SPEC
+
+## Scope
+
+This SPEC defines the founder-ratified, path-only predicate used by P6 intent coverage and the
+future Proofbound-controlled delivery boundary. It does not infer intent from file contents,
+commit subjects, author labels, or natural-language summaries. It adds no event kind, provider,
+wire identity, behavior lock, or new delivery boundary.
+
+## Applicability predicate
+
+A commit is behavior-changing exactly when at least one changed path is in this ordered universe:
+
+```text
+Makefile
+check-windows.ps1
+setup-windows.ps1
+CLAUDE.md
+.github/workflows/**
+gates/**
+scripts/**
+tools/**
+kernel/**
+docs/gates.md
+docs/allowed-skips.txt
+docs/allowed-survivors.txt
+docs/decisions/INDEX.md
+docs/invariants.lock
+docs/laws.lock
+```
+
+Within `kernel/**`, exclude only `kernel/**/SPEC.md` and `kernel/**/testdata/**`. Go test files
+remain included. The predicate is path-only and content-independent. All other documentation,
+notes, vision files, `README.md`, `ROADMAP.md`, `.gitignore`, and `LICENSE` are excluded unless
+exact-listed above.
+
+## Git diff semantics
+
+- A root commit considers all paths in its tree.
+- An ordinary commit considers the diff against its first parent.
+- A merge considers the union of diffs against every parent.
+- A rename or copy tests both old and new paths; a deletion tests the deleted path.
+- Any matching path makes the commit applicable.
+
+The matcher must emit a deterministic result and the complete normalized path set used for the
+decision. It must fail closed on an invalid or missing commit object. It must not inspect the
+working tree.
+
+## Intent consequence
+
+The applicability matcher does not manufacture a claim. An applicable commit passes the later
+intent boundary only when the Git connector resolves at least one valid exact `Intent:` claim from
+that commit's committed tree. A non-applicable commit may have an explicit claim, but applicability
+does not become true because a claim exists.
+
+## Invariants and tests
+
+| ID | Invariant | Test |
+|---|---|---|
+| T4-INV-1 | Every exact file and included directory class matches; unrelated docs and excluded kernel SPEC/testdata paths do not | `scripts/tests/intent-applicability.test.sh` |
+| T4-INV-2 | Matching is content-independent and does not read the working tree | `scripts/tests/intent-applicability.test.sh` |
+| T4-INV-3 | Root, ordinary, deletion, rename, copy, and merge commits use the ratified diff basis | `scripts/tests/intent-applicability.test.sh` |
+| T4-INV-4 | A missing or malformed commit fails closed without an applicable result | `scripts/tests/intent-applicability.test.sh` |
+| T4-INV-5 | Applicability and exact `Intent:` resolution remain separate decisions | existing Git connector intent-resolution tests plus Task 4 delivery-boundary tests |
+
+## Acceptance boundary
+
+Task 4 additionally requires a complete post-`f426ca8` canary report containing changed paths,
+applicability, valid exact intent claim, and commit evidence for every commit; no known false
+negative; and a false-positive rate at or below 10%. A threshold breach requires redesign before
+enforcement. Enforcement remains limited to the existing explicit `make delivery-enforce` boundary.
+
+## Non-goals
+
+- No universal requirement that every repository commit carry intent.
+- No content classifier, author-selected class, AI judgment, or natural-language rule.
+- No change to frozen `vera.witness.v1`, `vera.verdict.v1`, `vera.replay.v1` identities or vectors.
+- No enforcement outside Proofbound's existing explicit delivery boundary.
