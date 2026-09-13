@@ -54,10 +54,10 @@ while IFS= read -r match; do
   path=${absolute#"$root"/}
   path=${path#./}
   classify "$path:$line" "$content"
-done < <(rg -n -i --no-heading --color never --hidden -g '!.git/**' "$regex" "$root" || true)
+done < <(cd "$root" && rg -n -i --no-heading --color never --hidden -g '!.git/**' "$regex" . || true)
 
 while IFS= read -r path; do
-  relative=${path#"$root"/}
+  relative=${path#./}
   if [[ ${relative##*/} == "$needle" ]]; then
     counts[deprecated-alias]=$((counts[deprecated-alias] + 1))
     if [[ $relative == kernel/cmd/* || $relative == kernel/internal/* || $relative == kernel/scripts/* ]]; then
@@ -65,7 +65,7 @@ while IFS= read -r path; do
     fi
     printf 'deprecated-alias\t%s\tpath component\n' "$relative"
   fi
-done < <(find "$root" -path "$root/.git" -prune -o -print)
+done < <(cd "$root" && find . -path './.git' -prune -o -print)
 
 printf 'summary\tfrozen-wire=%d frozen-storage=%d frozen-history=%d deprecated-alias=%d baseline-quote=%d unclassified=%d live-aliases=%d\n' \
   "${counts[frozen-wire]}" "${counts[frozen-storage]}" "${counts[frozen-history]}" "${counts[deprecated-alias]}" "${counts[baseline-quote]}" "$unclassified" "$live_aliases"
