@@ -18,12 +18,14 @@ operator note, and identity-classification fix are committed in `7273311`; the T
 and archive reference are committed in `d89f423`. Normal sync, projection, verify, reports, and
 failed-closed dangling-reference behavior remain unchanged.
 
-**Exact next action:** add `C3-016` for `internal/migration` to the census registry, regenerate and
-commit the Task 2 closure artifact against `7273311`, refresh the census/state, then rerun a clean
-detached Linux acceptance: bare `make check`; `proofbound migrate historical-evidence`; first and
-second `sync all`; `proofbound verify`; rebuild equality; and self-hosted reports. Bind the result,
-then repeat the already-required native Windows acceptance before closing C8-001/C8-002. Do not
-start Task 4 or relax referential integrity.
+The verifier showed that the two cited evidence events also require three exact P5 intent-record
+prerequisites in ledger order; those five records are now the archive's minimal transitive closure.
+
+**Exact next action:** commit the five-record archive/spec/VD amendment, then rerun a clean detached
+Linux acceptance: bare `make check`; `proofbound migrate historical-evidence`; first and second
+`sync all`; `proofbound verify`; rebuild equality; and self-hosted reports. Bind the result, then
+repeat the already-required native Windows acceptance before closing C8-001/C8-002. Do not start
+Task 4 or relax referential integrity.
 
 ## Branch and repository status
 
@@ -45,9 +47,10 @@ start Task 4 or relax referential integrity.
 - Native Windows portability work is implemented and the prior native run passed the PowerShell
   gate, witnessed check, and two-pass sync; its verify was blocked only by the shared historical
   dangling event.
-- The option-1 archive contains exactly sequence 1670/event
-  `01M28TPW9C8R7ND19MNDCJ9GDG` and sequence 1834/event `01M29HMPE5V977AR3VMW47DVDE`. Focused
-  parser, mutation, exact-import, non-empty-ledger, CLI-routing, and package tests pass.
+- The option-1 archive contains the three exact intent prerequisites at sequences 1227–1229 plus
+  sequence 1670/event `01M28TPW9C8R7ND19MNDCJ9GDG` and sequence 1834/event
+  `01M29HMPE5V977AR3VMW47DVDE`. Focused parser, mutation, exact-import, non-empty-ledger,
+  CLI-routing, and package tests pass.
 
 ## Verification and current blockers
 

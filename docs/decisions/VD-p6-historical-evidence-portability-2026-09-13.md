@@ -17,11 +17,12 @@ authenticated and does not itself constitute a verification result.
 
 ## Decision
 
-Proofbound may carry the two exact historical event envelopes cited by the accepted P5 obligation
-verdict in a versioned, committed migration archive. The archive is imported only by an explicit
-fresh-ledger migration command, after strict validation of its fixed record count, sequence numbers,
-event IDs, event fields, and content hashes. It is not read by any connector and cannot broaden the
-event universe.
+Proofbound may carry the two exact historical evidence envelopes cited by the accepted P5 obligation
+verdict, together with the three exact intent-record envelopes that are their minimal transitive
+ledger-order prerequisites, in a versioned, committed migration archive. The archive is imported
+only by an explicit fresh-ledger migration command, after strict validation of its fixed record
+count, sequence numbers, event IDs, event fields, and content hashes. It is not read by any
+connector and cannot broaden the event universe.
 
 The import is append-only and refuses a non-empty ledger. Ordinary sync, projection, verification,
 and report behavior remains unchanged; in particular, missing evidence remains a failed-closed

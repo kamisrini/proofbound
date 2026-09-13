@@ -7,10 +7,10 @@ the event universe. The governing contract is
 
 | Invariant | Statement | Proving test |
 |---|---|---|
-| HE-INV-1 | The archive has exactly the two fixed records and exact line digests | migration_test.go::TestLoadCommittedArchive |
+| HE-INV-1 | The archive has exactly the five-record fixed chain closure and exact line digests | migration_test.go::TestLoadCommittedArchive |
 | HE-INV-2 | Altered, missing, additional, reordered, duplicate, malformed, and unknown-field records fail closed | migration_test.go::TestParseRejectsArchiveMutations |
 | HE-INV-3 | A non-empty target ledger is refused without mutation | migration_test.go::TestImportRefusesNonEmptyLedger |
-| HE-INV-4 | Exact import preserves both fixed sequences and event identities | migration_test.go::TestImportExactArchive |
+| HE-INV-4 | Exact import preserves all fixed sequences and event identities | migration_test.go::TestImportExactArchive |
 
 The migration command is routed by the CLI's `TestParseCommand` table; normal sync and verification
 commands do not invoke this package.

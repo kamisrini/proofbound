@@ -24,11 +24,11 @@ func TestLoadCommittedArchive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(records) != 2 || records[0].Seq != 1670 || records[1].Seq != 1834 {
+	if len(records) != 5 || records[0].Seq != 1227 || records[1].Seq != 1228 || records[2].Seq != 1229 || records[3].Seq != 1670 || records[4].Seq != 1834 {
 		t.Fatalf("records=%+v", records)
 	}
-	if records[0].Event.ID.String() != "01M28TPW9C8R7ND19MNDCJ9GDG" || records[1].Event.ID.String() != "01M29HMPE5V977AR3VMW47DVDE" {
-		t.Fatalf("ids=%s,%s", records[0].Event.ID, records[1].Event.ID)
+	if records[0].Event.ID.String() != "01M25Y75PJCSGE5Q4ZX6JA9BH7" || records[1].Event.ID.String() != "01M25Y75PSMB0AM3N9XV8VG0F8" || records[2].Event.ID.String() != "01M25Y75PW3T47JK1QN9CR9G08" || records[3].Event.ID.String() != "01M28TPW9C8R7ND19MNDCJ9GDG" || records[4].Event.ID.String() != "01M29HMPE5V977AR3VMW47DVDE" {
+		t.Fatalf("ids=%s,%s,%s,%s,%s", records[0].Event.ID, records[1].Event.ID, records[2].Event.ID, records[3].Event.ID, records[4].Event.ID)
 	}
 }
 
@@ -102,7 +102,7 @@ func TestImportExactArchive(t *testing.T) {
 	if err := s.ReadEvents(context.Background(), store.Filter{}, func(r store.Record) error { got = append(got, r); return nil }); err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 2 || got[0].Seq != 1670 || got[1].Seq != 1834 || got[0].Event.ID != archive[0].Event.ID || got[1].Event.ID != archive[1].Event.ID {
+	if len(got) != 5 || got[0].Seq != 1227 || got[1].Seq != 1228 || got[2].Seq != 1229 || got[3].Seq != 1670 || got[4].Seq != 1834 || got[0].Event.ID != archive[0].Event.ID || got[4].Event.ID != archive[4].Event.ID {
 		t.Fatalf("got=%+v", got)
 	}
 }

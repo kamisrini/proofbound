@@ -39,6 +39,24 @@ type expectedRecord struct {
 
 var expected = []expectedRecord{
 	{
+		seq: "1227", lineSHA: "86fccc57e22472df3cdc3034f1293d3ebe2f2f2538f177d771948fa838d1f4b4",
+		id: "01M25Y75PJCSGE5Q4ZX6JA9BH7", source: "intent.records", native: "BD-proofbound-p5-a1b2c3", kind: "business_decision.recorded",
+		occurred: "2026-09-10T11:15:43.403356-04:00", recorded: "2026-09-10T11:15:43.442482-04:00",
+		contentSHA: "b0dd1b659ad303852bdc1faf5f9071c0779199811e095a70e6323555655965e4", connector: "intent/1",
+	},
+	{
+		seq: "1228", lineSHA: "8ef06dcbb7db771740e59267848b0f1e1cab9b15d3e4e0f7a0c78f916388cdc5",
+		id: "01M25Y75PSMB0AM3N9XV8VG0F8", source: "intent.records", native: "BR-intent-chain-d4e5f6", kind: "requirement.recorded",
+		occurred: "2026-09-10T11:15:43.403356-04:00", recorded: "2026-09-10T11:15:43.449557-04:00",
+		contentSHA: "2590baa37f89a256fa3dc9ca19affc455e67a210007c6573f31ae5508cb4a864", connector: "intent/1",
+	},
+	{
+		seq: "1229", lineSHA: "2960bc57c84a73b061960c3a978a48a1757c8156da5551c5845b80a5515d1e75",
+		id: "01M25Y75PW3T47JK1QN9CR9G08", source: "intent.records", native: "CI-implement-p5-0a1b2c", kind: "change_intent.recorded",
+		occurred: "2026-09-10T11:15:43.403356-04:00", recorded: "2026-09-10T11:15:43.452593-04:00",
+		contentSHA: "b0cf6c8d4a13c536dbdee5d06c2b24b81ef603b3fa37dfe863bd12d55373ac37", connector: "intent/1",
+	},
+	{
 		seq: "1670", lineSHA: "8eff383aed595751e650b41593aebf948a39caea19ba2b800f419facc475e3ea",
 		id: "01M28TPW9C8R7ND19MNDCJ9GDG", source: "checks", native: "01M28TP6CJB4FYQWESR6ZTEV73", kind: "check.run",
 		occurred: "2026-09-11T14:11:44-04:00", recorded: "2026-09-11T14:12:07.084781-04:00",
