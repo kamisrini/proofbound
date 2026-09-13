@@ -20,15 +20,14 @@ Task 3 acceptance has passed on both platforms at frozen commit
 sync with zero second-pass appends, witnessed/bare `make check`, verify, rebuild, and the two
 self-hosted reports. C8-001 and C8-002 are now mechanically closed by their committed artifacts.
 
-**Exact next action:** run the final Task 4 acceptance checks after committing the C6 intent-coverage
-packet and regenerated census. The packet closes all 13 C6 rows and records the historical `0 / 40`
-applicable-commit claim coverage honestly; the canary and boundary tests are passing. If the gate is
-green, begin Task 5 in order. Do not widen P6 scope.
+**Exact next action:** begin Task 5 in order: enumerate every active requirement revision and
+obligation, then write the exact-revision non-author review SPEC/tests before implementation or
+review-closure edits. Task 4’s final bare `make check` passed with exit 0; its matcher, canary,
+delivery-boundary test, and C6 coverage packet are committed. Do not widen P6 scope.
 
 ## Branch and repository status
 
-- Branch: `main`; Task 3 closure and the Task 4 matcher/canary/boundary slices are committed; the
-  C6 coverage packet and census refresh are pending commit. Local history is ahead of
+- Branch: `main`; Task 3 and Task 4 closure slices are committed. Local history is ahead of
   `origin/main`; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
@@ -49,13 +48,13 @@ green, begin Task 5 in order. Do not widen P6 scope.
 - Derived census and artifact-integrity outputs have been regenerated; C8-001 and C8-002 are
   evidence-bound. The post-change bare `make check` passed with expected negative diagnostics
   separated from actual failures. The pre-existing untracked P5 draft remains untouched.
-- Task 4 now has a ratified path-only applicability SPEC, executable matcher, invariant tests, and
-  complete post-anchor canary report, plus the existing delivery-boundary check and seeded
-  missing-intent test.
+- Task 4 has the ratified path-only applicability SPEC, executable matcher, invariant tests,
+  complete post-anchor canary report, delivery-boundary check, seeded missing-intent test, C6
+  coverage packet, and final bare-gate evidence.
 
 ## Open work
 
-- P6 Tasks 4, 5, 6, 8, and 9 remain open; Task 7 is deferred to P7+ by ratified decision.
+- P6 Tasks 5, 6, 8, and 9 remain open; Task 7 is deferred to P7+ by ratified decision.
 - Census categories C3 and C7 still contain open `close-in-P6` rows, including package acceptance
   and measurements/falsifier evaluation. C6 is closed by the intent-coverage packet.
 - Final P6 package acceptance, mutation sweep, non-author current-code verdict, final census with
@@ -66,9 +65,8 @@ green, begin Task 5 in order. Do not widen P6 scope.
 - No current implementation blocker remains for Task 3. The native Windows fixed-port collision
   and missing-`env` PATH issue were resolved by disposable-process cleanup and explicit tool PATH;
   neither changed repository behavior.
-- C6 intent-history coverage still needs its complete artifact: the canary is observation-only and
-  current active requirements, obligations, reviews, and delivery-chain states are now enumerated
-  with exact evidence. Task 4’s final gate rerun remains unverified.
+- No Task 4 implementation blocker remains. Historical coverage is honestly `0 / 40`; the canary is
+  observation-only and does not retroactively claim intent for old commits.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
 
