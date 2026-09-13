@@ -7,4 +7,37 @@
 # skip-lint exists to catch, not a reason to allow it — a fixture that cannot build its own
 # premise is broken, and the test should FATAL so someone fixes it.
 #
-# Empty today: every test in the suite runs on a machine with git installed.
+# Native Windows does not expose POSIX inode replacement/mode bits, cannot create invalid-UTF-8
+# filenames, and runs the real wrapper through Git Bash; the named synthetic probes are covered by
+# the native acceptance command where applicable.
+TestCommits_PathIdentityIsPreservedOrRefused/root_invalid_UTF-8_is_refused  # native Windows filenames cannot carry invalid UTF-8
+TestCommits_PathIdentityIsPreservedOrRefused/non-root_invalid_UTF-8_is_refused  # native Windows filenames cannot carry invalid UTF-8
+TestEmitter_BindsGateAndGitToRepository  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_EmptyHelperOutputIsLoud/empty_date  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_EmptyHelperOutputIsLoud/empty_od  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_EscapesToolVersionControlCharacters  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_FreshCheckoutMakeTarget  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_HelperFailuresAreLoud/date_failure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_HelperFailuresAreLoud/od_failure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_MalformedHelperOutputIsLoud/backward_timestamp  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_MalformedHelperOutputIsLoud/impossible_timestamp  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_MalformedHelperOutputIsLoud/malformed_od  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_MalformedHelperOutputIsLoud/short_entropy  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_MalformedHelperOutputIsLoud/truncated_od  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_OutputDigestCoversCombinedBytes  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_PublicationFailuresAreLoud  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_PublicationFailuresAreLoud/hash_failure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_PublicationFailuresAreLoud/spool_removed  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RecordsRepositoryAndTools  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RecordsSuccessAndFailure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RejectsInadmissibleToolBytesBeforeGate/invalid_utf8  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RejectsInadmissibleToolBytesBeforeGate/nul  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RepositoryObservationFailsBeforeGate/head_failure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RepositoryObservationFailsBeforeGate/malformed_head  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RepositoryObservationFailsBeforeGate/status_failure  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_RunIDIsUniqueAndSelfConsistent  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEmitter_WorksWithoutProofboundBinary  # synthetic POSIX shell fixture is not portable to native Git Bash command lookup
+TestEnsurePrivateDirCreatesPrivateDirectory  # native Windows does not expose POSIX directory mode bits
+TestLock_PathReplacementIsLoss  # Windows refuses replacing a file while its byte range is locked
+TestLock_RecordCloseAndReplacementRoutes  # Windows refuses replacing a file while its byte range is locked
+TestStore_UsableRejectsALostLock  # Windows refuses replacing a file while its byte range is locked

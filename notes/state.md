@@ -9,11 +9,14 @@
 
 The founder ratified dual-platform execution on 2026-09-13: retain Linux and native Windows, using
 Git Bash/MSYS2 behind the PowerShell entry point. The receipt, semantic VD, SPEC contract, and
-roadmap update are committed. The native toolchain and Windows-filesystem checkout are prepared;
-the store lock is now platform-native (`flock`/`LockFileEx`) and Windows-only test assumptions are
-bounded in SPECs. Exact next action: commit this state/journal refresh, create a fresh bundle/Windows
-checkout at that commit, rerun `check-windows.ps1`, and record the final C8-002 result. C8-001's
-historical-evidence portability decision remains separate and must be resolved before Task 4.
+roadmap update are committed. The store lock is platform-native (`flock`/`LockFileEx`), Claude
+session paths are legal on Windows, and Windows-only filesystem assertions are bounded in SPECs.
+The latest native gate reached the full kernel suite but failed only because the generated connector
+artifact named the prior connector commit and `skip-lint` had no declarations for the new Windows
+and POSIX-bound skips; both are now corrected in the working tree. Exact next action: commit this
+state/journal/artifact refresh, create a fresh bundle and Windows-filesystem checkout at that
+commit, rerun `check-windows.ps1`, and record the final C8-002 result. C8-001's historical-evidence
+portability decision remains separate and must be resolved before Task 4.
 
 If the founder explicitly authorizes pushing branch `main` to
 `https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
@@ -22,8 +25,8 @@ report its exact result; do not infer destination approval from read access.
 ## Branch and repository status
 
 - Branch: `main`.
-- `HEAD` is `212cd18`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Local is
-  44 commits ahead and 0 behind before this state refresh.
+- `HEAD` is `59814ad`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Local is
+  ahead and 0 behind; the exact ahead count must be refreshed after the next commit.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
   `https://github.com/kamisrini/proofbound.git`. Do not report the branch as pushed.
@@ -72,10 +75,11 @@ report its exact result; do not infer destination approval from read access.
   `01M28TPW9C8R7ND19MNDCJ9GDG`, which is not source-recoverable from Git. A newly witnessed check
   did not repair the historical ID. Rebuild equality and fresh-store self-hosted reports remain
   unverified. Evidence: `docs/verification/p6-fresh-clone-linux.md`.
-- **C8-002 / Task 3 blocker:** native Windows now has the required toolchain and the gate has passed
+- **C8-002 / Task 3 blocker:** native Windows has the required toolchain and the gate has passed
   compilation and repository checks in clean Windows-filesystem clones. The latest run reached the
-  PostgreSQL-backed kernel suite but first stopped on stale generated connector evidence; that
-  artifact is regenerated and committed. No final green Windows gate result exists yet. Evidence:
+  PostgreSQL-backed kernel suite and stopped at `skip-lint` because platform skips were not yet
+  allowlisted; the allowlist and generated connector artifact are now corrected but unverified in a
+  fresh checkout. No final green Windows gate result exists yet. Evidence:
   `docs/verification/p6-windows-platform.md`.
 - The dual-platform decision is now received and recorded in
   `docs/verification/verdicts/p6-dual-platform-ratification.md`, with semantic VD
@@ -94,6 +98,9 @@ report its exact result; do not infer destination approval from read access.
   `Makefile` selection in the Windows gate. It then exposed Unix-only `syscall.Flock`, POSIX signal
   test assumptions, and Windows-illegal filename fixtures; these are now platform-bounded or
   adapted without changing Linux behavior.
+- The native test harness uses explicit `.cmd` shims only for synthetic POSIX fake-tool fixtures;
+  those fixtures are skipped and declared in `docs/allowed-skips.txt` on Windows. The shipped
+  wrapper's real-tool success path remains the required native acceptance proof.
 - Tasks 4–6 and 8–9 have not started. The 15 C3 package rows still require final-code calibrated
   mutation sweeps and non-author acceptance; 13 C6 intent/review rows and 16 C7 measurement/falsifier
   rows remain open; final round-C acceptance is absent.
