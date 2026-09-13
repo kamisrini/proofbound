@@ -8,10 +8,10 @@
 ## Resume — 2026-09-13
 
 The founder ratified dual-platform execution on 2026-09-13: retain Linux and native Windows, using
-Git Bash/MSYS2 behind the PowerShell entry point. The receipt and semantic VD are being committed in
-this checkpoint. The exact next action is to run the native Windows prerequisite/setup path and
-complete C8-002 evidence; C8-001's historical-evidence portability decision remains separate and
-must be resolved before Task 4.
+Git Bash/MSYS2 behind the PowerShell entry point. The receipt, semantic VD, SPEC contract, and
+roadmap update are committed. The exact next action is to run the native Windows prerequisite/setup
+path from a fresh PowerShell process and complete C8-002 evidence; C8-001's historical-evidence
+portability decision remains separate and must be resolved before Task 4.
 
 If the founder explicitly authorizes pushing branch `main` to
 `https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
@@ -21,8 +21,8 @@ report its exact result; do not infer destination approval from read access.
 
 - Branch: `main`.
 - The parent of this dated-resume layout update is
-  `10fa22c6b1246b3cf771c7d407901a4b5fd6c610`; `origin/main` remains
-  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 34 commits
+  `33bc32b`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is
+  committed, local is 35 commits ahead and 0 behind.
   ahead and 0 behind.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
@@ -81,6 +81,10 @@ report its exact result; do not infer destination approval from read access.
   cited historical event envelopes (recommended over relaxing dangling-evidence checks).
 - The historical archive is only a recommendation: its exact envelopes have not been exported,
   validated, specified, implemented, or independently reviewed. Do not present it as decided.
+- Native Windows currently has Git, Go, and `jq`; it lacks GNU Make, `golangci-lint`, and `rg` in the
+  PowerShell PATH. Git Bash exists at `C:\Program Files\Git\bin\bash.exe`; the first installer
+  attempt was stopped after the Go MSI made no progress. `setup-windows.ps1` now installs only missing
+  packages, so the next attempt will not unnecessarily upgrade Go.
 - Tasks 4–6 and 8–9 have not started. The 15 C3 package rows still require final-code calibrated
   mutation sweeps and non-author acceptance; 13 C6 intent/review rows and 16 C7 measurement/falsifier
   rows remain open; final round-C acceptance is absent.

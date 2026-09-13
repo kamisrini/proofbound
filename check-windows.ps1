@@ -14,5 +14,8 @@ if (-not (Test-Path 'Makefile')) {
     Write-Warning 'Makefile is absent because this was migrated as text-only. Full make check is unavailable until the scaffold is regenerated.'
     exit 0
 }
-make check
-
+$gitBash = Join-Path ${env:ProgramFiles} 'Git\bin\bash.exe'
+if (-not (Test-Path $gitBash)) { throw "Git Bash is required at $gitBash; WSL is not native Windows evidence." }
+$bashRepo = $((Resolve-Path '.').Path).Replace('\', '/')
+& $gitBash -lc "cd '$bashRepo' && make check"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
