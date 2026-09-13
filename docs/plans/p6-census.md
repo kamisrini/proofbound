@@ -2,8 +2,8 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=188 open=46 closed=142 unclassified=0.
-Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
+Counts: total=189 open=47 closed=142 unclassified=0.
+Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -97,6 +97,7 @@ Categories: C1=34 C2=41 C3=15 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C3-013 | C3 | package:internal/projections | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/projections | open | close-in-P6 | — | — |
 | C3-014 | C3 | package:internal/store | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/store | open | close-in-P6 | — | — |
 | C3-015 | C3 | package:internal/twin | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/twin | open | close-in-P6 | — | — |
+| C3-016 | C3 | package:internal/migration | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/migration | open | close-in-P6 | — | — |
 | C4-001 | C4 | connector:checks | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
 | C4-002 | C4 | connector:git | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
 | C4-003 | C4 | connector:git/gitcmd | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
