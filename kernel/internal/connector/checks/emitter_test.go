@@ -213,7 +213,7 @@ func TestEmitter_FreshCheckoutMakeTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(actualMake, "-C", fixture.root, "check-witnessed")
-	cmd.Env = append(os.Environ(), "PATH="+fixture.binDir+string(os.PathListSeparator)+os.Getenv("PATH"), "EXPECTED_REPO_ROOT="+fixture.root, "TMPDIR="+fixture.root)
+	cmd.Env = append(os.Environ(), "PATH="+fixture.binDir+string(os.PathListSeparator)+os.Getenv("PATH"), "EXPECTED_REPO_ROOT="+gitBashPath(fixture.root), "TMPDIR="+fixture.root)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("output=%q error=%v", output, err)
 	}
@@ -471,11 +471,19 @@ func (f emitterFixture) command(exitCode int) *exec.Cmd {
 	cmd.Env = append(os.Environ(),
 		"PATH="+f.binDir+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"FAKE_MAKE_EXIT="+strconv.Itoa(exitCode),
-		"EXPECTED_REPO_ROOT="+f.root,
+		"EXPECTED_REPO_ROOT="+gitBashPath(f.root),
 		"TMPDIR="+f.root,
 		"FAKE_DATE_STATE="+filepath.Join(f.root, "date-state"),
 	)
 	return cmd
+}
+
+func gitBashPath(path string) string {
+	if runtime.GOOS != "windows" {
+		return path
+	}
+	path = filepath.ToSlash(path)
+	return "/" + strings.ToLower(path[:1]) + path[2:]
 }
 
 func witnessFiles(t *testing.T, root string) []string {

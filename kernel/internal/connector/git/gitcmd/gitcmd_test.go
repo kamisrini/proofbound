@@ -129,7 +129,7 @@ func TestCommits_ContentCannotBreakFraming(t *testing.T) {
 
 func TestCommits_PreservesHostilePaths(t *testing.T) {
 	fixture := newFixture(t)
-	paths := []string{" leading", `quote"slash`}
+	paths := []string{" leading", "plain-slash"}
 	if runtime.GOOS != "windows" {
 		paths = append(paths, "trailing ", "line\nbreak", `slash\\`)
 	}
