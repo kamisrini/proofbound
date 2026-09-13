@@ -7,36 +7,32 @@
 
 ## Resume — 2026-09-13
 
-Founder ratified historical-evidence portability option 1: a strict migration-only archive of the
-two exact ledger envelopes cited by the accepted P5 obligation verdict. The receipt is committed at
+Founder ratified historical-evidence portability option 1. The strict migration-only archive now
+contains five exact ledger envelopes: the two cited P5 evidence records and their three exact
+intent-record prerequisites. The receipt is committed at
 `docs/verification/verdicts/p6-historical-evidence-ratification.md`; the semantic VD is
 `docs/decisions/VD-p6-historical-evidence-portability-2026-09-13.md`.
 
-The archive SPEC and exact fixture/tests were committed before implementation. The migration,
-store permission, explicit `proofbound migrate historical-evidence` command, package SPEC, README
-operator note, and identity-classification fix are committed in `7273311`; the Task 3 route artifact
-and archive reference are committed in `d89f423`. Normal sync, projection, verify, reports, and
-failed-closed dangling-reference behavior remain unchanged.
+Task 3 acceptance has passed on both platforms at frozen commit
+`b3303100f649c3987003a959668a261ae9b7b3f6`. Linux evidence is
+`docs/verification/p6-fresh-clone-linux.md`; native Windows evidence is
+`docs/verification/p6-windows-platform.md`. Both records bind migration `imported=5`, two-pass
+sync with zero second-pass appends, witnessed/bare `make check`, verify, rebuild, and the two
+self-hosted reports. C8-001 and C8-002 are now mechanically closed by their committed artifacts.
 
-The verifier showed that the two cited evidence events also require three exact P5 intent-record
-prerequisites in ledger order; those five records are now the archive's minimal transitive closure.
-
-**Exact next action:** commit the five-record archive/spec/VD amendment, then rerun a clean detached
-Linux acceptance: bare `make check`; `proofbound migrate historical-evidence`; first and second
-`sync all`; `proofbound verify`; rebuild equality; and self-hosted reports. Bind the result, then
-repeat the already-required native Windows acceptance before closing C8-001/C8-002. Do not start
-Task 4 or relax referential integrity.
+**Exact next action:** commit the coherent Task 3 closure set (Windows evidence, refreshed Linux
+evidence, census, artifact-integrity record, and this state/journal update; exclude the pre-existing
+untracked P5 draft), then run the repository bare `make check` and inspect its result. If green,
+begin Task 4 in order: write the ratified applicability SPEC and invariant tests before any
+implementation. Do not start Task 5 or widen P6 scope.
 
 ## Branch and repository status
 
-- Branch: `main`; current HEAD when this note was written: `d89f423`; local branch is ahead of
-  `origin/main` and has not been pushed.
-- Push remains unauthorized at the destination-specific safety boundary for
-  `https://github.com/kamisrini/proofbound.git`; do not infer write authorization from remote read
-  access.
+- Branch: `main`; HEAD is `b3303100f649c3987003a959668a261ae9b7b3f6`; Task 3 closure edits are currently
+  uncommitted. Local history is ahead of `origin/main`; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
-  not be committed without ownership resolution.
+  remain uncommitted without ownership resolution.
 
 ## Completed
 
@@ -44,42 +40,41 @@ Task 4 or relax referential integrity.
   obligation verdict, mutation evidence, and delivery-readiness evidence are preserved.
 - P6 authorization, Task 0 census, Task 1 C1/C2 closure, Task 2 C4 closure, and the 52-cell C5
   route matrix are complete. Task 7 is explicitly skipped to P7+.
-- Native Windows portability work is implemented and the prior native run passed the PowerShell
-  gate, witnessed check, and two-pass sync; its verify was blocked only by the shared historical
-  dangling event.
-- The option-1 archive contains the three exact intent prerequisites at sequences 1227–1229 plus
-  sequence 1670/event `01M28TPW9C8R7ND19MNDCJ9GDG` and sequence 1834/event
-  `01M29HMPE5V977AR3VMW47DVDE`. Focused parser, mutation, exact-import, non-empty-ledger,
-  CLI-routing, and package tests pass.
+- Task 3 historical-evidence portability is implemented spec-first with exact archive validation,
+  migration-only import permission, explicit CLI routing, exact-import/mutation/non-empty-ledger
+  tests, and unchanged normal connector/projection/verify behavior.
+- Native Windows passed the PowerShell entry point, focused replay test, bare and witnessed checks,
+  five-record migration, two sync passes, verify, rebuild, and both reports. The earlier failures
+  were recorded as process/PATH diagnostics, not allowed as evidence.
+- Derived census and artifact-integrity outputs have been regenerated; C8-001 and C8-002 are
+  evidence-bound. The pre-existing untracked P5 draft remains untouched.
 
-## Verification and current blockers
+## Open work
 
-- Prior author-side bare `make check` and `proofbound verify` are green on the existing migrated
-  local ledger; the earlier Linux linter result is historical evidence only.
-- The current bare check reached the gates but reported the expected generated-artifact/census
-  follow-ups: the Task 2 artifact still names the pre-migration code commit, and the census lacks
-  the new `internal/migration` C3 row. No implementation test failure was reported.
-- A clean detached clone at `d89f423` reached the same two follow-ups and then stopped at state
-  freshness because this note had not yet been refreshed. That acceptance is unverified and must be
-  rerun after the next coherent documentation commit.
-- C8-001 Linux and C8-002 native Windows remain open until migration-enabled fresh-clone verify,
-  rebuild equality, and reports are green and evidence-bound. Tasks 4–9 remain unstarted; C3, C6,
-  and C7 remain open.
+- P6 Tasks 4, 5, 6, 8, and 9 remain open; Task 7 is deferred to P7+ by ratified decision.
+- Census categories C3, C6, and C7 still contain open `close-in-P6` rows, including package
+  acceptance, review completion, and measurements/falsifier evaluation.
+- Final P6 package acceptance, mutation sweep, non-author current-code verdict, final census with
+  zero open `close-in-P6` rows, and round-C close remain outstanding.
 
-## Unverified assumptions
+## Blocked and unverified
 
-- The archive was extracted from the local migrated ledger and its complete line digests are bound
-  in the migration implementation; the fresh-clone end-to-end proof has not yet established that
-  the archive makes the accepted P5 chain fully reproducible.
-- Native Windows must be rerun after the final migration-enabled code/artifact commit; the previous
-  green-through-sync run is not evidence for this implementation.
+- No current implementation blocker remains for Task 3. The native Windows fixed-port collision
+  and missing-`env` PATH issue were resolved by disposable-process cleanup and explicit tool PATH;
+  neither changed repository behavior.
+- The final repository-level bare `make check` after these documentation/generated-artifact edits
+  is not yet rerun. Task 4 has not started.
+- Push is not attempted; destination-specific authorization/authentication has not been freshly
+  established for this turn.
 
 ## Institutionalized improvement
 
-Resume state is maintained at the top of this file with a dated exact next action. New production
-packages must be added to the P6 census registry in the same coherent change, and generated closure
-artifacts must be regenerated only after the code commit they bind. Focused tests are not treated as
-package acceptance; fresh-clone commands and non-author verdicts remain required.
+Resume notes remain at the top of this file with a dated exact next action. Acceptance records now
+name the frozen commit, toolchain, exit codes, expected negative diagnostics, and disposable-state
+boundaries. Native platform runs must use one isolated process tree, an explicit PATH including Git
+`usr\\bin`, and verified cleanup before a retry; no test skip is allowlisted merely to mask a fixed
+port collision. Generated census/integrity artifacts are regenerated in the same coherent change as
+the evidence they summarize.
 
 ## Standing cautions
 

@@ -2,7 +2,7 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=189 open=47 closed=142 unclassified=0.
+Counts: total=189 open=45 closed=144 unclassified=0.
 Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
@@ -191,8 +191,8 @@ Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C7-014 | C7 | falsifier:applicability-boundary | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:applicability-boundary | open | close-in-P6 | — | — |
 | C7-015 | C7 | falsifier:foreign-provider-schema-change | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:foreign-provider-schema-change | open | close-in-P6 | — | — |
 | C7-016 | C7 | falsifier:requirement-review-rubber-stamp | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:requirement-review-rubber-stamp | open | close-in-P6 | — | — |
-| C8-001 | C8 | fresh-clone-linux | A fresh Linux clone needs check, double sync, verify, rebuild equality, and self-hosted reports. | fresh-clone:linux | open | close-in-P6 | — | — |
-| C8-002 | C8 | platform-windows | Windows scripts imply a platform path that needs a real Windows run or an accepted narrowing decision. | fresh-clone:windows | open | close-in-P6 | — | — |
+| C8-001 | C8 | fresh-clone-linux | A fresh Linux clone needs check, double sync, verify, rebuild equality, and self-hosted reports. | artifact:docs/verification/p6-fresh-clone-linux.md | closed | close-in-P6 | — | docs/verification/p6-fresh-clone-linux.md |
+| C8-002 | C8 | platform-windows | Windows scripts imply a platform path that needs a real Windows run or an accepted narrowing decision. | artifact:docs/verification/p6-windows-platform.md | closed | close-in-P6 | — | docs/verification/p6-windows-platform.md |
 | C8-003 | C8 | artifact-integrity | Verdict digests, commit references, and acceptance artifact paths need a complete integrity audit. | artifact:docs/verification/p6-artifact-integrity.md | closed | close-in-P6 | — | docs/verification/p6-artifact-integrity.md |
 | C8-004 | C8 | vision-progress-assessment | The motivating vision-progress assessment is only in ignored local status and needs preservation or classification. | artifact:docs/verification/p6-vision-progress-assessment.md | closed | close-in-P6 | — | docs/verification/p6-vision-progress-assessment.md |
 | C8-005 | C8 | snapshot-provider | The conditional snapshot provider is skipped for P6 and retained for P7+. | decision-skip:docs/decisions/VD-p6-consolidation-2026-09-12.md:snapshot-provider | closed | defer-to-P7 | docs/decisions/VD-p6-consolidation-2026-09-12.md | docs/decisions/VD-p6-consolidation-2026-09-12.md |
