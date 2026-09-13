@@ -8,10 +8,13 @@
 ## Branch and repository status
 
 - Branch: `main`.
-- Pre-wrap HEAD: `e1bb67df7ed24109c095d2a9720767fbc8612d83`.
-- At inspection, `origin/main` was `1d1112df2622abd54f07837335a7805c3c69145d`; local was
-  30 commits ahead and 0 behind. The coherent state/census-freshness wrap commit and push occur
-  after this note is written and are reported by the wrapping agent.
+- The parent of this final push-status note is wrap commit
+  `3810a851f7e12c7e954c719de9e9c1201f5b6d6f`; `origin/main` remains
+  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 32 commits
+  ahead and 0 behind.
+- Push was not executed. A remote read succeeded, but write authentication was not reached because
+  safety review requires explicit destination-specific approval to export these commits to
+  `https://github.com/kamisrini/proofbound.git`. Do not report the branch as pushed.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is not the accepted P5
   exhibit (SHA-256 `9d203c96243a73cad2cc119662a9b58ea04dc7e9b17d8e5ed3b1a418118d5ffa`)
@@ -86,6 +89,10 @@ the narrow historical-evidence portability SPEC and tests before implementation,
 empty-ledger acceptance, bind C8-001/C8-002 evidence, regenerate the census, and close Task 3. If no
 decision is supplied, ask only for those two ratifications; do not start Task 4 out of order and do
 not require a separate resume prompt.
+
+If the founder explicitly authorizes pushing branch `main` to
+`https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
+report its exact result; do not infer destination approval from read access.
 
 ## Standing cautions
 
