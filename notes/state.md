@@ -3,15 +3,18 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-13 (P6 Tasks 0–2 complete; Task 3 in progress with C8-001 still blocked)
+**As of:** 2026-09-13 (P6 Tasks 0–2 complete; Task 3 in progress with C8-001 and C8-002 still open)
 
 ## Resume — 2026-09-13
 
 The founder ratified dual-platform execution on 2026-09-13: retain Linux and native Windows, using
 Git Bash/MSYS2 behind the PowerShell entry point. The receipt, semantic VD, SPEC contract, and
-roadmap update are committed. The exact next action is to run the native Windows prerequisite/setup
-path from a fresh PowerShell process and complete C8-002 evidence; C8-001's historical-evidence
-portability decision remains separate and must be resolved before Task 4.
+roadmap update are committed. The native toolchain and Windows-filesystem checkout are now prepared;
+the first full native run passed compilation and all preceding checks but was stopped by the
+repository freshness guard because this note was four commits behind HEAD. Exact next action:
+commit this state/journal refresh, create a fresh bundle/Windows checkout at that commit, rerun
+`check-windows.ps1`, and record the final C8-002 result. C8-001's historical-evidence portability
+decision remains separate and must be resolved before Task 4.
 
 If the founder explicitly authorizes pushing branch `main` to
 `https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
@@ -20,10 +23,8 @@ report its exact result; do not infer destination approval from read access.
 ## Branch and repository status
 
 - Branch: `main`.
-- The parent of this dated-resume layout update is
-  `33bc32b`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is
-  committed, local is 35 commits ahead and 0 behind.
-  ahead and 0 behind.
+- `HEAD` is `a26f3e5`; `origin/main` remains `1d1112df2622abd54f07837335a7805c3c69145d`. Local is
+  40 commits ahead and 0 behind before this state refresh.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
   `https://github.com/kamisrini/proofbound.git`. Do not report the branch as pushed.
@@ -82,9 +83,13 @@ report its exact result; do not infer destination approval from read access.
 - The historical archive is only a recommendation: its exact envelopes have not been exported,
   validated, specified, implemented, or independently reviewed. Do not present it as decided.
 - Native Windows currently has Git, Go, and `jq`; it lacks GNU Make, `golangci-lint`, and `rg` in the
-  PowerShell PATH. Git Bash exists at `C:\Program Files\Git\bin\bash.exe`; the first installer
-  attempt was stopped after the Go MSI made no progress. `setup-windows.ps1` now installs only missing
-  packages, so the next attempt will not unnecessarily upgrade Go.
+  original PowerShell PATH. Git Bash exists at `C:\Program Files\Git\bin\bash.exe`; native GNU Make,
+  golangci-lint, and ripgrep are now installed. The official Go 1.27.0 archive was extracted into a
+  complete native toolchain at `C:\Users\thamm\AppData\Local\Proofbound\go1.27.0-full\go`.
+- Native acceptance must use a Windows-filesystem checkout with `core.autocrlf=false`; the WSL UNC
+  mount is not valid native evidence because Go reports `RLock ... Incorrect function` there. The
+  native run also exposed and fixed locale ordering, Windows drive/path parsing, and explicit
+  `Makefile` selection in the Windows gate.
 - Tasks 4–6 and 8–9 have not started. The 15 C3 package rows still require final-code calibrated
   mutation sweeps and non-author acceptance; 13 C6 intent/review rows and 16 C7 measurement/falsifier
   rows remain open; final round-C acceptance is absent.
