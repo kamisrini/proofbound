@@ -84,6 +84,22 @@ func TestCommits_EmptyRepositoryIsNotAnError(t *testing.T) {
 	}
 }
 
+func TestCommits_DetachedHEADAtCommitIsNotAnError(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("a", "a")
+	fixture.commit("one", "")
+	commitSHA := fixture.head()
+	fixture.git("checkout", "--detach", "-q", commitSHA)
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commits, err := repo.Commits(context.Background())
+	if err != nil || !contains(allCommitSHAs(t, fixture), commitSHA) || len(commits) != 1 {
+		t.Fatalf("commits=%v error=%v", commits, err)
+	}
+}
+
 func TestReachable_EmptyRepositoryIsNotAnError(t *testing.T) {
 	fixture := newFixture(t)
 	repo, err := New(fixture.root)

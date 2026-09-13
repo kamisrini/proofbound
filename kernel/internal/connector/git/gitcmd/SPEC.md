@@ -48,7 +48,8 @@ cannot become partial after construction.
   body prose, do not create a claim.
 - Tips are peeled commit ids for every ref/HEAD route admitted by `Commits`; excluded refs never
   appear. A failure from Git is always an error except the documented unborn-HEAD/empty-repository
-  cases.
+  cases. `git show-ref` also exits 1 for a valid detached HEAD because no named ref is present; the
+  already-validated detached HEAD object is therefore admitted rather than treated as a broken ref.
 
 ## 3. Invariants
 

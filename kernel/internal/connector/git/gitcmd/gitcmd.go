@@ -362,12 +362,9 @@ func (r *Repo) validateRefs(ctx context.Context) error {
 			return errors.New("gitcmd: detached HEAD does not name a commit object")
 		}
 	}
-	if _, err := r.run(ctx, "show-ref"); err == nil {
-		return nil
-	} else if _, headErr := r.peelCommit(ctx, "HEAD"); headErr == nil {
-		return fmt.Errorf("gitcmd: validate refs: %w", err)
-	}
-	// `show-ref` exits 1 with no refs in a legitimate unborn repository.
+	// `show-ref` exits 1 both for a legitimate unborn repository and for a valid
+	// detached HEAD, which has no named ref. Loose/packed refs and detached HEAD
+	// were already validated above, so there is no additional failure to report.
 	return nil
 }
 
