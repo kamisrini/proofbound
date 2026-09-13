@@ -54,7 +54,7 @@ func TestParseRejectsArchiveMutations(t *testing.T) {
 }
 
 func TestImportRefusesNonEmptyLedger(t *testing.T) {
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL")})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), AllowHistoricalEvidenceImport: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestImportRefusesNonEmptyLedger(t *testing.T) {
 }
 
 func TestImportExactArchive(t *testing.T) {
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL")})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), AllowHistoricalEvidenceImport: true})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -18,16 +18,17 @@ var (
 )
 
 type Config struct {
-	Root              string
-	DataDir           string
-	RuntimeDir        string
-	BinariesDir       string
-	LockPath          string
-	Port              uint16
-	DatabaseURL       string
-	MaxConns          int
-	AllowReplayImport bool
-	Now               func() time.Time
+	Root                          string
+	DataDir                       string
+	RuntimeDir                    string
+	BinariesDir                   string
+	LockPath                      string
+	Port                          uint16
+	DatabaseURL                   string
+	MaxConns                      int
+	AllowReplayImport             bool
+	AllowHistoricalEvidenceImport bool
+	Now                           func() time.Time
 }
 
 func (c Config) normalized() (Config, error) {

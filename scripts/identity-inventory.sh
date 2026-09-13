@@ -28,7 +28,7 @@ classify() {
     docs/decisions/*|docs/verification/verdicts/*|notes/journal/*|docs/verification/p2-*|docs/verification/p3-*|docs/verification/task*|docs/plans/P1-*|GENESIS-PROMPT.md:*|MIGRATION-PROMPT.md:*)
       category=frozen-history
       ;;
-    docs/plans/P5-*|docs/plans/p6-census-rows.tsv:*|docs/plans/p6-census.md:*|scripts/p6-census.sh:*|docs/verification/p5-ratification-baseline.md:*|scripts/tests/identity-inventory.test.sh:*)
+    docs/plans/P5-*|docs/plans/p6-census-rows.tsv:*|docs/plans/p6-census.md:*|scripts/p6-census.sh:*|docs/verification/p5-ratification-baseline.md:*|docs/verification/p6-*|scripts/tests/identity-inventory.test.sh:*)
       category=baseline-quote
       ;;
     *)

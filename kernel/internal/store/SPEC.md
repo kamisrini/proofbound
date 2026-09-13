@@ -149,6 +149,11 @@ type Config struct {
 	// production stores refuse explicit-sequence imports.
 	AllowReplayImport bool
 
+	// AllowHistoricalEvidenceImport is a separate guarded seam for the fixed P6
+	// historical-evidence migration. It is enabled only by the explicit migration
+	// command after that package has validated its exact archive.
+	AllowHistoricalEvidenceImport bool
+
 	// Now is optional; nil means time.Now. It stamps sync_runs.started_at /
 	// finished_at and the lock file's informational acquired_at. It is no longer
 	// load-bearing for the lock: it was injected so lock-STALENESS tests could
@@ -194,6 +199,11 @@ func (s *Store) Close() error
 // sequenced stream. It is available only to temporary twin stores and is
 // transactional: a failed import leaves no partial rows.
 func (s *Store) ImportReplayRecords(context.Context, []Record) error
+
+// ImportHistoricalEvidenceRecords writes the prevalidated, explicitly sequenced
+// P6 historical migration stream transactionally. It is disabled unless the
+// explicit historical-evidence migration configuration is enabled.
+func (s *Store) ImportHistoricalEvidenceRecords(context.Context, []Record) error
 
 // Lock reports the lock this Store holds. The zero LockInfo when DatabaseURL was set.
 func (s *Store) Lock() LockInfo

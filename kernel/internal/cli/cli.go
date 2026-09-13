@@ -27,11 +27,12 @@ import (
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/gates"
+	"github.com/kamisrini/proofbound/kernel/internal/migration"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce}"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -64,6 +65,7 @@ const (
 	commandIntentCheck
 	commandGatesCanary
 	commandGatesEnforce
+	commandMigrateHistoricalEvidence
 )
 
 func parseCommand(args []string) command {
@@ -104,6 +106,8 @@ func parseCommand(args []string) command {
 		return commandGatesCanary
 	case len(args) == 2 && args[0] == "gates" && args[1] == "enforce":
 		return commandGatesEnforce
+	case len(args) == 2 && args[0] == "migrate" && args[1] == "historical-evidence":
+		return commandMigrateHistoricalEvidence
 	default:
 		return commandInvalid
 	}
@@ -161,6 +165,10 @@ func repositoryRootFrom(dir string) (string, error) {
 
 func openStore(ctx context.Context, root, databaseURL string) (*store.Store, error) {
 	return store.Open(ctx, store.Config{Root: stateRoot(root), DatabaseURL: databaseURL})
+}
+
+func openHistoricalEvidenceStore(ctx context.Context, root, databaseURL string) (*store.Store, error) {
+	return store.Open(ctx, store.Config{Root: stateRoot(root), DatabaseURL: databaseURL, AllowHistoricalEvidenceImport: true})
 }
 
 func stateRoot(root string) string { return filepath.Join(root, ".proofbound") }
@@ -497,6 +505,22 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			return err
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
+		return err
+	}
+	if cmd == commandMigrateHistoricalEvidence {
+		ledger, err := openHistoricalEvidenceStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		records, err := migration.Load(filepath.Join(root, migration.ArchivePath))
+		if err != nil {
+			return err
+		}
+		if err := migration.Import(ctx, ledger, records); err != nil {
+			return err
+		}
+		_, err = fmt.Fprintf(output, "imported=%d\n", len(records))
 		return err
 	}
 	ledger, err := openStore(ctx, root, databaseURL)

@@ -512,3 +512,63 @@ func (s *Store) ImportReplayRecords(ctx context.Context, records []Record) error
 	err = tx.Commit(ctx)
 	return err
 }
+
+// ImportHistoricalEvidenceRecords imports the fixed, explicitly authorized P6 migration stream.
+// Callers must validate the stream's exact contents before using this seam.
+func (s *Store) ImportHistoricalEvidenceRecords(ctx context.Context, records []Record) error {
+	if err := s.usable(); err != nil {
+		return err
+	}
+	if !s.cfg.AllowHistoricalEvidenceImport {
+		return fmt.Errorf("%w: historical evidence import disabled", ErrConfig)
+	}
+	return s.importRecords(ctx, records)
+}
+
+func (s *Store) importRecords(ctx context.Context, records []Record) (err error) {
+	seenIDs := make(map[string]struct{}, len(records))
+	seenKeys := make(map[string]struct{}, len(records))
+	var last int64
+	for i, r := range records {
+		if r.Seq <= last {
+			return fmt.Errorf("%w: replay sequence %d is not increasing", ErrConfig, i)
+		}
+		if err := r.Event.Validate(); err != nil {
+			return fmt.Errorf("%w: replay event %d: %v", ErrConfig, i, err)
+		}
+		id := r.Event.ID.String()
+		key := string(r.Event.Source) + "\x00" + r.Event.NativeID + "\x00" + r.Event.ContentSHA
+		if _, ok := seenIDs[id]; ok {
+			return fmt.Errorf("%w: duplicate replay event id at %d", ErrConfig, i)
+		}
+		if _, ok := seenKeys[key]; ok {
+			return fmt.Errorf("%w: duplicate replay idempotency key at %d", ErrConfig, i)
+		}
+		seenIDs[id] = struct{}{}
+		seenKeys[key] = struct{}{}
+		last = r.Seq
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+	for _, r := range records {
+		_, err = tx.Exec(ctx, `INSERT INTO events(seq,event_id,source,native_id,kind,occurred_at,recorded_at,payload,content_sha,connector_version) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, r.Seq, r.Event.ID.String(), r.Event.Source, r.Event.NativeID, r.Event.Kind, r.Event.OccurredAt, r.Event.RecordedAt, r.Event.Payload, r.Event.ContentSHA, r.Event.ConnectorVersion)
+		if err != nil {
+			return err
+		}
+	}
+	if len(records) > 0 {
+		_, err = tx.Exec(ctx, `SELECT setval(pg_get_serial_sequence('events','seq'), $1, true)`, records[len(records)-1].Seq)
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit(ctx)
+	return err
+}

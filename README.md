@@ -124,6 +124,9 @@ Additional operator targets are `make check-witnessed`, `make verify`, `make gat
 ledger; mutation sweeps are package-acceptance evidence and intentionally stay outside
 `make check`.
 
+For a fresh clone that is carrying the P6 portability archive, run the one-shot migration before
+verification: `go run ./cmd/proofbound migrate historical-evidence`.
+
 The current command-line entry point is a scaffold while the product workflow is being built. The
 working implementation and tests live under [`kernel/`](kernel/).
 
