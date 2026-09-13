@@ -14,6 +14,8 @@ Append the factual entry to today’s journal, including LESSON when applicable.
 notes/state.md in place with the current date, branch status, completed work, open blockers,
 unverified assumptions, the exact next action, and any institutionalized improvement. The exact
 next action is durable agent state; the user must not be asked to run a separate resume prompt.
+Per Build Law 10, put `## Resume — YYYY-MM-DD` first after `As of`, with the exact next action and
+immediate blockers there rather than buried later in the file.
 
 Run the appropriate verification gate, especially bare `make check`; if generated-index or
 invariant-lock freshness fails, regenerate the derived artifact and rerun the gate. Treat expected

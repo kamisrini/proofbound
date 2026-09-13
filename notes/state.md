@@ -5,12 +5,25 @@
 
 **As of:** 2026-09-12 (P6 Tasks 0–2 complete; Task 3 blocked on two founder decisions)
 
+## Resume — 2026-09-12
+
+At the next agent turn, consume the founder's two Task 3 decisions if supplied. If both recommended
+choices are ratified, first commit the founder receipt verbatim and mint the semantic VD; then write
+the narrow historical-evidence portability SPEC and tests before implementation, rerun the fresh
+empty-ledger acceptance, bind C8-001/C8-002 evidence, regenerate the census, and close Task 3. If no
+decision is supplied, ask only for those two ratifications; do not start Task 4 out of order and do
+not require a separate resume prompt.
+
+If the founder explicitly authorizes pushing branch `main` to
+`https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
+report its exact result; do not infer destination approval from read access.
+
 ## Branch and repository status
 
 - Branch: `main`.
-- The parent of this final push-status note is wrap commit
-  `3810a851f7e12c7e954c719de9e9c1201f5b6d6f`; `origin/main` remains
-  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 32 commits
+- The parent of this dated-resume layout update is
+  `81380334d068c23e1a139b3b3a11620d3f5a0546`; `origin/main` remains
+  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 33 commits
   ahead and 0 behind.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
@@ -80,19 +93,6 @@ leaving the production census checker red while component tests stayed green. Th
 is now bound and `scripts/tests/p6-census-current.test.sh` runs the production
 `scripts/p6-census.sh --check` inside every `make hooks-test` / bare `make check`. The gate registry
 documents this lightweight freshness backstop.
-
-## Exact next action
-
-At the next agent turn, consume the founder's two Task 3 decisions if supplied. If both recommended
-choices are ratified, first commit the founder receipt verbatim and mint the semantic VD; then write
-the narrow historical-evidence portability SPEC and tests before implementation, rerun the fresh
-empty-ledger acceptance, bind C8-001/C8-002 evidence, regenerate the census, and close Task 3. If no
-decision is supplied, ask only for those two ratifications; do not start Task 4 out of order and do
-not require a separate resume prompt.
-
-If the founder explicitly authorizes pushing branch `main` to
-`https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
-report its exact result; do not infer destination approval from read access.
 
 ## Standing cautions
 
