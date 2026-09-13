@@ -22,7 +22,7 @@ self-hosted reports. C8-001 and C8-002 are now mechanically closed by their comm
 
 **Exact next action:** add the narrow applicability check to the existing `make delivery-enforce`
 boundary and write its seeded missing-intent test. The complete post-`f426ca8` canary report is now
-committed: 66 commits examined, 38 applicable, zero exact claims, no known false negatives, and no
+committed: 67 commits examined, 39 applicable, zero exact claims, no known false negatives, and no
 threshold trigger. Do not start Task 5 or widen P6 scope.
 
 ## Branch and repository status
