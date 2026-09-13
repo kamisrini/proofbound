@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -111,9 +110,9 @@ func acquireLock(c Config) (*ledgerLock, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: open lock: %v", ErrConfig, err)
 	}
-	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+	if err = lockPlatform(f); err != nil {
 		_ = f.Close()
-		if errors.Is(err, syscall.EWOULDBLOCK) {
+		if errors.Is(err, errLockBusy) {
 			return nil, &LockedError{Path: c.LockPath}
 		}
 		return nil, err

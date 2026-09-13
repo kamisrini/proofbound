@@ -6,6 +6,13 @@
 **Re-confirmation:** Task 3's DoD requires re-confirming the plan's DB/locking design against real embedded-postgres behavior. § 4 is that re-confirmation — every number and every behavior there was **measured on 2026-08-08**, not assumed. Three plan statements did not survive contact and are corrected in place (§ 4 F1, F2, F6).
 **Review hardening (2026-08-09):** an adversarial pass demonstrated that a live lock holder never re-checked that it still held the lock, and that the read seam could not be used from inside its own callback. Both were measured, not argued (§ 4 F14, F15); the lock was rebuilt on an ownership token with an atomic publish and a compare-and-swap takeover, and INV-33 … INV-38 were added. Every change in that pass is recorded here first.
 
+**Dual-platform amendment (2026-09-13):** the lock contract is platform-neutral. POSIX uses
+`flock(2)` and native Windows uses `LockFileEx`; both take an exclusive, nonblocking kernel file
+lock on the derived `LockPath`, both release it when the owning handle/process dies, and both map a
+busy lock to `ErrLocked`. The public behavior and invariant remain identical; the OS primitive is
+selected by build-tagged implementation files. The frozen Linux measurement history below remains
+valid for the POSIX implementation and is not claimed as a Windows measurement.
+
 **Lock replaced with `flock(2)` (2026-08-09, round 3).** The rebuilt lock failed review too, in the same place and for the same underlying reason. Measured (§ 4 F14b): detection latency equalled `HeartbeatInterval` — a cached loss flag meant that at the SHIPPED 60s default a lock lost to a `git clean` stayed invisible for up to a minute, and two processes appended interleaved to one ledger for 2.6 seconds with no error on either side; the takeover compare-and-swap did not mutually exclude, because `os.Link` shares the source inode so every reclaim marker was born already stale; and a constant `newNonce` passed the whole suite. The common cause is not any of those three bugs: it is that **a regular file was being asked to answer "does anybody else hold this ledger", and every answer a regular file can give is an inference about some past instant.**
 
 **Round 4 — four defects the flock rebuild left standing (2026-08-09).** The exclusion
@@ -26,7 +33,17 @@ gate is diagnosed in **F24** — a closed listening socket is not released while
 mechanism on a different file descriptor. Two unchosen numbers found while hunting it are
 measured and replaced in F23.
 
-So the exclusion mechanism is no longer hand-rolled. It is an exclusive `flock(2)` held for the life of the `Store` (§ 4 F16–F21, measured 2026-08-09). The kernel releases it when the holder dies for ANY reason, which deletes staleness, takeover, reclaim markers, pid liveness *for the lock*, the ownership nonce, and the heartbeat — together with the invariants that existed only to make those safe (INV-22, INV-24, INV-38 RETIRED; INV-23, INV-25, INV-27, INV-37 AMENDED; INV-39, INV-40, INV-41 ADDED). The one thing `flock` does not cover — the lock lives on the inode, so unlinking the PATH admits a second holder — is closed by an identity check at the operation choke point rather than on a timer. Interface changes are in § 2 and are a deletion in every case: `Config.StaleLockAfter`, `Config.HeartbeatInterval`, `LockInfo.TookOverFrom`, `LockedError.Alive`, and the lock record's `nonce`.
+So the exclusion mechanism is no longer hand-rolled. It is a platform-native exclusive file lock held
+for the life of the `Store` (`flock(2)` on POSIX and `LockFileEx` on Windows; § 4 F16–F21 measured
+the POSIX implementation on 2026-08-09). The kernel releases it when the holder dies for ANY reason,
+which deletes staleness, takeover, reclaim markers, pid liveness *for the lock*, the ownership nonce,
+and the heartbeat — together with the invariants that existed only to make those safe (INV-22,
+INV-24, INV-38 RETIRED; INV-23, INV-25, INV-27, INV-37 AMENDED; INV-39, INV-40, INV-41 ADDED).
+The one thing a platform-native file lock does not cover — the lock lives on the inode/file identity,
+so unlinking `LockPath` admits a second holder — is closed by an identity check at the operation
+choke point rather than on a timer. Interface changes are in § 2 and are a deletion in every case:
+`Config.StaleLockAfter`, `Config.HeartbeatInterval`, `LockInfo.TookOverFrom`, `LockedError.Alive`,
+and the lock record's `nonce`.
 
 ---
 
@@ -188,9 +205,11 @@ type LockInfo struct {
 }
 ```
 
-**The lock itself.** The lock is an **exclusive `flock(2)`** on `LockPath`, taken
-`LOCK_EX|LOCK_NB` at `Open` and held until `Close` closes the descriptor. That is the
-entire exclusion mechanism. Everything below the flock is a label on it.
+**The lock itself.** The lock is an **exclusive, nonblocking platform-native file lock** on
+`LockPath`, taken at `Open` and held until `Close` closes the descriptor: `flock(2)` with
+`LOCK_EX|LOCK_NB` on POSIX, `LockFileEx` with `LOCKFILE_EXCLUSIVE_LOCK|LOCKFILE_FAIL_IMMEDIATELY`
+on native Windows. That is the entire exclusion mechanism. Everything below the OS lock is a label
+on it.
 
 - **The kernel is the arbiter.** A second acquirer fails immediately with
   `EWOULDBLOCK` (§ 4, F16) — no pid probing, no liveness heuristic, no age threshold,
@@ -699,9 +718,9 @@ above is thematic (see the note at the top of this section).
 
 **Round 3 — the flock rebuild (2026-08-09).** Numbers continue the sequence.
 
-39. **INV-39 — The lock is an exclusive, NON-BLOCKING flock on `LockPath`.** While a
-    Store is open, an outside `open`+`flock(LOCK_EX|LOCK_NB)` on that exact path fails
-    with `EWOULDBLOCK`, and a second `Open` — in this process or another — is refused
+39. **INV-39 — The lock is an exclusive, NON-BLOCKING platform-native file lock on `LockPath`.**
+    While a Store is open, an outside exclusive nonblocking lock attempt on that exact path fails
+    with the platform busy error, and a second `Open` — in this process or another — is refused
     with `ErrLocked` promptly rather than waiting. *Three one-line mistakes break this
     and each is caught separately: locking a different descriptor leaves `LockPath`
     takeable; `LOCK_SH` admits two holders; dropping `LOCK_NB` makes a busy ledger hang a
