@@ -66,6 +66,12 @@ report its exact result; do not infer destination approval from read access.
 - `scripts/p6-census.sh --check`, Task 1/2 closure checkers, route matrix checker, and artifact
   integrity checker: exit 0.
 - `git fsck --no-dangling --no-progress`: exit 0.
+- Final native Windows `check-windows.ps1`: exit 0 at `a2e3aed`; `make check-witnessed`, both sync
+  passes, and the native Windows toolchain checks also passed. Native `verify` failed only on the
+  shared dangling historical verdict event documented in `p6-windows-platform.md`.
+- A fresh Linux `make check` retry was attempted with host execution and a clean Linux PATH but
+  stopped at `golangci-lint: command not found`; this workspace has no Linux linter binary. The
+  prior dated Linux gate result remains historical evidence, not a new post-fix green result.
 
 ## Open, blocked, and unverified
 
