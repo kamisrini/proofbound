@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -128,7 +129,10 @@ func TestCommits_ContentCannotBreakFraming(t *testing.T) {
 
 func TestCommits_PreservesHostilePaths(t *testing.T) {
 	fixture := newFixture(t)
-	paths := []string{" leading", "trailing ", "line\nbreak", `quote"slash\\`}
+	paths := []string{" leading", `quote"slash`}
+	if runtime.GOOS != "windows" {
+		paths = append(paths, "trailing ", "line\nbreak", `slash\\`)
+	}
 	for _, path := range paths {
 		fixture.write(path, path)
 	}
@@ -156,7 +160,10 @@ func TestNULUTF8Strings_RejectsNonUTF8PathIdentity(t *testing.T) {
 func TestCommits_PathIdentityIsPreservedOrRefused(t *testing.T) {
 	t.Run("valid UTF-8 survives", func(t *testing.T) {
 		fixture := newFixture(t)
-		path := " leading-☃\n"
+		path := " leading-☃"
+		if runtime.GOOS != "windows" {
+			path += "\n"
+		}
 		fixture.write(path, "content")
 		fixture.commit("valid", "")
 		if files := onlyCommit(t, fixture).FilesTouched; !reflect.DeepEqual(files, []string{path}) {
@@ -169,6 +176,9 @@ func TestCommits_PathIdentityIsPreservedOrRefused(t *testing.T) {
 			name = "non-root"
 		}
 		t.Run(name+" invalid UTF-8 is refused", func(t *testing.T) {
+			if runtime.GOOS == "windows" {
+				t.Skip("native Windows filenames cannot carry invalid UTF-8 bytes")
+			}
 			fixture := newFixture(t)
 			if nonRoot {
 				fixture.write("base", "base")

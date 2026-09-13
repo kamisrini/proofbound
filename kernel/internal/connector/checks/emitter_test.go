@@ -8,9 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -317,15 +317,18 @@ func TestEmitter_PublicationFailuresAreLoud(t *testing.T) {
 			}
 		})
 	}
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX process-group termination is not available in the Windows standard library")
+	}
 	fixture := newEmitterFixture(t)
 	cmd := fixture.command(0)
 	cmd.Env = append(cmd.Env, "FAKE_GO_BLOCK=1")
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.SysProcAttr = processGroupAttributes()
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(100 * time.Millisecond)
-	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err != nil {
+	if err := terminateProcessGroup(cmd.Process.Pid); err != nil {
 		t.Fatal(err)
 	}
 	_ = cmd.Wait()

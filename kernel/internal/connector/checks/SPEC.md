@@ -17,6 +17,12 @@ one `run_id` is a visible revision, never silently treated as the original obser
 VD-verification-asymmetry-2dyjnd. Verdict artifacts remain a separate `review.verdict` source under
 VD-verdicts-are-artifacts-rl0rab.
 
+Native-platform test boundary: the wrapper's cleanup-on-termination probe uses POSIX process-group
+signals where the standard library exposes them. Native Windows has no equivalent `Setpgid`/group
+`SIGTERM` operation in the standard library; Windows acceptance still exercises all ordinary success,
+failure, helper-failure, and publication paths, while that POSIX-only termination probe is explicitly
+skipped rather than represented as a false Windows pass.
+
 ## 2. Witness v1 schema
 
 The exact JSON object is:

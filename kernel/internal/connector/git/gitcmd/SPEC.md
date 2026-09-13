@@ -35,6 +35,10 @@ cannot become partial after construction.
   non-UTF-8 paths are refused because JSON cannot represent their byte identity reversibly.
   Scalar fields are likewise refused unless they are valid UTF-8; JSON replacement characters
   never stand in for observed Git bytes.
+- The byte-identity fixtures cover filenames legal on the host filesystem. Windows cannot create
+  control-character, trailing-space, backslash, or invalid-UTF-8 filenames through its native API;
+  the raw NUL parser remains tested directly, and the adapter's invalid-byte refusal is exercised on
+  platforms that can present such Git bytes.
 - Decision citations are resolved against exact direct files in the commit's own
   `docs/decisions/VD-*.md` directory; nested paths do not qualify. A token
   that is only a prefix of a real id, or merely looks id-shaped, is never emitted.
