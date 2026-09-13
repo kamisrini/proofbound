@@ -3,16 +3,15 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-12 (P6 Tasks 0–2 complete; Task 3 blocked on two founder decisions)
+**As of:** 2026-09-13 (P6 Tasks 0–2 complete; Task 3 in progress with C8-001 still blocked)
 
-## Resume — 2026-09-12
+## Resume — 2026-09-13
 
-At the next agent turn, consume the founder's two Task 3 decisions if supplied. If both recommended
-choices are ratified, first commit the founder receipt verbatim and mint the semantic VD; then write
-the narrow historical-evidence portability SPEC and tests before implementation, rerun the fresh
-empty-ledger acceptance, bind C8-001/C8-002 evidence, regenerate the census, and close Task 3. If no
-decision is supplied, ask only for those two ratifications; do not start Task 4 out of order and do
-not require a separate resume prompt.
+The founder ratified dual-platform execution on 2026-09-13: retain Linux and native Windows, using
+Git Bash/MSYS2 behind the PowerShell entry point. The receipt and semantic VD are being committed in
+this checkpoint. The exact next action is to run the native Windows prerequisite/setup path and
+complete C8-002 evidence; C8-001's historical-evidence portability decision remains separate and
+must be resolved before Task 4.
 
 If the founder explicitly authorizes pushing branch `main` to
 `https://github.com/kamisrini/proofbound.git`, test write authentication by performing that push and
@@ -22,8 +21,8 @@ report its exact result; do not infer destination approval from read access.
 
 - Branch: `main`.
 - The parent of this dated-resume layout update is
-  `81380334d068c23e1a139b3b3a11620d3f5a0546`; `origin/main` remains
-  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 33 commits
+  `10fa22c6b1246b3cf771c7d407901a4b5fd6c610`; `origin/main` remains
+  `1d1112df2622abd54f07837335a7805c3c69145d`. Once this note is committed, local is 34 commits
   ahead and 0 behind.
 - Push was not executed. A remote read succeeded, but write authentication was not reached because
   safety review requires explicit destination-specific approval to export these commits to
@@ -75,13 +74,13 @@ report its exact result; do not infer destination approval from read access.
   unverified. Evidence: `docs/verification/p6-fresh-clone-linux.md`.
 - **C8-002 / Task 3 blocker:** native Windows PowerShell passed the corpus check but cannot find
   native `make`; no Windows gate result exists. Evidence: `docs/verification/p6-windows-platform.md`.
-- Founder decisions remain unreceived: authorize a strict migration-only archive of the exact cited
-  historical event envelopes (recommended over relaxing dangling-evidence checks), and narrow P6
-  runtime support to Linux while retaining PowerShell as setup/migration help (recommended over
-  adding a second platform toolchain during consolidation).
+- The dual-platform decision is now received and recorded in
+  `docs/verification/verdicts/p6-dual-platform-ratification.md`, with semantic VD
+  `docs/decisions/VD-p6-dual-platform-2026-09-13.md`. Native Windows acceptance is still open.
+- One founder decision remains unreceived: authorize a strict migration-only archive of the exact
+  cited historical event envelopes (recommended over relaxing dangling-evidence checks).
 - The historical archive is only a recommendation: its exact envelopes have not been exported,
-  validated, specified, implemented, or independently reviewed. Linux-only support is likewise not
-  ratified. Do not present either as decided.
+  validated, specified, implemented, or independently reviewed. Do not present it as decided.
 - Tasks 4–6 and 8–9 have not started. The 15 C3 package rows still require final-code calibrated
   mutation sweeps and non-author acceptance; 13 C6 intent/review rows and 16 C7 measurement/falsifier
   rows remain open; final round-C acceptance is absent.

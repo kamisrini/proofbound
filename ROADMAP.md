@@ -134,5 +134,8 @@ proof; round-C non-author verdict ACCEPTABLE and committed; bare `make check` an
 contract remains pinned for P7+; intent applicability uses the closed path rule in the semantic VD,
 with zero known false negatives and a greater-than-10% false-positive redesign trigger; the
 stop-early ceiling is 40 active execution hours after Task 0, excluding founder/verifier wait time.
+P6 retains both Linux and native Windows execution for the existing tooling under
+[`VD-p6-dual-platform-2026-09-13`](docs/decisions/VD-p6-dual-platform-2026-09-13.md); native Windows
+acceptance remains an evidence requirement, not an assumed green result.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

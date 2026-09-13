@@ -7,6 +7,25 @@ and the configured gate estate, then closes the C8 reproducibility/integrity row
 kind, projection, gate, provider, platform promise, or product capability. Frozen v1 wire identities
 and pinned vectors are never edited.
 
+## Dual-platform execution contract
+
+The founder ratified retention of both Linux and native Windows for the existing execution path in
+`docs/verification/verdicts/p6-dual-platform-ratification.md`, with semantic decision
+`docs/decisions/VD-p6-dual-platform-2026-09-13.md`. This preserves an existing tracked platform
+claim; it does not add product capability.
+
+Linux requires Git, Bash, Go >=1.26, `jq`, GNU Make, `golangci-lint`, and the standard checked-script
+tools. Native Windows requires Git for Windows or MSYS2 with Bash, Git, Go >=1.26, `jq`, GNU Make,
+`golangci-lint`, and the standard checked-script tools. The PowerShell entry point may install or
+inspect prerequisites, but GNU Make must execute the repository's Bash recipes. WSL is not native
+Windows evidence.
+
+For each OS, the acceptance record must include the tool versions, the tracked platform entry point,
+bare `make check`, witnessed check/ledger prerequisites, complete two-pass `sync all`,
+`proofbound verify`, rebuild equality, and self-hosted intent/requirement reports. A missing
+prerequisite or failed command leaves that OS red and C8-002 open; no partial corpus check is a green
+platform result.
+
 ## Closed route matrix
 
 The source-kind universe is exactly:

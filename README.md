@@ -95,6 +95,10 @@ standard `make check` gate is green.
 - `golangci-lint` (required by the full check)
 - Docker, if running PostgreSQL integration or mutation tests
 
+For native Windows, use Git for Windows or MSYS2 so Bash and GNU Make can run the repository's
+recipes; WSL is not native Windows verification. The tracked `setup-windows.ps1` and
+`check-windows.ps1` scripts are the entry points.
+
 ### Build and test
 
 From the repository root:

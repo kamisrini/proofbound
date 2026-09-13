@@ -4,7 +4,7 @@
 
 **Entry point:** `check-windows.ps1` under native Windows PowerShell
 
-**Result:** DECISION REQUIRED
+**Result:** OPEN — prerequisite remediation required under ratified dual-platform scope
 
 The repository entry point was invoked through real `powershell.exe` with `-NoProfile` and
 `-ExecutionPolicy Bypass`; this was not a WSL Bash run. It printed:
@@ -17,8 +17,8 @@ It then reached `make check` and failed because `make` is not installed or disco
 native Windows PowerShell environment. No Windows green claim is made. The script itself correctly
 fails rather than treating a text-corpus check as the repository gate.
 
-Under `docs/plans/p6-task3-reproducibility-SPEC.md`, C8-002 can close only through either a real
-green native run after installing the required toolchain or a founder-ratified support narrowing.
-The P6 depth-before-width recommendation is to define Linux as the supported P6 execution platform
-and retain the PowerShell files only as setup/migration helpers, without claiming native Windows
-verification.
+The founder has now ratified retaining both Linux and native Windows in
+`docs/verification/verdicts/p6-dual-platform-ratification.md`, with semantic decision
+`docs/decisions/VD-p6-dual-platform-2026-09-13.md`. C8-002 remains open until the missing Windows
+toolchain is available and the complete native acceptance run passes. WSL will not substitute for
+that evidence.
