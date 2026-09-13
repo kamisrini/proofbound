@@ -17,11 +17,17 @@ one `run_id` is a visible revision, never silently treated as the original obser
 VD-verification-asymmetry-2dyjnd. Verdict artifacts remain a separate `review.verdict` source under
 VD-verdicts-are-artifacts-rl0rab.
 
-Native-platform test boundary: the wrapper's cleanup-on-termination probe uses POSIX process-group
-signals where the standard library exposes them. Native Windows has no equivalent `Setpgid`/group
-`SIGTERM` operation in the standard library; Windows acceptance still exercises all ordinary success,
-failure, helper-failure, and publication paths, while that POSIX-only termination probe is explicitly
-skipped rather than represented as a false Windows pass.
+Native-platform test boundary: the wrapper's synthetic fake-command emitter fixture and its cleanup-
+on-termination probe use POSIX shell/process-group behavior. Native Windows has no equivalent
+`Setpgid`/group `SIGTERM` operation in the standard library, and Git Bash prepends its own native
+tool directories ahead of a test PATH, so the synthetic fixture is skipped on Windows rather than
+represented as a false pass. Native Windows acceptance runs the shipped wrapper with the real
+toolchain and covers the successful witness path; the ingestion and validation suite remains
+platform-independent.
+
+On native Windows, the acceptance fixture exposes its fake tool commands through `.cmd` shims
+because Windows command lookup does not execute an extensionless POSIX fixture from `env`. This is
+test-harness plumbing and does not alter the shipped wrapper or its command contract.
 
 ## 2. Witness v1 schema
 

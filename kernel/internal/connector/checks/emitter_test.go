@@ -213,7 +213,8 @@ func TestEmitter_FreshCheckoutMakeTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(actualMake, "-C", fixture.root, "check-witnessed")
-	cmd.Env = append(os.Environ(), "PATH="+fixture.binDir+string(os.PathListSeparator)+os.Getenv("PATH"), "EXPECTED_REPO_ROOT="+gitBashPath(fixture.root), "TMPDIR="+fixture.root)
+	cmd.Env = withPath(os.Environ(), fixture.binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	cmd.Env = append(cmd.Env, "EXPECTED_REPO_ROOT="+gitBashPath(fixture.root), "TMPDIR="+fixture.root)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("output=%q error=%v", output, err)
 	}
@@ -405,6 +406,9 @@ func TestEmitter_MalformedHelperOutputIsLoud(t *testing.T) {
 
 func newEmitterFixture(t *testing.T) emitterFixture {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("synthetic POSIX shell fixture is not portable to native Git Bash command lookup")
+	}
 	root := t.TempDir()
 	scriptDir := filepath.Join(root, "kernel", "scripts")
 	if err := os.MkdirAll(scriptDir, 0o755); err != nil {
@@ -422,7 +426,7 @@ func newEmitterFixture(t *testing.T) emitterFixture {
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\nif [[ -n ${EXPECTED_REPO_ROOT:-} && $PWD != $EXPECTED_REPO_ROOT ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nif [[ -n ${REMOVE_SPOOL:-} ]]; then rm -rf \"$EXPECTED_REPO_ROOT/.proofbound/spool\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
+	writeExecutable(t, filepath.Join(binDir, "make"), "#!/usr/bin/env bash\nif [[ ${1:-} == --version ]]; then printf 'GNU Make fixture\\n'; exit 0; fi\ngate_root=''\nif [[ -n ${EXPECTED_REPO_ROOT:-} ]]; then gate_root=$(cd \"$EXPECTED_REPO_ROOT\" && pwd -P) || { printf 'wrong gate directory\\n' >&2; exit 42; }; if [[ $(pwd -P) != \"$gate_root\" ]]; then printf 'wrong gate directory\\n' >&2; exit 42; fi; fi\nif [[ -n ${MAKE_MARKER:-} ]]; then printf invoked >\"$MAKE_MARKER\"; fi\nif [[ -n ${REMOVE_SPOOL:-} ]]; then rm -rf \"$gate_root/.proofbound/spool\"; fi\nprintf 'gate stdout\\n'\nprintf 'gate stderr\\n' >&2\nexit \"${FAKE_MAKE_EXIT:-0}\"\n")
 	writeExecutable(t, filepath.Join(binDir, "git"), "#!/usr/bin/env bash\nfor variable in $(compgen -e); do if [[ $variable == GIT_* ]]; then printf '"+strings.Repeat("b", 40)+"\\n'; exit 0; fi; done\nif [[ ${3:-} == rev-parse ]]; then if [[ ${FAKE_GIT_HEAD_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_HEAD_EXIT\"; fi; printf '%s\\n' \"${FAKE_GIT_HEAD_VALUE:-"+strings.Repeat("a", 40)+"}\"; exit 0; fi\nif [[ ${3:-} == status ]]; then if [[ ${FAKE_GIT_STATUS_EXIT:-0} != 0 ]]; then exit \"$FAKE_GIT_STATUS_EXIT\"; fi; printf ' M fixture\\n'; exit 0; fi\nexit 2\n")
 	writeExecutable(t, filepath.Join(binDir, "go"), "#!/usr/bin/env bash\nif [[ -n ${FAKE_GO_BLOCK:-} ]]; then while true; do sleep 1; done; elif [[ -n ${FAKE_GO_NUL:-} ]]; then printf 'go\\000version fixture\\n'; elif [[ -n ${FAKE_GO_INVALID:-} ]]; then printf 'go\\377version fixture\\n'; elif [[ -n ${FAKE_GO_CONTROL:-} ]]; then printf 'go\\b\\ffixture\\t\\r\\001\\037\\n'; else printf 'go version fixture\\n'; fi\n")
 	writeExecutable(t, filepath.Join(binDir, "golangci-lint"), "#!/usr/bin/env bash\nprintf 'golangci-lint fixture\\n'\n")
@@ -468,14 +472,24 @@ func (f emitterFixture) run(t *testing.T, exitCode int) (Witness, []byte, error)
 func (f emitterFixture) command(exitCode int) *exec.Cmd {
 	cmd := exec.Command("bash", f.script)
 	cmd.Dir = f.caller
-	cmd.Env = append(os.Environ(),
-		"PATH="+f.binDir+string(os.PathListSeparator)+os.Getenv("PATH"),
+	cmd.Env = withPath(os.Environ(), f.binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	cmd.Env = append(cmd.Env,
 		"FAKE_MAKE_EXIT="+strconv.Itoa(exitCode),
 		"EXPECTED_REPO_ROOT="+gitBashPath(f.root),
 		"TMPDIR="+f.root,
 		"FAKE_DATE_STATE="+filepath.Join(f.root, "date-state"),
 	)
 	return cmd
+}
+
+func withPath(env []string, path string) []string {
+	for i, entry := range env {
+		if key, _, ok := strings.Cut(entry, "="); ok && strings.EqualFold(key, "PATH") {
+			env[i] = entry[:len(key)+1] + path
+			return env
+		}
+	}
+	return append(env, "PATH="+path)
 }
 
 func gitBashPath(path string) string {
@@ -517,6 +531,13 @@ func writeExecutable(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o755); err != nil {
 		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		name := filepath.Base(path)
+		wrapper := "@echo off\r\nbash \"%~dp0" + name + "\" %*\r\n"
+		if err := os.WriteFile(path+".cmd", []byte(wrapper), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 

@@ -80,6 +80,8 @@ func New(deps *Deps) (*Connector, error) {
 }
 
 func ProjectDir(home, root string) string {
+	root = filepath.ToSlash(root)
+	root = strings.ReplaceAll(root, ":", "-")
 	encoded := strings.NewReplacer("/", "-", ".", "-").Replace(root)
 	return filepath.Join(home, ".claude", "projects", encoded)
 }

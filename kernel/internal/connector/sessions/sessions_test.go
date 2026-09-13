@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -60,6 +61,10 @@ func writeFixture(t *testing.T, home, root, name, data string, age time.Duration
 func TestProjectDir(t *testing.T) {
 	got := ProjectDir("/home/test", "/tmp/a.b/repo")
 	want := filepath.Join("/home/test", ".claude", "projects", "-tmp-a-b-repo")
+	if runtime.GOOS == "windows" {
+		got = ProjectDir(`C:\Users\test`, `C:\tmp\a.b\repo`)
+		want = filepath.Join(`C:\Users\test`, ".claude", "projects", "C--tmp-a-b-repo")
+	}
 	if got != want {
 		t.Fatalf("got %q want %q", got, want)
 	}

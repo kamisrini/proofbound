@@ -9,6 +9,11 @@ project directory, skips live files (mtime no older than ten minutes), parses JS
 appends one `session.observed` event per session file. A missing source directory is an empty,
 successful sync.
 
+The encoded directory is derived from the absolute root after normalizing the platform path
+separator to `/`. On POSIX, `/` and `.` become `-`; on Windows, the drive-colon and normalized
+separators also become `-`, so the result is a legal single Windows path component (for example
+`C:\\work\\repo` becomes `C--work-repo`).
+
 ## Payload
 
 Each event payload is canonical JSON with exactly these fields:
@@ -21,7 +26,7 @@ non-empty lines. Files below 50% coverage emit no event and are counted as skipp
 
 ## Invariants
 
-| INV-1 | Source directory is derived from the absolute repository root by replacing `/` and `.` with `-` | sessions_test.go::TestProjectDir |
+| INV-1 | Source directory is derived from the absolute repository root by platform-normalizing separators and replacing path punctuation with `-` | sessions_test.go::TestProjectDir |
 | INV-2 | Files newer than ten minutes are never ingested | sessions_test.go::TestSyncSkipsLiveFiles |
 | INV-3 | Malformed lines are skipped and reduce parse coverage without aborting the file | sessions_test.go::TestSyncRecordsParseCoverage |
 | INV-4 | A file below 50% parse coverage emits no event | sessions_test.go::TestSyncDropsLowCoverage |

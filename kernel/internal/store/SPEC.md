@@ -211,6 +211,12 @@ type LockInfo struct {
 on native Windows. That is the entire exclusion mechanism. Everything below the OS lock is a label
 on it.
 
+The inode/path-replacement proof and POSIX `0700` mode-bit assertion are POSIX-specific filesystem
+observations. Windows keeps the same ownership and loss-detection contract, but its sharing rules
+can refuse unlink/replace of a locked file and its compatibility mode does not expose POSIX mode
+bits; Windows acceptance therefore proves native lock exclusivity, release, and ordinary directory
+creation while the two POSIX observations remain explicitly skipped.
+
 - **The kernel is the arbiter.** A second acquirer fails immediately with
   `EWOULDBLOCK` (§ 4, F16) — no pid probing, no liveness heuristic, no age threshold,
   and nothing to decide.

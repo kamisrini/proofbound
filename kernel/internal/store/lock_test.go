@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -33,6 +34,9 @@ func TestLock_ExclusiveAndPathBound(t *testing.T) {
 }
 
 func TestLock_PathReplacementIsLoss(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows refuses replacing a file while its byte range is locked")
+	}
 	root := t.TempDir()
 	c, err := (Config{Root: root}).normalized()
 	if err != nil {
@@ -52,6 +56,9 @@ func TestLock_PathReplacementIsLoss(t *testing.T) {
 }
 
 func TestStore_UsableRejectsALostLock(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows refuses replacing a file while its byte range is locked")
+	}
 	c, err := (Config{Root: t.TempDir()}).normalized()
 	if err != nil {
 		t.Fatal(err)
@@ -102,6 +109,9 @@ func TestConfig_AcceptsTheDerivedLockPathExplicitly(t *testing.T) {
 }
 
 func TestLock_RecordCloseAndReplacementRoutes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows refuses replacing a file while its byte range is locked")
+	}
 	now := time.Unix(1234, 0)
 	c, err := (Config{Root: t.TempDir(), Now: func() time.Time { return now }}).normalized()
 	if err != nil {

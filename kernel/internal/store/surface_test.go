@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -79,6 +80,9 @@ func TestEmbeddedPort_DefaultAndExplicit(t *testing.T) {
 }
 
 func TestEnsurePrivateDirCreatesPrivateDirectory(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows does not expose POSIX directory mode bits")
+	}
 	dir := filepath.Join(t.TempDir(), "nested", "postgres")
 	if err := ensurePrivateDir(dir); err != nil {
 		t.Fatal(err)
@@ -184,9 +188,9 @@ func TestConfig_DefaultsAndLockAssertion(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := t.TempDir()
-	data := root + "/data"
-	run := root + "/run"
-	bin := root + "/bin"
+	data := filepath.Join(root, "data")
+	run := filepath.Join(root, "run")
+	bin := filepath.Join(root, "bin")
 	c, err = (Config{Root: root, DataDir: data, RuntimeDir: run, BinariesDir: bin}).normalized()
 	if err != nil {
 		t.Fatal(err)
