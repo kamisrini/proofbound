@@ -2,7 +2,7 @@
 
 **Anchor:** immediately after `f426ca8`
 
-**Head:** `aadd6601a68d04bc1f0cb5fb8f7becf39bc3cc10`
+**Head:** `d6abc5b3c777fb08f9ddf840bc8444db7c9f5f3d`
 
 **Policy:** founder-ratified path-only predicate from `docs/decisions/VD-p6-consolidation-2026-09-12.md`.
 
@@ -77,11 +77,13 @@ This is a pre-enforcement observation. Applicability is content-independent; no 
 | `ee56d9abcca3` | feat: specify and match P6 intent applicability paths | docs/plans/p6-task4-applicability-SPEC.md, scripts/intent-applicability.sh, scripts/tests/intent-applicability.test.sh | true | no |
 | `c1d8da6e226d` | docs: record Task 4 applicability progress | notes/journal/2026-09-13.md, notes/state.md | false | no |
 | `aadd6601a68d` | feat: record P6 intent applicability canary | docs/plans/p6-task4-applicability-SPEC.md, notes/journal/2026-09-13.md, notes/state.md, scripts/p6-intent-canary.sh | true | no |
+| `bbd9288241b7` | docs: bind complete P6 applicability canary | docs/verification/p6-intent-applicability-canary.md, notes/journal/2026-09-13.md, notes/state.md | false | no |
+| `d6abc5b3c777` | feat: gate delivery on applicable commit intent | docs/plans/p6-task4-applicability-SPEC.md, scripts/delivery-enforce.sh, scripts/intent-delivery-applicability.sh, scripts/tests/intent-delivery-applicability.test.sh | true | no |
 
 ## Summary
 
-- Commits examined: `67`.
-- Applicable commits: `39`.
+- Commits examined: `69`.
+- Applicable commits: `40`.
 - Applicable commits with valid exact Intent claims: `0`.
 - Coverage: `0.0%`.
 - Known false negatives: `0`.
