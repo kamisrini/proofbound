@@ -86,6 +86,8 @@ or projector boundary and are outside the 13-pair registered universe.
 - `docs/verification/p6-windows-platform.md`
 - `docs/verification/p6-artifact-integrity.md`
 - `docs/verification/p6-vision-progress-assessment.md`
+- `docs/verification/p6-historical-evidence.jsonl` and the explicit
+  `migrate historical-evidence` command record
 
 Task 3 closes only when the 52-cell matrix checker, artifact-integrity checker, frozen-vector tests,
 fresh-clone record, native PowerShell result (or accepted narrowing), `proofbound verify`, and bare
