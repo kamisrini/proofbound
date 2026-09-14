@@ -3,6 +3,8 @@ package migration
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,6 +41,27 @@ func TestLoadCommittedArchive(t *testing.T) {
 	}
 	if records[0].Event.ID.String() != "01M25Y75PJCSGE5Q4ZX6JA9BH7" || records[1].Event.ID.String() != "01M25Y75PSMB0AM3N9XV8VG0F8" || records[2].Event.ID.String() != "01M25Y75PW3T47JK1QN9CR9G08" || records[3].Event.ID.String() != "01M28TPW9C8R7ND19MNDCJ9GDG" || records[4].Event.ID.String() != "01M29HMPE5V977AR3VMW47DVDE" {
 		t.Fatalf("ids=%s,%s,%s,%s,%s", records[0].Event.ID, records[1].Event.ID, records[2].Event.ID, records[3].Event.ID, records[4].Event.ID)
+	}
+}
+
+func TestLoadReportsArchiveReadFailure(t *testing.T) {
+	_, err := Load(filepath.Join(t.TempDir(), "missing.jsonl"))
+	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("read historical evidence archive")) {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestParseRejectsTrailingJSONOnRecordLine(t *testing.T) {
+	base := committedArchive(t)
+	lineEnd := bytes.IndexByte(base, '\n')
+	line := append(append([]byte(nil), base[:lineEnd]...), []byte(" {}")...)
+	digest := sha256.Sum256(line)
+	oldSHA := expected[0].lineSHA
+	expected[0].lineSHA = hex.EncodeToString(digest[:])
+	t.Cleanup(func() { expected[0].lineSHA = oldSHA })
+	mutated := append(line, base[lineEnd:]...)
+	if _, err := Parse(bytes.NewReader(mutated)); err == nil {
+		t.Fatal("trailing JSON accepted")
 	}
 }
 

@@ -149,7 +149,10 @@ func validateExpected(index int, envelope archiveEnvelope) error {
 		return fmt.Errorf("historical evidence archive: record %d content hash mismatch", index)
 	}
 	contentSHA, err := core.ContentSHA(e.Payload)
-	if err != nil || contentSHA != e.ContentSHA {
+	if err != nil {
+		return fmt.Errorf("historical evidence archive: record %d payload hash: %w", index, err)
+	}
+	if contentSHA != e.ContentSHA {
 		return fmt.Errorf("historical evidence archive: record %d payload hash mismatch", index)
 	}
 	canonical, err := core.Canonicalize(e.Payload)
