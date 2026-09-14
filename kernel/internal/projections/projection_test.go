@@ -397,6 +397,37 @@ func TestCommitValidationRejectsEachScalar(t *testing.T) {
 	}
 }
 
+func TestCommitValidationIntentRefs(t *testing.T) {
+	digest := strings.Repeat("a", 64)
+	base := commitPayload{SHA: shaFor("intent-refs"), AuthorName: "Author", AuthorEmail: "author@example.test", CommitterName: "Committer", CommitterEmail: "committer@example.test", CommittedAt: time.Now(), Subject: "subject", IntentRefs: []commitIntentRef{{Provider: "records", RecordID: "CI-valid-item-acde12", ArtifactSHA256: digest}}}
+	if err := base.validate(); err != nil {
+		t.Fatalf("valid intent ref rejected: %v", err)
+	}
+	ordered := base
+	ordered.IntentRefs = append(ordered.IntentRefs, commitIntentRef{Provider: "specdir", RecordID: "CI-valid-item-acde12", ArtifactSHA256: digest})
+	if err := ordered.validate(); err != nil {
+		t.Fatalf("ordered intent refs rejected: %v", err)
+	}
+	cases := []struct {
+		name string
+		edit func(*commitPayload)
+	}{
+		{"provider", func(v *commitPayload) { v.IntentRefs[0].Provider = "other" }},
+		{"record id", func(v *commitPayload) { v.IntentRefs[0].RecordID = "bad" }},
+		{"artifact digest", func(v *commitPayload) { v.IntentRefs[0].ArtifactSHA256 = "bad" }},
+		{"ordering", func(v *commitPayload) {
+			v.IntentRefs = []commitIntentRef{{Provider: "specdir", RecordID: "CI-valid-item-acde12", ArtifactSHA256: digest}, {Provider: "records", RecordID: "CI-valid-item-acde12", ArtifactSHA256: digest}}
+		}},
+	}
+	for _, tc := range cases {
+		v := base
+		tc.edit(&v)
+		if err := v.validate(); err == nil {
+			t.Errorf("invalid intent ref %s accepted", tc.name)
+		}
+	}
+}
+
 func TestCheckValidationRejectsEachScalar(t *testing.T) {
 	base := checkPayload{Schema: "vera.witness.v1", RunID: "01ARZ3NDEKTSV4RRFFQ69G5FAV", Command: "make check", StartedAt: time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC), FinishedAt: time.Date(2026, 8, 25, 12, 0, 1, 0, time.UTC), DurationMS: 1000, OutputSHA256: strings.Repeat("a", 64), GitSHA: strings.Repeat("b", 40), ToolVersions: toolPayload{Go: "go", GolangCILint: "lint", Make: "make"}}
 	cases := []struct {
