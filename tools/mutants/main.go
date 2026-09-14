@@ -24,6 +24,7 @@ type mutant struct {
 var testTags string
 var mutationPattern = "./..."
 var sourceRepositoryRoot string
+var testRunPattern string
 
 func main() {
 	pkg := flag.String("pkg", "", "kernel package directory, e.g. internal/store")
@@ -34,6 +35,7 @@ func main() {
 	end := flag.Int("end", 0, "one-based candidate ordinal to stop after (default: final candidate)")
 	flag.Parse()
 	testTags = *tags
+	testRunPattern = os.Getenv("MUTANT_TEST_RUN")
 	if *pkg == "" {
 		fail("-pkg is required")
 	}
@@ -290,6 +292,9 @@ func testArgs(pattern string) []string {
 		// Integration packages share the configured disposable database. Running them
 		// concurrently makes one package's rows invalidate another package's assertions.
 		args = append(args, "-p=1", "-tags", testTags)
+	}
+	if testRunPattern != "" {
+		args = append(args, "-run", testRunPattern)
 	}
 	return append(args, pattern)
 }

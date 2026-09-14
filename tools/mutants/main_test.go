@@ -10,9 +10,12 @@ import (
 
 func TestTestArgsSerializesTaggedIntegrationPackages(t *testing.T) {
 	original := testTags
+	originalRun := testRunPattern
 	t.Cleanup(func() { testTags = original })
+	t.Cleanup(func() { testRunPattern = originalRun })
 
 	testTags = ""
+	testRunPattern = ""
 	if got, want := testArgs("./..."), []string{"test", "-count=1", "./..."}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("untagged args=%v want=%v", got, want)
 	}
@@ -26,6 +29,10 @@ func TestTestArgsSerializesTaggedIntegrationPackages(t *testing.T) {
 	}
 	if got := testTimeout(); got != 2*time.Minute {
 		t.Fatalf("tagged timeout=%s", got)
+	}
+	testRunPattern = "^TestIntent"
+	if got, want := testArgs("./internal/projections"), []string{"test", "-count=1", "-p=1", "-tags", "integration", "-run", "^TestIntent", "./internal/projections"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("filtered tagged args=%v want=%v", got, want)
 	}
 }
 
