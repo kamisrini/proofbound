@@ -12,7 +12,7 @@ P6 Task 8 is active. The frozen production universe is 16 packages from `go list
 its calibrated result of 58 candidates, 58 killed, 0 invalid, 0 survived. P6 Task 7 remains skipped
 under the founder ratification; no P7+ capability is being added.
 
-The CLI remediation is currently in the worktree, not yet committed. It adds behavior-preserving
+The CLI remediation is committed at `3f115ea`. It adds behavior-preserving
 dispatch/control-flow simplifications and narrow seams for store opening, sync creation, gate
 evaluation, projection application, ID generation, event reading, and close handling. Focused host
 `go test ./internal/cli -count=1` passes, and the DB-tagged integration suite passed before mutation.
@@ -20,19 +20,20 @@ evaluation, projection application, ID generation, event reading, and close hand
 The complete pre-commit CLI mutation sweep was diagnostic and reported 234 candidates, 233 killed,
 0 invalid, and one survivor at `cli.go:347#233`; the survivor was the committed-intent Markdown
 filter because the fixture had no non-Markdown artifact. The fixture now includes `notes.txt`, the
-focused test passes, and targeted candidate `233` is killed. This is not final package evidence
-because the implementation hash must be frozen first.
+focused test passes, and targeted candidate `233` is killed. The required complete sweep against
+the frozen commit is now green: 234 candidates, 234 killed, 0 invalid, 0 survived. Evidence is in
+`docs/verification/p6-task8-cli-mutation-3f115ea.md` and the exact CLI tree is
+`6a1a1804018be77c5a17a3d70c024c2978511683`.
 
-**Exact next action:** start a disposable PostgreSQL service, commit the coherent CLI remediation
-and updated resume journal, then rerun the complete calibrated integration-tagged CLI sweep against
-that commit. Record its final counts and exact tree object; only after that continue the remaining
-production packages in frozen order. Do not close C3, start Task 9, or claim P6 deep-complete until
-all package results, exact tree objects, and a current-code non-author verdict are committed.
+**Exact next action:** run the calibrated mutation sweep for the next production package in frozen
+order, `internal/connector/checks`, against commit `3f115ea`; record its counts and tree object,
+then continue package-by-package. Do not close C3, start Task 9, or claim P6 deep-complete until all
+package results, exact tree objects, and a current-code non-author verdict are committed.
 
 ## Branch and repository status
 
-- Branch: `main`; local history is ahead of `origin/main`. The CLI remediation and state/journal
-  refresh are currently uncommitted; no push is being attempted in this turn.
+- Branch: `main`; local history is ahead of `origin/main`. The CLI acceptance evidence and state/
+  journal refresh are currently uncommitted; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
   remain uncommitted without ownership resolution.
@@ -49,22 +50,23 @@ all package results, exact tree objects, and a current-code non-author verdict a
   expected negative-control diagnostics were not failures.
 - Task 8 `internal/core` mutation acceptance is green: 58 candidates, 58 killed, 0 invalid, 0
   survived, after invariant tests and behavior-preserving guard decomposition.
-- CLI focused tests, tagged integration tests, and targeted mutation remediation are green; final
-  committed CLI acceptance is still open.
+- CLI focused tests, tagged integration tests, and the complete committed mutation sweep are green:
+  234 candidates, 234 killed, 0 invalid, 0 survived.
 
 ## Open work
 
-- P6 Task 8 remains open for the CLI and the other 14 production packages. Final package evidence
+- P6 Task 8 remains open for the other 15 production packages. Final package evidence
   must bind one implementation commit, each exact package tree object, calibrated mutation counts,
   and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
-- The current state has no implementation blocker; the disposable DB service was stopped after
-  diagnostics and must be restarted for the final CLI sweep.
+- The current state has no implementation blocker; the disposable DB service was stopped after the
+  CLI sweep. Remaining package sweeps may need their own disposable DB service if tagged tests need it.
 
 ## Blocked and unverified
 
-- The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic,
-  not acceptance. No final committed CLI summary exists yet.
+- The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic.
+- CLI committed acceptance is now verified, but the other package rows and current-code non-author
+  verdict remain unverified.
 - No current non-author final package verdict covers the eventual frozen implementation commit.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
