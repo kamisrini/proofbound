@@ -52,10 +52,17 @@ the trace, witness, and invalid-repository survivors; it now reaches the provide
 guard at `syncGit` line 192, which is a candidate for declared unreachable-by-construction status
 only after the complete sweep and independent review.
 
-**Exact next action:** finish `internal/cli` mutation remediation by deriving focused tests for the
-reachable `runCommand` and helper error paths, document only genuinely unreachable constructor
-guards with exact survivor records, rerun the complete calibrated CLI sweep to a final summary, and
-commit only once its result is accepted. Then continue
+The follow-up CLI changes add direct contracts for `verifyStep`, `latestLedgerCheckRunID`, and
+invalid Git repository handling. The concrete store remains the production implementation behind a
+narrow event-reader interface; focused host CLI tests pass. These changes are now ready for a
+durability commit, but the package mutation result remains unverified.
+
+**Exact next action:** run the integration-tagged CLI mutation path against an available disposable
+PostgreSQL service; if the environment cannot provide one, record that exact limitation and use
+focused seams/tests plus independently reviewed declared survivors only where justified. Then rerun
+the complete calibrated CLI sweep to a final summary before continuing the frozen package set. Do not
+close package acceptance or start Task 9 until all package results, tree objects, and a non-author
+current-code verdict bind one final implementation commit.
 the frozen package set in order; do not close package acceptance or start Task 9 until all package
 results, tree objects, and a non-author current-code verdict bind one final frozen implementation
 commit.

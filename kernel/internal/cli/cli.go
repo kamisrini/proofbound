@@ -435,10 +435,10 @@ func syncChecks(ctx context.Context, root, databaseURL string, output io.Writer)
 }
 
 func runCommand(ctx context.Context, cmd command, args []string, root, databaseURL string, output io.Writer) (resultErr error) {
-	if cmd == commandSyncChecks {
+	switch cmd {
+	case commandSyncChecks:
 		return syncChecks(ctx, root, databaseURL, output)
-	}
-	if cmd == commandSyncSessions {
+	case commandSyncSessions:
 		ids, err := newIDs()
 		if err != nil {
 			return err
@@ -454,8 +454,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d skipped=%d\n", result.Listed, result.Appended, result.Existing, result.Skipped)
 		return err
-	}
-	if cmd == commandSyncReviews {
+	case commandSyncReviews:
 		ids, err := newIDs()
 		if err != nil {
 			return err
@@ -471,8 +470,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d malformed=%d documentary=%d\n", result.Listed, result.Appended, result.Existing, result.Malformed, result.Documentary)
 		return err
-	}
-	if cmd == commandSyncGitHub {
+	case commandSyncGitHub:
 		ids, err := newIDs()
 		if err != nil {
 			return err
@@ -488,8 +486,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
 		return err
-	}
-	if cmd == commandSyncIntentRecords || cmd == commandSyncIntentSpecdir || cmd == commandSyncIntentAll {
+	case commandSyncIntentRecords, commandSyncIntentSpecdir, commandSyncIntentAll:
 		selection := map[command]string{commandSyncIntentRecords: "records", commandSyncIntentSpecdir: "specdir", commandSyncIntentAll: "all"}[cmd]
 		ids, err := newIDs()
 		if err != nil {
@@ -506,8 +503,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
 		return err
-	}
-	if cmd == commandMigrateHistoricalEvidence {
+	case commandMigrateHistoricalEvidence:
 		ledger, err := openHistoricalEvidenceStore(ctx, root, databaseURL)
 		if err != nil {
 			return err
@@ -529,7 +525,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 	}
 	defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
 	projector := projections.New()
-	if cmd == commandGatesCanary || cmd == commandGatesEnforce {
+	switch cmd {
+	case commandGatesCanary, commandGatesEnforce:
 		definitions, err := gates.LoadDir(filepath.Join(root, "gates"))
 		if err != nil {
 			return err
@@ -578,9 +575,12 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		if cmd == commandSyncGit {
+		switch cmd {
+		case commandSyncGit:
 			_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", gitResult.Listed, gitResult.Appended, gitResult.Existing)
 			return err
+		case commandSyncAll:
+			break
 		}
 		checksResult, err := syncChecksOnStore(ctx, root, ledger, ids)
 		if err != nil {
@@ -835,7 +835,11 @@ func latestSpoolWitness(root string) (checks.Witness, error) {
 	return witness, nil
 }
 
-func latestLedgerCheckRunID(ctx context.Context, ledger *store.Store) (string, error) {
+type eventReader interface {
+	ReadEvents(context.Context, store.Filter, func(store.Record) error) error
+}
+
+func latestLedgerCheckRunID(ctx context.Context, ledger eventReader) (string, error) {
 	var latest string
 	if err := ledger.ReadEvents(ctx, store.Filter{Source: core.SourceChecks, Kind: core.KindCheckRun}, func(record store.Record) error {
 		latest = record.Event.NativeID

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +15,9 @@ import (
 
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	intentrecords "github.com/kamisrini/proofbound/kernel/internal/connector/intent/records"
+	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/gates"
+	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
@@ -280,6 +284,86 @@ func TestVerifyChecksEveryStageError(t *testing.T) {
 	checked := strings.Count(body, "}); err != nil {")
 	if stages != 16 || checked != stages {
 		t.Fatalf("verify stages=%d checked=%d", stages, checked)
+	}
+}
+
+func TestVerifyStepFailsClosed(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	called := false
+	if err := verifyStep(ctx, "cancelled", func() error {
+		called = true
+		return nil
+	}); !errors.Is(err, context.Canceled) || called {
+		t.Fatalf("cancelled step err=%v called=%t", err, called)
+	}
+
+	want := errors.New("stage failed")
+	if err := verifyStep(context.Background(), "failing", func() error { return want }); !errors.Is(err, want) {
+		t.Fatalf("step error=%v", err)
+	}
+
+	t.Setenv("PROOFBOUND_VERIFY_TRACE", "1")
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldStderr := os.Stderr
+	os.Stderr = writer
+	t.Cleanup(func() {
+		os.Stderr = oldStderr
+		_ = writer.Close()
+	})
+	if err := verifyStep(context.Background(), "traced", func() error { return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	trace, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(trace) != "verify: begin traced\n" {
+		t.Fatalf("trace=%q", trace)
+	}
+}
+
+type fakeEventReader struct {
+	records []store.Record
+	err     error
+}
+
+func (f fakeEventReader) ReadEvents(_ context.Context, _ store.Filter, yield func(store.Record) error) error {
+	if f.err != nil {
+		return f.err
+	}
+	for _, record := range f.records {
+		if err := yield(record); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func TestLatestLedgerCheckRunIDRequiresCheckEvent(t *testing.T) {
+	if _, err := latestLedgerCheckRunID(context.Background(), fakeEventReader{}); err == nil || !strings.Contains(err.Error(), "no check.run event") {
+		t.Fatalf("empty ledger result err=%v", err)
+	}
+	want := "check-run-1"
+	got, err := latestLedgerCheckRunID(context.Background(), fakeEventReader{records: []store.Record{{Event: core.Event{NativeID: want}}}})
+	if err != nil || got != want {
+		t.Fatalf("latest=%q err=%v", got, err)
+	}
+}
+
+func TestSyncGitRejectsInvalidRepository(t *testing.T) {
+	ids, err := newIDs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := syncGit(context.Background(), t.TempDir(), nil, ids); err == nil || !strings.Contains(err.Error(), "not a work tree") {
+		t.Fatalf("invalid repository err=%v", err)
 	}
 }
 
