@@ -26,10 +26,11 @@ run had zero invalid and surviving mutants. Migration’s committed evidence is
 `docs/verification/p6-task8-migration-mutation-4499fa5.md`. The projections diagnostic was
 intentionally interrupted before a complete summary and is not accepted evidence.
 
-**Exact next action:** execute a complete calibrated integration-tagged mutation sweep for
-`internal/projections` against current frozen implementation `4499fa5`, using bounded isolated
-disposable databases if needed; record no result until the final summary reports all candidates,
-zero invalid, and zero survived. Then continue with `internal/store` and `internal/twin` in order.
+**Exact next action:** profile and implement a lightweight test-execution optimization for the
+404-candidate `internal/projections` integration sweep without changing its acceptance bar, then
+execute the complete calibrated run against `4499fa5`; record no result until all candidates are
+summarized with zero invalid and zero survived. Then continue with `internal/store` and
+`internal/twin` in order.
 Do not close C3, start Task 9, or claim P6 deep-complete until all package results, exact tree
 objects, and a current-code non-author verdict are committed.
 
@@ -65,8 +66,9 @@ objects, and a current-code non-author verdict are committed.
   and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
 - The current state has no product implementation blocker. Projections integration mutation
-  testing is operationally expensive; bounded isolated databases are required to finish it without
-  treating interrupted chunks as evidence. No disposable DB service is left running.
+  testing is operationally expensive: safe external-DB execution calibrated successfully, but a
+  bounded four-way run was stopped after partial output because it remained too slow. No disposable
+  DB service is left running and no partial count is accepted.
 
 ## Blocked and unverified
 
