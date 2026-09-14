@@ -72,7 +72,10 @@ var (
 )
 
 func Canonicalize(raw json.RawMessage) ([]byte, error) {
-	if len(raw) == 0 || !json.Valid(raw) {
+	if len(raw) == 0 {
+		return nil, ErrCanonicalJSON
+	}
+	if !json.Valid(raw) {
 		return nil, ErrCanonicalJSON
 	}
 	if err := inspectJSON(raw); err != nil {
@@ -153,11 +156,19 @@ func inspectValue(v any) error {
 	switch x := v.(type) {
 	case json.Number:
 		f, err := x.Float64()
-		if err != nil || math.IsInf(f, 0) || math.IsNaN(f) {
+		if err != nil {
 			return fmt.Errorf("%w: %w", ErrCanonicalJSON, ErrUnsafeNumber)
 		}
-		if i, err := x.Int64(); err == nil && (i > 1<<53 || i < -(1<<53)) {
+		if math.IsInf(f, 0) {
 			return fmt.Errorf("%w: %w", ErrCanonicalJSON, ErrUnsafeNumber)
+		}
+		if math.IsNaN(f) {
+			return fmt.Errorf("%w: %w", ErrCanonicalJSON, ErrUnsafeNumber)
+		}
+		if i, err := x.Int64(); err == nil {
+			if i > 1<<53 || i < -(1<<53) {
+				return fmt.Errorf("%w: %w", ErrCanonicalJSON, ErrUnsafeNumber)
+			}
 		}
 	case []any:
 		for _, e := range x {

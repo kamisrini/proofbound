@@ -39,12 +39,15 @@ negative-control diagnostics were non-failures. Census and artifact-integrity ch
 P6 Task 8 inventory is frozen in `docs/plans/p6-task8-package-acceptance-SPEC.md`. Host `go list
 ./internal/...` returned 17 packages: 16 contain production `.go` files and `internal/specfirst`
 is test-only. Census row C3-017 now explicitly records that exclusion; the package-universe test
-passes. No mutation result or final package verdict has been claimed.
+passes. The first calibrated `internal/core` sweep exposed 23 survivors; targeted invariant tests
+and behavior-preserving guard decomposition reduced that to two, and the final rerun killed all 58
+of 58 candidates with zero invalid or surviving mutants. The focused host Go test also passes.
 
-**Exact next action:** commit the Task 8 inventory/spec/test and census refresh, then run calibrated
-mutation sweeps for all 16 production packages on one frozen implementation commit. Record every
-candidate/killed/invalid/survived count and stop package closure until a non-author verdict naming
-the same commit and each package tree object is committed on receipt. Do not start Task 9.
+**Exact next action:** commit the `internal/core` mutation-remediation tests and guard refactor with
+this state/journal update, then run the calibrated sweep for the next production package in the
+frozen 16-package set. Record every candidate/killed/invalid/survived count; do not close package
+acceptance or start Task 9 until all package results, tree objects, and a non-author current-code
+verdict bind one final frozen implementation commit.
 
 ## Branch and repository status
 
@@ -72,6 +75,9 @@ the same commit and each package tree object is committed on receipt. Do not sta
 - Task 4 has the ratified path-only applicability SPEC, executable matcher, invariant tests,
   complete post-anchor canary report, delivery-boundary check, seeded missing-intent test, C6
   coverage packet, and final bare-gate evidence.
+- Task 8 `internal/core` mutation acceptance is now green: 58 candidates, 58 killed, 0 invalid,
+  0 survived, after tests were added for default clock behavior, nested decoder/error propagation,
+  malformed event fields, and subject-sensitive idempotency semantics.
 
 ## Open work
 
@@ -98,7 +104,8 @@ name the frozen commit, toolchain, exit codes, expected negative diagnostics, an
 boundaries. Native platform runs must use one isolated process tree, an explicit PATH including Git
 `usr\\bin`, and verified cleanup before a retry; no test skip is allowlisted merely to mask a fixed
 port collision. Generated census/integrity artifacts are regenerated in the same coherent change as
-the evidence they summarize.
+the evidence they summarize. Mutation remediation now requires a focused invariant test or a
+semantics-preserving code simplification for each survivor before package closure is claimed.
 
 ## Standing cautions
 
