@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -111,6 +112,69 @@ func TestNewRejectsUnsafeRepository(t *testing.T) {
 	}
 }
 
+func TestNewChecksEveryRequiredDependencyAndDefaultsClock(t *testing.T) {
+	ids, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: rand.Reader})
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := func() *Deps {
+		return &Deps{API: fakeAPI{}, Owner: "github", Repos: []string{"docs"}, IDs: ids, Logger: slog.Default()}
+	}
+	for name, mutate := range map[string]func(*Deps){
+		"api":    func(d *Deps) { d.API = nil },
+		"ids":    func(d *Deps) { d.IDs = nil },
+		"logger": func(d *Deps) { d.Logger = nil },
+		"owner":  func(d *Deps) { d.Owner = "" },
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := base()
+			mutate(d)
+			if _, err := New(d); err == nil {
+				t.Fatal("accepted incomplete dependencies")
+			}
+		})
+	}
+	if _, err := New(nil); err == nil {
+		t.Fatal("accepted nil dependencies")
+	}
+	d, err := New(base())
+	if err != nil || d.now == nil {
+		t.Fatalf("default clock present=%t err=%v", d.now != nil, err)
+	}
+}
+
+func TestSyncChecksEveryUninitializedConnectorField(t *testing.T) {
+	ids, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: rand.Reader})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, connector := range map[string]*Connector{
+		"nil connector": nil,
+		"api":           {ids: ids, now: time.Now},
+		"ids":           {api: fakeAPI{}, now: time.Now},
+		"clock":         {api: fakeAPI{}, ids: ids},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := connector.Sync(context.Background(), &appendFake{}); err == nil {
+				t.Fatal("accepted uninitialized connector")
+			}
+		})
+	}
+}
+
+func TestValidNameChecksEveryCharacterClassAndBoundary(t *testing.T) {
+	for _, name := range []string{"A", "a", "0", "-", "_", "a.b"} {
+		if !validName(name) {
+			t.Fatalf("valid name %q rejected", name)
+		}
+	}
+	for _, name := range []string{"", ". .", "..", strings.Repeat("a", 101), "@", "[", "`", "{", "/", ":"} {
+		if validName(name) {
+			t.Fatalf("invalid name %q accepted", name)
+		}
+	}
+}
+
 func TestSyncChangedUpstreamRecordCreatesRevision(t *testing.T) {
 	ids, _ := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: rand.Reader})
 	now := func() time.Time { return time.Unix(20, 0) }
@@ -161,12 +225,42 @@ func TestHTTPClientPreservesQueryAndUsesHeaderAuth(t *testing.T) {
 	}
 }
 
+func TestHTTPClientRejectsInvalidSchemesAndTransportErrors(t *testing.T) {
+	for _, base := range []string{"%", "ftp://example.test"} {
+		c := &HTTPClient{BaseURL: base, Client: &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Status: "200 OK", Body: io.NopCloser(strings.NewReader(`{}`)), Header: make(http.Header)}, nil
+		})}}
+		if err := c.request(context.Background(), "endpoint", &map[string]any{}); err == nil {
+			t.Fatalf("accepted base URL %q", base)
+		}
+	}
+	want := errors.New("transport failed")
+	c := &HTTPClient{Client: &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) { return nil, want })}}
+	if err := c.request(context.Background(), "endpoint", &map[string]any{}); !errors.Is(err, want) {
+		t.Fatalf("transport error=%v", err)
+	}
+}
+
+func TestHTTPClientRejectsBothNonSuccessStatusBoundaries(t *testing.T) {
+	for _, status := range []int{199, 300} {
+		c := &HTTPClient{Client: &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: status, Status: "test status", Body: io.NopCloser(strings.NewReader(`{}`)), Header: make(http.Header)}, nil
+		})}}
+		if err := c.request(context.Background(), "endpoint", &map[string]any{}); err == nil {
+			t.Fatalf("accepted status %d", status)
+		}
+	}
+}
+
 func TestHTTPClientClampsCollectionLimit(t *testing.T) {
 	if got, err := boundedLimit(1000); err != nil || got != maxItemsPerCollection {
 		t.Fatalf("bounded limit=%d err=%v", got, err)
 	}
 	if _, err := boundedLimit(0); err == nil {
 		t.Fatal("accepted zero collection limit")
+	}
+	if _, err := (&HTTPClient{}).Deployments(context.Background(), "github", "docs", 0); err == nil {
+		t.Fatal("Deployments accepted zero collection limit")
 	}
 }
 
