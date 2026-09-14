@@ -43,11 +43,18 @@ passes. The first calibrated `internal/core` sweep exposed 23 survivors; targete
 and behavior-preserving guard decomposition reduced that to two, and the final rerun killed all 58
 of 58 candidates with zero invalid or surviving mutants. The focused host Go test also passes.
 
-**Exact next action:** commit the `internal/core` mutation-remediation tests and guard refactor with
-this state/journal update, then run the calibrated sweep for the next production package in the
-frozen 16-package set. Record every candidate/killed/invalid/survived count; do not close package
-acceptance or start Task 9 until all package results, tree objects, and a non-author current-code
-verdict bind one final frozen implementation commit.
+The first complete CLI mutation attempt was intentionally not accepted: after a behavior-preserving
+dispatch refactor removed the earlier routing survivors, the run was stopped when it exposed a
+larger set of untested error paths in `runCommand` and verification helpers. It has no final summary
+and is not package evidence. Focused `go test ./internal/cli -count=1` still passes. The CLI source
+refactor and its resulting test gap remain uncommitted.
+
+**Exact next action:** finish `internal/cli` mutation remediation by deriving focused tests for the
+uncovered error paths (starting with the surviving verification/helper sites), rerun the complete
+calibrated CLI sweep to a final summary, and commit only once its result is accepted. Then continue
+the frozen package set in order; do not close package acceptance or start Task 9 until all package
+results, tree objects, and a non-author current-code verdict bind one final frozen implementation
+commit.
 
 ## Branch and repository status
 
