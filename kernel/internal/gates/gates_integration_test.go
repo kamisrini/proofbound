@@ -141,7 +141,7 @@ func TestCurrentGateEstateEventRoutes(t *testing.T) {
 		{core.SourceIntentSpecdir, core.KindRequirement, true},
 		{core.SourceIntentSpecdir, core.KindChangeIntent, true},
 	}
-	definitions, err := LoadDir("../../../gates")
+	definitions, err := LoadDir(filepath.Join(testRepositoryRoot(t), "gates"))
 	if err != nil {
 		t.Fatal(err)
 	}
