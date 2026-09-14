@@ -210,6 +210,8 @@ func TestRequirementReviewProjectionValidation(t *testing.T) {
 		name   string
 		mutate func(*connectorreviews.RequirementReview)
 	}{
+		{"invalid schema", func(r *connectorreviews.RequirementReview) { r.Schema = "proofbound.requirement-review.v0" }},
+		{"invalid review id", func(r *connectorreviews.RequirementReview) { r.ReviewID = "other" }},
 		{"invalid requirement artifact digest", func(r *connectorreviews.RequirementReview) { r.Requirement.ArtifactSHA256 = "not-a-digest" }},
 		{"invalid review artifact digest", func(r *connectorreviews.RequirementReview) { r.ArtifactSHA256 = "not-a-digest" }},
 	} {
