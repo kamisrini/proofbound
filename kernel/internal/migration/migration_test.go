@@ -60,8 +60,8 @@ func TestParseRejectsTrailingJSONOnRecordLine(t *testing.T) {
 	expected[0].lineSHA = hex.EncodeToString(digest[:])
 	t.Cleanup(func() { expected[0].lineSHA = oldSHA })
 	mutated := append(line, base[lineEnd:]...)
-	if _, err := Parse(bytes.NewReader(mutated)); err == nil {
-		t.Fatal("trailing JSON accepted")
+	if _, err := Parse(bytes.NewReader(mutated)); err == nil || !bytes.Contains([]byte(err.Error()), []byte("has trailing JSON")) {
+		t.Fatalf("err=%v", err)
 	}
 }
 
