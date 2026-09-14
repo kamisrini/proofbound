@@ -70,6 +70,9 @@ func TestCommits_ExtractsOnlyExplicitIntentTrailers(t *testing.T) {
 			t.Fatalf("text=%q got=%v", text, got)
 		}
 	}
+	if got := intentTrailers("subject\nIntent: CI-real-item-acde12\nSigned-off-by: Test <test@example.invalid>\n"); got != nil {
+		t.Fatalf("missing separator accepted: %v", got)
+	}
 }
 
 func TestCommits_EmptyRepositoryIsNotAnError(t *testing.T) {
@@ -248,6 +251,9 @@ func TestRepo_RefusesPartialHistory(t *testing.T) {
 		if _, err := repo.Commits(context.Background()); !errors.Is(err, ErrShallow) {
 			t.Fatalf("listing error=%v", err)
 		}
+		if _, err := repo.Reachable(context.Background()); !errors.Is(err, ErrShallow) {
+			t.Fatalf("reachable error=%v", err)
+		}
 		if _, err := New(fixture.root); !errors.Is(err, ErrShallow) {
 			t.Fatalf("construction error=%v", err)
 		}
@@ -280,6 +286,26 @@ func TestCommits_BrokenRepositoryIsAnError(t *testing.T) {
 	}
 	if _, err := repo.Commits(context.Background()); err == nil {
 		t.Fatal("broken ref was treated as an empty repository")
+	}
+	if _, err := repo.Reachable(context.Background()); err == nil {
+		t.Fatal("broken ref was treated as reachable history")
+	}
+}
+
+func TestReachableReportsRelativePathFailure(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("a", "a")
+	fixture.commit("one", "")
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := errors.New("relative path failed")
+	old := relativePath
+	relativePath = func(string, string) (string, error) { return "", want }
+	t.Cleanup(func() { relativePath = old })
+	if _, err := repo.Reachable(context.Background()); !errors.Is(err, want) {
+		t.Fatalf("reachable error=%v", err)
 	}
 }
 

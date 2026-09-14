@@ -26,6 +26,8 @@ type Repo struct {
 	root string
 }
 
+var relativePath = filepath.Rel
+
 func New(root string) (*Repo, error) {
 	if root == "" {
 		return nil, errors.New("gitcmd: repository root is required")
@@ -319,7 +321,7 @@ func (r *Repo) validateRefs(ctx context.Context) error {
 		if entry.IsDir() {
 			return nil
 		}
-		rel, relErr := filepath.Rel(gitDir, path)
+		rel, relErr := relativePath(gitDir, path)
 		if relErr != nil {
 			return relErr
 		}
