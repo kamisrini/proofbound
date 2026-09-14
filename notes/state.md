@@ -36,10 +36,15 @@ reserved for P7+.
 Host bare `PATH=/home/thamm/go/bin:$PATH make check` passed with exit 0 and `0 issues`; expected
 negative-control diagnostics were non-failures. Census and artifact-integrity checks also pass.
 
-**Exact next action:** begin P6 Task 8 in order: enumerate every current production package under
-`go list ./internal/...`, write the final package-acceptance SPEC and invariant tests before running
-mutation sweeps, then bind package tree objects and non-author verdict requirements. Do not claim
-P6 completion or start Task 9 until the final frozen implementation commit is accepted.
+P6 Task 8 inventory is frozen in `docs/plans/p6-task8-package-acceptance-SPEC.md`. Host `go list
+./internal/...` returned 17 packages: 16 contain production `.go` files and `internal/specfirst`
+is test-only. Census row C3-017 now explicitly records that exclusion; the package-universe test
+passes. No mutation result or final package verdict has been claimed.
+
+**Exact next action:** commit the Task 8 inventory/spec/test and census refresh, then run calibrated
+mutation sweeps for all 16 production packages on one frozen implementation commit. Record every
+candidate/killed/invalid/survived count and stop package closure until a non-author verdict naming
+the same commit and each package tree object is committed on receipt. Do not start Task 9.
 
 ## Branch and repository status
 
