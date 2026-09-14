@@ -2,7 +2,7 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=190 open=32 closed=158 unclassified=0.
+Counts: total=190 open=23 closed=167 unclassified=0.
 Categories: C1=35 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
@@ -176,15 +176,15 @@ Categories: C1=35 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C6-011 | C6 | active-obligations | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
 | C6-012 | C6 | exact-revision-reviews | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
 | C6-013 | C6 | self-hosted-delivery-chain | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
-| C7-001 | C7 | measurement:artifact-authoring-minutes | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:artifact-authoring-minutes | open | close-in-P6 | — | — |
-| C7-002 | C7 | measurement:independent-review-field-change-rate | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:independent-review-field-change-rate | open | close-in-P6 | — | — |
-| C7-003 | C7 | measurement:ambiguous-obligations-preimplementation | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:ambiguous-obligations-preimplementation | open | close-in-P6 | — | — |
-| C7-004 | C7 | measurement:false-or-missing-commit-intent-links | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:false-or-missing-commit-intent-links | open | close-in-P6 | — | — |
-| C7-005 | C7 | measurement:verdict-evidence-mismatches | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:verdict-evidence-mismatches | open | close-in-P6 | — | — |
-| C7-006 | C7 | measurement:gate-canary-false-block-pass | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:gate-canary-false-block-pass | open | close-in-P6 | — | — |
-| C7-007 | C7 | measurement:empty-store-reconstruction-time | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:empty-store-reconstruction-time | open | close-in-P6 | — | — |
-| C7-008 | C7 | measurement:provider-mapping-conformance | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:provider-mapping-conformance | open | close-in-P6 | — | — |
-| C7-009 | C7 | measurement:requirement-review-findings | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:requirement-review-findings | open | close-in-P6 | — | — |
+| C7-001 | C7 | measurement:artifact-authoring-minutes | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-002 | C7 | measurement:independent-review-field-change-rate | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-003 | C7 | measurement:ambiguous-obligations-preimplementation | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-004 | C7 | measurement:false-or-missing-commit-intent-links | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-005 | C7 | measurement:verdict-evidence-mismatches | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-006 | C7 | measurement:gate-canary-false-block-pass | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-007 | C7 | measurement:empty-store-reconstruction-time | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-008 | C7 | measurement:provider-mapping-conformance | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
+| C7-009 | C7 | measurement:requirement-review-findings | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | artifact:docs/verification/p6-measurements-falsifiers.md | closed | close-in-P6 | — | docs/verification/p6-measurements-falsifiers.md |
 | C7-010 | C7 | falsifier:chain-maintenance-cost | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:chain-maintenance-cost | open | close-in-P6 | — | — |
 | C7-011 | C7 | falsifier:artifact-role-confusion | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:artifact-role-confusion | open | close-in-P6 | — | — |
 | C7-012 | C7 | falsifier:subjective-obligation-outcomes | P5 falsifier needs false, fired, or indeterminate plus typed provenance and triggered action. | p5-result:falsifier:subjective-obligation-outcomes | open | close-in-P6 | — | — |

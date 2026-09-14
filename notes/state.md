@@ -21,10 +21,16 @@ Host bare `PATH=/home/thamm/go/bin:$PATH make check` passed with exit 0; the san
 was environmental only. The expected `index stale; run make index` text came from its negative
 control, and the gate completed with `0 issues`.
 
-**Exact next action:** begin P6 Task 6 in order: enumerate the nine P5 measurements and seven
-falsifiers, write the exact-result/provenance SPEC and invariant tests before implementation, and
-do not start Task 7 or Task 8. Preserve the ratified `measured`, `not-recoverable`,
-`not-applicable`, `false`, `fired`, and `indeterminate` result vocabulary.
+P6 Task 6 is now implemented spec-first in the working tree. The result registry contains exactly
+nine measurements and seven falsifiers. Four measurements are directly measured from committed
+evidence; five are explicitly `not-recoverable` rather than invented. Falsifiers use only the
+ratified `false`, `fired`, or `indeterminate` vocabulary, with actions for unresolved samples.
+The hostile result-checker suite passes, and all 16 C7 census rows now resolve to the generated
+packet.
+
+**Exact next action:** commit the Task 6 SPEC, result registry, checker, hostile tests, generated
+packet, and census refresh, then run host bare `make check`. If green, update the state to begin
+Task 7's already-ratified skip verification; do not implement a snapshot provider or start Task 8.
 
 ## Branch and repository status
 

@@ -8,6 +8,8 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 git clone -q --no-local . "$tmp/repo"
 fixture=$tmp/repo
+cp scripts/p6-task5-review.sh "$fixture/scripts/p6-task5-review.sh"
+cp docs/verification/p6-requirement-review.md "$fixture/docs/verification/p6-requirement-review.md"
 cp "$fixture/docs/verification/verdicts/p5-requirement-review-round1.md" "$tmp/review.md"
 
 expect_fail() {
