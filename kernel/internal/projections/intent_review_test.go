@@ -98,6 +98,27 @@ func TestObligationVerdictProjectionValidation(t *testing.T) {
 			t.Fatalf("report=%s", out.String())
 		}
 	})
+	for _, tc := range []struct {
+		name   string
+		mutate func(*connectorreviews.ObligationVerdict)
+	}{
+		{"missing requirement reference", func(v *connectorreviews.ObligationVerdict) { v.Requirements = nil }},
+		{"missing obligation target", func(v *connectorreviews.ObligationVerdict) { v.Obligations[0].ObligationID = "O-404" }},
+	} {
+		t.Run("rejects incomplete exact chain "+tc.name, func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			intentFixtureEvents(t, s, true)
+			evidence := evidenceEvent(t)
+			appendEvents(t, s, evidence)
+			verdict := obligationVerdictFixture(shaFor("intent-commit"), evidence.ID.String())
+			tc.mutate(&verdict)
+			appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, verdict.VerdictID, verdict))
+			if err := New().Apply(context.Background(), s); err == nil {
+				t.Fatal("incomplete v2 exact chain accepted")
+			}
+		})
+	}
 	t.Run("future evidence", func(t *testing.T) {
 		s := testStore(t)
 		defer s.Close()
@@ -186,7 +207,7 @@ func TestRequirementReviewProjectionValidation(t *testing.T) {
 		})
 	}
 	for _, tc := range []struct {
-		name string
+		name   string
 		mutate func(*connectorreviews.RequirementReview)
 	}{
 		{"invalid requirement artifact digest", func(r *connectorreviews.RequirementReview) { r.Requirement.ArtifactSHA256 = "not-a-digest" }},
