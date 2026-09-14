@@ -26,8 +26,8 @@ the frozen commit is now green: 234 candidates, 234 killed, 0 invalid, 0 survive
 `6a1a1804018be77c5a17a3d70c024c2978511683`.
 
 **Exact next action:** run the calibrated mutation sweep for the next production package in frozen
-order, `internal/connector/git`, against commit `3f115ea`; record its counts and tree object, then
-continue package-by-package. Do not close C3, start Task 9, or claim P6 deep-complete until all
+order, `internal/connector/git/gitcmd`, against commit `3f115ea`; record its counts and tree object,
+then continue package-by-package. Do not close C3, start Task 9, or claim P6 deep-complete until all
 package results, exact tree objects, and a current-code non-author verdict are committed.
 
 ## Branch and repository status
@@ -52,11 +52,12 @@ package results, exact tree objects, and a current-code non-author verdict are c
   survived, after invariant tests and behavior-preserving guard decomposition.
 - CLI focused tests, tagged integration tests, and the complete committed mutation sweep are green:
   234 candidates, 234 killed, 0 invalid, 0 survived. The checks connector sweep is also green:
-  36 candidates, 36 killed, 0 invalid, 0 survived.
+  36 candidates, 36 killed, 0 invalid, 0 survived; Git is green with 34 candidates, 34 killed,
+  0 invalid, 0 survived.
 
 ## Open work
 
-- P6 Task 8 remains open for the other 14 production packages. Final package evidence
+- P6 Task 8 remains open for the other 13 production packages. Final package evidence
   must bind one implementation commit, each exact package tree object, calibrated mutation counts,
   and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
