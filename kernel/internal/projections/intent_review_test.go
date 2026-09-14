@@ -185,6 +185,26 @@ func TestRequirementReviewProjectionValidation(t *testing.T) {
 			}
 		})
 	}
+	for _, tc := range []struct {
+		name string
+		mutate func(*connectorreviews.RequirementReview)
+	}{
+		{"invalid requirement artifact digest", func(r *connectorreviews.RequirementReview) { r.Requirement.ArtifactSHA256 = "not-a-digest" }},
+		{"invalid review artifact digest", func(r *connectorreviews.RequirementReview) { r.ArtifactSHA256 = "not-a-digest" }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			intentFixtureEvents(t, s, false)
+			review := requirementReviewFixture("independent", strings.Repeat("b", 64), "O-1")
+			nativeID := review.ReviewID
+			tc.mutate(&review)
+			appendEvents(t, s, reviewEvent(t, core.KindRequirementReview, nativeID, review))
+			if err := New().Apply(context.Background(), s); err == nil {
+				t.Fatal("invalid requirement review digest accepted")
+			}
+		})
+	}
 }
 func TestUnverifiedIsDerived(t *testing.T) {
 	s := testStore(t)
