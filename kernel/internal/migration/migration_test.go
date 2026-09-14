@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
@@ -59,6 +61,61 @@ func TestParseRejectsArchiveMutations(t *testing.T) {
 	if _, err := Parse(bytes.NewReader(append(append([]byte(nil), base...), '\n'))); err != nil {
 		t.Fatal("final newline should be accepted:", err)
 	}
+}
+
+func TestValidateExpectedRejectsEveryEnvelopeIdentityMutation(t *testing.T) {
+	records, err := Parse(bytes.NewReader(committedArchive(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := records[0].Event
+	otherID, err := core.ParseEventID("01M25Y75PSMB0AM3N9XV8VG0F8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]func(*core.Event){
+		"event id":  func(e *core.Event) { e.ID = otherID },
+		"source":    func(e *core.Event) { e.Source = core.SourceChecks },
+		"native id": func(e *core.Event) { e.NativeID = "different-native-id" },
+		"kind":      func(e *core.Event) { e.Kind = core.KindCheckRun },
+		"occurred at": func(e *core.Event) {
+			e.OccurredAt = e.OccurredAt.Add(time.Second)
+		},
+		"recorded at": func(e *core.Event) {
+			e.RecordedAt = e.RecordedAt.Add(time.Second)
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := base
+			mutate(&e)
+			if err := validateExpected(0, archiveEnvelope{Seq: records[0].Seq, Event: e}); err == nil {
+				t.Fatal("mutated envelope accepted")
+			}
+		})
+	}
+}
+
+func TestValidateExpectedRejectsPayloadHashAndCanonicalityMutations(t *testing.T) {
+	records, err := Parse(bytes.NewReader(committedArchive(t)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := records[0].Event
+	t.Run("payload hash", func(t *testing.T) {
+		e := base
+		e.ContentSHA = "0000000000000000000000000000000000000000000000000000000000000000"
+		if err := validateExpected(0, archiveEnvelope{Seq: records[0].Seq, Event: e}); err == nil {
+			t.Fatal("payload hash mutation accepted")
+		}
+	})
+	t.Run("noncanonical payload", func(t *testing.T) {
+		e := base
+		e.Payload = append(append([]byte(nil), e.Payload...), ' ')
+		if err := validateExpected(0, archiveEnvelope{Seq: records[0].Seq, Event: e}); err == nil {
+			t.Fatal("noncanonical payload accepted")
+		}
+	})
 }
 
 func TestImportRefusesNonEmptyLedger(t *testing.T) {
