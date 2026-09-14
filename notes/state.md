@@ -12,7 +12,8 @@ P6 Task 8 is active. The frozen production universe is 16 packages from `go list
 its calibrated result of 58 candidates, 58 killed, 0 invalid, 0 survived. P6 Task 7 remains skipped
 under the founder ratification; no P7+ capability is being added.
 
-The CLI remediation is committed at `3f115ea`. It adds behavior-preserving
+The CLI remediation is committed at `3f115ea`. The gitcmd remediation is committed at `a5ef803`,
+which is the current frozen implementation hash. It adds behavior-preserving
 dispatch/control-flow simplifications and narrow seams for store opening, sync creation, gate
 evaluation, projection application, ID generation, event reading, and close handling. Focused host
 `go test ./internal/cli -count=1` passes, and the DB-tagged integration suite passed before mutation.
@@ -21,19 +22,19 @@ The complete pre-commit CLI mutation sweep was diagnostic and reported 234 candi
 0 invalid, and one survivor at `cli.go:347#233`; the survivor was the committed-intent Markdown
 filter because the fixture had no non-Markdown artifact. The fixture now includes `notes.txt`, the
 focused test passes, and targeted candidate `233` is killed. The required complete sweep against
-the frozen commit is now green: 234 candidates, 234 killed, 0 invalid, 0 survived. Evidence is in
-`docs/verification/p6-task8-cli-mutation-3f115ea.md` and the exact CLI tree is
-`6a1a1804018be77c5a17a3d70c024c2978511683`.
+the frozen commit is now green: 234 candidates, 234 killed, 0 invalid, 0 survived. At `a5ef803`,
+CLI is 234/234, checks is 36/36, Git is 34/34, and gitcmd is 86/86, all with zero invalid and
+surviving mutants. Evidence is in `docs/verification/p6-task8-package-results-a5ef803.md`.
 
 **Exact next action:** run the calibrated mutation sweep for the next production package in frozen
-order, `internal/connector/git/gitcmd`, against commit `3f115ea`; record its counts and tree object,
+order, `internal/connector/github`, against commit `a5ef803`; record its counts and tree object,
 then continue package-by-package. Do not close C3, start Task 9, or claim P6 deep-complete until all
 package results, exact tree objects, and a current-code non-author verdict are committed.
 
 ## Branch and repository status
 
-- Branch: `main`; local history is ahead of `origin/main`. The CLI acceptance evidence and state/
-  journal refresh are currently uncommitted; no push is being attempted in this turn.
+- Branch: `main`; local history is ahead of `origin/main`. Current package-result evidence and the
+  state/journal refresh are currently uncommitted; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
   remain uncommitted without ownership resolution.
@@ -51,13 +52,12 @@ package results, exact tree objects, and a current-code non-author verdict are c
 - Task 8 `internal/core` mutation acceptance is green: 58 candidates, 58 killed, 0 invalid, 0
   survived, after invariant tests and behavior-preserving guard decomposition.
 - CLI focused tests, tagged integration tests, and the complete committed mutation sweep are green:
-  234 candidates, 234 killed, 0 invalid, 0 survived. The checks connector sweep is also green:
-  36 candidates, 36 killed, 0 invalid, 0 survived; Git is green with 34 candidates, 34 killed,
-  0 invalid, 0 survived.
+  234 candidates, 234 killed, 0 invalid, 0 survived. Checks is 36/36, Git is 34/34, and gitcmd is
+  86/86; all have zero invalid and surviving mutants at the current frozen hash.
 
 ## Open work
 
-- P6 Task 8 remains open for the other 13 production packages. Final package evidence
+- P6 Task 8 remains open for the other 12 production packages. Final package evidence
   must bind one implementation commit, each exact package tree object, calibrated mutation counts,
   and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
