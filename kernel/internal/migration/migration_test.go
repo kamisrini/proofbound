@@ -12,7 +12,15 @@ import (
 
 func committedArchive(t *testing.T) []byte {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "docs", "verification", "p6-historical-evidence.jsonl"))
+	root := os.Getenv("PROOFBOUND_TEST_REPO_ROOT")
+	if root == "" {
+		var err error
+		root, err = filepath.Abs(filepath.Join("..", "..", ".."))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	data, err := os.ReadFile(filepath.Join(root, "docs", "verification", "p6-historical-evidence.jsonl"))
 	if err != nil {
 		t.Fatal(err)
 	}
