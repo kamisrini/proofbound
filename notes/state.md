@@ -35,8 +35,8 @@ objects, and a current-code non-author verdict are committed.
 
 ## Branch and repository status
 
-- Branch: `main`; local history is ahead of `origin/main`. Migration evidence and the state/journal
-  refresh are currently uncommitted; no push is being attempted in this turn.
+- Branch: `main`; local history is ahead of `origin/main`. Tracked work is committed through
+  `3b53b6b`; no push is being attempted in this turn.
 - The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
   remain uncommitted without ownership resolution.
