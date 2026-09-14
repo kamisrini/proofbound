@@ -47,11 +47,15 @@ The first complete CLI mutation attempt was intentionally not accepted: after a 
 dispatch refactor removed the earlier routing survivors, the run was stopped when it exposed a
 larger set of untested error paths in `runCommand` and verification helpers. It has no final summary
 and is not package evidence. Focused `go test ./internal/cli -count=1` still passes. The CLI source
-refactor and its resulting test gap remain uncommitted.
+refactor, event-reader seam, and resulting tests remain uncommitted. The next fail-fast probe killed
+the trace, witness, and invalid-repository survivors; it now reaches the provider-construction
+guard at `syncGit` line 192, which is a candidate for declared unreachable-by-construction status
+only after the complete sweep and independent review.
 
 **Exact next action:** finish `internal/cli` mutation remediation by deriving focused tests for the
-uncovered error paths (starting with the surviving verification/helper sites), rerun the complete
-calibrated CLI sweep to a final summary, and commit only once its result is accepted. Then continue
+reachable `runCommand` and helper error paths, document only genuinely unreachable constructor
+guards with exact survivor records, rerun the complete calibrated CLI sweep to a final summary, and
+commit only once its result is accepted. Then continue
 the frozen package set in order; do not close package acceptance or start Task 9 until all package
 results, tree objects, and a non-author current-code verdict bind one final frozen implementation
 commit.
