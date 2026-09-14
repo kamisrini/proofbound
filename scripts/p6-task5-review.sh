@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo=${P6_TASK5_ROOT:-$(git rev-parse --show-toplevel)}
+mode=${1:---check}
+artifact=$repo/docs/verification/p6-requirement-review.md
+tmp=$(mktemp)
+normalized=$(mktemp)
+trap 'rm -f "$tmp" "$normalized"' EXIT
+zeroes=$(printf '%064d' 0)
+
+die() { echo "p6-task5-review: $*" >&2; exit 1; }
+case $mode in --write|--check) ;; *) die 'usage: scripts/p6-task5-review.sh [--write|--check]' ;; esac
+git -C "$repo" rev-parse --show-toplevel >/dev/null 2>&1 || die 'root is not a Git worktree'
+
+cli=$repo/kernel/internal/cli/cli.go
+[[ -f $cli ]] || die 'production CLI wiring is missing'
+rg -q 'intentrecords\.New' "$cli" || die 'records provider is not configured'
+rg -q 'intentspecdir\.New' "$cli" || die 'specdir provider is not configured'
+
+hash_native() {
+  local path=$1
+  sed -E "s/(,\"artifact_path\":\"[^\"]*\",\"artifact_sha256\":\")[0-9a-f]{64}/\\1$zeroes/" "$repo/$path" >"$normalized"
+  sha256sum "$normalized" | awk '{print $1}'
+}
+
+review_hash() {
+  local path=$1
+  sed -E "s/(,\"artifact_path\":\"[^\"]*\",\"artifact_sha256\":\")[0-9a-f]{64}/\\1$zeroes/" "$repo/$path" >"$normalized"
+  sha256sum "$normalized" | awk '{print $1}'
+}
+
+req_count=0
+obligation_count=0
+review_count=0
+rows_file=$(mktemp)
+trap 'rm -f "$tmp" "$normalized" "$rows_file"' EXIT
+
+mapfile -t requirement_paths < <(git -C "$repo" ls-files 'docs/intent/records/requirements/*/*.md' | LC_ALL=C sort)
+specdir_count=0
+while IFS= read -r path; do
+  [[ -n $path ]] || continue
+  [[ $path == specs/*/requirements.md ]] || die "unexpected specdir requirement path: $path"
+  specdir_count=$((specdir_count + 1))
+done < <(git -C "$repo" ls-files 'specs/*/requirements.md')
+
+for path in "${requirement_paths[@]}"; do
+  line=$(sed -n '2p' "$repo/$path")
+  [[ $line == '{'* ]] || die "requirement metadata is missing: $path"
+  [[ $line == *'"schema":"proofbound.requirement.v1"'* ]] || die "requirement schema is invalid: $path"
+  [[ $line == *'"status":"active"'* ]] || continue
+  id=$(sed -n 's/.*"requirement_id":"\([^"]*\)".*/\1/p' <<<"$line")
+  owner=$(sed -n 's/.*"declared_owner":"\([^"]*\)".*/\1/p' <<<"$line")
+  digest=$(sed -n 's/.*"artifact_path":"[^"]*","artifact_sha256":"\([0-9a-f]\{64\}\)".*/\1/p' <<<"$line")
+  declared_path=$(sed -n 's/.*"artifact_path":"\([^"]*\)","artifact_sha256".*/\1/p' <<<"$line")
+  [[ -n $id && -n $owner && $digest =~ ^[0-9a-f]{64}$ && $declared_path == "$path" ]] || die "requirement metadata is incomplete: $path"
+  [[ $(hash_native "$path") == "$digest" ]] || die "requirement digest mismatch: $path"
+
+  ids=$(grep -o '"id":"O-[^"]*","statement":"[^"]*","state":"active"' <<<"$line" | sed -E 's/.*"id":"([^"]+)".*/\1/' || true)
+  [[ -n $ids ]] || die "active requirement has no active obligations: $id"
+  count=0
+  for oid in $ids; do
+    count=$((count + 1))
+    obligation_count=$((obligation_count + 1))
+  done
+
+  matches=()
+  while IFS= read -r review; do
+    [[ -n $review ]] || continue
+    first=$(sed -n '1p' "$repo/$review")
+    second=$(sed -n '2p' "$repo/$review")
+    [[ $first == '---' && $second == '{"schema":"proofbound.requirement-review.v1"'* ]] || continue
+    [[ $second == *"\"record_id\":\"$id\""* && $second == *"\"artifact_sha256\":\"$digest\""* ]] || continue
+    matches+=("$review")
+  done < <(git -C "$repo" ls-files 'docs/verification/verdicts/*.md' | LC_ALL=C sort)
+  [[ ${#matches[@]} -eq 1 ]] || die "requirement $id has ${#matches[@]} exact matching reviews"
+  review=${matches[0]}
+  rline=$(sed -n '2p' "$repo/$review")
+  review_id=$(sed -n 's/.*"review_id":"\([^"]*\)".*/\1/p' <<<"$rline")
+  reviewer=$(sed -n 's/.*"declared_reviewer":"\([^"]*\)".*/\1/p' <<<"$rline")
+  review_path=$(sed -n 's/.*"artifact_path":"\([^"]*\)","artifact_sha256".*/\1/p' <<<"$rline")
+  review_digest=$(sed -n 's/.*"artifact_path":"[^"]*","artifact_sha256":"\([0-9a-f]\{64\}\)".*/\1/p' <<<"$rline")
+  [[ -n $review_id && -n $reviewer && $review_path == "$review" && $review_digest =~ ^[0-9a-f]{64}$ ]] || die "review metadata is incomplete: $review"
+  [[ $(review_hash "$review") == "$review_digest" ]] || die "review digest mismatch: $review"
+  [[ $reviewer != "$owner" ]] || die "requirement $id review declares its author as reviewer"
+  for oid in $ids; do
+    [[ $rline == *"\"obligation_id\":\"$oid\",\"outcome\":\"VERIFIABLE\""* ]] || die "requirement $id obligation $oid lacks VERIFIABLE review"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$digest" "$path" "$oid" "$review_id" "$review" >>"$rows_file"
+  done
+  req_count=$((req_count + 1))
+  review_count=$((review_count + 1))
+done
+
+coverage=$repo/docs/verification/p6-intent-coverage.md
+[[ -f $coverage ]] || die 'intent coverage packet is missing'
+rg -q 'state=SATISFIED' "$coverage" || die 'self-hosted intent chain is not SATISFIED'
+[[ -f $repo/docs/verification/p5-self-hosting.md ]] || die 'self-hosted chain evidence is missing'
+
+{
+  printf '# P6 Task 5 — requirement-review completion\n\n'
+  printf '<!-- @generated by scripts/p6-task5-review.sh --write; do not hand-edit -->\n\n'
+  printf 'Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 5 and `docs/plans/p6-task5-requirement-review-SPEC.md`.\n\n'
+  printf 'Configured providers: `records`, `specdir`. Active requirement revisions: **%d** (`records=%d`, `specdir=%d`). Active obligations: **%d**. Exact matching reviews: **%d**.\n\n' "$req_count" "$req_count" "$specdir_count" "$obligation_count" "$review_count"
+  printf '| Requirement revision | Requirement artifact | Obligation | Review | Review artifact | Outcome |\n|---|---|---|---|---|---|\n'
+  while IFS=$'\t' read -r id digest path oid review_id review; do
+    printf '| `intent.records:%s@%s` | `%s` | `%s` | `%s` | `%s` | `VERIFIABLE` |\n' "$id" "$digest" "$path" "$oid" "$review_id" "$review"
+  done <"$rows_file"
+  printf '\n## Self-hosted chain\n\n'
+  printf 'The exact active chain and its `state=SATISFIED` rendering are recorded in `%s`, with the retained implementation proof in `docs/verification/p5-self-hosting.md`.\n\n' "${coverage#"$repo/"}"
+  printf 'Acceptance commands: `scripts/tests/p6-task5-review.test.sh`, `scripts/p6-task5-review.sh --check`, focused requirement-review tests, `scripts/p6-census.sh --check`, and bare `make check`.\n'
+} >"$tmp"
+
+case $mode in
+  --write) install -m 0644 "$tmp" "$artifact" ;;
+  --check)
+    [[ -f $artifact ]] || die 'closure artifact is missing'
+    diff -u "$artifact" "$tmp" || die 'closure artifact is stale; run scripts/p6-task5-review.sh --write'
+    ;;
+esac

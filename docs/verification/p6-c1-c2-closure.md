@@ -4,7 +4,7 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 1 and `docs/plans/p6-task1-mechanisms-SPEC.md`.
 
-The checker resolved the exact 34-row C1 and 41-row C2 universes. Gate-registry audit: 34 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
+The checker resolved the exact 35-row C1 and 41-row C2 universes. Gate-registry audit: 34 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
 
 | Row | Probe | Exit | Evidence |
 |---|---|---:|---|
@@ -42,6 +42,7 @@ The checker resolved the exact 34-row C1 and 41-row C2 universes. Gate-registry 
 | C1-032 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C1-033 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C1-034 | `Make target exists and README names it` | 0 | docs/verification/p6-c1-c2-closure.md |
+| C1-035 | `Task 5 closure checker exists and is tracked` | 0 | scripts/p6-task5-review.sh |
 | C2-001 | `gate-registry audit row 001` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C2-002 | `gate-registry audit row 002` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C2-003 | `gate-registry audit row 003` | 0 | docs/verification/p6-c1-c2-closure.md |

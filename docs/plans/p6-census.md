@@ -2,8 +2,8 @@
 # P6 debt census
 
 Generation input commit: `7bb9a66df00ce4c5e1acc7a418db412884dcbcdf`.
-Counts: total=189 open=32 closed=157 unclassified=0.
-Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
+Counts: total=190 open=32 closed=158 unclassified=0.
+Categories: C1=35 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -41,6 +41,7 @@ Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C1-032 | C1 | undocumented-make:invariants-lock | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C1-033 | C1 | undocumented-make:identity-inventory | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C1-034 | C1 | undocumented-make:mutants | A public Make target is not documented in README.md or CLAUDE.md. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
+| C1-035 | C1 | mechanism:scripts/p6-task5-review.sh | A live authority names the Task 5 requirement-review closure checker. | path:scripts/p6-task5-review.sh | closed | close-in-P6 | — | scripts/p6-task5-review.sh |
 | C2-001 | C2 | gate-row:Secrets / force-push / Bash-writes to INDEX.md | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C2-002 | C2 | gate-row:Hand-edit of `@generated` files (Write/Edit channel) | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C2-003 | C2 | gate-row:Broken `VD-` refs in repo .md just written | The registry row requires an existence, self-test, Make-DAG, tier, owner, and expiry audit. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
@@ -171,10 +172,10 @@ Categories: C1=34 C2=41 C3=16 C4=12 C5=52 C6=13 C7=16 C8=5.
 | C6-007 | C6 | intent-commit:1ba2336e310dc7cb1487648fa6a36ac7adc0cff6 | Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
 | C6-008 | C6 | intent-commit:7046b425d6de32062a451e574f8c6372aff167b7 | Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
 | C6-009 | C6 | intent-commit:7bb9a66df00ce4c5e1acc7a418db412884dcbcdf | Post-P5 commit needs ratified path classification and exact Intent claim evidence when applicable. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
-| C6-010 | C6 | active-requirements | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
-| C6-011 | C6 | active-obligations | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
-| C6-012 | C6 | exact-revision-reviews | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
-| C6-013 | C6 | self-hosted-delivery-chain | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-intent-coverage.md | closed | close-in-P6 | — | docs/verification/p6-intent-coverage.md |
+| C6-010 | C6 | active-requirements | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
+| C6-011 | C6 | active-obligations | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
+| C6-012 | C6 | exact-revision-reviews | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
+| C6-013 | C6 | self-hosted-delivery-chain | Current self-hosted intent state needs complete exact-revision enumeration and proof. | artifact:docs/verification/p6-requirement-review.md | closed | close-in-P6 | — | docs/verification/p6-requirement-review.md |
 | C7-001 | C7 | measurement:artifact-authoring-minutes | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:artifact-authoring-minutes | open | close-in-P6 | — | — |
 | C7-002 | C7 | measurement:independent-review-field-change-rate | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:independent-review-field-change-rate | open | close-in-P6 | — | — |
 | C7-003 | C7 | measurement:ambiguous-obligations-preimplementation | P5 measurement needs measured, not-recoverable, or not-applicable plus typed provenance. | p5-result:measurement:ambiguous-obligations-preimplementation | open | close-in-P6 | — | — |
