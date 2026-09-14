@@ -163,19 +163,38 @@ func repositoryRootFrom(dir string) (string, error) {
 	}
 }
 
-func openStore(ctx context.Context, root, databaseURL string) (*store.Store, error) {
+var openStore = func(ctx context.Context, root, databaseURL string) (*store.Store, error) {
 	return store.Open(ctx, store.Config{Root: stateRoot(root), DatabaseURL: databaseURL})
 }
 
-func openHistoricalEvidenceStore(ctx context.Context, root, databaseURL string) (*store.Store, error) {
+var openHistoricalEvidenceStore = func(ctx context.Context, root, databaseURL string) (*store.Store, error) {
 	return store.Open(ctx, store.Config{Root: stateRoot(root), DatabaseURL: databaseURL, AllowHistoricalEvidenceImport: true})
+}
+
+var beginSync = func(ctx context.Context, ledger *store.Store, connector string) (*store.Sync, error) {
+	return ledger.BeginSync(ctx, connector)
+}
+
+var evaluateGate = func(ctx context.Context, ledger *store.Store, definition gates.Definition) (gates.Result, error) {
+	return gates.Evaluate(ctx, ledger, definition)
+}
+
+var applyProjection = func(ctx context.Context, projector *projections.Projector, ledger *store.Store) error {
+	return projector.Apply(ctx, ledger)
+}
+
+func closeStore(ledger *store.Store) error {
+	if ledger == nil {
+		return nil
+	}
+	return ledger.Close()
 }
 
 func stateRoot(root string) string { return filepath.Join(root, ".proofbound") }
 
 func productEnv(live string) string { return os.Getenv(live) }
 
-func newIDs() (*core.IDGenerator, error) {
+var newIDs = func() (*core.IDGenerator, error) {
 	return core.NewIDGenerator(core.IDGeneratorConfig{Entropy: crand.Reader, Now: time.Now})
 }
 
@@ -201,7 +220,7 @@ func syncGit(ctx context.Context, root string, ledger *store.Store, ids *core.ID
 	if err != nil {
 		return connectorgit.Result{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "git")
+	run, err := beginSync(ctx, ledger, "git")
 	if err != nil {
 		return connectorgit.Result{}, err
 	}
@@ -238,7 +257,7 @@ func syncChecksOnStore(ctx context.Context, root string, ledger *store.Store, id
 	if err != nil {
 		return checksResult{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "checks")
+	run, err := beginSync(ctx, ledger, "checks")
 	if err != nil {
 		return checksResult{}, err
 	}
@@ -354,7 +373,7 @@ func syncIntentOnStore(ctx context.Context, root, selection string, ledger *stor
 	if err != nil {
 		return connectorintent.Result{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "intent."+selection)
+	run, err := beginSync(ctx, ledger, "intent."+selection)
 	if err != nil {
 		return connectorintent.Result{}, err
 	}
@@ -367,7 +386,7 @@ func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, i
 	if err != nil {
 		return reviewsResult{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "reviews")
+	run, err := beginSync(ctx, ledger, "reviews")
 	if err != nil {
 		return reviewsResult{}, err
 	}
@@ -393,7 +412,7 @@ func syncGitHubOnStore(ctx context.Context, ledger *store.Store, ids *core.IDGen
 	if err != nil {
 		return githubResult{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "github")
+	run, err := beginSync(ctx, ledger, "github")
 	if err != nil {
 		return githubResult{}, err
 	}
@@ -407,7 +426,7 @@ func syncSessionsOnStore(ctx context.Context, root string, ledger *store.Store, 
 	if err != nil {
 		return sessionsResult{}, err
 	}
-	run, err := ledger.BeginSync(ctx, "sessions")
+	run, err := beginSync(ctx, ledger, "sessions")
 	if err != nil {
 		return sessionsResult{}, err
 	}
@@ -447,7 +466,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		result, err := syncSessionsOnStore(ctx, root, ledger, ids)
 		if err != nil {
 			return err
@@ -463,7 +482,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		result, err := syncReviewsOnStore(ctx, root, ledger, ids)
 		if err != nil {
 			return err
@@ -479,7 +498,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		result, err := syncGitHubOnStore(ctx, ledger, ids)
 		if err != nil {
 			return err
@@ -496,7 +515,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		result, err := syncIntentOnStore(ctx, root, selection, ledger, ids)
 		if err != nil {
 			return err
@@ -508,7 +527,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		records, err := migration.Load(filepath.Join(root, migration.ArchivePath))
 		if err != nil {
 			return err
@@ -523,7 +542,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 	if err != nil {
 		return err
 	}
-	defer func() { resultErr = errors.Join(resultErr, ledger.Close()) }()
+	defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 	projector := projections.New()
 	switch cmd {
 	case commandGatesCanary, commandGatesEnforce:
@@ -533,14 +552,14 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		definitions, err = gateDefinitionsForCommand(cmd, definitions)
 		if err != nil {
-			return err
+			return fmt.Errorf("select gate definitions: %w", err)
 		}
 		if err := resolveIntentGateHeadScope(ctx, root, definitions); err != nil {
 			return err
 		}
 		results := make([]gates.Result, 0, len(definitions))
 		for _, definition := range definitions {
-			result, err := gates.Evaluate(ctx, ledger, definition)
+			result, err := evaluateGate(ctx, ledger, definition)
 			if err != nil {
 				return err
 			}
@@ -549,7 +568,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			}
 			results = append(results, result)
 		}
-		if cmd == commandGatesEnforce {
+		switch cmd {
+		case commandGatesEnforce:
 			if err := enforceGateResults(definitions, results); err != nil {
 				return err
 			}
@@ -611,7 +631,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		if err := projector.Apply(ctx, ledger); err != nil {
+		if err := applyProjection(ctx, projector, ledger); err != nil {
 			return err
 		}
 		return projector.ReportWeek(ctx, ledger, time.Now(), reachable, output)
@@ -742,8 +762,8 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	}); err != nil {
 		return err
 	}
-	if secondIntent.Appended != 0 || secondGit.Appended != 0 || secondChecks.Appended != 0 || secondSessions.Appended != 0 || secondReviews.Appended != 0 {
-		return fmt.Errorf("verify: second sync appended intent=%d git=%d checks=%d sessions=%d reviews=%d", secondIntent.Appended, secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended)
+	if err := requireNoSecondSyncAppends(secondIntent.Appended, secondGit.Appended, secondChecks.Appended, secondSessions.Appended, secondReviews.Appended); err != nil {
+		return err
 	}
 	if err := verifyStep(ctx, "projection apply", func() error { return projector.Apply(ctx, ledger) }); err != nil {
 		return err
@@ -772,6 +792,16 @@ func verify(ctx context.Context, root string, ledger *store.Store, projector *pr
 	}
 	if latestLedgerRunID != witness.RunID {
 		return fmt.Errorf("verify: latest spool witness %s is not the latest ledger check.run %s", witness.RunID, latestLedgerRunID)
+	}
+	return nil
+}
+
+func requireNoSecondSyncAppends(intent, git, checks, sessions, reviews int) error {
+	counts := []int{intent, git, checks, sessions, reviews}
+	for _, count := range counts {
+		if count != 0 {
+			return fmt.Errorf("verify: second sync appended intent=%d git=%d checks=%d sessions=%d reviews=%d", intent, git, checks, sessions, reviews)
+		}
 	}
 	return nil
 }
@@ -829,10 +859,14 @@ func latestSpoolWitness(root string) (checks.Witness, error) {
 		}
 		return checks.Witness{}, fmt.Errorf("verify: latest witness %s has invalid trailing data: %w", filename, err)
 	}
-	if filename != witness.RunID+".json" || witness.Schema != "vera.witness.v1" || witness.Command != "make check" || witness.RunID == "" {
+	if !validMakeCheckWitness(filename, witness) {
 		return checks.Witness{}, fmt.Errorf("verify: latest spool file %s is not a valid make check witness", filename)
 	}
 	return witness, nil
+}
+
+func validMakeCheckWitness(filename string, witness checks.Witness) bool {
+	return filename == witness.RunID+".json" && witness.Schema == "vera.witness.v1" && witness.Command == "make check" && witness.RunID != ""
 }
 
 type eventReader interface {
