@@ -45,6 +45,8 @@ func TestLoadRejectsInvalidDefinitions(t *testing.T) {
 		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"experimental","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
 		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"not-a-date","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
 		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code"}}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"not-a-source","kind":"check.run","condition":{"field":"exit_code","equals":0}}`),
+		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"not-a-kind","condition":{"field":"exit_code","equals":0}}`),
 		[]byte(`{"schema":"proofbound.gate.v1","id":"x","description":"d","expires":"2099-01-01","mode":"canary","source":"checks","kind":"check.run","condition":{"field":"exit_code","equals":0}} trailing`),
 	} {
 		if _, err := Parse(bad); err == nil {
