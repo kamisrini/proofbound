@@ -3,17 +3,18 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-14
+**As of:** 2026-09-15
 
-## Resume — 2026-09-14
+## Resume — 2026-09-15
 
 P6 Task 8 is active. The frozen production universe is 16 packages from `go list ./internal/...`;
 `internal/specfirst` is test-only and explicitly excluded by C3-017. P6 Task 7 remains skipped under
 the founder ratification; no P7+ capability is being added.
 
-The current frozen implementation hash is `4499fa5`. It includes the committed GitHub, gates, and
-migration test remediations after the prior `a5ef803` freeze. Migration also has a committed
-fixture-root correction and archive-validation invariants; focused host tests pass.
+The current frozen implementation hash is `be58cd7`. It includes the projections integration-test
+optimization and the final report/reducer validation fixtures. The projections package passed its
+full tagged suite and complete calibrated mutation partitions: 404 candidates, 404 killed, 0
+invalid, 0 survived. Exact evidence is `docs/verification/p6-task8-projections-mutation-be58cd7.md`.
 
 The complete pre-commit CLI mutation sweep was diagnostic and reported 234 candidates, 233 killed,
 0 invalid, and one survivor at `cli.go:347#233`; the survivor was the committed-intent Markdown
@@ -23,14 +24,12 @@ candidates, 234 killed, 0 invalid, 0 survived. Completed package runs are core 5
 checks 36/36, Git 34/34, gitcmd 86/86, GitHub 58/58, intent 93/93, intent records 52/52, intent
 specdir 47/47, reviews 114/114, sessions 62/62, gates 109/109, and migration 33/33; every listed
 run had zero invalid and surviving mutants. Migration’s committed evidence is
-`docs/verification/p6-task8-migration-mutation-4499fa5.md`. The projections diagnostic was
-intentionally interrupted before a complete summary and is not accepted evidence.
+`docs/verification/p6-task8-migration-mutation-4499fa5.md`.
 
-**Exact next action:** profile and implement a lightweight test-execution optimization for the
-404-candidate `internal/projections` integration sweep without changing its acceptance bar, then
-execute the complete calibrated run against `4499fa5`; record no result until all candidates are
-summarized with zero invalid and zero survived. Then continue with `internal/store` and
-`internal/twin` in order.
+**Exact next action:** freeze the current package-universe revision for Task 8, then run complete
+calibrated mutation sweeps for `internal/store` and `internal/twin` in order, recording each exact
+tree object and zero-invalid/zero-survivor summary. Obtain current-code non-author verdicts for
+all package rows before closing C3 or starting Task 9.
 Do not close C3, start Task 9, or claim P6 deep-complete until all package results, exact tree
 objects, and a current-code non-author verdict are committed.
 
@@ -38,9 +37,10 @@ objects, and a current-code non-author verdict are committed.
 
 - Branch: `main`; local history is ahead of `origin/main`. All tracked work is committed; no push
   is being attempted in this turn.
-- The only pre-existing untracked path is `docs/plans/P5-intent-provenance-plan.md`, SHA-256
-  `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`. It is untouched and must
-  remain uncommitted without ownership resolution.
+- Pre-existing untracked paths are `docs/plans/P5-intent-provenance-plan.md`, SHA-256
+  `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`, and
+  `kernel/cmd/p6dbprobe/main.go`. Both are untouched and must remain uncommitted without ownership
+  resolution.
 
 ## Completed
 
@@ -61,21 +61,21 @@ objects, and a current-code non-author verdict are committed.
 
 ## Open work
 
-- P6 Task 8 remains open for the other 3 production packages: projections, store, and twin. Final package evidence
+- P6 Task 8 remains open for the other 2 production packages: store and twin. Projections is
+  mutation-clean at 404/404/0/0. Final package evidence
   must bind one implementation commit, each exact package tree object, calibrated mutation counts,
   and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
-- The current state has no product implementation blocker. Projections integration mutation
-  testing is operationally expensive: safe external-DB execution calibrated successfully, but a
-  bounded four-way run was stopped after partial output because it remained too slow. No disposable
-  DB service is left running and no partial count is accepted.
+- The current state has no product implementation blocker. Projections integration testing was
+  optimized with unique external-DB schemas and parallel independent tests; the embedded fallback
+  remains serial. The disposable PostgreSQL profiler is still running only if needed for the next
+  package and is not acceptance evidence.
 
 ## Blocked and unverified
 
 - The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic.
 - Completed package mutation runs are verified individually, but the final cross-package packet
-  and current-code non-author verdict remain unverified. Projections, store, and twin remain
-  unverified.
+  and current-code non-author verdict remain unverified. Store and twin remain unverified.
 - No current non-author final package verdict covers the eventual frozen implementation commit.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
