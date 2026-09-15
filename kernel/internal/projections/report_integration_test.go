@@ -91,6 +91,26 @@ func TestReportWeek_PropagatesSessionRowScanError(t *testing.T) {
 	}
 }
 
+func TestReportWeek_PropagatesReviewRowScanError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"schema":"vera.verdict.v1","verdict_id":"review-scan-error","status":"NEEDS_WORK","reviewed_commit":"0123456789012345678901234567890123456789","findings":[{"finding_id":"F-scan-error","severity":"MED","defect_commit":""}],"artifact_path":"docs/verification/verdicts/review-scan-error.md","artifact_sha":"0000000000000000000000000000000000000000000000000000000000000000"}`)
+	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "review-scan-error", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE reviews_view ALTER COLUMN seq TYPE TEXT USING 'not-a-seq'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	if err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output); err == nil {
+		t.Fatal("review row scan error was swallowed")
+	}
+}
+
 func TestReportGitHub_RendersJoinStatesFreshnessAndProof(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
