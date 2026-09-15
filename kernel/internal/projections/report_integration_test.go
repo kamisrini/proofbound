@@ -51,6 +51,26 @@ func TestReportWeek_FailsClosedWhenProofEventIsMissing(t *testing.T) {
 	}
 }
 
+func TestReportWeek_PropagatesCheckRowScanError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"schema":"vera.witness.v1","run_id":"01ARZ3NDEKTSV4RRFFQ69G5FAV","command":"make check","exit_code":0,"started_at":"2026-08-25T12:00:00Z","finished_at":"2026-08-25T12:00:01Z","duration_ms":1000,"output_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","git_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","git_dirty":false,"tool_versions":{"go":"go1.26","golangci_lint":"v2","make":"GNU Make 4"}}`)
+	appendRaw(t, s, core.SourceChecks, core.KindCheckRun, "check-scan-error", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE checks_view ALTER COLUMN duration_ms TYPE TEXT USING 'not-a-duration'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	if err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output); err == nil {
+		t.Fatal("check row scan error was swallowed")
+	}
+}
+
 func TestReportGitHub_RendersJoinStatesFreshnessAndProof(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
