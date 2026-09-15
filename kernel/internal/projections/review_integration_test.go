@@ -44,20 +44,25 @@ func TestRedVerdictChainRequiresStrictLedgerInterval(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
 	sha := "0123456789012345678901234567890123456789"
+	start := time.Now().Add(-time.Hour)
+	end := time.Now().Add(time.Hour)
 	verdict := func(id, status string) []byte {
 		return []byte(`{"schema":"vera.verdict.v1","verdict_id":"` + id + `","status":"` + status + `","reviewed_commit":"` + sha + `","findings":[{"finding_id":"` + id + `-finding","severity":"MED","defect_commit":""}],"artifact_path":"docs/verification/verdicts/` + id + `.md","artifact_sha":"0000000000000000000000000000000000000000000000000000000000000000"}`)
 	}
+	appendRawAt(t, s, core.SourceReviews, core.KindReviewVerdict, "at-start", verdict("at-start", "NEEDS_WORK"), start)
 	appendRaw(t, s, core.SourceGitHub, core.KindReviewVerdict, "foreign-review", verdict("foreign", "NEEDS_WORK"), 0)
 	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "before", commitJSON(sha, "before"), 1)
 	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "red", verdict("red", "NEEDS_WORK"), 2)
-	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "between", commitJSON(sha, "between"), 3)
+	foreignCommit := appendRaw(t, s, core.SourceGit, core.KindReviewVerdict, "foreign-commit-kind", verdict("foreign-commit-kind", "NEEDS_WORK"), 3)
+	between := appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "between", commitJSON(sha, "between"), 4)
 	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "next", verdict("next", "ACCEPTABLE"), 4)
 	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "after", commitJSON(sha, "after"), 5)
-	chains, err := readRedVerdictChains(context.Background(), s, time.Now().Add(-time.Hour), time.Now().Add(time.Hour))
+	appendRawAt(t, s, core.SourceReviews, core.KindReviewVerdict, "at-end", verdict("at-end", "NEEDS_WORK"), end)
+	chains, err := readRedVerdictChains(context.Background(), s, start, end)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(chains) != 1 || len(chains[0].changeEventIDs) != 1 {
+	if len(chains) != 1 || len(chains[0].changeEventIDs) != 1 || chains[0].changeEventIDs[0] != between.Event.ID.String() || chains[0].changeEventIDs[0] == foreignCommit.Event.ID.String() {
 		t.Fatalf("chains=%+v", chains)
 	}
 }

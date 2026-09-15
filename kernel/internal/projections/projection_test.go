@@ -797,12 +797,16 @@ func appendCommit(t *testing.T, s *store.Store, sha, subject string, n int64) st
 	return appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, commitJSON(shaFor(sha), subject), n)
 }
 func appendRaw(t *testing.T, s *store.Store, source core.Source, kind core.Kind, native string, payload []byte, _ int64) store.Record {
+	return appendRawAt(t, s, source, kind, native, payload, time.Now())
+}
+
+func appendRawAt(t *testing.T, s *store.Store, source core.Source, kind core.Kind, native string, payload []byte, occurredAt time.Time) store.Record {
 	t.Helper()
 	g, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: crand.Reader, Now: time.Now})
 	if err != nil {
 		t.Fatal(err)
 	}
-	e, err := g.NewEvent(core.NewEventParams{Source: source, NativeID: native, Kind: kind, OccurredAt: time.Now(), Payload: payload, ConnectorVersion: "test/1"})
+	e, err := g.NewEvent(core.NewEventParams{Source: source, NativeID: native, Kind: kind, OccurredAt: occurredAt, Payload: payload, ConnectorVersion: "test/1"})
 	if err != nil {
 		t.Fatal(err)
 	}
