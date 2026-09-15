@@ -238,10 +238,15 @@ func TestApply_GitHubDeliveryRetainsNormalizedFieldsAndProof(t *testing.T) {
 func TestGitHubPayloadValidationRejectsMalformedFields(t *testing.T) {
 	validWorkflow := githubWorkflowPayload{Repository: "github/docs", RunID: 1, Workflow: "CI", HeadSHA: shaFor("valid"), Status: "completed", Conclusion: "success", CreatedAt: time.Unix(1, 0), UpdatedAt: time.Unix(2, 0)}
 	for name, edit := range map[string]func(*githubWorkflowPayload){
-		"repository": func(v *githubWorkflowPayload) { v.Repository = "github/docs/actions" },
-		"run id":     func(v *githubWorkflowPayload) { v.RunID = 0 },
-		"sha":        func(v *githubWorkflowPayload) { v.HeadSHA = "bad" },
-		"timestamps": func(v *githubWorkflowPayload) { v.UpdatedAt = v.CreatedAt.Add(-time.Second) },
+		"repository":           func(v *githubWorkflowPayload) { v.Repository = "github/docs/actions" },
+		"run id":               func(v *githubWorkflowPayload) { v.RunID = 0 },
+		"workflow":             func(v *githubWorkflowPayload) { v.Workflow = " " },
+		"sha":                  func(v *githubWorkflowPayload) { v.HeadSHA = "bad" },
+		"status":               func(v *githubWorkflowPayload) { v.Status = " " },
+		"completed conclusion": func(v *githubWorkflowPayload) { v.Conclusion = " " },
+		"created at":           func(v *githubWorkflowPayload) { v.CreatedAt = time.Time{} },
+		"updated at":           func(v *githubWorkflowPayload) { v.UpdatedAt = time.Time{} },
+		"timestamps":           func(v *githubWorkflowPayload) { v.UpdatedAt = v.CreatedAt.Add(-time.Second) },
 	} {
 		t.Run(name, func(t *testing.T) {
 			v := validWorkflow
