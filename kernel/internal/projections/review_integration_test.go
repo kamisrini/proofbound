@@ -47,6 +47,7 @@ func TestRedVerdictChainRequiresStrictLedgerInterval(t *testing.T) {
 	verdict := func(id, status string) []byte {
 		return []byte(`{"schema":"vera.verdict.v1","verdict_id":"` + id + `","status":"` + status + `","reviewed_commit":"` + sha + `","findings":[{"finding_id":"` + id + `-finding","severity":"MED","defect_commit":""}],"artifact_path":"docs/verification/verdicts/` + id + `.md","artifact_sha":"0000000000000000000000000000000000000000000000000000000000000000"}`)
 	}
+	appendRaw(t, s, core.SourceGitHub, core.KindReviewVerdict, "foreign-review", verdict("foreign", "NEEDS_WORK"), 0)
 	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "before", commitJSON(sha, "before"), 1)
 	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "red", verdict("red", "NEEDS_WORK"), 2)
 	appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, "between", commitJSON(sha, "between"), 3)

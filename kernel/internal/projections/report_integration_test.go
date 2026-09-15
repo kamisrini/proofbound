@@ -30,6 +30,13 @@ func TestReportWeek_RendersLedgerRowsAndSupersededCommit(t *testing.T) {
 	if !strings.Contains(output.String(), "historical commit [superseded]") || !strings.Contains(output.String(), "proof="+r.Event.ID.String()) {
 		t.Fatalf("report=%q", output.String())
 	}
+	output.Reset()
+	if err := New().ReportWeek(context.Background(), s, weekEnd, nil, &output); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(output.String(), "historical commit [superseded]") {
+		t.Fatalf("nil reachability marked commit superseded: %q", output.String())
+	}
 }
 
 func TestReportWeek_FailsClosedWhenProofEventIsMissing(t *testing.T) {
