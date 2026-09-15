@@ -77,6 +77,9 @@ objects, and a current-code non-author verdict are committed.
 - Completed package mutation runs are verified individually, but the final cross-package packet
   and current-code non-author verdict remain unverified. Store and twin remain unverified.
 - No current non-author final package verdict covers the eventual frozen implementation commit.
+- `make check` reached `kernel-check` but could not complete in this environment: the installed
+  `golangci-lint` v2.13.2 was built with Go 1.26 and panicked while loading Go 1.27 sources.
+  Repository checks before kernel-check passed; rerun with a Go-version-compatible linter.
 - Push is not attempted; destination-specific authorization/authentication has not been freshly
   established for this turn.
 - The pre-existing untracked P5 draft is intentionally untouched and excluded from all commits.
