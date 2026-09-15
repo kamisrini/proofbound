@@ -281,6 +281,26 @@ func TestRequirementReviewProjectionValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestRequirementReviewProjectionPropagatesInsertError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	intentFixtureEvents(t, s, false)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE requirement_reviews_view ADD CONSTRAINT p6_requirement_review_insert_failure CHECK (false)`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	review := requirementReviewFixture("independent", strings.Repeat("b", 64), "O-1")
+	appendEvents(t, s, reviewEvent(t, core.KindRequirementReview, review.ReviewID, review))
+	if err := New().Apply(context.Background(), s); err == nil || !strings.Contains(err.Error(), "p6_requirement_review_insert_failure") {
+		t.Fatalf("requirement review insert error=%v", err)
+	}
+}
 func TestUnverifiedIsDerived(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
