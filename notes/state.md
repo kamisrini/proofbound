@@ -11,10 +11,11 @@ P6 Task 8 is active. The frozen production universe is 16 packages from `go list
 `internal/specfirst` is test-only and explicitly excluded by C3-017. P6 Task 7 remains skipped under
 the founder ratification; no P7+ capability is being added.
 
-The current frozen implementation hash is `be58cd7`. It includes the projections integration-test
-optimization and the final report/reducer validation fixtures. The projections package passed its
-full tagged suite and complete calibrated mutation partitions: 404 candidates, 404 killed, 0
-invalid, 0 survived. Exact evidence is `docs/verification/p6-task8-projections-mutation-be58cd7.md`.
+The current frozen implementation hash is `e4c8e77`. It includes the projections integration-test
+optimization, final report/reducer fixtures, store survivor coverage, and the isolated replay
+sequence guard. Projections passed 404/404/0/0; store passed 133/133/0/0; twin passed 31/31/0/0.
+Evidence is in `docs/verification/p6-task8-projections-mutation-be58cd7.md` and
+`docs/verification/p6-task8-store-twin-mutation-e4c8e77.md`.
 
 The complete pre-commit CLI mutation sweep was diagnostic and reported 234 candidates, 233 killed,
 0 invalid, and one survivor at `cli.go:347#233`; the survivor was the committed-intent Markdown
@@ -26,10 +27,9 @@ specdir 47/47, reviews 114/114, sessions 62/62, gates 109/109, and migration 33/
 run had zero invalid and surviving mutants. Migration’s committed evidence is
 `docs/verification/p6-task8-migration-mutation-4499fa5.md`.
 
-**Exact next action:** freeze the current package-universe revision for Task 8, then run complete
-calibrated mutation sweeps for `internal/store` and `internal/twin` in order, recording each exact
-tree object and zero-invalid/zero-survivor summary. Obtain current-code non-author verdicts for
-all package rows before closing C3 or starting Task 9.
+**Exact next action:** obtain current-code non-author verdicts for all package rows, and if required
+rerun older package results at `e4c8e77`; then commit the final cross-package packet before closing
+C3 or starting Task 9.
 Do not close C3, start Task 9, or claim P6 deep-complete until all package results, exact tree
 objects, and a current-code non-author verdict are committed.
 
@@ -61,10 +61,10 @@ objects, and a current-code non-author verdict are committed.
 
 ## Open work
 
-- P6 Task 8 remains open for the other 2 production packages: store and twin. Projections is
-  mutation-clean at 404/404/0/0. Final package evidence
-  must bind one implementation commit, each exact package tree object, calibrated mutation counts,
-  and a committed non-author verdict for that same commit/tree.
+- P6 Task 8 remains open for the final cross-package packet and non-author verdict. Projections is
+  mechanically clean at 404/404/0/0; store is clean at 133/133/0/0; twin is clean at 31/31/0/0.
+  Final package evidence must bind one implementation commit, each exact package tree object,
+  calibrated mutation counts, and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
 - The current state has no product implementation blocker. Projections integration testing was
   optimized with unique external-DB schemas and parallel independent tests; the embedded fallback
@@ -75,8 +75,9 @@ objects, and a current-code non-author verdict are committed.
 
 - The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic.
 - Completed package mutation runs are verified individually, but the final cross-package packet
-  and current-code non-author verdict remain unverified. Store and twin remain unverified.
-- No current non-author final package verdict covers the eventual frozen implementation commit.
+  and current-code non-author verdict remain unverified. Store and twin are mechanically verified
+  at `e4c8e77`; older package runs still need final-commit binding or explicit reruns.
+- No current non-author final package verdict covers the frozen implementation commit.
 - `make check` reached `kernel-check` but could not complete in this environment: the installed
   `golangci-lint` v2.13.2 was built with Go 1.26 and panicked while loading Go 1.27 sources.
   Repository checks before kernel-check passed; rerun with a Go-version-compatible linter.
