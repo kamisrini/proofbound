@@ -71,6 +71,26 @@ func TestReportWeek_PropagatesCheckRowScanError(t *testing.T) {
 	}
 }
 
+func TestReportWeek_PropagatesSessionRowScanError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"session_id":"session-scan-error","started_at":"2026-08-25T12:00:00Z","finished_at":"2026-08-25T12:00:01Z","message_count":2,"tool_call_count":1,"files_written_count":1,"parse_coverage":0.5}`)
+	appendRaw(t, s, core.SourceSessions, core.KindSessionObserved, "session-scan-error", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE sessions_view ALTER COLUMN message_count TYPE TEXT USING 'not-a-count'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	if err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output); err == nil {
+		t.Fatal("session row scan error was swallowed")
+	}
+}
+
 func TestReportGitHub_RendersJoinStatesFreshnessAndProof(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
