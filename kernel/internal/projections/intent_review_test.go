@@ -218,6 +218,31 @@ func TestObligationVerdictProjectionValidation(t *testing.T) {
 	}
 }
 
+func TestObligationVerdictProjectionPropagatesFindingInsertError(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	intentFixtureEvents(t, s, true)
+	evidence := evidenceEvent(t)
+	review := requirementReviewFixture("independent", strings.Repeat("b", 64), "O-1")
+	appendEvents(t, s, evidence, reviewEvent(t, core.KindRequirementReview, review.ReviewID, review))
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE reviews_view ADD CONSTRAINT p6_finding_insert_failure CHECK (false)`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	verdict := obligationVerdictFixture(shaFor("intent-commit"), evidence.ID.String())
+	verdict.Status = "NEEDS_WORK"
+	verdict.Findings = []connectorreviews.Finding{{FindingID: "F-1", Severity: "MED"}}
+	appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, verdict.VerdictID, verdict))
+	if err := New().Apply(context.Background(), s); err == nil {
+		t.Fatal("finding insert error was swallowed")
+	}
+}
+
 func TestRequirementReviewProjectionValidation(t *testing.T) {
 	for _, tc := range []struct{ name, reviewer, digest, obligation, outcome string }{{"author equals reviewer", "owner", strings.Repeat("b", 64), "O-1", "VERIFIABLE"}, {"wrong revision", "independent", strings.Repeat("f", 64), "O-1", "VERIFIABLE"}, {"absent obligation", "independent", strings.Repeat("b", 64), "O-404", "VERIFIABLE"}, {"unknown outcome", "independent", strings.Repeat("b", 64), "O-1", "MAYBE"}} {
 		t.Run(tc.name, func(t *testing.T) {
