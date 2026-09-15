@@ -5,6 +5,7 @@ package projections
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -111,6 +112,20 @@ func TestReportWeek_FailsClosedWhenReviewProofEventIsMissing(t *testing.T) {
 	err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output)
 	if err == nil || !strings.Contains(err.Error(), "missing event proof") {
 		t.Fatalf("output=%q error=%v", output.String(), err)
+	}
+}
+
+func TestRenderWeekReport_PropagatesSessionAndReviewOutputFailures(t *testing.T) {
+	report := weekReport{
+		sessions: []sessionReportRow{{sessionID: "session-1", eventID: "session-proof"}},
+		reviews:  []reviewReportRow{{findingID: "finding-1", eventID: "review-proof"}},
+	}
+	want := errors.New("write failed")
+	for _, at := range []int{5, 6} {
+		writer := &failWriteAt{at: at, err: want}
+		if err := renderWeekReport(writer, time.Time{}, time.Time{}, report); !errors.Is(err, want) {
+			t.Fatalf("write %d error=%v calls=%d", at, err, writer.calls)
+		}
 	}
 }
 
