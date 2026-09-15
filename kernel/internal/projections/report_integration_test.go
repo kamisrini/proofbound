@@ -119,9 +119,10 @@ func TestRenderWeekReport_PropagatesSessionAndReviewOutputFailures(t *testing.T)
 	report := weekReport{
 		sessions: []sessionReportRow{{sessionID: "session-1", eventID: "session-proof"}},
 		reviews:  []reviewReportRow{{findingID: "finding-1", eventID: "review-proof"}},
+		chains:   []redVerdictChain{{redEventID: "red-proof", nextEventID: "next-proof"}},
 	}
 	want := errors.New("write failed")
-	for _, at := range []int{5, 6} {
+	for _, at := range []int{5, 6, 7, 8, 9} {
 		writer := &failWriteAt{at: at, err: want}
 		if err := renderWeekReport(writer, time.Time{}, time.Time{}, report); !errors.Is(err, want) {
 			t.Fatalf("write %d error=%v calls=%d", at, err, writer.calls)
