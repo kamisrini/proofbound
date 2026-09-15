@@ -51,6 +51,69 @@ func TestReportWeek_FailsClosedWhenProofEventIsMissing(t *testing.T) {
 	}
 }
 
+func TestReportWeek_FailsClosedWhenCheckProofEventIsMissing(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"schema":"vera.witness.v1","run_id":"01ARZ3NDEKTSV4RRFFQ69G5FAV","command":"make check","exit_code":0,"started_at":"2026-08-25T12:00:00Z","finished_at":"2026-08-25T12:00:01Z","duration_ms":1000,"output_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","git_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","git_dirty":false,"tool_versions":{"go":"go1.26","golangci_lint":"v2","make":"GNU Make 4"}}`)
+	appendRaw(t, s, core.SourceChecks, core.KindCheckRun, "check-missing-proof", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE checks_view SET event_id='01ARZ3NDEKTSV4RRFFQ69G5FAV'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output)
+	if err == nil || !strings.Contains(err.Error(), "missing event proof") {
+		t.Fatalf("output=%q error=%v", output.String(), err)
+	}
+}
+
+func TestReportWeek_FailsClosedWhenSessionProofEventIsMissing(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"session_id":"session-missing-proof","started_at":"2026-08-25T12:00:00Z","finished_at":"2026-08-25T12:00:01Z","message_count":2,"tool_call_count":1,"files_written_count":1,"parse_coverage":0.5}`)
+	appendRaw(t, s, core.SourceSessions, core.KindSessionObserved, "session-missing-proof", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE sessions_view SET event_id='01ARZ3NDEKTSV4RRFFQ69G5FAV'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output)
+	if err == nil || !strings.Contains(err.Error(), "missing event proof") {
+		t.Fatalf("output=%q error=%v", output.String(), err)
+	}
+}
+
+func TestReportWeek_FailsClosedWhenReviewProofEventIsMissing(t *testing.T) {
+	s := testStore(t)
+	defer s.Close()
+	payload := []byte(`{"schema":"vera.verdict.v1","verdict_id":"review-missing-proof","status":"NEEDS_WORK","reviewed_commit":"0123456789012345678901234567890123456789","findings":[{"finding_id":"F-missing-proof","severity":"MED","defect_commit":""}],"artifact_path":"docs/verification/verdicts/review-missing-proof.md","artifact_sha":"0000000000000000000000000000000000000000000000000000000000000000"}`)
+	appendRaw(t, s, core.SourceReviews, core.KindReviewVerdict, "review-missing-proof", payload, 1)
+	if err := New().Apply(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE reviews_view SET event_id='01ARZ3NDEKTSV4RRFFQ69G5FAV'`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	err := New().ReportWeek(context.Background(), s, time.Now().UTC().Add(time.Hour), map[string]bool{}, &output)
+	if err == nil || !strings.Contains(err.Error(), "missing event proof") {
+		t.Fatalf("output=%q error=%v", output.String(), err)
+	}
+}
+
 func TestReportWeek_PropagatesCheckRowScanError(t *testing.T) {
 	s := testStore(t)
 	defer s.Close()
