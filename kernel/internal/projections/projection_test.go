@@ -266,6 +266,27 @@ func TestGitHubWorkflowValidationAllowsInProgressWithoutConclusion(t *testing.T)
 	}
 }
 
+func TestGitHubDeploymentPayloadValidationRejectsMalformedFields(t *testing.T) {
+	valid := githubDeploymentPayload{Repository: "github/docs", DeploymentID: 1, Environment: "production", SHA: shaFor("valid"), CreatedAt: time.Unix(1, 0), UpdatedAt: time.Unix(2, 0)}
+	for name, edit := range map[string]func(*githubDeploymentPayload){
+		"repository":    func(v *githubDeploymentPayload) { v.Repository = "github/docs/actions" },
+		"deployment id": func(v *githubDeploymentPayload) { v.DeploymentID = 0 },
+		"environment":   func(v *githubDeploymentPayload) { v.Environment = " " },
+		"sha":           func(v *githubDeploymentPayload) { v.SHA = "bad" },
+		"created at":    func(v *githubDeploymentPayload) { v.CreatedAt = time.Time{} },
+		"updated at":    func(v *githubDeploymentPayload) { v.UpdatedAt = time.Time{} },
+		"timestamps":    func(v *githubDeploymentPayload) { v.UpdatedAt = v.CreatedAt.Add(-time.Second) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			v := valid
+			edit(&v)
+			if err := v.validate(); err == nil {
+				t.Fatal("malformed deployment accepted")
+			}
+		})
+	}
+}
+
 func TestExternalRepositoryNameAlphabetAndShape(t *testing.T) {
 	for _, value := range []string{"A", "Z", "a", "z", "0", "9", "-", "_", "x.y", "GitHub-9_repo.name"} {
 		if !validExternalName(value) {
