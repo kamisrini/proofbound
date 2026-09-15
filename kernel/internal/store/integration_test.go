@@ -9,9 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/fergusstrange/embedded-postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 )
@@ -193,6 +196,217 @@ func TestReadEventsPagingIsReentrant(t *testing.T) {
 	}
 }
 
+func TestStoreImportReplayRoutes(t *testing.T) {
+	t.Run("disabled", func(t *testing.T) {
+		s := integrationStore(t)
+		defer s.Close()
+		if err := s.ImportReplayRecords(context.Background(), nil); !errors.Is(err, ErrConfig) {
+			t.Fatalf("error=%v", err)
+		}
+	})
+	t.Run("validation", func(t *testing.T) {
+		s := integrationReplayStore(t, Config{})
+		defer s.Close()
+		e := integrationEvent(t, "replay-validation")
+		bad := e
+		bad.Payload = nil
+		for name, records := range map[string][]Record{
+			"invalid event":       {{Seq: 1, Event: bad}},
+			"decreasing sequence": {{Seq: 2, Event: e}, {Seq: 1, Event: integrationEvent(t, "replay-decreasing")}},
+			"duplicate event":     {{Seq: 1, Event: e}, {Seq: 2, Event: e}},
+		} {
+			t.Run(name, func(t *testing.T) {
+				if err := s.ImportReplayRecords(context.Background(), records); !errors.Is(err, ErrConfig) {
+					t.Fatalf("error=%v", err)
+				}
+			})
+		}
+	})
+	t.Run("begin failure", func(t *testing.T) {
+		s := integrationReplayStore(t, Config{})
+		defer s.Close()
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if err := s.ImportReplayRecords(ctx, []Record{{Seq: 1, Event: integrationEvent(t, "replay-begin")}}); err == nil {
+			t.Fatal("canceled transaction began")
+		}
+	})
+	t.Run("insert failure rolls back", func(t *testing.T) {
+		s := integrationReplayStore(t, Config{MaxConns: 1})
+		defer s.Close()
+		e := integrationEvent(t, "replay-insert")
+		appendStoreEvent(t, s, e)
+		if err := s.ImportReplayRecords(context.Background(), []Record{{Seq: 99, Event: e}}); err == nil {
+			t.Fatal("duplicate event was accepted")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		count := 0
+		if err := s.ReadEvents(ctx, Filter{}, func(Record) error { count++; return nil }); err != nil {
+			t.Fatal(err)
+		}
+		if count != 1 {
+			t.Fatalf("count=%d", count)
+		}
+	})
+	t.Run("sequence update failure rolls back", func(t *testing.T) {
+		s := integrationReplayStore(t, Config{MaxConns: 1})
+		defer s.Close()
+		defer dropEventSequence(t, s)()
+		if err := s.ImportReplayRecords(context.Background(), []Record{{Seq: 1, Event: integrationEvent(t, "replay-sequence")}}); err == nil {
+			t.Fatal("missing sequence was accepted")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := s.ReadEvents(ctx, Filter{}, func(Record) error { return nil }); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestStoreImportHistoricalEvidenceRoutes(t *testing.T) {
+	t.Run("disabled", func(t *testing.T) {
+		s := integrationStore(t)
+		defer s.Close()
+		if err := s.ImportHistoricalEvidenceRecords(context.Background(), nil); !errors.Is(err, ErrConfig) {
+			t.Fatalf("error=%v", err)
+		}
+	})
+	t.Run("validation", func(t *testing.T) {
+		s := integrationHistoricalStore(t, Config{})
+		defer s.Close()
+		e := integrationEvent(t, "historical-validation")
+		bad := e
+		bad.Payload = nil
+		if err := s.ImportHistoricalEvidenceRecords(context.Background(), []Record{{Seq: 1, Event: bad}}); !errors.Is(err, ErrConfig) {
+			t.Fatalf("error=%v", err)
+		}
+	})
+	t.Run("begin failure", func(t *testing.T) {
+		s := integrationHistoricalStore(t, Config{})
+		defer s.Close()
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		if err := s.ImportHistoricalEvidenceRecords(ctx, []Record{{Seq: 1, Event: integrationEvent(t, "historical-begin")}}); err == nil {
+			t.Fatal("canceled transaction began")
+		}
+	})
+	t.Run("insert failure rolls back", func(t *testing.T) {
+		s := integrationHistoricalStore(t, Config{MaxConns: 1})
+		defer s.Close()
+		e := integrationEvent(t, "historical-insert")
+		appendStoreEvent(t, s, e)
+		if err := s.ImportHistoricalEvidenceRecords(context.Background(), []Record{{Seq: 99, Event: e}}); err == nil {
+			t.Fatal("duplicate event was accepted")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := s.ReadEvents(ctx, Filter{}, func(Record) error { return nil }); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("sequence update failure rolls back", func(t *testing.T) {
+		s := integrationHistoricalStore(t, Config{MaxConns: 1})
+		defer s.Close()
+		defer dropEventSequence(t, s)()
+		if err := s.ImportHistoricalEvidenceRecords(context.Background(), []Record{{Seq: 1, Event: integrationEvent(t, "historical-sequence")}}); err == nil {
+			t.Fatal("missing sequence was accepted")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := s.ReadEvents(ctx, Filter{}, func(Record) error { return nil }); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestStoreMigrationFailureRoutes(t *testing.T) {
+	url := os.Getenv("DATABASE_URL")
+	if url == "" {
+		t.Fatal("DATABASE_URL is required")
+	}
+	newPool := func(t *testing.T) *pgxpool.Pool {
+		t.Helper()
+		pool, err := pgxpool.New(context.Background(), url)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return pool
+	}
+	t.Run("acquire failure", func(t *testing.T) {
+		pool := newPool(t)
+		pool.Close()
+		if err := migrate(context.Background(), pool); err == nil {
+			t.Fatal("migration acquired a closed pool")
+		}
+	})
+	t.Run("advisory lock failure", func(t *testing.T) {
+		pool := newPool(t)
+		defer pool.Close()
+		original := migrationAdvisoryLockSQL
+		migrationAdvisoryLockSQL = "SELECT definitely_missing_migration_function()"
+		defer func() { migrationAdvisoryLockSQL = original }()
+		if err := migrate(context.Background(), pool); err == nil || !strings.Contains(err.Error(), "definitely_missing_migration_function") {
+			t.Fatal("invalid advisory-lock query was accepted")
+		}
+	})
+	t.Run("ledger SQL failure", func(t *testing.T) {
+		pool := newPool(t)
+		defer pool.Close()
+		original := ledgerSQL
+		ledgerSQL = []byte("SELECT definitely_missing_migration_function()")
+		defer func() { ledgerSQL = original }()
+		if err := migrate(context.Background(), pool); err == nil || !strings.Contains(err.Error(), "definitely_missing_migration_function") {
+			t.Fatal("invalid ledger SQL was accepted")
+		}
+	})
+}
+
+func TestOpenEmbeddedIdentityWriteFailure(t *testing.T) {
+	root := t.TempDir()
+	data := filepath.Join(root, "data")
+	runtimeDir := filepath.Join(root, "runtime")
+	if err := os.MkdirAll(data, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	binaries := os.Getenv("PROOFBOUND_TEST_REPO_ROOT")
+	if binaries != "" {
+		binaries = filepath.Join(binaries, "kernel", ".proofbound", "pgbin")
+	} else {
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for {
+			candidate := filepath.Join(wd, ".proofbound", "pgbin")
+			if _, err := os.Stat(candidate); err == nil {
+				binaries = candidate
+				break
+			}
+			parent := filepath.Dir(wd)
+			if parent == wd {
+				t.Skip("embedded postgres binaries are unavailable")
+			}
+			wd = parent
+		}
+	}
+	server := embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(55441).DataPath(data).RuntimePath(runtimeDir).BinariesPath(binaries).Username("proofbound").Password("proofbound").Database("proofbound"))
+	if err := server.Start(); err != nil {
+		t.Skipf("embedded postgres unavailable: %v", err)
+	}
+	if err := server.Stop(); err != nil {
+		t.Fatal(err)
+	}
+	marker := filepath.Join(data, ".proofbound-identity")
+	if err := os.WriteFile(marker, []byte(proofboundEmbeddedIdentity.marker+"\n"), 0o400); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Open(context.Background(), Config{Root: root, DataDir: data, BinariesDir: binaries, Port: 55441})
+	if !errors.Is(err, ErrMigrate) || s != nil {
+		t.Fatalf("store=%v error=%v", s, err)
+	}
+}
+
 func integrationStore(t *testing.T) *Store {
 	return integrationStoreWithConfig(t, Config{})
 }
@@ -211,6 +425,69 @@ func integrationStoreWithConfig(t *testing.T, cfg Config) *Store {
 		t.Fatal(err)
 	}
 	return s
+}
+
+func integrationReplayStore(t *testing.T, cfg Config) *Store {
+	t.Helper()
+	root, err := os.MkdirTemp(t.TempDir(), "proofbound-twin-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return integrationStoreAtRoot(t, root, cfg, true, false)
+}
+
+func integrationHistoricalStore(t *testing.T, cfg Config) *Store {
+	t.Helper()
+	return integrationStoreAtRoot(t, t.TempDir(), cfg, false, true)
+}
+
+func integrationStoreAtRoot(t *testing.T, root string, cfg Config, replay, historical bool) *Store {
+	t.Helper()
+	url := os.Getenv("DATABASE_URL")
+	if url == "" {
+		t.Fatal("DATABASE_URL is required")
+	}
+	resetIntegrationDatabase(t, url)
+	cfg.Root, cfg.DatabaseURL = root, url
+	cfg.AllowReplayImport, cfg.AllowHistoricalEvidenceImport = replay, historical
+	s, err := Open(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+func appendStoreEvent(t *testing.T, s *Store, e core.Event) {
+	t.Helper()
+	sy, err := s.BeginSync(context.Background(), "import-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := sy.Append(context.Background(), e); err != nil {
+		t.Fatal(err)
+	}
+	if err := sy.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func dropEventSequence(t *testing.T, s *Store) func() {
+	t.Helper()
+	if err := s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
+		_, err := tx.Exec(ctx, "DROP SEQUENCE IF EXISTS events_seq_seq CASCADE")
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return func() {
+		_ = s.WithTx(context.Background(), func(ctx context.Context, tx *Tx) error {
+			if _, err := tx.Exec(ctx, "CREATE SEQUENCE IF NOT EXISTS events_seq_seq"); err != nil {
+				return err
+			}
+			_, err := tx.Exec(ctx, "ALTER TABLE events ALTER COLUMN seq SET DEFAULT nextval('events_seq_seq')")
+			return err
+		})
+	}
 }
 
 func resetIntegrationDatabase(t *testing.T, databaseURL string) {

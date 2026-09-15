@@ -40,6 +40,8 @@ var ledgerSQL = func() []byte {
 	return sql
 }()
 
+var migrationAdvisoryLockSQL = `SELECT pg_advisory_xact_lock(hashtext('proofbound:ledger-migration'))`
+
 type Store struct {
 	pool     *pgxpool.Pool
 	lock     *ledgerLock
@@ -190,7 +192,7 @@ func migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	// Multiple Proofbound processes may open the same externally managed database at
 	// once (for example, package-level integration tests). Serialize the
 	// create-if-not-exists migration on the database connection.
-	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext('proofbound:ledger-migration'))`); err != nil {
+	if _, err = tx.Exec(ctx, migrationAdvisoryLockSQL); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, string(ledgerSQL)); err != nil {
@@ -504,7 +506,7 @@ func (s *Store) ImportReplayRecords(ctx context.Context, records []Record) error
 		}
 	}
 	if len(records) > 0 {
-		_, err = tx.Exec(ctx, `SELECT setval(pg_get_serial_sequence('events','seq'), $1, true)`, records[len(records)-1].Seq)
+		_, err = tx.Exec(ctx, `SELECT setval(COALESCE(pg_get_serial_sequence('events','seq'), 'missing_events_seq'::regclass), $1, true)`, records[len(records)-1].Seq)
 		if err != nil {
 			return err
 		}
@@ -564,7 +566,7 @@ func (s *Store) importRecords(ctx context.Context, records []Record) (err error)
 		}
 	}
 	if len(records) > 0 {
-		_, err = tx.Exec(ctx, `SELECT setval(pg_get_serial_sequence('events','seq'), $1, true)`, records[len(records)-1].Seq)
+		_, err = tx.Exec(ctx, `SELECT setval(COALESCE(pg_get_serial_sequence('events','seq'), 'missing_events_seq'::regclass), $1, true)`, records[len(records)-1].Seq)
 		if err != nil {
 			return err
 		}

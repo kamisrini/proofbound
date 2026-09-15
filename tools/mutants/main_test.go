@@ -71,6 +71,20 @@ func TestCollectStaysWithinNamedPackage(t *testing.T) {
 	}
 }
 
+func TestCollectSkipsInactiveBuildFiles(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "active.go"), []byte("package root\nvar activeValue = 1 == 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "inactive_windows.go"), []byte("package root\nvar inactiveValue = 1 == 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mutants := collect(root)
+	if len(mutants) != 1 || filepath.Base(mutants[0].file) != "active.go" {
+		t.Fatalf("mutants=%+v", mutants)
+	}
+}
+
 func TestValidateRange(t *testing.T) {
 	for _, valid := range [][2]int{{1, 1}, {2, 4}, {4, 4}} {
 		if err := validateRange(valid[0], valid[1], 4); err != nil {

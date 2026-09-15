@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"go/build"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -119,6 +120,9 @@ func collect(dir string) []mutant {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
+		if ok, err := build.Default.MatchFile(dir, entry.Name()); err != nil || !ok {
+			continue
+		}
 		b, err := os.ReadFile(path)
 		if err != nil {
 			continue

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -96,6 +97,16 @@ func TestEnsurePrivateDirCreatesPrivateDirectory(t *testing.T) {
 	}
 }
 
+func TestEnsurePrivateDirReportsExistingFile(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "not-a-directory")
+	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := ensurePrivateDir(file); err == nil {
+		t.Fatal("existing file was accepted as a private directory")
+	}
+}
+
 func TestEmbeddedIdentityUsesProofboundForNewAndLegacyOnlyForMovedData(t *testing.T) {
 	newData := t.TempDir()
 	identity, err := embeddedIdentityFor(newData)
@@ -129,6 +140,35 @@ func TestEmbeddedIdentityUsesProofboundForNewAndLegacyOnlyForMovedData(t *testin
 }
 
 func TestOpen_FailureRoutesReleaseTheLock(t *testing.T) {
+	t.Run("embedded directory preparation", func(t *testing.T) {
+		root := t.TempDir()
+		dataFile := filepath.Join(root, "data-file")
+		if err := os.WriteFile(dataFile, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		s, err := Open(context.Background(), Config{Root: root, DataDir: dataFile})
+		if !errors.Is(err, ErrMigrate) || !strings.Contains(err.Error(), "prepare embedded postgres directory") || s != nil {
+			t.Fatalf("store=%v error=%v", s, err)
+		}
+		assertLockAvailable(t, Config{Root: root, DataDir: dataFile})
+	})
+
+	t.Run("embedded identity marker", func(t *testing.T) {
+		root := t.TempDir()
+		data := filepath.Join(root, "data")
+		if err := os.MkdirAll(data, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(data, ".proofbound-identity"), []byte("unknown\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		s, err := Open(context.Background(), Config{Root: root, DataDir: data})
+		if !errors.Is(err, ErrMigrate) || !strings.Contains(err.Error(), "embedded identity") || s != nil {
+			t.Fatalf("store=%v error=%v", s, err)
+		}
+		assertLockAvailable(t, Config{Root: root, DataDir: data})
+	})
+
 	t.Run("invalid database URL", func(t *testing.T) {
 		root := t.TempDir()
 		if s, err := Open(context.Background(), Config{Root: root, DatabaseURL: "://invalid"}); err == nil || s != nil {
@@ -154,7 +194,7 @@ func TestOpen_FailureRoutesReleaseTheLock(t *testing.T) {
 			t.Fatal(err)
 		}
 		s, err := Open(context.Background(), Config{Root: root, BinariesDir: binariesFile})
-		if !errors.Is(err, ErrMigrate) || s != nil {
+		if !errors.Is(err, ErrMigrate) || !strings.Contains(err.Error(), "embedded postgres") || s != nil {
 			t.Fatalf("store=%v error=%v", s, err)
 		}
 		assertLockAvailable(t, Config{Root: root, BinariesDir: binariesFile})
