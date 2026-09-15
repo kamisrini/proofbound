@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 	"github.com/oklog/ulid/v2"
@@ -714,26 +715,61 @@ func TestRebuild_RowSetMatchesIncremental(t *testing.T) {
 func testStore(t *testing.T) *store.Store {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
+	if url != "" {
+		if t.Name() != "TestSnapshotPropagatesDigestFunctionError" {
+			t.Parallel()
+		}
+		url = isolatedTestDatabaseURL(t, url)
+	}
 	cfg := store.Config{Root: t.TempDir(), DatabaseURL: url}
 	s, err := store.Open(context.Background(), cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if url == "" {
-		url = "postgres://proofbound:proofbound@127.0.0.1:55432/proofbound?sslmode=disable"
+		if err := s.WithTx(context.Background(), func(ctx context.Context, tx *store.Tx) error {
+			if _, err := tx.Exec(ctx, `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
+				return err
+			}
+			_, err := tx.Exec(ctx, `DROP TABLE IF EXISTS projection_meta, requirement_reviews_view, obligation_verdicts_view, commit_intents_view, intent_targets_view, requirement_obligations_view, change_intents_view, requirements_view, business_decisions_view, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`)
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
 	}
-	pool, err := pgxpool.New(context.Background(), url)
+	return s
+}
+
+func isolatedTestDatabaseURL(t *testing.T, raw string) string {
+	t.Helper()
+	schema := fmt.Sprintf("pb_test_%x", sha256.Sum256([]byte(fmt.Sprintf("%d:%s:%d", os.Getpid(), t.Name(), time.Now().UnixNano()))))[:24]
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, raw)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { pool.Close() })
-	if _, err := pool.Exec(context.Background(), `TRUNCATE events, sync_runs RESTART IDENTITY CASCADE`); err != nil {
+	if _, err := conn.Exec(ctx, `CREATE SCHEMA `+pgx.Identifier{schema}.Sanitize()); err != nil {
+		conn.Close(ctx)
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(context.Background(), `DROP TABLE IF EXISTS projection_meta, requirement_reviews_view, obligation_verdicts_view, commit_intents_view, intent_targets_view, requirement_obligations_view, change_intents_view, requirements_view, business_decisions_view, commits_view, checks_view, sessions_view, reviews_view, github_delivery_view CASCADE`); err != nil {
+	if err := conn.Close(ctx); err != nil {
 		t.Fatal(err)
 	}
-	return s
+	t.Cleanup(func() {
+		conn, err := pgx.Connect(ctx, raw)
+		if err == nil {
+			_, _ = conn.Exec(ctx, `DROP SCHEMA `+pgx.Identifier{schema}.Sanitize()+` CASCADE`)
+			_ = conn.Close(ctx)
+		}
+	})
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	query := parsed.Query()
+	query.Set("options", "-csearch_path="+schema)
+	parsed.RawQuery = query.Encode()
+	return parsed.String()
 }
 func appendCommit(t *testing.T, s *store.Store, sha, subject string, n int64) store.Record {
 	return appendRaw(t, s, core.SourceGit, core.KindCommitRecorded, sha, commitJSON(shaFor(sha), subject), n)
