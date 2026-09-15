@@ -165,6 +165,32 @@ func TestObligationVerdictProjectionValidation(t *testing.T) {
 		})
 	}
 	for _, tc := range []struct {
+		name    string
+		outcome string
+		status  string
+		wantErr bool
+	}{
+		{"satisfied", "SATISFIED", "ACCEPTABLE", false},
+		{"not satisfied", "NOT_SATISFIED", "NEEDS_WORK", false},
+		{"inconclusive", "INCONCLUSIVE", "NEEDS_WORK", false},
+		{"unknown", "UNKNOWN", "NEEDS_WORK", true},
+	} {
+		t.Run("outcome domain "+tc.name, func(t *testing.T) {
+			s := testStore(t)
+			defer s.Close()
+			intentFixtureEvents(t, s, true)
+			evidence := evidenceEvent(t)
+			appendEvents(t, s, evidence)
+			verdict := obligationVerdictFixture(shaFor("intent-commit"), evidence.ID.String())
+			verdict.Status = tc.status
+			verdict.Obligations[0].Outcome = tc.outcome
+			appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, verdict.VerdictID, verdict))
+			if err := New().Apply(context.Background(), s); (err != nil) != tc.wantErr {
+				t.Fatalf("error=%v wantErr=%t", err, tc.wantErr)
+			}
+		})
+	}
+	for _, tc := range []struct {
 		name   string
 		mutate func(*connectorreviews.ObligationVerdict)
 	}{
