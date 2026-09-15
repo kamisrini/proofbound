@@ -238,8 +238,8 @@ func TestObligationVerdictProjectionPropagatesFindingInsertError(t *testing.T) {
 	verdict.Status = "NEEDS_WORK"
 	verdict.Findings = []connectorreviews.Finding{{FindingID: "F-1", Severity: "MED"}}
 	appendEvents(t, s, reviewEvent(t, core.KindReviewVerdict, verdict.VerdictID, verdict))
-	if err := New().Apply(context.Background(), s); err == nil {
-		t.Fatal("finding insert error was swallowed")
+	if err := New().Apply(context.Background(), s); err == nil || !strings.Contains(err.Error(), "p6_finding_insert_failure") {
+		t.Fatalf("finding insert error=%v", err)
 	}
 }
 
