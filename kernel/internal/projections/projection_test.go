@@ -390,6 +390,7 @@ func TestCommitValidationRejectsEachScalar(t *testing.T) {
 	}
 	for _, tc := range cases {
 		v := base
+		v.IntentRefs = append([]commitIntentRef(nil), base.IntentRefs...)
 		tc.edit(&v)
 		if err := v.validate(); err == nil {
 			t.Errorf("%s accepted", tc.name)
