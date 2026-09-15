@@ -506,7 +506,7 @@ func (s *Store) ImportReplayRecords(ctx context.Context, records []Record) error
 		}
 	}
 	if len(records) > 0 {
-		_, err = tx.Exec(ctx, `SELECT setval(COALESCE(pg_get_serial_sequence('events','seq'), 'missing_events_seq'::regclass), $1, true)`, records[len(records)-1].Seq)
+		_, err = tx.Exec(ctx, `SELECT setval((CASE WHEN pg_get_serial_sequence('events','seq') IS NULL THEN 'missing_events_seq' ELSE pg_get_serial_sequence('events','seq') END)::regclass, $1, true)`, records[len(records)-1].Seq)
 		if err != nil {
 			return err
 		}
@@ -566,7 +566,7 @@ func (s *Store) importRecords(ctx context.Context, records []Record) (err error)
 		}
 	}
 	if len(records) > 0 {
-		_, err = tx.Exec(ctx, `SELECT setval(COALESCE(pg_get_serial_sequence('events','seq'), 'missing_events_seq'::regclass), $1, true)`, records[len(records)-1].Seq)
+		_, err = tx.Exec(ctx, `SELECT setval((CASE WHEN pg_get_serial_sequence('events','seq') IS NULL THEN 'missing_events_seq' ELSE pg_get_serial_sequence('events','seq') END)::regclass, $1, true)`, records[len(records)-1].Seq)
 		if err != nil {
 			return err
 		}
