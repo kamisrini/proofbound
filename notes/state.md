@@ -3,7 +3,7 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-15
+**As of:** 2026-09-16
 
 ## Resume — 2026-09-15
 
@@ -27,9 +27,15 @@ specdir 47/47, reviews 114/114, sessions 62/62, gates 109/109, and migration 33/
 run had zero invalid and surviving mutants. Migration’s committed evidence is
 `docs/verification/p6-task8-migration-mutation-4499fa5.md`.
 
-**Exact next action:** obtain current-code non-author verdicts for all package rows, and if required
-rerun older package results at `e4c8e77`; then commit the final cross-package packet before closing
-C3 or starting Task 9.
+Fresh complete frozen-commit reruns now cover core, checks, Git, gitcmd, GitHub, intent, intent
+records, intent specdir, reviews, sessions, gates, and migration; all twelve are green with the
+same counts recorded in `docs/verification/p6-task8-frozen-reruns-e4c8e77.md`. The first fresh
+untagged gates probe exposed 38 survivors because it omitted the integration proving tests; that
+probe is diagnostic only. The correctly tagged gates rerun is 109/109/0/0.
+
+**Exact next action:** complete the frozen-commit CLI and projections reruns with controlled
+database concurrency, obtain current-code non-author verdicts for all package rows, then commit the
+final cross-package packet before closing C3 or starting Task 9.
 Do not close C3, start Task 9, or claim P6 deep-complete until all package results, exact tree
 objects, and a current-code non-author verdict are committed.
 
@@ -63,8 +69,10 @@ objects, and a current-code non-author verdict are committed.
 
 - P6 Task 8 remains open for the final cross-package packet and non-author verdict. Projections is
   mechanically clean at 404/404/0/0; store is clean at 133/133/0/0; twin is clean at 31/31/0/0.
-  Final package evidence must bind one implementation commit, each exact package tree object,
-  calibrated mutation counts, and a committed non-author verdict for that same commit/tree.
+  Twelve additional package rows are mechanically rerun at `e4c8e77`; CLI and projections were
+  started but their partitioned runs were interrupted before complete summaries. Final package
+  evidence must bind one implementation commit, each exact package tree object, calibrated
+  mutation counts, and a committed non-author verdict for that same commit/tree.
 - Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
 - The current state has no product implementation blocker. Projections integration testing was
   optimized with unique external-DB schemas and parallel independent tests; the embedded fallback
@@ -76,7 +84,7 @@ objects, and a current-code non-author verdict are committed.
 - The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic.
 - Completed package mutation runs are verified individually, but the final cross-package packet
   and current-code non-author verdict remain unverified. Store and twin are mechanically verified
-  at `e4c8e77`; older package runs still need final-commit binding or explicit reruns.
+  at `e4c8e77`; CLI and projections still need complete frozen-commit reruns.
 - No current non-author final package verdict covers the frozen implementation commit.
 - `make check` reached `kernel-check` but could not complete in this environment: the installed
   `golangci-lint` v2.13.2 was built with Go 1.26 and panicked while loading Go 1.27 sources.
