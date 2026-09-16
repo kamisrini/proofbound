@@ -5,103 +5,78 @@
 
 **As of:** 2026-09-16
 
-## Resume — 2026-09-15
+## Resume — 2026-09-16
 
-P6 Task 8 is active. The frozen production universe is 16 packages from `go list ./internal/...`;
-`internal/specfirst` is test-only and explicitly excluded by C3-017. P6 Task 7 remains skipped under
-the founder ratification; no P7+ capability is being added.
+P6 Task 8 remains active. The frozen implementation is `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`.
+The exact next action after this EOD checkpoint is to commit the factual journal/state update, then
+rerun bare `make check`; the first run stopped at commit-cadence before reaching kernel checks.
+If the direct generated-index or invariant-lock freshness check fails, regenerate that artifact
+with its declared target and rerun the complete gate. Then create and clone-verify the dated bundle,
+and push the final commit only if the authenticated `origin` remains a valid destination under the
+current local-only backup decision and the user’s conditional EOD authorization.
 
-The current frozen implementation hash is `e4c8e77`. It includes the projections integration-test
-optimization, final report/reducer fixtures, store survivor coverage, and the isolated replay
-sequence guard. Projections passed 404/404/0/0; store passed 133/133/0/0; twin passed 31/31/0/0.
-Evidence is in `docs/verification/p6-task8-projections-mutation-be58cd7.md` and
-`docs/verification/p6-task8-store-twin-mutation-e4c8e77.md`.
-
-The complete pre-commit CLI mutation sweep was diagnostic and reported 234 candidates, 233 killed,
-0 invalid, and one survivor at `cli.go:347#233`; the survivor was the committed-intent Markdown
-filter because the fixture had no non-Markdown artifact. The fixture now includes `notes.txt`, the
-focused test passes, and targeted candidate `233` is killed. The committed sweep is green: 234
-candidates, 234 killed, 0 invalid, 0 survived. Completed package runs are core 58/58, CLI 234/234,
-checks 36/36, Git 34/34, gitcmd 86/86, GitHub 58/58, intent 93/93, intent records 52/52, intent
-specdir 47/47, reviews 114/114, sessions 62/62, gates 109/109, and migration 33/33; every listed
-run had zero invalid and surviving mutants. Migration’s committed evidence is
-`docs/verification/p6-task8-migration-mutation-4499fa5.md`.
-
-Fresh complete frozen-commit reruns now cover core, checks, Git, gitcmd, GitHub, intent, intent
-records, intent specdir, reviews, sessions, gates, and migration; all twelve are green with the
-same counts recorded in `docs/verification/p6-task8-frozen-reruns-e4c8e77.md`. The first fresh
-untagged gates probe exposed 38 survivors because it omitted the integration proving tests; that
-probe is diagnostic only. The correctly tagged gates rerun is 109/109/0/0.
-
-**Exact next action:** complete the frozen-commit CLI and projections reruns with controlled
-database concurrency, obtain current-code non-author verdicts for all package rows, then commit the
-final cross-package packet before closing C3 or starting Task 9.
-Do not close C3, start Task 9, or claim P6 deep-complete until all package results, exact tree
-objects, and a current-code non-author verdict are committed.
+Tomorrow’s first implementation action: at `e4c8e77`, run a one-candidate calibrated integration
+pilot for `internal/cli` against a fresh disposable PostgreSQL instance, measure elapsed time, then
+choose a capped partition concurrency and finish the complete 234 CLI and 404 projections
+candidates. Each concurrent partition must have its own disposable database; only complete
+calibrated package summaries count. Obtain a current-code non-author verdict for all 16 package
+rows before closing C3 or starting Task 9.
 
 ## Branch and repository status
 
-- Branch: `main`; local history is ahead of `origin/main`. All tracked work is committed; no push
-  is being attempted in this turn.
-- Pre-existing untracked paths are `docs/plans/P5-intent-provenance-plan.md`, SHA-256
-  `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`, and
-  `kernel/cmd/p6dbprobe/main.go`. Both are untouched and must remain uncommitted without ownership
-  resolution.
+- Branch: `main`, tracking `origin/main`, locally 129 commits ahead at the start of EOD. Remote
+  authentication is available (`kamisrini`, `repo` scope); conditional push is pending the final
+  verified commit and policy check.
+- The two pre-existing untracked paths are `docs/plans/P5-intent-provenance-plan.md` (SHA-256
+  `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
+  `kernel/cmd/p6dbprobe/main.go` (SHA-256
+  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). Preserve both and keep
+  them out of commits unless ownership is resolved.
+- Repository-scoped session artifact searches found no files in `notes/tmp`, `.codex`, `.agents`,
+  or the expected user session directory. No mutation workers, PostgreSQL servers, or P6 temporary
+  database directories remained at inspection.
 
 ## Completed
 
-- P5 remains accepted; its ratified plan, semantic VD, founder record, adjudications, independent
-  obligation verdict, mutation evidence, and delivery-readiness evidence are preserved.
-- P6 authorization, Task 0 census, Task 1 C1/C2 closure, Task 2 C4 closure, Task 3 historical
-  portability, Task 4 applicability, Task 5 requirement review, Task 6 measurements/falsifiers,
-  and the 52-cell C5 route matrix are complete. Task 7 is explicitly skipped to P7+.
-- Native Windows evidence for Task 3 and the Linux fresh-clone evidence for C8 are preserved. The
-  post-change host bare `PATH=/home/thamm/go/bin:$PATH make check` passed with exit 0 and `0 issues`;
-  expected negative-control diagnostics were not failures.
-- Task 8 `internal/core` mutation acceptance is green: 58 candidates, 58 killed, 0 invalid, 0
-  survived, after invariant tests and behavior-preserving guard decomposition.
-- CLI focused tests, tagged integration tests, and the complete committed mutation sweep are green:
-  234 candidates, 234 killed, 0 invalid, 0 survived. Checks is 36/36, Git is 34/34, and gitcmd is
-  86/86; all have zero invalid and surviving mutants. GitHub, intent, records, specdir, reviews,
-  sessions, gates, and migration also completed with zero invalid and surviving mutants.
+- Today’s committed documentation checkpoint `a199229` records 12 fresh complete calibrated
+  mutation reruns at the frozen commit: core 58/58, checks 36/36, Git 34/34, gitcmd 86/86,
+  GitHub 58/58, intent 93/93, records 52/52, specdir 47/47, reviews 114/114, sessions 62/62,
+  gates 109/109, and migration 33/33; each has 0 invalid and 0 survivors.
+- The fresh untagged gates probe’s 38 survivors are diagnostic because integration proving tests
+  were omitted. Correctly tagged gates rerun passed 109/109/0/0. The package-universe test passed;
+  the 16 production packages and test-only `internal/specfirst` classification remain explicit.
+- Frozen store and twin results are 133/133/0/0 and 31/31/0/0. Earlier CLI evidence is 234/234/0/0
+  at an earlier freeze; projections is 404/404/0/0 at an earlier freeze. Neither replaces the
+  missing complete frozen-commit rerun.
+- P5 remains accepted. P6 Tasks 0–6 are complete; Task 7 is explicitly skipped under ratification.
+  Historical portability, route-matrix, platform, and prior acceptance evidence remain preserved.
+- Direct `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed during EOD inspection.
 
-## Open work
+## Open, blocked, and unverified
 
-- P6 Task 8 remains open for the final cross-package packet and non-author verdict. Projections is
-  mechanically clean at 404/404/0/0; store is clean at 133/133/0/0; twin is clean at 31/31/0/0.
-  Twelve additional package rows are mechanically rerun at `e4c8e77`; CLI and projections were
-  started but their partitioned runs were interrupted before complete summaries. Final package
-  evidence must bind one implementation commit, each exact package tree object, calibrated
-  mutation counts, and a committed non-author verdict for that same commit/tree.
-- Final C3 census closure, Task 9 round-C consolidation, and the P6 deep-complete claim remain open.
-- The current state has no product implementation blocker. Projections integration testing was
-  optimized with unique external-DB schemas and parallel independent tests; the embedded fallback
-  remains serial. The disposable PostgreSQL profiler is still running only if needed for the next
-  package and is not acceptance evidence.
-
-## Blocked and unverified
-
-- The pre-commit CLI sweep found and remediated one survivor; its 234/233/0/1 result is diagnostic.
-- Completed package mutation runs are verified individually, but the final cross-package packet
-  and current-code non-author verdict remain unverified. Store and twin are mechanically verified
-  at `e4c8e77`; CLI and projections still need complete frozen-commit reruns.
-- No current non-author final package verdict covers the frozen implementation commit.
-- `make check` reached `kernel-check` but could not complete in this environment: the installed
-  `golangci-lint` v2.13.2 was built with Go 1.26 and panicked while loading Go 1.27 sources.
-  Repository checks before kernel-check passed; rerun with a Go-version-compatible linter.
-- Push is not attempted; destination-specific authorization/authentication has not been freshly
-  established for this turn.
-- The pre-existing untracked P5 draft is intentionally untouched and excluded from all commits.
+- Task 8 still needs complete frozen-commit CLI and projections sweeps and committed exact-tree
+  rows for all packages. Two attempts at those DB-backed sweeps were interrupted before complete
+  summaries; their partial output is not evidence.
+- No current-code non-author verdict covers all package rows. C3 closure, Task 9 round-C
+  consolidation, and the P6 deep-complete claim remain prohibited until the package packet and
+  independent verdict are committed.
+- The first bare `make check` failed at `commit-cadence` because the HEAD commit was over 90 minutes
+  old while the only dirty paths were the two pre-existing untracked files. Hooks completed; the
+  gate had not yet reached index-check, invariant checks, or kernel-check. The `index stale` line
+  came from an expected negative-control test; direct index and invariant checks passed.
+- The last recorded full gate reached `kernel-check` but the installed Go-1.26-built golangci-lint
+  panicked while loading Go 1.27 sources. This compatibility issue remains unverified today until
+  the full gate is rerun after the durable checkpoint.
+- The old accepted decision prefers local-only durability and bundles. Although `origin` exists and
+  authentication is active, its use is conditional and must be resolved conservatively before any
+  push. The dated EOD bundle and clone verification are not yet complete.
 
 ## Institutionalized improvement
 
-Resume notes remain at the top with a dated exact next action. Mutation survivors now require a
-focused invariant test or a semantics-preserving simplification before closure. Mutation evidence
-is never accepted from an interrupted or pre-commit run; package acceptance requires the complete
-calibrated summary after the frozen implementation commit. Disposable database runs are isolated,
-and expected negative-test diagnostics are recorded separately from actual gate failures. When
-integration mutation suites are slow, isolated databases may parallelize execution, but only a
-complete per-package summary is durable evidence.
+For DB-backed mutation work, first run a bounded calibrated pilot and measure throughput, then use
+capped concurrency with a separate disposable database per partition. Exclude interrupted output;
+record only complete summaries. Continue preserving untracked user artifacts, and refresh the
+resume state alongside every durable checkpoint.
 
 ## Standing cautions
 
@@ -109,4 +84,5 @@ complete per-package summary is durable evidence.
   historical artifacts.
 - The archive is migration-only and exact; no broad import, new provider, event kind, platform
   promise, or P7+ capability is authorized.
-- Use host execution for the Snap Go toolchain. Keep the pre-existing untracked P5 draft untouched.
+- Do not close C3, start Task 9, or claim P6 deep-complete without exact frozen package evidence and
+  the committed current-code non-author verdict.
