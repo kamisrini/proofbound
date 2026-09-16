@@ -8,12 +8,11 @@
 ## Resume — 2026-09-16
 
 P6 Task 8 remains active. The frozen implementation is `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`.
-The exact next action after this EOD checkpoint is to commit the factual journal/state update, then
-rerun bare `make check`; the first run stopped at commit-cadence before reaching kernel checks.
-If the direct generated-index or invariant-lock freshness check fails, regenerate that artifact
-with its declared target and rerun the complete gate. Then create and clone-verify the dated bundle,
-and push the final commit only if the authenticated `origin` remains a valid destination under the
-current local-only backup decision and the user’s conditional EOD authorization.
+Today’s factual journal/state update is committed next; the remaining EOD closeout actions are to
+create and clone-verify the dated bundle and push the completed checkpoint to authenticated
+`origin`, as conditionally requested. Bare `make check` was rerun: repository checks passed, while
+kernel lint is blocked by the installed Go-1.26-built linter panicking on Go 1.27 source. Direct
+generated-index and invariant checks passed, so no derived artifact regeneration is indicated.
 
 Tomorrow’s first implementation action: at `e4c8e77`, run a one-candidate calibrated integration
 pilot for `internal/cli` against a fresh disposable PostgreSQL instance, measure elapsed time, then
@@ -24,9 +23,10 @@ rows before closing C3 or starting Task 9.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`, locally 129 commits ahead at the start of EOD. Remote
-  authentication is available (`kamisrini`, `repo` scope); conditional push is pending the final
-  verified commit and policy check.
+- Branch: `main`, tracking `origin/main`. The remote main ref was `1d1112df2622abd54f07837335a7805c3c69145d`
+  and an ancestor of local main when checked; GitHub authentication is active (`kamisrini`, `repo`
+  scope). The local-only backup decision remains documented, but this EOD request conditionally
+  authorizes pushing the committed history after the verified bundle is made.
 - The two pre-existing untracked paths are `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
@@ -60,16 +60,16 @@ rows before closing C3 or starting Task 9.
 - No current-code non-author verdict covers all package rows. C3 closure, Task 9 round-C
   consolidation, and the P6 deep-complete claim remain prohibited until the package packet and
   independent verdict are committed.
-- The first bare `make check` failed at `commit-cadence` because the HEAD commit was over 90 minutes
-  old while the only dirty paths were the two pre-existing untracked files. Hooks completed; the
-  gate had not yet reached index-check, invariant checks, or kernel-check. The `index stale` line
-  came from an expected negative-control test; direct index and invariant checks passed.
-- The last recorded full gate reached `kernel-check` but the installed Go-1.26-built golangci-lint
-  panicked while loading Go 1.27 sources. This compatibility issue remains unverified today until
-  the full gate is rerun after the durable checkpoint.
-- The old accepted decision prefers local-only durability and bundles. Although `origin` exists and
-  authentication is active, its use is conditional and must be resolved conservatively before any
-  push. The dated EOD bundle and clone verification are not yet complete.
+- The first bare `make check` failed at `commit-cadence` because HEAD was over 90 minutes old while
+  the only dirty paths were the two pre-existing untracked files. After a documentation checkpoint
+  refreshed HEAD, a rerun passed all repository checks and Go build/tests, then golangci-lint v2.13.2
+  panicked because it was built with Go 1.26 and encountered Go 1.27 source. This is an environment
+  compatibility blocker, not a reported source lint error. An intermediate bare invocation also
+  lacked the linter in PATH; the host-path rerun is the meaningful gate result.
+- The `index stale; run make index` text came from an expected negative-control test. Direct
+  `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed, so no regeneration was needed.
+- Bundle creation/clone verification and conditional push remain the final closeout steps. No
+  current-code non-author package verdict exists.
 
 ## Institutionalized improvement
 
