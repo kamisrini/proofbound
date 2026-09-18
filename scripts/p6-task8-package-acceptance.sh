@@ -74,10 +74,15 @@ zero_digest=0000000000000000000000000000000000000000000000000000000000000000
 actual_digest=$(sed -E "s/^artifact_sha: [0-9a-f]{64}$/artifact_sha: $zero_digest/" "$verdict" | sha256sum | awk '{print $1}')
 actual_author=$(git -C "$root" show -s --format=%an "$frozen")
 actual_committer=$(git -C "$root" show -s --format=%cn "$frozen")
+actual_author_id=${actual_author//[[:space:]]/}
+actual_committer_id=${actual_committer//[[:space:]]/}
+reviewed_author_id=${reviewed_author//[[:space:]]/}
+reviewed_committer_id=${reviewed_committer//[[:space:]]/}
 [[ $schema == vera.verdict.v1 ]] || die 'verdict does not declare vera.verdict.v1'
 [[ $status == ACCEPTABLE ]] || die "non-author verdict status is $status, not ACCEPTABLE"
 [[ $reviewed == "$frozen" ]] || die 'verdict is not bound to the manifest frozen commit'
-[[ -n $reviewer && $reviewer != "$actual_author" && $reviewer != "$actual_committer" && $reviewer != "$reviewed_author" ]] || die 'reviewer identity is missing or equals the code author'
+[[ $reviewer =~ ^[[:alnum:]_.-]+$ ]] || die 'reviewer identity is missing or malformed'
+[[ $reviewer != "$actual_author_id" && $reviewer != "$actual_committer_id" && $reviewer != "$reviewed_author_id" && $reviewer != "$reviewed_committer_id" ]] || die 'reviewer identity equals the code author or committer'
 [[ $reviewed_author == "$actual_author" ]] || die 'verdict code-author identity does not match the frozen commit'
 [[ $reviewed_committer == "$actual_committer" ]] || die 'verdict code-committer identity does not match the frozen commit'
 [[ $declared_path == docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md ]] || die 'verdict artifact path is not exact'
