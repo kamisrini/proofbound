@@ -1,12 +1,14 @@
 # P6 intent self-coverage
 
-**Date:** 2026-09-13
+**Historical measurement:** 2026-09-13
+
+**Current census recheck:** 2026-09-18
 
 **Anchor:** immediately after `f426ca8`
 
-**Current head measured:** `d6abc5b3c777fb08f9ddf840bc8444db7c9f5f3d`
+**Current canary head:** `e02dbb1c0569f6f892584370767159153dc2e567`
 
-## Historical coverage
+## Historical coverage at the 2026-09-13 baseline
 
 The complete path-only canary is committed at
 [`p6-intent-applicability-canary.md`](p6-intent-applicability-canary.md). It examines 69 commits,
@@ -23,6 +25,29 @@ false-positive redesign threshold did not fire under the exact path definition.
 | Coverage | `0.0%` | numerator / denominator above |
 | Known false negatives | 0 | hostile matcher tests and canary output |
 | False-positive rate | `0.0%` under the ratified path definition | founder-ratified semantic VD |
+
+## Current census interval
+
+The current census generator input is
+`8bef29020d0799c7a71efba1230c85e0860a3e4f`. Its C6 commit interval contains every commit after
+`f426ca8` through that input commit; the registry represents every one of those commits with an
+`intent-commit:<full-sha>` row. A refreshed canary at current HEAD
+`e02dbb1c05695451961f0cad4a669501c47c95b3` examines 135 commits, including and extending past that
+interval. The full path and claim classification is in
+[`p6-intent-applicability-canary-task8-20260918.md`](p6-intent-applicability-canary-task8-20260918.md).
+
+| Datum | Result |
+|---|---:|
+| Commits examined by the refreshed canary | 135 |
+| Applicable commits | 81 |
+| Applicable commits with valid exact Intent claims | 0 |
+| Coverage | 0.0% |
+| Known false negatives | 0 |
+| False-positive rate under the ratified path definition | 0.0% |
+
+No commit in this interval carried an explicit `Intent:` trailer, so there was no new claim to
+resolve against the ledger. The refreshed result remains observation-only; it does not reject any
+historical commit or widen the existing enforcement boundary.
 
 ## Current active intent chain
 
@@ -46,6 +71,6 @@ enforcement point; its new applicability check blocks an applicable commit with 
 
 ## Decision
 
-This packet closes the C6 evidence rows by recording both the historical gap and the current exact
-chain. It does not claim retroactive intent for the 40 applicable historical commits, does not
-promote external consumers, and does not alter any frozen wire identity or vector.
+This packet closes the C6 evidence rows by recording the historical gap, the refreshed census
+interval, and the current exact chain. It does not claim retroactive intent for applicable
+historical commits, promote external consumers, or alter any frozen wire identity or vector.

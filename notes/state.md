@@ -24,18 +24,29 @@ the `proofbound` database. These attempts are excluded. Disposable database chec
 were raised to 30 minutes and 8 GB WAL after long file-sync pauses; transaction and durability
 settings remained default.
 
-The exact-tree 16-package result matrix and current-code non-author verdict have been drafted.
-Acceptance checker, census wiring, and focused negative tests are in the worktree. C3 remains open
-until the verdict is committed and the census rows cite both artifacts. Task 9 has not started.
-Next: stage and commit the evidence packet plus verdict in the required order, verify all acceptance
-checks, then close C3 in a separate census update. Keep the frozen Go implementation at `e4c8e77`.
+The exact-tree 16-package result matrix and current-code non-author verdict are committed. The
+acceptance checker validates the frozen commit, production package set, tree objects, complete
+calibrated counts, verdict identity/schema/digest, and census evidence links. Its negative tests
+passed after normalizing multiword code-author identities. C3 remains open until the census rows
+cite both committed artifacts. Task 9 has not started.
+
+Updating the census generator advanced its input to `8bef29020d0799c7a71efba1230c85e0860a3e4f`.
+Per the C6 census SPEC, the input interval includes every post-`f426ca8` commit through that hash.
+The 134-commit interval is now represented by exact C6 commit rows. A refreshed path-only canary at
+current HEAD `e02dbb1c05695451961f0cad4a669501c47c95b3` examined 135 commits, 81 applicable, with
+zero explicit Intent trailers. The current C6 summary is recorded in
+`docs/verification/p6-intent-coverage.md` and its full table in the new canary artifact.
+
+Next: verify the expanded census and run bare `make check`, then close C3 by citing the committed
+Task 8 matrix and verdict in each row. Do not start Task 9. Keep the frozen Go implementation at
+`e4c8e77`.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; current committed HEAD before this work was `0067dc6`
-  (`docs: finalize durable EOD state`). The Task 8 acceptance checker, its test, evidence packet,
-  verdict, and this status update are in progress. Commit only explicit Task 8 and state files;
-  preserve both pre-existing user artifacts below.
+- Branch: `main`, currently ahead of `origin/main` by the Task 8 acceptance and checker-fix commits;
+  `origin/main` remains at `0067dc6` (`docs: finalize durable EOD state`). The final census links,
+  C6 coverage expansion, and state update remain in progress. Commit only explicit Task 8/census
+  evidence and state files; preserve both pre-existing user artifacts below.
 - Preserve the pre-existing untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
@@ -63,11 +74,11 @@ checks, then close C3 in a separate census update. Keep the frozen Go implementa
 
 ## Open, blocked, and unverified
 
-- The frozen result matrix and current-code non-author verdict are not yet committed. Do not close
-  C3, start Task 9, or claim P6 deep-complete until the exact-tree packet and verdict are committed.
+- The current C3 rows are still open. Do not close them until the census cites both committed
+  Task 8 artifacts; do not start Task 9 or claim P6 deep-complete.
 - The current linter compatibility issue is environmental, not a reported source lint error; do not
   claim kernel lint passed.
-- The new schema-bearing verdict required updating the generated artifact-integrity summary; the
+- The new schema-bearing verdict required updating the generated artifact-integrity summary. The
   generated index and invariant table remain unchanged.
 
 ## Institutionalized improvement
