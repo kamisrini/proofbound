@@ -7,7 +7,7 @@
 
 ## Resume — 2026-09-18
 
-P6 Task 8 remains active. The frozen implementation is
+P6 Task 8 package acceptance is complete. The frozen implementation is
 `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; later commits are documentation-only. The requested
 one-candidate `internal/cli` integration pilot passed calibration and killed its candidate in
 15.22 seconds. Capped concurrency is two partitions, each with its own disposable PostgreSQL 16.4
@@ -27,8 +27,10 @@ settings remained default.
 The exact-tree 16-package result matrix and current-code non-author verdict are committed. The
 acceptance checker validates the frozen commit, production package set, tree objects, complete
 calibrated counts, verdict identity/schema/digest, and census evidence links. Its negative tests
-passed after normalizing multiword code-author identities. C3 remains open until the census rows
-cite both committed artifacts. Task 9 has not started.
+passed, including author impersonation with the multiword code-author identity. The census now
+binds all 16 C3 production package rows to the matrix and committed verdict; C3-017 remains the
+explicit `internal/specfirst` test-only exclusion. The rendered census has 7 open, 309 closed, and
+0 unclassified rows. Task 9 has not started.
 
 Updating the census generator advanced its input to `8bef29020d0799c7a71efba1230c85e0860a3e4f`.
 Per the C6 census SPEC, the input interval includes every post-`f426ca8` commit through that hash.
@@ -37,27 +39,29 @@ current HEAD `e02dbb1c05695451961f0cad4a669501c47c95b3` examined 135 commits, 81
 zero explicit Intent trailers. The current C6 summary is recorded in
 `docs/verification/p6-intent-coverage.md` and its full table in the new canary artifact.
 
-Next: verify the expanded census and run bare `make check`, then close C3 by citing the committed
-Task 8 matrix and verdict in each row. Do not start Task 9. Keep the frozen Go implementation at
-`e4c8e77`.
+The final `make check` was run with `PATH="/snap/go/current/bin:/home/thamm/go/bin:$PATH"`
+and `GOFLAGS=-p=1`, with loopback access enabled for embedded PostgreSQL tests. Repository checks,
+Go build, and Go tests passed. Kernel lint did not run to completion: installed golangci-lint
+2.13.2 was built with Go 1.26.7 and panicked on Go 1.27 source with `file requires newer Go
+version go1.27`. Direct generated-index and invariant checks passed. The C3 closure and this result
+are committed; Task 9 has not started.
 
 ## Branch and repository status
 
-- Branch: `main`, currently ahead of `origin/main` by the Task 8 acceptance and checker-fix commits;
-  `origin/main` remains at `0067dc6` (`docs: finalize durable EOD state`). The final census links,
-  C6 coverage expansion, and state update remain in progress. Commit only explicit Task 8/census
-  evidence and state files; preserve both pre-existing user artifacts below.
+- Branch: `main`, ahead of `origin/main` by four Task 8 acceptance, checker-fix, C6 refresh, and C3
+  closure commits; `origin/main` remains at `0067dc6` (`docs: finalize durable EOD state`).
+  These local commits have not been pushed. Preserve both pre-existing user artifacts below.
 - Preserve the pre-existing untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
   `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). Keep both out of commits.
-- Task-local frozen checkout and disposable database clusters are under `/tmp`; stop and remove
-  them after the remaining projection partitions finish.
-- The latest bare `make check` passed repository checks and Go build/tests. Kernel lint remains
-  blocked because installed golangci-lint was built with Go 1.26 and panics on Go 1.27 source.
-  Direct generated-index and invariant checks passed. The artifact-integrity audit was regenerated
-  to account for the new schema-bearing verdict; the generated index and invariant table needed no
-  change.
+- Task-local disposable PostgreSQL clusters were stopped after all partitions completed. Mutation
+  checkouts and per-run database directories were removed from `/tmp`.
+- The final `make check` passed repository checks, Go build, and Go tests. Kernel lint remains
+  blocked because installed golangci-lint 2.13.2 was built with Go 1.26.7 and panics on Go 1.27
+  source. Direct generated-index and invariant checks passed. The artifact-integrity audit was
+  regenerated to account for the new schema-bearing verdict; the generated index and invariant
+  table needed no change.
 
 ## Completed
 
@@ -74,8 +78,8 @@ Task 8 matrix and verdict in each row. Do not start Task 9. Keep the frozen Go i
 
 ## Open, blocked, and unverified
 
-- The current C3 rows are still open. Do not close them until the census cites both committed
-  Task 8 artifacts; do not start Task 9 or claim P6 deep-complete.
+- Do not start Task 9 or claim P6 deep-complete; the independent final consolidation round remains
+  separate.
 - The current linter compatibility issue is environmental, not a reported source lint error; do not
   claim kernel lint passed.
 - The new schema-bearing verdict required updating the generated artifact-integrity summary. The
