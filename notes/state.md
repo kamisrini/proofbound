@@ -48,9 +48,13 @@ are committed; Task 9 has not started.
 
 ## Branch and repository status
 
-- Branch: `main`, ahead of `origin/main` by four Task 8 acceptance, checker-fix, C6 refresh, and C3
-  closure commits; `origin/main` remains at `0067dc6` (`docs: finalize durable EOD state`).
-  These local commits have not been pushed. Preserve both pre-existing user artifacts below.
+- Branch: `main`; the Task 8 acceptance, checker-fix, C6 refresh, and C3 closure commits through
+  `624e704` have been pushed to `origin/main`. That closure commit is included in verified bundle
+  `/home/thamm/Backups/proofbound-20260918T230921Z.bundle` (SHA-256
+  `2cc596921755ccc890b76994ca9b51a936df57901e15faa81e130ea7897a4252`); `git bundle verify` and
+  a bare clone confirmed its `main` and `HEAD` refs. The final notes-only handoff checkpoint follows
+  the closure commit and will be included in a fresh verified bundle and push before handoff.
+  Preserve both pre-existing user artifacts below.
 - Preserve the pre-existing untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
