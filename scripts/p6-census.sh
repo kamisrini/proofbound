@@ -127,7 +127,15 @@ run_probe() {
       local vd=${arg%%:*} named=${arg#*:}
       [[ $decision == "$vd" && $subject == "$named" ]] && accepted_vd "$vd" && rg -qi --fixed-strings "${named//-/ }" "$root/$vd"
       ;;
-    acceptance|connector|route|intent-history|p5-result|fresh-clone)
+    acceptance)
+      row_probe=$(awk -F '\t' -v wanted="package:$arg" '$3 == wanted {print $5; exit}' "$registry")
+      row_evidence=$(awk -F '\t' -v wanted="package:$arg" '$3 == wanted {print $8; exit}' "$registry")
+      [[ $row_probe == "acceptance:$arg" ]] || return 1
+      [[ ",$row_evidence," == *",docs/verification/p6-task8-package-results-e4c8e77.tsv,"* ]] || return 1
+      [[ ",$row_evidence," == *",docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md,"* ]] || return 1
+      bash "$root/scripts/p6-task8-package-acceptance.sh" --package "$arg" --root "$root" >/dev/null
+      ;;
+    connector|route|intent-history|p5-result|fresh-clone)
       return 1
       ;;
     *) die "unknown probe form in $subject: $probe" ;;

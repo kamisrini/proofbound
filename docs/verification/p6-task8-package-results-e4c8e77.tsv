@@ -1,0 +1,18 @@
+# frozen-implementation	e4c8e77407699f7e089d5c1a2b3ce58df5871fbf
+package	tree	candidates	killed	invalid	survived	calibration	evidence
+internal/cli	6a1a1804018be77c5a17a3d70c024c2978511683	234	234	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-cli-projections-mutation-e4c8e77.md
+internal/connector/checks	200d781e872c063b0fd3ab2045b6760d685bd1f0	36	36	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/git	b4a7beeb7617625a3521e6393c7570bcdc73783c	34	34	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/git/gitcmd	1e72a5c0c52d731ff4d85005b820db8d1208d052	86	86	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/github	9b2aae50693322c21a987ccd5e119ef70eb66798	58	58	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/intent	6fad5e69fb203244d346233078e169a4b9bfc7c0	93	93	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/intent/records	9ac52619e76036e4c16ad6123e1679c7fece0570	52	52	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/intent/specdir	b50c85c27100da88ac713e2291fbb975d7b01a80	47	47	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/reviews	e5e00cb31d5e47037628da54b65cc2b3409d217d	114	114	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/connector/sessions	5f984b21790002cf045c762865492767a491235a	62	62	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/core	9508eada402ff0231111cc11413a765311a361be	58	58	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/gates	b524b275ab4f6355638fcb6a7cea23a3d3075c3e	109	109	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md
+internal/projections	af840395f0211de0fe375f3d2ef1599e97e4a638	404	404	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-cli-projections-mutation-e4c8e77.md
+internal/store	66d8f61e08561c075b30b05fe5e1e6c33228692a	133	133	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-store-twin-mutation-e4c8e77.md
+internal/twin	bbc59b6e7cf3e4fb1b8f48130355e7a505a3f1d3	31	31	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-store-twin-mutation-e4c8e77.md
+internal/migration	6f9cb480578e34f902d9940825d5f2ff70cc022c	33	33	0	0	neutral=survived;invalid=invalid;lethal=killed	docs/verification/p6-task8-frozen-reruns-e4c8e77.md

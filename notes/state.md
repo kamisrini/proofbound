@@ -3,79 +3,72 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-16
+**As of:** 2026-09-18
 
-## Resume — 2026-09-16
+## Resume — 2026-09-18
 
-P6 Task 8 remains active. The frozen implementation is `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`.
-Bare `make check` was rerun: repository checks passed, while kernel lint is blocked by the installed
-Go-1.26-built linter panicking on Go 1.27 source. Direct generated-index and invariant checks
-passed, so no derived artifact regeneration is indicated. EOD durability for commit `8377716` was
-completed: the dated bundle was verified by both `git bundle verify` and a bare clone, and the
-authenticated push to `origin/main` succeeded. This final status-only update is committed and is
-included in a fresh verified bundle/push before handoff.
+P6 Task 8 remains active. The frozen implementation is
+`e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; later commits are documentation-only. The requested
+one-candidate `internal/cli` integration pilot passed calibration and killed its candidate in
+15.22 seconds. Capped concurrency is two partitions, each with its own disposable PostgreSQL 16.4
+instance. The complete CLI rerun passed: 234 killed, 0 invalid, 0 survived.
 
-Tomorrow’s first implementation action: at `e4c8e77`, run a one-candidate calibrated integration
-pilot for `internal/cli` against a fresh disposable PostgreSQL instance, measure elapsed time, then
-choose a capped partition concurrency and finish the complete 234 CLI and 404 projections
-candidates. Each concurrent partition must have its own disposable database; only complete
-calibrated package summaries count. Obtain a current-code non-author verdict for all 16 package
-rows before closing C3 or starting Task 9.
+The complete `internal/projections` sweep passed: 404 killed, 0 invalid, 0 survived. Its four
+calibrated ranges were intent/report 1–58 (58 candidates, 949.16 seconds), core 59–202 (144,
+3,852.81 seconds), core 203–345 (143, 3,311.33 seconds), and report 346–404 (59, 701.70 seconds).
+The two concurrent core partitions and final report range each had their own disposable PostgreSQL
+instance. Only complete summaries count. The first filter attempt omitted the lethal calibration
+test and stopped before candidate 1; an earlier unbalanced core attempt was interrupted at 26
+candidates; and the first report calibration stopped before candidate 1 because its cluster lacked
+the `proofbound` database. These attempts are excluded. Disposable database checkpoint settings
+were raised to 30 minutes and 8 GB WAL after long file-sync pauses; transaction and durability
+settings remained default.
+
+The exact-tree 16-package result matrix and current-code non-author verdict have been drafted.
+Acceptance checker, census wiring, and focused negative tests are in the worktree. C3 remains open
+until the verdict is committed and the census rows cite both artifacts. Task 9 has not started.
+Next: stage and commit the evidence packet plus verdict in the required order, verify all acceptance
+checks, then close C3 in a separate census update. Keep the frozen Go implementation at `e4c8e77`.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`. The first EOD push advanced remote main from
-  `1d1112df2622abd54f07837335a7805c3c69145d` to `83777166b8fec1beccd06fa008ac121615ba6e03`,
-  and `git ls-remote` confirmed equality. GitHub authentication was active (`kamisrini`, `repo`
-  scope). This final documentation-only state update is also pushed and included in the fresh
-  handoff bundle.
-- The two pre-existing untracked paths are `docs/plans/P5-intent-provenance-plan.md` (SHA-256
+- Branch: `main`, tracking `origin/main`; current committed HEAD before this work was `0067dc6`
+  (`docs: finalize durable EOD state`). The Task 8 acceptance checker, its test, evidence packet,
+  verdict, and this status update are in progress. Commit only explicit Task 8 and state files;
+  preserve both pre-existing user artifacts below.
+- Preserve the pre-existing untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
-  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). Preserve both and keep
-  them out of commits unless ownership is resolved.
-- Repository-scoped session artifact searches found no files in `notes/tmp`, `.codex`, `.agents`,
-  or the expected user session directory. No mutation workers, PostgreSQL servers, or P6 temporary
-  database directories remained at inspection.
+  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). Keep both out of commits.
+- Task-local frozen checkout and disposable database clusters are under `/tmp`; stop and remove
+  them after the remaining projection partitions finish.
+- The latest bare `make check` passed repository checks and Go build/tests. Kernel lint remains
+  blocked because installed golangci-lint was built with Go 1.26 and panics on Go 1.27 source.
+  Direct generated-index and invariant checks passed. The artifact-integrity audit was regenerated
+  to account for the new schema-bearing verdict; the generated index and invariant table needed no
+  change.
 
 ## Completed
 
-- Today’s committed documentation checkpoint `a199229` records 12 fresh complete calibrated
-  mutation reruns at the frozen commit: core 58/58, checks 36/36, Git 34/34, gitcmd 86/86,
-  GitHub 58/58, intent 93/93, records 52/52, specdir 47/47, reviews 114/114, sessions 62/62,
-  gates 109/109, and migration 33/33; each has 0 invalid and 0 survivors.
-- The fresh untagged gates probe’s 38 survivors are diagnostic because integration proving tests
-  were omitted. Correctly tagged gates rerun passed 109/109/0/0. The package-universe test passed;
-  the 16 production packages and test-only `internal/specfirst` classification remain explicit.
-- Frozen store and twin results are 133/133/0/0 and 31/31/0/0. Earlier CLI evidence is 234/234/0/0
-  at an earlier freeze; projections is 404/404/0/0 at an earlier freeze. Neither replaces the
-  missing complete frozen-commit rerun.
+- At frozen `e4c8e77`, 12 fresh calibrated package reruns passed with zero invalid or survivors:
+  core 58, checks 36, Git 34, gitcmd 86, GitHub 58, intent 93, records 52, specdir 47, reviews
+  114, sessions 62, gates 109, and migration 33 candidates.
+- Frozen store and twin results are 133/133 and 31/31, each with zero invalid or survivors.
+- The current frozen CLI rerun is 234/234/0/0. Two calibrated 117-candidate partitions used
+  separate fresh PostgreSQL instances; elapsed times were 707.11 and 554.96 seconds.
+- The package-universe check passed: 16 production packages and test-only `internal/specfirst`.
+- Direct `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed during EOD inspection.
 - P5 remains accepted. P6 Tasks 0–6 are complete; Task 7 is explicitly skipped under ratification.
   Historical portability, route-matrix, platform, and prior acceptance evidence remain preserved.
-- Direct `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed during EOD inspection.
-- The verified EOD bundle for the preceding checkpoint was
-  `/home/thamm/Backups/proofbound-20260916T232408Z.bundle`; it cloned with main exactly at
-  `83777166b8fec1beccd06fa008ac121615ba6e03`. The final status-only checkpoint is bundled and
-  pushed as part of this closeout.
 
 ## Open, blocked, and unverified
 
-- Task 8 still needs complete frozen-commit CLI and projections sweeps and committed exact-tree
-  rows for all packages. Two attempts at those DB-backed sweeps were interrupted before complete
-  summaries; their partial output is not evidence.
-- No current-code non-author verdict covers all package rows. C3 closure, Task 9 round-C
-  consolidation, and the P6 deep-complete claim remain prohibited until the package packet and
-  independent verdict are committed.
-- The first bare `make check` failed at `commit-cadence` because HEAD was over 90 minutes old while
-  the only dirty paths were the two pre-existing untracked files. After a documentation checkpoint
-  refreshed HEAD, a rerun passed all repository checks and Go build/tests, then golangci-lint v2.13.2
-  panicked because it was built with Go 1.26 and encountered Go 1.27 source. This is an environment
-  compatibility blocker, not a reported source lint error. An intermediate bare invocation also
-  lacked the linter in PATH; the host-path rerun is the meaningful gate result.
-- The `index stale; run make index` text came from an expected negative-control test. Direct
-  `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed, so no regeneration was needed.
-- No current-code non-author package verdict exists. The linter compatibility issue remains
-  blocked pending a Go-1.27-compatible golangci-lint build.
+- The frozen result matrix and current-code non-author verdict are not yet committed. Do not close
+  C3, start Task 9, or claim P6 deep-complete until the exact-tree packet and verdict are committed.
+- The current linter compatibility issue is environmental, not a reported source lint error; do not
+  claim kernel lint passed.
+- The new schema-bearing verdict required updating the generated artifact-integrity summary; the
+  generated index and invariant table remain unchanged.
 
 ## Institutionalized improvement
 
