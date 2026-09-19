@@ -55,8 +55,10 @@ deep-complete until that round is committed. Preserve the two untracked user art
   an environment/toolchain blocker, not a reported source lint failure.
 - No derived artifact regeneration is indicated: generated freshness, direct index check, and
   invariant lint passed.
-- Final documentation commit `63a60fc4c41d49596f062d5dab99c0a056e658a3` was pushed to
-  `origin/main`. The final bundle path and digest are recorded after its verification below.
+- Final documentation commit `04d60c12c55040f10ff4b373d2551e7e64ed7016` was pushed to
+  `origin/main`. Final bundle: `/home/thamm/Backups/proofbound-20260919T144637Z.bundle`,
+  SHA-256 `0995034c77d7ae1220bb40d9854106bac21867c9d736a26710918f3947f5e68f`; `git bundle verify`
+  and a bare clone resolved main/HEAD to `04d60c1`.
 
 ## Institutionalized improvement
 
