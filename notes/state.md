@@ -39,16 +39,18 @@ deep-complete until that round is committed. Preserve the two untracked user art
 - The 2026-09-18 acceptance checkpoint recorded the frozen CLI 234/234/0/0 rerun, projections
   404/404/0/0 rerun, exact matrix, verdict, refreshed C6 coverage, and negative-test coverage.
 - Today’s gate reached and passed the Task 8 acceptance checker, all package-universe checks, and
-  repository checks before stopping at commit cadence. Direct `scripts/index-check.sh` and
-  `scripts/invariant-lint.sh` passed; the index freshness text was an expected negative control.
+  repository checks before stopping at commit cadence. After this checkpoint, the complete rerun
+  passed cadence, repository checks, the 16-package acceptance checker, Go build, and Go tests.
+  Direct `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed; the index freshness text
+  was an expected negative control.
 
 ## Open, blocked, and unverified
 
 - Task 9’s independent final consolidation round remains open. No P6 deep-complete claim is made.
-- Today’s `make check` stopped at `commit-cadence` because HEAD was over 90 minutes old while the
-  preserved untracked user artifacts kept the worktree dirty. After the documentation checkpoint,
-  rerun the complete gate.
-- The last complete gate passed repository checks, Go build, and Go tests, but kernel lint remains
+- The first `make check` stopped at `commit-cadence` because HEAD was over 90 minutes old while the
+  preserved untracked user artifacts kept the worktree dirty; the documentation checkpoint then
+  refreshed cadence.
+- The final gate passed repository checks, Go build, Go tests, and Task 8 acceptance, but kernel lint remains
   blocked: golangci-lint 2.13.2 was built with Go 1.26.7 and panicked on Go 1.27 source. This is
   an environment/toolchain blocker, not a reported source lint failure.
 - No derived artifact regeneration is indicated: generated freshness, direct index check, and
