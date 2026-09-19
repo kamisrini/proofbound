@@ -8,11 +8,11 @@
 ## Resume — 2026-09-19
 
 P6 Task 8 package acceptance is complete. Frozen implementation:
-`e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`. The exact next action is: commit this factual
-journal/state checkpoint, rerun `PATH=/snap/go/current/bin:/home/thamm/go/bin:$PATH GOFLAGS=-p=1 make
-check`, then create and clone-verify the dated bundle and push the final documentation checkpoint
-to authenticated `origin/main`. If the gate reaches kernel lint, record the known Go-1.26-built
-golangci-lint versus Go 1.27 compatibility blocker without claiming lint passed.
+`e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`. Today’s durability closeout is complete: the factual
+journal/state checkpoint was committed, the documented gate passed repository checks, the dated
+bundle was clone-verified, and the authenticated push succeeded. Kernel lint remains blocked by
+the known Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; it is not claimed as
+passed.
 
 Tomorrow’s first action is Task 9’s independent final consolidation round. Do not claim P6
 deep-complete until that round is committed. Preserve the two untracked user artifacts below.
@@ -55,6 +55,9 @@ deep-complete until that round is committed. Preserve the two untracked user art
   an environment/toolchain blocker, not a reported source lint failure.
 - No derived artifact regeneration is indicated: generated freshness, direct index check, and
   invariant lint passed.
+- Final documentation commit `7af4e683d7321037d2718b8818014a3e04eafcf0` was pushed to
+  `origin/main`. Bundle `/home/thamm/Backups/proofbound-20260919T144237Z.bundle` was verified;
+  its SHA-256 is `9dd89b56835c33d7e3167ba11f2fce3a0813d0a586018180d9a522e14f4b5664`.
 
 ## Institutionalized improvement
 
