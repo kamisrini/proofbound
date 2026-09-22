@@ -135,7 +135,19 @@ run_probe() {
       [[ ",$row_evidence," == *",docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md,"* ]] || return 1
       bash "$root/scripts/p6-task8-package-acceptance.sh" --package "$arg" --root "$root" >/dev/null
       ;;
-    connector|route|intent-history|p5-result|fresh-clone)
+    p5-result)
+      result_artifact=$root/docs/verification/p6-measurements-falsifiers.md
+      result_name=$arg
+      case $result_name in
+        measurement:*|falsifier:*) result_name=${result_name#*:} ;;
+        *) return 1 ;;
+      esac
+      tracked_path docs/verification/p6-measurements-falsifiers.md || return 1
+      tracked_path scripts/p6-task6-results.sh || return 1
+      bash "$root/scripts/p6-task6-results.sh" --check >/dev/null || return 1
+      rg -Fq "| \`$result_name\` |" "$result_artifact"
+      ;;
+    connector|route|intent-history|fresh-clone)
       return 1
       ;;
     *) die "unknown probe form in $subject: $probe" ;;

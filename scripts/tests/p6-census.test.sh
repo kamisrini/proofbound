@@ -51,6 +51,24 @@ if bash "$base/scripts/p6-census.sh" --check --root "$base" >/dev/null 2>&1; the
 fi
 echo 'ok generated-freshness-drift'
 
+p5result=$tmp/p5result
+cp -a "$base" "$p5result"
+git -C "$p5result" reset -q --hard HEAD
+mkdir -p "$p5result/docs/verification"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$p5result/scripts/p6-task6-results.sh"
+chmod +x "$p5result/scripts/p6-task6-results.sh"
+printf '| F-1 | `fixture-7` | `false` | fixture observation | fixture:artifact | no action |\n' \
+  >"$p5result/docs/verification/p6-measurements-falsifiers.md"
+sed -i '/^C7-001\t/ s#path:README.md\tclose-in-P6\t—\tREADME.md#p5-result:measurement:fixture-7\tclose-in-P6\t—\tdocs/verification/p6-measurements-falsifiers.md#' \
+  "$p5result/docs/plans/p6-census-rows.tsv"
+git -C "$p5result" add docs/plans/p6-census-rows.tsv docs/verification/p6-measurements-falsifiers.md scripts/p6-task6-results.sh
+p5_output=$(bash "$p5result/scripts/p6-census.sh" --render --root "$p5result")
+if ! grep -Fq '| C7-001 | C7 | fixture-7 | fixture row | p5-result:measurement:fixture-7 | closed |' <<<"$p5_output"; then
+  echo 'p5-result probe did not close a valid result row' >&2
+  exit 1
+fi
+echo 'ok p5-result-probe'
+
 schema=$tmp/schema
 cp -a "$base" "$schema"
 git -C "$schema" reset -q --hard HEAD
