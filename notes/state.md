@@ -52,8 +52,10 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 
 - Kernel lint remains blocked: golangci-lint 2.13.2 was built with Go 1.26.7 and panicked on Go
   1.27 source. This is an environment/toolchain blocker, not a reported source lint failure.
-- The final state checkpoint and authenticated push remain to be performed after this journal/state
-  update; the two preserved untracked artifacts remain untouched.
+- Final closeout commit `b9d816f` was authenticated-pushed to `origin/main`. The dated bundle
+  `/home/thamm/Backups/proofbound-20260922T134451Z.bundle` was bundle-verified at that tip with
+  SHA-256 `05e7bbd62f867fbe5dbb6b9ebf51e071f0e426e557407cd6f92a090e78970e88`. The two preserved
+  untracked artifacts remain untouched.
 
 ## Institutionalized improvement
 
