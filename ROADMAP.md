@@ -152,8 +152,10 @@ proof; round-C non-author verdict ACCEPTABLE and committed; bare `make check` an
 
 **Status 2026-09-22:** Task 9 final consolidation is complete. The round-C verdict is ACCEPTABLE,
 the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
-deep-complete with evidence above. Kernel lint remains blocked by the documented Go 1.26-built
-`golangci-lint` versus Go 1.27 compatibility mismatch and is not claimed as passed.
+deep-complete with evidence above. The initial closeout environment had a Go 1.26-built
+`golangci-lint` versus Go 1.27 compatibility mismatch; a compatible Go 1.27.1-built
+`golangci-lint` 2.13.2 rerun subsequently passed with zero issues, and both `make check` and
+`make verify` passed under that toolchain.
 
 **Ratified boundaries:** no new capability; the conditional snapshot provider is skipped and its
 contract remains pinned for P7+; intent applicability uses the closed path rule in the semantic VD,
@@ -162,5 +164,16 @@ stop-early ceiling is 40 active execution hours after Task 0, excluding founder/
 P6 retains both Linux and native Windows execution for the existing tooling under
 [`VD-p6-dual-platform-2026-09-13`](docs/decisions/VD-p6-dual-platform-2026-09-13.md); native Windows
 acceptance remains an evidence requirement, not an assumed green result.
+
+## P7+ — Capability planning (draft; no implementation authorized)
+
+P6 is closed. P7+ planning begins with the deferred conditional snapshot-provider decision, while
+the no-width doctrine and the pinned provider contract remain in force. The planning draft is
+[`P7-snapshot-provider-plan-draft1.md`](docs/plans/P7-snapshot-provider-plan-draft1.md).
+
+The first P7 gate is a founder decision: either retain the P6 decision to skip a snapshot provider,
+or name a concrete lawful export feed and explicitly authorize the narrow width exception. Until
+that decision is recorded, no provider, vendor, feed, schema, event kind, or implementation is
+authorized. The remaining P7+ vision ladder is sequenced only after this gate is resolved.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

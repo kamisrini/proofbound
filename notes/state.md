@@ -7,12 +7,14 @@
 
 ## Resume — 2026-09-22
 
-P6 Task 9’s independent final consolidation round is complete in commit `52d41ca`. The frozen
+P6 Task 9’s independent final consolidation round is complete in commit `52d41ca`, with the
+durable closeout checkpoint at `614dc1c`. The frozen
 implementation remains `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; the round-C verdict is
 ACCEPTABLE, the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
-deep-complete in `ROADMAP.md`. `proofbound verify` passed. The final repository gate passed
-repository checks, Go build, and Go tests, while kernel lint remains blocked by the known
-Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; it is not claimed as passed.
+deep-complete in `ROADMAP.md`. `proofbound verify` passed. The initial final repository gate
+recorded the known Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; a subsequent
+rerun with Go 1.27.1 and a matching golangci-lint 2.13.2 build passed repository checks, Go build,
+Go tests, and lint with `0 issues`. The compatible-toolchain `make verify` rerun also passed.
 
 Preserve the two untracked user artifacts below; they remain excluded from all commits.
 
@@ -50,9 +52,13 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 
 ## Open, blocked, and unverified
 
-- Kernel lint remains blocked: golangci-lint 2.13.2 was built with Go 1.26.7 and panicked on Go
-  1.27 source. This is an environment/toolchain blocker, not a reported source lint failure.
-- Final closeout commit `b9d816f` was authenticated-pushed to `origin/main`. The dated bundle
+- The old Go-1.26-built linter remains incompatible, but the environment blocker is resolved for
+  the current checkout by the Go-1.27.1-built matching binary in `/tmp/proofbound-go127`.
+- Final closeout commit `614dc1c` was authenticated-pushed to `origin/main`. The dated bundle
+  `/home/thamm/Backups/proofbound-20260922T134546Z.bundle` was bundle-verified at that tip with
+  SHA-256 `9a216568ef3b945afedac4fcb3e157373a976218439414d4162d33184b707b07`. The earlier
+  closeout bundle remains recorded below for historical continuity.
+- Earlier closeout commit `b9d816f` was authenticated-pushed to `origin/main`. The dated bundle
   `/home/thamm/Backups/proofbound-20260922T134451Z.bundle` was bundle-verified at that tip with
   SHA-256 `05e7bbd62f867fbe5dbb6b9ebf51e071f0e426e557407cd6f92a090e78970e88`. The two preserved
   untracked artifacts remain untouched.
@@ -71,3 +77,6 @@ ownership-unclear files. Continue recording only complete calibrated mutation su
   promise, or P7+ capability is authorized.
 - Do not add P7+ capability, widen the provider boundary, or alter frozen wire identities without
   new authorization. Preserve the two untracked user artifacts.
+- P7 planning is allowed after P6 closure, but implementation remains blocked at the snapshot-
+  provider decision until a lawful feed is named and the width exception is explicitly authorized,
+  or the skip decision is reaffirmed.
