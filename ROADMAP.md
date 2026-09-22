@@ -43,6 +43,10 @@ predicts nothing — measured three times.
 ledger-ordered red-verdict chain, graduated spec-first enforcement to a blocking `make check`
 test, and recorded the full verifier run. Task status detail: the plan's Position section.
 
+**P6 final consolidation review 2026-09-22:** P1 is deep-complete under the P6 round-C verdict and
+the final zero-open census; evidence is recorded in
+[`p6-task9-consolidation.md`](docs/verification/p6-task9-consolidation.md).
+
 ## P2 — Gates as data ✅ (target: +4 weeks)
 
 **Status 2026-08-26:** P2 is complete. The gate set and delivery boundary are complete: `gates/make-check-success.yaml`, the
@@ -52,6 +56,10 @@ after PASS canary evidence; enforcement is explicit and fails closed. Gate defin
 an ISO expiry date, and enforcement rejects expired definitions. The canary→enforce bad-witness
 sequence is proven in `docs/verification/p2-gate-evidence.md`. The runtime P0 checks are represented
 by dedicated witnessed gates; `hooks-test` remains explicitly retained as a mechanism self-test.
+
+**P6 final consolidation review 2026-09-22:** P2 is deep-complete under the same round-C verdict
+and zero-open census; evidence is recorded in
+[`p6-task9-consolidation.md`](docs/verification/p6-task9-consolidation.md).
 
 - Gate definitions in `gates/*.yaml` evaluated by the kernel against the ledger (replaces parts of Makefile checks)
 - Canary evaluation against historical events before a gate can block
@@ -67,6 +75,10 @@ implemented; live acceptance is recorded in `docs/verification/p3-github-live-ac
 
 - **DoD:** the deployed-where / tested-what view running on real external data; cold sync < 10 min; freshness rendered on every surface
 
+**P6 final consolidation review 2026-09-22:** P3 is deep-complete under the same round-C verdict
+and zero-open census; evidence is recorded in
+[`p6-task9-consolidation.md`](docs/verification/p6-task9-consolidation.md).
+
 ## P4 — Twin spike (target: +6 weeks)
 
 **Accepted 2026-08-27:** `kernel/internal/twin` provides bounded replay, a
@@ -76,6 +88,10 @@ projects only in a disposable store. Independent acceptance is recorded in
 [`p4-current-round1.md`](docs/verification/verdicts/p4-current-round1.md); durable prediction
 events remain a later feed-backed extension.
 Decision and acceptance boundary: [VD-p4-twin-replay-calibration-2026-08-26](docs/decisions/VD-p4-twin-replay-calibration-2026-08-26.md).
+
+**P6 final consolidation review 2026-09-22:** P4 is deep-complete under the same round-C verdict
+and zero-open census; evidence is recorded in
+[`p6-task9-consolidation.md`](docs/verification/p6-task9-consolidation.md).
 
 ## P5 — Intent provenance (ratified 2026-09-10)
 
@@ -113,6 +129,10 @@ the semantic decision is
    Bare `make check` and `proofbound verify` pass; calibrated package mutation sweeps are green; and
    a non-author independent package verdict is committed on receipt.
 
+**P6 final consolidation review 2026-09-22:** P5 is deep-complete under the same round-C verdict
+and zero-open census; evidence is recorded in
+[`p6-task9-consolidation.md`](docs/verification/p6-task9-consolidation.md).
+
 ## P6 — Consolidation: deep completion of P1–P5 (ratified 2026-09-12)
 
 Depth before width. P6 closes a mechanically generated C1–C8 census covering live documentation,
@@ -129,6 +149,11 @@ promise hidden by defer/wontfix; all production packages mutation-green and non-
 one frozen final implementation commit; zero expired advisories; full event-route and clean-clone
 proof; round-C non-author verdict ACCEPTABLE and committed; bare `make check` and
 `proofbound verify` green. P7+ capability planning begins only after P6 closes.
+
+**Status 2026-09-22:** Task 9 final consolidation is complete. The round-C verdict is ACCEPTABLE,
+the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
+deep-complete with evidence above. Kernel lint remains blocked by the documented Go 1.26-built
+`golangci-lint` versus Go 1.27 compatibility mismatch and is not claimed as passed.
 
 **Ratified boundaries:** no new capability; the conditional snapshot provider is skipped and its
 contract remains pinned for P7+; intent applicability uses the closed path rule in the semantic VD,

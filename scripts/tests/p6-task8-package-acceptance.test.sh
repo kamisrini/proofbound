@@ -53,7 +53,7 @@ fi
 echo 'ok verdict-commit-binding'
 
 git -C "$tmp/repo" checkout -q -- docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md
-sed -i 's/^reviewer_id: .*/reviewer_id: VERAMaintainer/' \
+sed -i 's/^Reviewer identity: .*/Reviewer identity: `VERAMaintainer`/' \
   "$tmp/repo/docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md"
 rehash_verdict "$tmp/repo/docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md"
 if bash "$tmp/repo/scripts/p6-task8-package-acceptance.sh" --check --root "$tmp/repo" >/dev/null 2>&1; then

@@ -2,7 +2,7 @@
 
 **Historical measurement:** 2026-09-13
 
-**Current census recheck:** 2026-09-18
+**Current census recheck:** 2026-09-22
 
 **Anchor:** immediately after `f426ca8`
 
@@ -26,7 +26,7 @@ false-positive redesign threshold did not fire under the exact path definition.
 | Known false negatives | 0 | hostile matcher tests and canary output |
 | False-positive rate | `0.0%` under the ratified path definition | founder-ratified semantic VD |
 
-## Current census interval
+## Prior Task 8 census interval
 
 The current census generator input is
 `8bef29020d0799c7a71efba1230c85e0860a3e4f`. Its C6 commit interval contains every commit after
@@ -48,6 +48,26 @@ interval. The full path and claim classification is in
 No commit in this interval carried an explicit `Intent:` trailer, so there was no new claim to
 resolve against the ledger. The refreshed result remains observation-only; it does not reject any
 historical commit or widen the existing enforcement boundary.
+
+## Task 9 final census interval
+
+The final census generator input is
+`13503c7c96bad63ce1b95405ee8a83f09ccdab5a`. Its C6 registry rows cover every commit after
+`f426ca8` through that input commit. The final canary is committed at
+[`p6-intent-applicability-canary-task9-20260922.md`](p6-intent-applicability-canary-task9-20260922.md).
+
+| Datum | Result |
+|---|---:|
+| Commits examined by the final canary | 145 |
+| Applicable commits | 82 |
+| Applicable commits with valid exact Intent claims | 0 |
+| Coverage | 0.0% |
+| Known false negatives | 0 |
+| False-positive rate under the ratified path definition | 0.0% |
+
+No commit in the final interval carried an explicit `Intent:` trailer. This remains an
+observation-only historical result and does not retroactively reject commits or widen the existing
+explicit `make delivery-enforce` boundary.
 
 ## Current active intent chain
 

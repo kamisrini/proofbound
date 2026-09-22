@@ -3,12 +3,9 @@ schema: vera.verdict.v1
 verdict_id: p6-task8-current-round1-e4c8e77
 status: ACCEPTABLE
 reviewed_commit: e4c8e77407699f7e089d5c1a2b3ce58df5871fbf
-reviewer_id: codex-task8-non-author-reviewer-20260918
-code_author: VERA Maintainer
-code_committer: VERA Maintainer
 findings: []
 artifact_path: docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md
-artifact_sha: 84565e5d5d2482c7b7c43c04ee96645c57a728128260916f24ca2ee77b4bace3
+artifact_sha: 8cadcef52cc0c80355248aaea594883e64a67f12792590ee75e0d0802d93b0e2
 ---
 
 # P6 Task 8 — current-code non-author verdict
@@ -17,6 +14,10 @@ artifact_sha: 84565e5d5d2482c7b7c43c04ee96645c57a728128260916f24ca2ee77b4bace3
 `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf` as an independent reviewer. Its author and committer are
 `VERA Maintainer`; the reviewer identity above is separate from both. I found no open defect against
 the Task 8 package acceptance contract.
+
+Reviewer identity: `codex-task8-non-author-reviewer-20260918`
+Code author: `VERA Maintainer`
+Code committer: `VERA Maintainer`
 
 ## Review scope and basis
 

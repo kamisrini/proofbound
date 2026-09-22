@@ -65,9 +65,9 @@ git -C "$root" cat-file -e "$frozen:kernel/internal" 2>/dev/null || die 'frozen 
 status=$(awk '$1 == "status:" {print $2; exit}' "$verdict")
 schema=$(awk '$1 == "schema:" {print $2; exit}' "$verdict")
 reviewed=$(awk '$1 == "reviewed_commit:" {print $2; exit}' "$verdict")
-reviewer=$(awk '$1 == "reviewer_id:" {print $2; exit}' "$verdict")
-reviewed_author=$(awk '$1 == "code_author:" {$1=""; sub(/^ /, ""); print; exit}' "$verdict")
-reviewed_committer=$(awk '$1 == "code_committer:" {$1=""; sub(/^ /, ""); print; exit}' "$verdict")
+reviewer=$(sed -n 's/^Reviewer identity: `\([^`]*\)`.*/\1/p' "$verdict" | head -1)
+reviewed_author=$(sed -n 's/^Code author: `\([^`]*\)`.*/\1/p' "$verdict" | head -1)
+reviewed_committer=$(sed -n 's/^Code committer: `\([^`]*\)`.*/\1/p' "$verdict" | head -1)
 declared_path=$(awk '$1 == "artifact_path:" {print $2; exit}' "$verdict")
 declared_digest=$(awk '$1 == "artifact_sha:" {print $2; exit}' "$verdict")
 zero_digest=0000000000000000000000000000000000000000000000000000000000000000
