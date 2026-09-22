@@ -3,30 +3,30 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-**As of:** 2026-09-19
+**As of:** 2026-09-22
 
-## Resume — 2026-09-19
+## Resume — 2026-09-22
 
-P6 Task 8 package acceptance is complete. Frozen implementation:
-`e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`. Today’s durability closeout is complete: the factual
-journal/state checkpoint was committed, the documented gate passed repository checks, the dated
-bundle was clone-verified, and the authenticated push succeeded. Kernel lint remains blocked by
-the known Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; it is not claimed as
-passed.
+P6 Task 9’s independent final consolidation round is complete in commit `52d41ca`. The frozen
+implementation remains `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; the round-C verdict is
+ACCEPTABLE, the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
+deep-complete in `ROADMAP.md`. `proofbound verify` passed. The final repository gate passed
+repository checks, Go build, and Go tests, while kernel lint remains blocked by the known
+Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; it is not claimed as passed.
 
-Tomorrow’s first action is Task 9’s independent final consolidation round. Do not claim P6
-deep-complete until that round is committed. Preserve the two untracked user artifacts below.
+Preserve the two untracked user artifacts below; they remain excluded from all commits.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; HEAD at inspection was `054da9db9921dbc67f87cd1c13c03576ff0224a3`.
-- No commits were made earlier on 2026-09-19. The only worktree entries were the pre-existing
+- Branch: `main`, tracking `origin/main`; the Task 9 consolidation packet is at `52d41ca` before
+  this state checkpoint.
+- The only worktree entries are the preserved
   untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
   `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`).
 - No PostgreSQL server, mutation worker, task-local database, or repository session fragment was
-  active. Existing `/tmp` build/mutation caches are disposable and not evidence.
+  left active. Existing `/tmp` build/mutation caches are disposable and not evidence.
 
 ## Completed
 
@@ -34,30 +34,26 @@ deep-complete until that round is committed. Preserve the two untracked user art
   complete calibrated mutation counts totaling 1,584 killed, 0 invalid, 0 survived, and a
   committed ACCEPTABLE current-code non-author verdict. `internal/specfirst` remains the explicit
   test-only exclusion.
-- C3 is closed. Task 9 has not started. P5 and P6 Tasks 0–6 remain complete; Task 7 remains
-  explicitly skipped under ratification.
+- C3 is closed. Task 9 is closed by the ACCEPTABLE round-C verdict
+  docs/verification/verdicts/p6-consolidation-roundC-20260922.md; P5 and P6 Tasks 0–8 remain
+  complete, and Task 7 remains explicitly skipped under ratification.
+- The final evidence packet is docs/verification/p6-task9-consolidation.md. The final census
+  generation input is `13503c7c96bad63ce1b95405ee8a83f09ccdab5a`; its 327 rows are all closed.
 - The 2026-09-18 acceptance checkpoint recorded the frozen CLI 234/234/0/0 rerun, projections
   404/404/0/0 rerun, exact matrix, verdict, refreshed C6 coverage, and negative-test coverage.
-- Today’s gate reached and passed the Task 8 acceptance checker, all package-universe checks, and
-  repository checks before stopping at commit cadence. After this checkpoint, the complete rerun
-  passed cadence, repository checks, the 16-package acceptance checker, Go build, and Go tests.
-  Direct `scripts/index-check.sh` and `scripts/invariant-lint.sh` passed; the index freshness text
-  was an expected negative control.
+- The final gate passed all repository checks, the Task 8 acceptance checker and hostile tests,
+  package-universe checks, Go build, and Go tests. The expected `index stale; run make index`
+  text came only from the intentional negative control. Direct index and invariant checks passed.
+- The Task 9 close also corrected the strict `vera.verdict.v1` metadata boundary by keeping its
+  front matter exact and moving reviewer metadata into Markdown body text consumed only by the
+  package-acceptance checker. `proofbound verify` then passed against the committed verdict set.
 
 ## Open, blocked, and unverified
 
-- Task 9’s independent final consolidation round remains open. No P6 deep-complete claim is made.
-- The first `make check` stopped at `commit-cadence` because HEAD was over 90 minutes old while the
-  preserved untracked user artifacts kept the worktree dirty; the documentation checkpoint then
-  refreshed cadence.
-- The final gate passed repository checks, Go build, Go tests, and Task 8 acceptance, but kernel lint remains
-  blocked: golangci-lint 2.13.2 was built with Go 1.26.7 and panicked on Go 1.27 source. This is
-  an environment/toolchain blocker, not a reported source lint failure.
-- No derived artifact regeneration is indicated: generated freshness, direct index check, and
-  invariant lint passed.
-- The preceding documentation checkpoint `04d60c1` was pushed to `origin/main` and bundle-verified.
-  This latest notes-only state is the durable handoff; its final bundle path and push are reported
-  in the closeout response.
+- Kernel lint remains blocked: golangci-lint 2.13.2 was built with Go 1.26.7 and panicked on Go
+  1.27 source. This is an environment/toolchain blocker, not a reported source lint failure.
+- The final state checkpoint and authenticated push remain to be performed after this journal/state
+  update; the two preserved untracked artifacts remain untouched.
 
 ## Institutionalized improvement
 
@@ -71,5 +67,5 @@ ownership-unclear files. Continue recording only complete calibrated mutation su
   historical artifacts.
 - The archive is migration-only and exact; no broad import, new provider, event kind, platform
   promise, or P7+ capability is authorized.
-- Do not start or close Task 9 or claim P6 deep-complete without the independent final consolidation
-  round.
+- Do not add P7+ capability, widen the provider boundary, or alter frozen wire identities without
+  new authorization. Preserve the two untracked user artifacts.
