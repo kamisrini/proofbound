@@ -8,7 +8,7 @@
 ## Resume — 2026-09-22
 
 P6 Task 9’s independent final consolidation round is complete in commit `52d41ca`, with the
-durable closeout checkpoint at `614dc1c`. The frozen
+durable closeout checkpoint at `9b20f1d`. The frozen
 implementation remains `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; the round-C verdict is
 ACCEPTABLE, the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
 deep-complete in `ROADMAP.md`. `proofbound verify` passed. The initial final repository gate
@@ -16,12 +16,18 @@ recorded the known Go-1.26-built golangci-lint versus Go 1.27 compatibility mism
 rerun with Go 1.27.1 and a matching golangci-lint 2.13.2 build passed repository checks, Go build,
 Go tests, and lint with `0 issues`. The compatible-toolchain `make verify` rerun also passed.
 
+Today’s bare `make check` reached repository checks, acceptance checks, Go build/test preparation,
+and platform checks, then stopped at the commit-cadence guard because the two intentionally
+preserved untracked user artifacts kept the worktree dirty beyond the 90-minute window. The
+`index stale; run make index` text came only from the intentional negative-control test; generated
+freshness passed. A documentation-only checkpoint is the approved response, followed by a full
+compatible-toolchain rerun.
+
 Preserve the two untracked user artifacts below; they remain excluded from all commits.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; the Task 9 consolidation packet is at `52d41ca` before
-  this state checkpoint.
+- Branch: `main`, tracking `origin/main`; `HEAD` and `origin/main` are both `9b20f1d`.
 - The only worktree entries are the preserved
   untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
@@ -49,12 +55,17 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 - The Task 9 close also corrected the strict `vera.verdict.v1` metadata boundary by keeping its
   front matter exact and moving reviewer metadata into Markdown body text consumed only by the
   package-acceptance checker. `proofbound verify` then passed against the committed verdict set.
+- P7 planning is staged at `docs/plans/P7-snapshot-provider-plan-draft1.md`; it selects no feed and
+  authorizes no implementation. The first gate is the founder decision to retain the snapshot-
+  provider skip or name a lawful export feed and authorize the narrow width exception.
 
 ## Open, blocked, and unverified
 
 - The old Go-1.26-built linter remains incompatible, but the environment blocker is resolved for
   the current checkout by the Go-1.27.1-built matching binary in `/tmp/proofbound-go127`.
-- Final closeout commit `614dc1c` was authenticated-pushed to `origin/main`. The dated bundle
+- Final closeout commit `9b20f1d` was authenticated-pushed to `origin/main`; its dated bundle is
+  the next durability action for this closeout. The earlier final closeout commit `614dc1c` was
+  authenticated-pushed to `origin/main`. Its dated bundle
   `/home/thamm/Backups/proofbound-20260922T134546Z.bundle` was bundle-verified at that tip with
   SHA-256 `9a216568ef3b945afedac4fcb3e157373a976218439414d4162d33184b707b07`. The earlier
   closeout bundle remains recorded below for historical continuity.
@@ -69,6 +80,10 @@ At EOD, if preserved user-owned untracked artifacts trip commit cadence, make a 
 journal/state checkpoint, rerun the gate, and preserve the artifacts. Do not delete, add, or absorb
 ownership-unclear files. Continue recording only complete calibrated mutation summaries.
 
+When lint is blocked by a toolchain mismatch, identify the linter build toolchain and retry with a
+matching disposable toolchain before classifying lint as a source blocker; retain the original
+failure as historical evidence.
+
 ## Standing cautions
 
 - Preserve frozen `vera.witness.v1`, `vera.verdict.v1`, `vera.replay.v1`, pinned vectors, and
@@ -80,3 +95,9 @@ ownership-unclear files. Continue recording only complete calibrated mutation su
 - P7 planning is allowed after P6 closure, but implementation remains blocked at the snapshot-
   provider decision until a lawful feed is named and the width exception is explicitly authorized,
   or the skip decision is reaffirmed.
+
+## Exact next action
+
+After this checkpoint is pushed and its dated bundle is verified, begin P7 Gate 1 by resolving the
+snapshot-provider decision: retain the skip or record one concrete lawful export feed plus explicit
+authorization for the narrow width exception. Do not implement a provider before that decision.
