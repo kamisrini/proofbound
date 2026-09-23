@@ -8,7 +8,8 @@
 ## Resume — 2026-09-22
 
 P6 Task 9’s independent final consolidation round is complete in commit `52d41ca`, with the
-durable closeout checkpoint at `9b20f1d`. The frozen
+implementation closeout packet at `614dc1c`. Today’s EOD documentation checkpoint has been
+verified and pushed to `origin/main`. The frozen
 implementation remains `e4c8e77407699f7e089d5c1a2b3ce58df5871fbf`; the round-C verdict is
 ACCEPTABLE, the final census is 327/327 closed with zero unclassified rows, and P1–P5 are annotated
 deep-complete in `ROADMAP.md`. `proofbound verify` passed. The initial final repository gate
@@ -27,7 +28,8 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; `HEAD` and `origin/main` are both `9b20f1d`.
+- Branch: `main`, tracking `origin/main`; `HEAD` and `origin/main` are aligned at the pushed EOD
+  checkpoint.
 - The only worktree entries are the preserved
   untracked `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
@@ -63,12 +65,13 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 
 - The old Go-1.26-built linter remains incompatible, but the environment blocker is resolved for
   the current checkout by the Go-1.27.1-built matching binary in `/tmp/proofbound-go127`.
-- Final closeout commit `9b20f1d` was authenticated-pushed to `origin/main`; its dated bundle is
-  the next durability action for this closeout. The earlier final closeout commit `614dc1c` was
-  authenticated-pushed to `origin/main`. Its dated bundle
+- The earlier final closeout commit `614dc1c` was authenticated-pushed to `origin/main`. Its dated bundle
   `/home/thamm/Backups/proofbound-20260922T134546Z.bundle` was bundle-verified at that tip with
   SHA-256 `9a216568ef3b945afedac4fcb3e157373a976218439414d4162d33184b707b07`. The earlier
   closeout bundle remains recorded below for historical continuity.
+- The pushed pre-final-correction checkpoint `7457458` also has a verified dated bundle at
+  `/home/thamm/Backups/proofbound-20260923T004651Z.bundle`, SHA-256
+  `e47266fd8ddab88715f1b71043cb6571d25f42c2e19a58df6aa030005763e1bf`.
 - Earlier closeout commit `b9d816f` was authenticated-pushed to `origin/main`. The dated bundle
   `/home/thamm/Backups/proofbound-20260922T134451Z.bundle` was bundle-verified at that tip with
   SHA-256 `05e7bbd62f867fbe5dbb6b9ebf51e071f0e426e557407cd6f92a090e78970e88`. The two preserved
