@@ -16,6 +16,9 @@ deep-complete in `ROADMAP.md`. `proofbound verify` passed. The initial final rep
 recorded the known Go-1.26-built golangci-lint versus Go 1.27 compatibility mismatch; a subsequent
 rerun with Go 1.27.1 and a matching golangci-lint 2.13.2 build passed repository checks, Go build,
 Go tests, and lint with `0 issues`. The compatible-toolchain `make verify` rerun also passed.
+The final bare `make check` at the pushed handoff tip reached `kernel-check` and stopped because
+`golangci-lint` was absent from the bare PATH; this is an environment availability limitation, not
+a reported source lint failure. The matching Go 1.27.1-compatible gate passed lint with `0 issues`.
 
 Today’s bare `make check` reached repository checks, acceptance checks, Go build/test preparation,
 and platform checks, then stopped at the commit-cadence guard because the two intentionally
@@ -72,6 +75,10 @@ Preserve the two untracked user artifacts below; they remain excluded from all c
 - The pushed pre-final-correction checkpoint `7457458` also has a verified dated bundle at
   `/home/thamm/Backups/proofbound-20260923T004651Z.bundle`, SHA-256
   `e47266fd8ddab88715f1b71043cb6571d25f42c2e19a58df6aa030005763e1bf`.
+- The pushed handoff checkpoint `2b6d514` has a verified dated bundle at
+  `/home/thamm/Backups/proofbound-20260923T005300Z.bundle`, SHA-256
+  `4d1981c293c932bf46e70be45066159480548f99b0e565b7d08d32693729797`; this state correction
+  will itself receive a replacement bundle after it is pushed.
 - Earlier closeout commit `b9d816f` was authenticated-pushed to `origin/main`. The dated bundle
   `/home/thamm/Backups/proofbound-20260922T134451Z.bundle` was bundle-verified at that tip with
   SHA-256 `05e7bbd62f867fbe5dbb6b9ebf51e071f0e426e557407cd6f92a090e78970e88`. The two preserved
