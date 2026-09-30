@@ -13,15 +13,13 @@ the founder decision to retain the snapshot-provider skip, or naming one concret
 feed and explicitly authorizing the narrow width exception. Until that decision is recorded, do
 not implement a provider or introduce a feed, vendor, schema, event kind, or other P7+ capability.
 
-Immediate closeout status: this documentation checkpoint still needs its commit, authenticated
-push if available, and a verified dated Git bundle. The two preserved untracked artifacts must
-remain untouched and excluded from commits.
+Closeout commit dc34cde is created; authenticated push and a verified dated Git bundle remain
+pending. The two preserved untracked artifacts must remain untouched and excluded from commits.
 
 ## Branch and repository status
 
-- Branch: main, tracking origin/main; before this checkpoint HEAD and origin/main were
-  aligned at 6902a79737525c62630a32b4ab55ab0b0ac374f6.
-- No commits were made on 2026-09-30 before this closeout.
+- Branch: main, tracking origin/main; HEAD is dc34cde and origin/main remains 6902a797.
+- The documentation closeout commit dc34cde is today's only commit.
 - Preserved untracked artifacts, excluded from all commits:
   docs/plans/P5-intent-provenance-plan.md (SHA-256
   eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439) and
@@ -42,14 +40,16 @@ remain untouched and excluded from commits.
 
 ## Verification
 
-- Today's bare make check passed repository checks, generated freshness, P6 census and package
-  acceptance checks, and the Windows contract before stopping at
-  commit-cadence: dirty worktree outlived 90m commit window because the protected untracked
-  artifacts keep the worktree dirty. It is not a full green gate today.
+- The first bare make check reached repository checks, generated freshness, P6 census and package
+  acceptance checks, and the Windows contract before stopping at commit-cadence because the
+  protected untracked artifacts kept the worktree dirty past the 90-minute window.
+- After dc34cde, bare make check passed cadence, repository checks, generated freshness, P6 census,
+  package acceptance, and the Windows contract. It stopped at kernel-check because
+  golangci-lint was not available on PATH (exit 127); no source lint failure was reported.
 - The line index stale; run make index was expected output from an intentional negative-control
   test. Generated-index and invariant-lock freshness passed; no regeneration was required.
 - The compatible Go 1.27.1 / matching golangci-lint run recorded on 2026-09-22 passed make check
-  and make verify; that result is historical, not a replacement for today's cadence stop.
+  and make verify; that result is historical, not a replacement for today's missing-linter stop.
 
 ## Open, blocked, and unverified
 
@@ -57,7 +57,7 @@ remain untouched and excluded from commits.
   explicitly authorize the narrow width exception.
 - Blocked: provider implementation and all downstream P7+ capability work until that decision is
   recorded.
-- Unverified today: kernel build/test/lint and make verify were not reached after the cadence
+- Unverified today: kernel build/test/lint and make verify were not reached after the missing-linter
   stop; the prior compatible-toolchain results remain the only evidence for those checks.
 - Unverified assumption: the two untracked artifacts are user-owned or otherwise ownership-unclear;
   their matching hashes support preservation, not authorization to commit them.
