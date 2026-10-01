@@ -165,15 +165,13 @@ P6 retains both Linux and native Windows execution for the existing tooling unde
 [`VD-p6-dual-platform-2026-09-13`](docs/decisions/VD-p6-dual-platform-2026-09-13.md); native Windows
 acceptance remains an evidence requirement, not an assumed green result.
 
-## P7+ — Capability planning (draft; no implementation authorized)
+## P7+ — Capability planning (Gate 1 resolved; no implementation authorized)
 
-P6 is closed. P7+ planning begins with the deferred conditional snapshot-provider decision, while
-the no-width doctrine and the pinned provider contract remain in force. The planning draft is
+P6 is closed. P7 Gate 1 is resolved: the founder retained the conditional snapshot-provider skip.
+The no-width doctrine and pinned provider contract remain in force. The planning draft is
 [`P7-snapshot-provider-plan-draft1.md`](docs/plans/P7-snapshot-provider-plan-draft1.md).
-
-The first P7 gate is a founder decision: either retain the P6 decision to skip a snapshot provider,
-or name a concrete lawful export feed and explicitly authorize the narrow width exception. Until
-that decision is recorded, no provider, vendor, feed, schema, event kind, or implementation is
-authorized. The remaining P7+ vision ladder is sequenced only after this gate is resolved.
+No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
+continue only within existing feeds and separately authorized slices; the next bounded planning
+candidate is behavior locks and regeneration.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

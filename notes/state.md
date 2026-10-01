@@ -3,85 +3,58 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads CLAUDE.md, then this file, before acting.
 
-As of: 2026-09-30
+As of: 2026-10-01
 
-## Resume — 2026-09-30
+## Resume — 2026-10-01
 
-The P6 final consolidation and P7 planning boundary are complete and pushed at 6902a79; no
-implementation work was performed today. The exact next action is: resolve P7 Gate 1 by recording
-the founder decision to retain the snapshot-provider skip, or naming one concrete lawful export
-feed and explicitly authorizing the narrow width exception. Until that decision is recorded, do
-not implement a provider or introduce a feed, vendor, schema, event kind, or other P7+ capability.
-
-Local closeout commits dc34cde and 129406c are created; push was not performed because policy rejected publishing to the unverified default remote. A complete dated bundle for 129406c was verified at /home/thamm/Backups/proofbound-20260930T154747Z.bundle (SHA-256 a4bd4370b0aaf4b3a0e184304a27cc72f806b2d01cf054ebfad7676c38856796).
+P7 Gate 1 is resolved: retain the P6 snapshot-provider skip. The exact next action is to draft and
+independently review a bounded behavior-locks/regeneration planning slice using existing feeds.
+This is planning only. Do not implement a snapshot provider or introduce a feed, vendor, schema,
+event kind, or other P7+ capability.
 
 ## Branch and repository status
 
-- Branch: main, tracking origin/main; local main is ahead of origin/main because the push was not performed.
-- Today's commits are documentation-only; no implementation commit was made.
-- Preserved untracked artifacts, excluded from all commits:
+- Branch: main, tracking origin/main; local main remains ahead because prior push publication was
+  blocked by policy.
+- Today's changes are documentation-only and the preserved untracked artifacts remain excluded:
   docs/plans/P5-intent-provenance-plan.md (SHA-256
   eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439) and
   kernel/cmd/p6dbprobe/main.go (SHA-256
   f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0).
-- Ignored runtime/session directories were inspected. No relevant PostgreSQL, Proofbound,
-  mutation-worker, or p6dbprobe process remained active.
 
 ## Completed
 
-- P6 Task 9 final consolidation is complete: round-C is ACCEPTABLE, the final census is 327/327
-  closed with zero unclassified rows, and P1–P5 are annotated deep-complete.
-- The P7 planning draft is committed. It authorizes planning only; the snapshot-provider decision
-  is the first gate and no implementation is authorized before it is resolved.
-- Today's audit inspected current status, history, journals, notes, repository laws, plans,
-  ignored/session artifacts, and live processes. No implementation change was found.
-- The protected artifact hashes match the prior durable handoff.
-
-## Verification
-
-- The first bare make check reached repository checks, generated freshness, P6 census and package
-  acceptance checks, and the Windows contract before stopping at commit-cadence because the
-  protected untracked artifacts kept the worktree dirty past the 90-minute window.
-- After dc34cde, bare make check passed cadence, repository checks, generated freshness, P6 census,
-  package acceptance, and the Windows contract. It stopped at kernel-check because
-  golangci-lint was not available on PATH (exit 127); no source lint failure was reported.
-- The line index stale; run make index was expected output from an intentional negative-control
-  test. Generated-index and invariant-lock freshness passed; no regeneration was required.
-- The compatible Go 1.27.1 / matching golangci-lint run recorded on 2026-09-22 passed make check
-  and make verify; that result is historical, not a replacement for today's missing-linter stop.
+- P6 final consolidation remains complete: round-C ACCEPTABLE, 327/327 census rows closed, and
+  P1–P5 deep-complete.
+- Recorded the founder decision in
+  docs/decisions/VD-p7-snapshot-provider-skip-2026-10-01.md.
+- Updated the P7 plan and roadmap to show Gate 1 resolved in favor of the skip.
+- Regenerated docs/decisions/INDEX.md. No implementation or frozen wire identity changed.
 
 ## Open, blocked, and unverified
 
-- Open decision: P7 Gate 1 must retain the snapshot-provider skip or name a lawful export feed and
-  explicitly authorize the narrow width exception.
-- Blocked: provider implementation and all downstream P7+ capability work until that decision is
-  recorded.
-- Unverified today: kernel build/test/lint and make verify were not reached after the missing-linter
-  stop; the prior compatible-toolchain results remain the only evidence for those checks.
-- Unverified assumption: the two untracked artifacts are user-owned or otherwise ownership-unclear;
-  their matching hashes support preservation, not authorization to commit them.
-- Native Windows acceptance remains an evidence requirement and is not assumed green from the
-  Windows contract test.
+- Open: draft and independently review the next bounded behavior-locks/regeneration planning
+  slice within existing feeds.
+- Blocked: snapshot-provider work and all external-feed expansion until a new decision names a
+  concrete lawful feed and grants a narrow exception.
+- Unverified: today's full gate result, pending the post-change verification run.
+- Native Windows acceptance remains an evidence requirement and is not assumed green.
 
 ## Institutionalized improvement
 
-When preserved untracked artifacts trip the cadence guard, record their exact hashes in the
-journal and state, make a documentation-only checkpoint, rerun the gate, and preserve the files.
-Do not delete, stage, or absorb ownership-unclear artifacts. No new automation is justified by
-this audit; the existing EOD checkpoint and cadence rule are the lightweight repeatable control.
+Keep capability boundaries decision-first: record the concrete feed and authorization before
+minting a provider SPEC or writing provider code. When no real feed is needed, retain the skip and
+continue only within existing feeds. No new automation is justified.
 
 ## Standing cautions
 
 - Preserve frozen vera.witness.v1, vera.verdict.v1, vera.replay.v1, pinned vectors, and
   historical artifacts.
-- The archive is migration-only and exact; no broad import, new provider, event kind, platform
-  promise, or P7+ capability is authorized.
-- P7 planning is allowed after P6 closure, but implementation remains blocked at the
-  snapshot-provider decision until the skip is reaffirmed or a lawful feed and width exception are
-  explicitly named.
+- No provider, feed, vendor, schema, event kind, or P7+ capability is authorized by this
+  decision.
+- P7 planning is allowed only within existing feeds and separately authorized slices.
 
 ## Exact next action
 
-Resolve P7 Gate 1: record the founder decision to retain the snapshot-provider skip, or name one
-concrete lawful export feed and explicitly authorize the narrow width exception. Do not implement a
-provider before that decision.
+Draft and independently review a bounded behavior-locks/regeneration planning slice using existing
+feeds. Do not implement a snapshot provider or widen the provider boundary.
