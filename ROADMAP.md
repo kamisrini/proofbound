@@ -168,10 +168,11 @@ acceptance remains an evidence requirement, not an assumed green result.
 ## P7+ — Capability planning (Gate 1 resolved; no implementation authorized)
 
 P6 is closed. P7 Gate 1 is resolved: the founder retained the conditional snapshot-provider skip.
-The no-width doctrine and pinned provider contract remain in force. The planning draft is
-[`P7-snapshot-provider-plan-draft1.md`](docs/plans/P7-snapshot-provider-plan-draft1.md).
+The no-width doctrine and pinned provider contract remain in force. The planning drafts are
+[P7-snapshot-provider-plan-draft1.md](docs/plans/P7-snapshot-provider-plan-draft1.md) and
+[P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md).
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
-continue only within existing feeds and separately authorized slices; the next bounded planning
-candidate is behavior locks and regeneration.
+continue only within existing feeds and separately authorized slices; the next action is independent
+review and bounded-subject selection for the behavior-locks/regeneration draft.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
