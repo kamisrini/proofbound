@@ -172,7 +172,7 @@ The no-width doctrine and pinned provider contract remain in force. The planning
 [P7-snapshot-provider-plan-draft1.md](docs/plans/P7-snapshot-provider-plan-draft1.md) and
 [P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md).
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
-continue only within existing feeds and separately authorized slices; the next action is independent
-review and bounded-subject selection for the behavior-locks/regeneration draft.
+continue only within existing feeds and separately authorized slices; independent review of the
+proposed twin-replay subject is the next gate.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

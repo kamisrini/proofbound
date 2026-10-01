@@ -7,10 +7,10 @@ As of: 2026-10-01
 
 ## Resume — 2026-10-01
 
-P7 Gate 1 is resolved: retain the P6 snapshot-provider skip. The exact next action is to
-independently review docs/plans/P7-behavior-locks-regeneration-plan-draft1.md against the vision,
-P5 semantics, existing feeds, and P6 boundaries, then record the selected bounded subject before
-any implementation. Do not implement a snapshot provider, behavior lock, or regeneration yet.
+P7 Gate 1 is resolved: retain the P6 snapshot-provider skip. The exact next action is to obtain a
+non-author independent review of docs/plans/P7-behavior-locks-regeneration-plan-draft1.md and its
+proposed kernel/internal/twin replay subject, then record accept, amend, or reject before any
+implementation. Do not implement a snapshot provider, behavior lock, or regeneration yet.
 
 ## Branch and repository status
 
@@ -29,26 +29,26 @@ any implementation. Do not implement a snapshot provider, behavior lock, or rege
 - Recorded the founder decision in
   docs/decisions/VD-p7-snapshot-provider-skip-2026-10-01.md.
 - Updated the P7 snapshot-provider plan, roadmap, and decision index.
-- Drafted the bounded behavior-locks/regeneration planning slice. No implementation or frozen wire
-  identity changed.
+- Drafted the behavior-locks/regeneration plan and proposed the bounded twin replay subject.
+  No implementation or frozen wire identity changed.
 
 ## Verification
 
-- Focused index, state, lesson, invariant, and spec-numbering checks passed.
-- Bare make check passed cadence, repository checks, generated freshness, P6 census,
-  package acceptance, and platform stages, then stopped at kernel-check because golangci-lint was
-  unavailable (exit 127). The expected index stale; run make index output was an intentional
-  negative-control message; no source lint failure was reported.
+- Focused index, state, lesson, invariant, spec-numbering, and link checks passed.
+- Bare make check passed cadence, repository checks, generated freshness, P6 census, package
+  acceptance, and platform stages, then stopped at kernel-check because golangci-lint was unavailable
+  (exit 127). The expected index stale; run make index output was an intentional negative-control
+  message; no source lint failure was reported.
 - Kernel build/test/lint and make verify remain unverified today because the compatible linter is
   unavailable. Native Windows acceptance remains an evidence requirement and is not assumed green.
 
 ## Open, blocked, and unverified
 
-- Open: independently review the behavior-locks/regeneration draft and select one bounded subject.
+- Open: non-author independent review of the proposed twin replay subject and the behavior-lock plan.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
   until the relevant scope and acceptance decision are recorded.
-- Unverified assumption: existing feeds may support a bounded behavior-lock subject without a new
-  provider or production trace; the independent review must test this before implementation.
+- Unverified assumption: the existing twin replay evidence is sufficient for a behavior-lock pilot;
+  independent review must test this before implementation.
 
 ## Institutionalized improvement
 
@@ -66,6 +66,6 @@ existing feeds. No new automation is justified.
 
 ## Exact next action
 
-Independently review docs/plans/P7-behavior-locks-regeneration-plan-draft1.md against the vision,
-P5 semantics, existing feeds, and P6 boundaries. Select and record one bounded subject before any
+Obtain a non-author independent review of docs/plans/P7-behavior-locks-regeneration-plan-draft1.md
+and its proposed kernel/internal/twin replay subject. Record accept, amend, or reject before any
 implementation.
