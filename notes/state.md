@@ -37,7 +37,12 @@ event kind, or other P7+ capability.
   slice within existing feeds.
 - Blocked: snapshot-provider work and all external-feed expansion until a new decision names a
   concrete lawful feed and grants a narrow exception.
-- Unverified: today's full gate result, pending the post-change verification run.
+- Bare make check passed all repository, generated-freshness, census, package-acceptance, and
+  platform stages, then stopped at kernel-check because golangci-lint was unavailable (exit 127).
+  The expected index stale; run make index output was an intentional negative-control message.
+  No source lint failure was reported.
+- Unverified today: kernel build/test/lint and make verify, because the compatible linter binary is
+  unavailable. The prior compatible-toolchain result remains historical evidence.
 - Native Windows acceptance remains an evidence requirement and is not assumed green.
 
 ## Institutionalized improvement
