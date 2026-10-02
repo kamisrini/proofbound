@@ -14,9 +14,10 @@ implementation. Do not implement a snapshot provider, behavior lock, or regenera
 
 ## Branch and repository status
 
-- Branch: main, tracking origin/main; local main remains ahead because prior push publication was
-  blocked by policy.
-- Today's changes are documentation-only. The preserved untracked artifacts remain excluded:
+- Branch: main, tracking origin/main; local main is seven commits ahead. Push publication remains
+  blocked because the default remote is not verified/authenticated under policy.
+- Today's changes are documentation-only. The preserved untracked artifacts remain excluded and
+  untouched:
   docs/plans/P5-intent-provenance-plan.md (SHA-256
   eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439) and
   kernel/cmd/p6dbprobe/main.go (SHA-256
@@ -31,30 +32,36 @@ implementation. Do not implement a snapshot provider, behavior lock, or regenera
 - Updated the P7 snapshot-provider plan, roadmap, and decision index.
 - Drafted the behavior-locks/regeneration plan and proposed the bounded twin replay subject.
   No implementation or frozen wire identity changed.
+- Completed the workday durability closeout by recording the gate result, cadence limitation, and
+  exact handoff action in today's journal.
 
 ## Verification
 
-- Focused index, state, lesson, invariant, spec-numbering, and link checks passed.
-- Bare make check passed cadence, repository checks, generated freshness, P6 census, package
-  acceptance, and platform stages, then stopped at kernel-check because golangci-lint was unavailable
-  (exit 127). The expected index stale; run make index output was an intentional negative-control
-  message; no source lint failure was reported.
-- Kernel build/test/lint and make verify remain unverified today because the compatible linter is
-  unavailable. Native Windows acceptance remains an evidence requirement and is not assumed green.
+- Focused index, state, lesson, invariant, spec-numbering, link, identity, and P6 closure checks
+  passed. Generated freshness passed; no derived artifact was regenerated.
+- Bare make check reached the repository, generated-freshness, P6 census, package, and platform
+  stages, then stopped at commit-cadence because the two preserved untracked artifacts left the
+  worktree dirty beyond the 90-minute window. The expected `index stale; run make index` output was
+  negative-test output, not a freshness failure.
+- Kernel build and tests passed; the final kernel lint stage could not run because `golangci-lint` is
+  unavailable (`command not found`, exit 127). `make verify` passed. Native Windows acceptance
+  remains an evidence requirement and is not assumed green.
 
 ## Open, blocked, and unverified
 
 - Open: non-author independent review of the proposed twin replay subject and the behavior-lock plan.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
-  until the relevant scope and acceptance decision are recorded.
-- Unverified assumption: the existing twin replay evidence is sufficient for a behavior-lock pilot;
-  independent review must test this before implementation.
+- Unverified assumptions: the existing twin replay evidence is sufficient for a behavior-lock pilot;
+  kernel lint remains unverified because its executable is unavailable; and native Windows acceptance
+  remains unconfirmed. Independent review must test the planning assumption before code.
+  acceptance remains unconfirmed. Independent review must test the planning assumption before code.
 
 ## Institutionalized improvement
 
 Keep capability boundaries decision-first: record the source, scope, and acceptance bar before
 writing capability code. When no real feed is needed, retain the skip and continue only within
-existing feeds. No new automation is justified.
+existing feeds. Keep planning recommendations explicitly separate from independent acceptance and
+record accept/amend/reject before implementation. No new automation is justified.
 
 ## Standing cautions
 
