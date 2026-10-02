@@ -14,8 +14,9 @@ implementation. Do not implement a snapshot provider, behavior lock, or regenera
 
 ## Branch and repository status
 
-- Branch: main, tracking origin/main; local main is seven commits ahead. Push publication remains
-  blocked because the default remote is not verified/authenticated under policy.
+- Branch: main, tracking origin/main; local main is ahead because the durability closeout is the
+  latest local commit. Push publication remains blocked because the default remote is not
+  verified/authenticated under policy.
 - Today's changes are documentation-only. The preserved untracked artifacts remain excluded and
   untouched:
   docs/plans/P5-intent-provenance-plan.md (SHA-256
