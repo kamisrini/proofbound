@@ -17,7 +17,7 @@ authentication cannot be verified because the remote DNS lookup failed.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; local `main` is nine commits ahead of the locally known
+- Branch: `main`, tracking `origin/main`; local `main` is eleven commits ahead of the locally known
   `origin/main` ref. No commits are dated 2026-10-06.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
@@ -35,6 +35,8 @@ authentication cannot be verified because the remote DNS lookup failed.
 - The P7 behavior-locks/regeneration planning draft and bounded deterministic twin-replay subject
   were recorded. They are planning only; no provider, feed, vendor, schema, event kind, or
   implementation was introduced.
+- The 2026-10-06 durability checkpoint was committed as `95f4855`; this final state/journal update
+  is the only additional change.
 - The 2026-10-06 audit inspected commits, tests, journals, notes, and session-artifact paths and
   found no new implementation work.
 
@@ -45,8 +47,13 @@ authentication cannot be verified because the remote DNS lookup failed.
   the preserved untracked artifacts outlived the 90-minute window.
 - `index stale; run make index` was expected negative-test output, not a generated-index failure;
   invariant-lock and index regeneration were not needed.
-- A full post-checkpoint `make check` is the required next verification. Kernel lint may remain
-  unverified if `golangci-lint` is unavailable. Native Windows acceptance is not assumed green.
+- Post-checkpoint bare `make check` cleared cadence and passed hooks, repository checks, generated
+  freshness, P6 census, package acceptance, and the Windows contract. The expected `index stale;
+  run make index` line was negative-test output; no derived artifact required regeneration.
+- The gate stopped at `kernel-check` because `/snap/bin/go` could not run under this host's
+  confinement (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests
+  did not run and lint was not reached; this is an environment limitation, not a source failure.
+  Native Windows acceptance is not assumed green.
 
 ## Open, blocked, and unverified
 
@@ -54,8 +61,8 @@ authentication cannot be verified because the remote DNS lookup failed.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
   pending that review and decision gate; push is blocked by the unresolved remote connection.
 - Unverified assumptions: existing twin-replay evidence is sufficient for a behavior-lock pilot;
-  kernel lint can run in this environment; native Windows acceptance remains unconfirmed; and the
-  local remote-tracking ref is current.
+  kernel build/tests/lint can run in this environment; native Windows acceptance remains
+  unconfirmed; and the local remote-tracking ref is current.
 
 ## Institutionalized improvement
 
