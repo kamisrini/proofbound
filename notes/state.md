@@ -7,22 +7,20 @@ As of: 2026-10-06
 
 ## Resume — 2026-10-06
 
-Exact next action: amend `docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` according to
-the `AMEND` verdict in `docs/verification/verdicts/p7-behavior-lock-plan-round1.md`: select the
-exact replay surface, define the lock artifact and baseline provenance, separate fact roles, bind
-intent obligations, and make detector-power/acceptance criteria explicit; then obtain a fresh
-non-author review before any behavior-lock, regeneration, snapshot-provider, or external-feed
-implementation.
+Exact next action: obtain a fresh non-author review of the amended
+`docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` and proposed decision
+`docs/decisions/VD-p7-behavior-lock-subject-2026-10-06.md`; record accept, amend, or reject before
+any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
 
-Immediate blockers: the amended subject/lock contract and its fresh independent review are
+Immediate blockers: the fresh independent review and decision outcome for the amended subject are
 missing; push authorization and authentication cannot be verified because the remote DNS lookup
 failed.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; local `main` is twelve commits ahead of the locally known
-  `origin/main` ref after this documentation-only review commit. No implementation commits are
-  dated 2026-10-06.
+- Branch: `main`, tracking `origin/main`; local `main` is thirteen commits ahead of the locally
+  known `origin/main` ref after this documentation-only amendment commit. No implementation
+  commits are dated 2026-10-06.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
 - The only untracked paths are preserved and excluded user artifacts:
@@ -43,6 +41,8 @@ failed.
   final state/journal update are documentation-only follow-up changes.
 - The first independent P7 behavior-lock planning review is recorded as `AMEND`; no implementation
   authorization follows from it.
+- The amended `ReplayIsolated` subject and proposed lock contract are recorded in
+  `VD-p7-behavior-lock-subject-2026-10-06`; fresh non-author review remains required.
 - The 2026-10-06 audit inspected commits, tests, journals, notes, and session-artifact paths and
   found no new implementation work.
 
@@ -63,8 +63,8 @@ failed.
 
 ## Open, blocked, and unverified
 
-- Open: amend the P7 behavior-lock plan with the exact replay surface, lock artifact, provenance,
-  intent binding, and acceptance bar, then obtain fresh non-author review.
+- Open: obtain fresh non-author review of the amended `ReplayIsolated` subject and proposed lock
+  contract, then record accept, amend, or reject.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
   pending the amended review and decision gate; push is blocked by the unresolved remote connection.
 - Unverified assumptions: existing twin-replay evidence is sufficient for a behavior-lock pilot;

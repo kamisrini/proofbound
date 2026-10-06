@@ -1,7 +1,7 @@
 # P7 Behavior Locks and Witnessed Regeneration — Planning Draft 1
 
-**Status:** DRAFT — planning only. No implementation, new event kind, provider, or production
-capability is authorized by this document.
+**Status:** DRAFT — amended after P7 planning review round 1; planning only. No implementation,
+new event kind, provider, wire identity, or production capability is authorized by this document.
 
 **Phase:** P7+ capability planning after P6 closure and the resolved snapshot-provider skip.
 
@@ -29,27 +29,54 @@ same durable contract rather than against the implementation that happened to ex
 The lock is not a replacement for business intent, independent verification, or observed
 deployment. It is a derived, evidence-bearing contract between intent and implementation.
 
-## Proposed bounded subject — pending independent review
+## Proposed bounded subject — amended, pending fresh independent review
 
-The recommended first subject is the deterministic replay path in kernel/internal/twin:
+The exact proposed product subject is `kernel/internal/twin.ReplayIsolated`, as recorded in the
+proposed decision [VD-p7-behavior-lock-subject-2026-10-06](../decisions/VD-p7-behavior-lock-subject-2026-10-06.md).
+The injected `Replay` function remains a supporting conformance seam, not the product boundary.
 
-- Inputs are a selected ledger prefix, explicitly sequenced candidate events, a baseline
-  projection snapshot, and an injected projection function.
-- Outputs are the replay comparison and the frozen vera.replay.v1 proof payload.
-- Existing evidence includes kernel/internal/twin/SPEC.md, replay proving tests, the accepted P4
-  decision and verdict, and calibrated P6 mutation evidence of 31 killed, 0 invalid, and 0 survived.
-- The existing ledger event stream is the input feed. No external export feed or new event kind is
-  needed.
-- The first subject excludes pure calibration, an isolated database-fork adapter, prediction
-  events, production traffic, and any regeneration implementation.
+The bounded subject is:
 
-This is preferred over selecting the whole twin package because it is deterministic, non-mutating,
-already evidence-bearing, and narrow enough to expose whether a behavior lock can protect a real
-Proofbound product boundary. The core package already has an interface-lock mechanism, but its
-low-level primitives are less representative of the end-to-end behavior-lock goal.
+- **Observed source input:** the selected append-only ledger prefix through `ThroughSeq`, including
+  the exact source event identities, sequence numbers, and content digests.
+- **Authored candidate input:** explicitly sequenced candidate events, with their exact canonical
+  event bytes and declared role as candidate inputs rather than observed production events.
+- **Baseline input:** a projection snapshot content-addressed to the same source prefix and the
+  accepted projector revision. An arbitrary caller-supplied baseline is not acceptable evidence;
+  if its provenance is absent, the result remains `UNVERIFIED` and cannot satisfy the lock.
+- **Observed behavior boundary:** the isolated temporary-store projection, candidate snapshot,
+  preserved/changed comparison, sequence map, and frozen `vera.replay.v1` proof payload.
+- **Existing feed:** the repository-native ledger event stream. No external export feed, provider,
+  vendor, or new event kind is needed.
 
-This is a scope recommendation, not an independent acceptance. Law 9 requires a non-author review
-before the subject or any implementation is accepted.
+The subject excludes calibration, prediction events, production traffic, a production-shaped twin,
+any new persistence surface, and all regeneration implementation. `Replay` may prove that the
+same request semantics hold through the injected seam, but it cannot substitute for the isolated
+product-boundary evidence.
+
+This subject is narrow, deterministic, non-mutating, and already implemented and evidenced. It is
+still a proposal: the fresh non-author review must accept, amend, or reject this exact boundary.
+
+## Proposed lock contract — pending decision
+
+The behavior lock is a separate authored, content-addressed artifact. It is not the frozen
+`vera.replay.v1` proof, not a projection table, and not a new ledger event or wire identity. A
+future lock addendum must define the canonical encoding, but its semantic content is fixed here:
+
+1. lock revision identity and exact subject (`ReplayIsolated`);
+2. source-prefix boundary, ordered observed source event identities, and source content digests;
+3. ordered authored candidate event identities, sequence numbers, and canonical event bytes;
+4. baseline snapshot provenance, accepted projector revision, and baseline digest;
+5. candidate snapshot digest, preserved/changed outcome, and complete sequence map;
+6. the frozen replay-proof schema, exact proof bytes or digest, and its relation to the lock; and
+7. the exact intent-obligation binding, or an explicit `UNDECLARED` state until an authorized
+   requirement exists.
+
+The lock revision digest covers the canonical lock bytes. A later lock revision is a new artifact;
+it cannot reinterpret an earlier replay proof or verdict. The lock's authored declaration,
+generated property corpus, observed ledger evidence, and derived replay result remain separate
+roles. Synthetic candidates and fixtures may test the contract but must never be presented as
+production observations.
 
 ## Planning boundary
 
@@ -66,19 +93,18 @@ and accepted feeds. It may not:
 
 ## Questions the plan must settle before implementation
 
-1. What exact replay behavior is the lock: candidate ordering, prefix selection, projection output,
-   proof bytes, or the complete bounded combination?
-2. What exact artifact is the lock, how is its revision content-addressed, and which intent
-   obligations authorize it?
-3. Which portions are authored declarations, which are generated artifacts, and which are observed
-   witnesses? The three must remain distinguishable.
-4. What property corpus can be generated from the replay lock without pretending that synthetic
-   fixtures are production observations?
-5. What detector-power and mutation controls show that the generated corpus can distinguish a
-   broken implementation from a passing one?
-6. What is the smallest regeneration boundary, and what evidence proves that regeneration preserves
-   the lock, ledger history, and replay proof semantics?
-7. What independent verdict is required before a lock or regenerated implementation is accepted?
+1. What canonical encoding and revision digest will the lock addendum use, without introducing a
+   new wire identity before a separate authorization?
+2. Which existing intent obligation authorizes the lock, or how will the explicit `UNDECLARED`
+   route be represented until one exists?
+3. What generated property corpus covers source bounds, candidate ordering, baseline provenance,
+   snapshot comparison, proof binding, stale revisions, and missing evidence?
+4. What detector-power and mutation controls show that the generated corpus distinguishes a broken
+   `ReplayIsolated` implementation from a passing one?
+5. What is the smallest regeneration boundary, and what evidence proves that regeneration preserves
+   the lock, ledger history, and replay-proof semantics?
+6. What fresh non-author verdict is required before the lock or any regenerated implementation is
+   accepted?
 
 ## Candidate deliverables
 
@@ -86,9 +112,11 @@ A separately authorized implementation slice would need, at minimum:
 
 - a package SPEC addendum defining the lock schema, source bindings, revision identity, invariants,
   non-goals, and failure-closed behavior;
+- a proposed decision record naming `ReplayIsolated` as the bounded product subject;
 - a fixture matrix separating authored intent, generated properties, and observed witnesses;
 - a route and evidence matrix showing which existing feeds support each lock claim;
-- positive, negative, mutation, stale-revision, missing-evidence, and clean-clone fixtures;
+- positive, negative, provenance, mutation, stale-revision, missing-evidence, and clean-clone
+  fixtures;
 - a measured detector-power and regeneration baseline;
 - an implementation boundary that can be rebuilt from committed artifacts and the ledger; and
 - a non-author independent verdict before acceptance.
@@ -108,15 +136,17 @@ Stop and re-scope if:
 
 ## Planning sequence
 
-1. Obtain a non-author independent review of this draft and the proposed twin-replay subject.
-2. Record the selected bounded subject and any amendments as a decision before implementation.
-3. Write the lock addendum and fixture matrix for the replay path.
-4. Validate the acceptance bar with hostile and mutation controls.
+1. Obtain a fresh non-author independent review of this amended draft and the proposed decision.
+2. Record accept, amend, or reject; implementation remains blocked unless the exact boundary is
+   accepted by that review.
+3. Write the lock addendum and fixture matrix for `ReplayIsolated`.
+4. Validate the acceptance bar with provenance, hostile, and mutation controls.
 5. Implement only the ratified slice, then obtain the independent verdict.
 6. Keep regeneration-as-repair separately gated on measured detector power.
 
 ## Current stop point
 
-The repository-grounded preflight recommends the twin replay path, but independent review and scope
-decision are still required. Until they occur, no behavior-lock or regeneration implementation is
-authorized.
+Round-1 independent review returned `AMEND`. The exact proposed subject is now `ReplayIsolated`,
+with a separate content-addressed lock contract and explicit fact-role boundaries. The proposed
+decision and this amended draft require a fresh non-author review. Until that review records
+`ACCEPT`, no behavior-lock or regeneration implementation is authorized.
