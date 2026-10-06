@@ -7,18 +7,22 @@ As of: 2026-10-06
 
 ## Resume — 2026-10-06
 
-Exact next action: obtain a non-author independent review of
-`docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` and its proposed
-`kernel/internal/twin` replay subject; record accept, amend, or reject before any behavior-lock,
-regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: amend `docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` according to
+the `AMEND` verdict in `docs/verification/verdicts/p7-behavior-lock-plan-round1.md`: select the
+exact replay surface, define the lock artifact and baseline provenance, separate fact roles, bind
+intent obligations, and make detector-power/acceptance criteria explicit; then obtain a fresh
+non-author review before any behavior-lock, regeneration, snapshot-provider, or external-feed
+implementation.
 
-Immediate blockers: the independent review and decision gate are missing; push authorization and
-authentication cannot be verified because the remote DNS lookup failed.
+Immediate blockers: the amended subject/lock contract and its fresh independent review are
+missing; push authorization and authentication cannot be verified because the remote DNS lookup
+failed.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; local `main` is eleven commits ahead of the locally known
-  `origin/main` ref. No commits are dated 2026-10-06.
+- Branch: `main`, tracking `origin/main`; local `main` is twelve commits ahead of the locally known
+  `origin/main` ref after this documentation-only review commit. No implementation commits are
+  dated 2026-10-06.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
 - The only untracked paths are preserved and excluded user artifacts:
@@ -35,8 +39,10 @@ authentication cannot be verified because the remote DNS lookup failed.
 - The P7 behavior-locks/regeneration planning draft and bounded deterministic twin-replay subject
   were recorded. They are planning only; no provider, feed, vendor, schema, event kind, or
   implementation was introduced.
-- The 2026-10-06 durability checkpoint was committed as `95f4855`; this final state/journal update
-  is the only additional change.
+- The 2026-10-06 durability checkpoint was committed as `95f4855`; the P7 review, roadmap, and
+  final state/journal update are documentation-only follow-up changes.
+- The first independent P7 behavior-lock planning review is recorded as `AMEND`; no implementation
+  authorization follows from it.
 - The 2026-10-06 audit inspected commits, tests, journals, notes, and session-artifact paths and
   found no new implementation work.
 
@@ -57,9 +63,10 @@ authentication cannot be verified because the remote DNS lookup failed.
 
 ## Open, blocked, and unverified
 
-- Open: independent non-author review of the P7 behavior-lock plan and bounded twin-replay subject.
+- Open: amend the P7 behavior-lock plan with the exact replay surface, lock artifact, provenance,
+  intent binding, and acceptance bar, then obtain fresh non-author review.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
-  pending that review and decision gate; push is blocked by the unresolved remote connection.
+  pending the amended review and decision gate; push is blocked by the unresolved remote connection.
 - Unverified assumptions: existing twin-replay evidence is sufficient for a behavior-lock pilot;
   kernel build/tests/lint can run in this environment; native Windows acceptance remains
   unconfirmed; and the local remote-tracking ref is current.
