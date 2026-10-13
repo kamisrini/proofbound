@@ -3,9 +3,9 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads CLAUDE.md, then this file, before acting.
 
-As of: 2026-10-06
+As of: 2026-10-13
 
-## Resume — 2026-10-06
+## Resume — 2026-10-13
 
 Exact next action: obtain a fresh non-author review of the amended
 `docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` and proposed decision
@@ -19,68 +19,66 @@ failed.
 ## Branch and repository status
 
 - Branch: `main`, tracking `origin/main`; local `main` is thirteen commits ahead of the locally
-  known `origin/main` ref after this documentation-only amendment commit. No implementation
-  commits are dated 2026-10-06.
+  known `origin/main` ref. There are no commits dated 2026-10-13.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
-- The only untracked paths are preserved and excluded user artifacts:
+- The only worktree entries are preserved untracked user artifacts:
   `docs/plans/P5-intent-provenance-plan.md` (SHA-256
   `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
   `kernel/cmd/p6dbprobe/main.go` (SHA-256
-  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`).
+  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). They remain untouched,
+  unstaged, and excluded from the documentation checkpoint.
+- No `.agents`, `.codex`, or other session-artifact files were found in the repository.
 
 ## Completed
 
 - P6 final consolidation remains complete: round-C ACCEPTABLE, 327/327 census rows closed, and
   P1–P5 deep-complete.
 - P7 Gate 1 remains resolved in favor of retaining the P6 snapshot-provider skip.
-- The P7 behavior-locks/regeneration planning draft and bounded deterministic twin-replay subject
-  were recorded. They are planning only; no provider, feed, vendor, schema, event kind, or
-  implementation was introduced.
-- The 2026-10-06 durability checkpoint was committed as `95f4855`; the P7 review, roadmap, and
-  final state/journal update are documentation-only follow-up changes.
-- The first independent P7 behavior-lock planning review is recorded as `AMEND`; no implementation
-  authorization follows from it.
-- The amended `ReplayIsolated` subject and proposed lock contract are recorded in
-  `VD-p7-behavior-lock-subject-2026-10-06`; fresh non-author review remains required.
-- The 2026-10-06 audit inspected commits, tests, journals, notes, and session-artifact paths and
-  found no new implementation work.
+- The amended P7 behavior-locks/regeneration planning draft and bounded deterministic
+  `ReplayIsolated` subject were recorded. They are planning only; no provider, feed, vendor,
+  schema, event kind, or implementation was introduced.
+- The first independent P7 planning review remains recorded as `AMEND`; the amended subject has
+  not received the required fresh non-author review or decision outcome.
+- Today’s work was repository inspection, verification, remote reachability checking, and durable
+  journal/state closeout. No implementation was authorized or changed.
 
 ## Verification
 
-- Bare `make check` before the checkpoint passed hooks, repository checks, generated freshness, P6
-  census, package acceptance, and the Windows contract before stopping at commit cadence because
-  the preserved untracked artifacts outlived the 90-minute window.
-- `index stale; run make index` was expected negative-test output, not a generated-index failure;
-  invariant-lock and index regeneration were not needed.
-- Post-checkpoint bare `make check` cleared cadence and passed hooks, repository checks, generated
-  freshness, P6 census, package acceptance, and the Windows contract. The expected `index stale;
-  run make index` line was negative-test output; no derived artifact required regeneration.
-- The gate stopped at `kernel-check` because `/snap/bin/go` could not run under this host's
-  confinement (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests
-  did not run and lint was not reached; this is an environment limitation, not a source failure.
-  Native Windows acceptance is not assumed green.
+- Bare `make check` was run on 2026-10-13. The expected negative-control line
+  `index stale; run make index` was not a generated-index failure; generated freshness and the
+  invariant-related checks passed without regeneration. Hook/self-test checks, P6 closure/package
+  acceptance, and the Windows contract completed successfully.
+- The actual gate failure was `commit-cadence: dirty worktree outlived 90m commit window`, caused
+  by the two preserved untracked artifacts. The main DAG therefore did not reach `kernel-check`.
+  A separate Snap confinement diagnostic appeared during the self-test activity; it is not counted
+  as a source failure, but kernel build/tests/lint remain unverified in this run.
+- The gate must be rerun after this documentation checkpoint so cadence can be evaluated against
+  the new commit. If it reaches `kernel-check`, record any toolchain limitation separately from
+  repository failures.
 
 ## Open, blocked, and unverified
 
-- Open: obtain fresh non-author review of the amended `ReplayIsolated` subject and proposed lock
+- Open: obtain a fresh non-author review of the amended `ReplayIsolated` subject and proposed lock
   contract, then record accept, amend, or reject.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
-  pending the amended review and decision gate; push is blocked by the unresolved remote connection.
+  pending that review and decision gate; push is blocked while the remote cannot be resolved and
+  authentication/authorization cannot be verified.
 - Unverified assumptions: existing twin-replay evidence is sufficient for a behavior-lock pilot;
   kernel build/tests/lint can run in this environment; native Windows acceptance remains
   unconfirmed; and the local remote-tracking ref is current.
 
 ## Institutionalized improvement
 
-When preserved user-owned untracked artifacts make the cadence gate dirty, keep them untouched,
-record their exact hashes, commit a documentation-only state/journal checkpoint, and rerun the
-full gate. This is an existing lightweight repeatable fix; no additional automation was added.
+When preserved user-owned untracked artifacts trigger the cadence guard, keep them untouched,
+record exact hashes, commit a documentation-only state/journal checkpoint, and rerun the full
+gate. This lightweight repeatable fix has recurred and is now the standing response; no new
+automation was added.
 
 ## Standing cautions
 
 - Preserve frozen `vera.witness.v1`, `vera.verdict.v1`, `vera.replay.v1`, pinned vectors, and
   historical artifacts.
 - No provider, feed, vendor, schema, event kind, or P7+ implementation is authorized by the
-  snapshot-provider decision.
-- Planning drafts are not implementation authorization.
+  snapshot-provider decision or by the planning draft.
+- Planning drafts and an `AMEND` review are not implementation authorization.
