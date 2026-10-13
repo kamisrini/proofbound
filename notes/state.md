@@ -7,14 +7,14 @@ As of: 2026-10-13
 
 ## Resume — 2026-10-13
 
-Exact next action: obtain a fresh non-author review of the amended
-`docs/plans/P7-behavior-locks-regeneration-plan-draft1.md` and proposed decision
-`docs/decisions/VD-p7-behavior-lock-subject-2026-10-06.md`; record accept, amend, or reject before
-any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: amend the P7 planning draft and proposed decision to resolve the round-2
+`AMEND` findings on baseline provenance and `UNVERIFIED` semantics, canonical lock identity and
+proof binding, intent-obligation/`UNDECLARED` semantics, and explicit pass/fail acceptance gates;
+then obtain another fresh non-author review before any behavior-lock, regeneration,
+snapshot-provider, or external-feed implementation.
 
-Immediate blockers: the fresh independent review and decision outcome for the amended subject are
-missing; push authorization and authentication cannot be verified because the remote DNS lookup
-failed.
+Immediate blockers: round-2 `AMEND` findings are unresolved; push authorization and authentication
+cannot be verified because the remote DNS lookup failed.
 
 ## Branch and repository status
 
@@ -39,8 +39,10 @@ failed.
 - The amended P7 behavior-locks/regeneration planning draft and bounded deterministic
   `ReplayIsolated` subject were recorded. They are planning only; no provider, feed, vendor,
   schema, event kind, or implementation was introduced.
-- The first independent P7 planning review remains recorded as `AMEND`; the amended subject has
-  not received the required fresh non-author review or decision outcome.
+- The first independent P7 planning review remains recorded as `AMEND`. The required fresh
+  non-author P7 planning review round 2 is recorded as `AMEND` in
+  `docs/verification/verdicts/p7-behavior-lock-plan-round2-20261013.md`; the proposed decision
+  now records the same outcome.
 - Today’s work was repository inspection, verification, remote reachability checking, and durable
   journal/state closeout. No implementation was authorized or changed.
 
@@ -58,11 +60,13 @@ failed.
   because `/snap/bin/go` could not run under this host's confinement
   (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests and lint did
   not complete. This is an environment limitation, not a source or generated-artifact failure.
+- The fresh round-2 planning review did not authorize implementation; it requires the four
+  contract amendments named in the verdict artifact and another non-author review.
 
 ## Open, blocked, and unverified
 
-- Open: obtain a fresh non-author review of the amended `ReplayIsolated` subject and proposed lock
-  contract, then record accept, amend, or reject.
+- Open: amend the planning draft and proposed decision for the four round-2 findings, then obtain
+  another fresh non-author review and record its outcome.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
   pending that review and decision gate; push is blocked while the remote cannot be resolved and
   authentication/authorization cannot be verified.

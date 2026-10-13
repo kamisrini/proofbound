@@ -1,6 +1,6 @@
 # VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject
 
-**Status:** Proposed — pending fresh non-author review
+**Status:** AMEND — fresh non-author review round 2 on 2026-10-13
 **Date:** 2026-10-06
 
 ## Context
@@ -50,3 +50,26 @@ implementation.
 
 Until that review accepts the proposal, the snapshot-provider skip and all existing frozen wire
 identities remain unchanged and implementation is blocked.
+
+## Fresh non-author review outcome — 2026-10-13
+
+The fresh independent review is recorded in
+[`p7-behavior-lock-plan-round2-20261013.md`](../verification/verdicts/p7-behavior-lock-plan-round2-20261013.md)
+against commit `d8d0339bb5a94f58f6436c555b535da19053e63e`.
+
+**Outcome: AMEND.** The `ReplayIsolated` boundary and exclusions are coherent, but planning
+acceptance requires these amendments:
+
+1. Define enforceable baseline provenance, its verification relation to the source prefix and
+   projector revision, and the representation of `UNVERIFIED`.
+2. Define canonical lock encoding, required-field semantics, revision identity, and the exact
+   binding between lock bytes and the frozen `vera.replay.v1` proof.
+3. Define the provider-scoped intent-obligation revision/artifact/obligation binding and reconcile
+   `UNDECLARED` with the accepted P5 `UNVERIFIED` semantics.
+4. Make provenance, stale-revision, missing-evidence, clean-clone, hostile, positive/negative,
+   detector-power, and mutation controls explicit pass/fail exit criteria bound to the lock and
+   reviewed evidence revision.
+
+The proposal remains planning-only. No behavior-lock, regeneration, snapshot-provider, or
+external-feed implementation is authorized. Another fresh non-author review is required after
+these amendments.

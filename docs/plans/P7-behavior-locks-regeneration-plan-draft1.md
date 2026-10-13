@@ -1,6 +1,6 @@
 # P7 Behavior Locks and Witnessed Regeneration — Planning Draft 1
 
-**Status:** DRAFT — amended after P7 planning review round 1; planning only. No implementation,
+**Status:** DRAFT — amended after P7 planning review rounds 1 and 2; planning only. No implementation,
 new event kind, provider, wire identity, or production capability is authorized by this document.
 
 **Phase:** P7+ capability planning after P6 closure and the resolved snapshot-provider skip.
@@ -29,7 +29,7 @@ same durable contract rather than against the implementation that happened to ex
 The lock is not a replacement for business intent, independent verification, or observed
 deployment. It is a derived, evidence-bearing contract between intent and implementation.
 
-## Proposed bounded subject — amended, pending fresh independent review
+## Proposed bounded subject — amended, pending resolution of round-2 review
 
 The exact proposed product subject is `kernel/internal/twin.ReplayIsolated`, as recorded in the
 proposed decision [VD-p7-behavior-lock-subject-2026-10-06](../decisions/VD-p7-behavior-lock-subject-2026-10-06.md).
@@ -144,9 +144,17 @@ Stop and re-scope if:
 5. Implement only the ratified slice, then obtain the independent verdict.
 6. Keep regeneration-as-repair separately gated on measured detector power.
 
+## Fresh review outcome — round 2
+
+The fresh non-author review recorded in
+[`p7-behavior-lock-plan-round2-20261013.md`](../verification/verdicts/p7-behavior-lock-plan-round2-20261013.md)
+reviewed this amended draft and the proposed decision at commit `d8d0339`. Its verdict was
+`AMEND`: the `ReplayIsolated` boundary and exclusions are coherent, but baseline provenance and
+`UNVERIFIED` semantics, canonical lock identity and proof binding, intent-obligation/
+`UNDECLARED` semantics, and explicit pass/fail acceptance gates remain underspecified.
+
 ## Current stop point
 
-Round-1 independent review returned `AMEND`. The exact proposed subject is now `ReplayIsolated`,
-with a separate content-addressed lock contract and explicit fact-role boundaries. The proposed
-decision and this amended draft require a fresh non-author review. Until that review records
-`ACCEPT`, no behavior-lock or regeneration implementation is authorized.
+Round-2 independent review returned `AMEND`. Amend the planning draft and proposed decision to
+resolve those four findings, then obtain another fresh non-author review. Until that review
+records `ACCEPT`, no behavior-lock or regeneration implementation is authorized.
