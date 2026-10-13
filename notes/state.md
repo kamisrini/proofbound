@@ -18,8 +18,9 @@ failed.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; local `main` is thirteen commits ahead of the locally
-  known `origin/main` ref. There are no commits dated 2026-10-13.
+- Branch: `main`, tracking `origin/main`; local `main` is ahead of the locally known
+  `origin/main` ref. Two documentation-only closeout commits were created today; no product or
+  implementation commit was created.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
 - The only worktree entries are preserved untracked user artifacts:
@@ -53,9 +54,10 @@ failed.
   by the two preserved untracked artifacts. The main DAG therefore did not reach `kernel-check`.
   A separate Snap confinement diagnostic appeared during the self-test activity; it is not counted
   as a source failure, but kernel build/tests/lint remain unverified in this run.
-- The gate must be rerun after this documentation checkpoint so cadence can be evaluated against
-  the new commit. If it reaches `kernel-check`, record any toolchain limitation separately from
-  repository failures.
+- The post-checkpoint bare `make check` rerun cleared cadence, reached `kernel-check`, and stopped
+  because `/snap/bin/go` could not run under this host's confinement
+  (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests and lint did
+  not complete. This is an environment limitation, not a source or generated-artifact failure.
 
 ## Open, blocked, and unverified
 
