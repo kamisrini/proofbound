@@ -7,13 +7,15 @@ As of: 2026-10-14
 
 ## Resume — 2026-10-14
 
-Exact next action: ask the owner whether the first real `ReplayIsolated` lock should explicitly
-remain `UNDECLARED` or be bound to a newly authorized, genuinely applicable P5 requirement. Then
-submit the draft twin SPEC addendum and fixture matrix for fresh non-author review; record
-`ACCEPT`, `AMEND`, or `REJECT` against their exact revision before any implementation.
+Exact next action: ask the owner to approve, amend, or reject the business outcome and single
+`O-1` obligation in `docs/plans/P7-replay-intent-requirement-proposal-draft1.md`. If approved,
+prepare formal P5 business-decision and requirement records with a named declared authority and
+exact revision binding. Then obtain fresh non-author review of the addendum, fixture matrix, and
+exact requirement revision before any implementation.
 
-Immediate blockers: the addendum and fixtures have not been independently accepted; no real
-`ReplayIsolated` intent obligation has been authorized; committed fixture corpus, proof-byte
+Immediate blockers: the proposed replay requirement wording awaits owner decision; the addendum
+and fixtures have not been independently accepted; no real `ReplayIsolated` intent obligation has
+been authorized; committed fixture corpus, proof-byte
 serialization, projector revision evidence, and implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
 
@@ -34,6 +36,10 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   Drafts are `docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
   `docs/plans/P7-replay-lock-fixture-matrix-draft1.md`. No product code, provider, feed, wire
   identity, event kind, or persistence surface changed.
+- The owner requested a recommendation for the pilot's intent binding. The recommended path is a
+  genuine P5 requirement, retaining `UNDECLARED` as a negative control. The owner authorized a
+  draft proposal, now in `docs/plans/P7-replay-intent-requirement-proposal-draft1.md`; no P5 record
+  or approval has been created.
 
 ## Verification
 
@@ -49,9 +55,9 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Open, blocked, and unverified
 
-- Open: choose the pilot's honest intent binding; ratify proof-byte serialization and projector
-  revision evidence; build committed fixtures and evidence manifest; obtain non-author review of
-  the draft slice and later of any implementation.
+- Open: decide the proposed requirement wording and named authority; ratify proof-byte
+  serialization and projector revision evidence; build committed fixtures and evidence manifest;
+  obtain non-author review of the draft slice and later of any implementation.
 - Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
   the applicable review and decision gate is satisfied. Push remains unverified.
 - Unverified: a real requirement applicable to this replay subject, complete clean-clone replay,
