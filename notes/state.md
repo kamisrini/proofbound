@@ -13,8 +13,9 @@ requirement revisions, `O-1`, the draft twin SPEC addendum, and fixture matrix. 
 until the slice and later implementation have their own independent verdicts.
 
 Immediate blockers: the P5 records and addendum/fixture slice have not been independently
-reviewed; committed fixture corpus, proof-byte
-serialization, projector revision evidence, and implementation verdict are absent. Push
+reviewed; the full gate cannot complete because the installed linter crashes on a Go 1.27
+version marker; committed fixture corpus, proof-byte serialization, projector revision evidence,
+and implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
 
 ## Branch and repository status
@@ -51,6 +52,13 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel-check` and stopped because this host's Snap Go confinement lacks
   `cap_dac_override` (`Function not implemented`). Go build/tests/lint remain unverified here;
   no source or generated-artifact failure was observed.
+- After formal P5 record commit `9e0621f`, both normalized self-digests and the exact decision
+  reference were verified; JSON metadata parses. The P5 records package tests passed with Go
+  outside the sandbox. Bare `make check` passed repository checks and Go build/tests, then stopped
+  because `golangci-lint` was absent from PATH. With its installed directory on PATH, the gate
+  again passed repository checks and Go build/tests, then the linter panicked: a file requires
+  Go 1.27 while the installed linter was built with Go 1.26.7. Lint remains unverified; this is
+  a tooling failure, not evidence of a source defect.
 
 ## Open, blocked, and unverified
 
@@ -60,7 +68,7 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 - Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
   the applicable review and decision gate is satisfied. Push remains unverified.
 - Unverified: independent verifiability of the new requirement, complete clean-clone replay,
-  detector power for a P7 mutation set, kernel build/tests/lint in this host, native Windows
+  detector power for a P7 mutation set, lint with a compatible toolchain, native Windows
   acceptance, and remote-tip freshness.
 
 ## Institutionalized improvement
