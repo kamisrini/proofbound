@@ -3,103 +3,65 @@
 > THE resume note. Overwrite in place; never append and never create a second state file.
 > A fresh session reads CLAUDE.md, then this file, before acting.
 
-As of: 2026-10-13
+As of: 2026-10-14
 
-## Resume — 2026-10-13
+## Resume — 2026-10-14
 
-Exact next action: prepare the separately authorized lock-schema/addendum and fixture-planning
-slice for the accepted `ReplayIsolated` subject in the twin package, preserving the accepted planning contract;
-obtain the applicable acceptance evidence and independent implementation review before any
-behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: ask the owner whether the first real `ReplayIsolated` lock should explicitly
+remain `UNDECLARED` or be bound to a newly authorized, genuinely applicable P5 requirement. Then
+submit the draft twin SPEC addendum and fixture matrix for fresh non-author review; record
+`ACCEPT`, `AMEND`, or `REJECT` against their exact revision before any implementation.
 
-Immediate blockers: implementation authorization and its separately gated acceptance slice are
-not yet complete; push authorization and authentication cannot be verified because the remote DNS
-lookup failed.
+Immediate blockers: the addendum and fixtures have not been independently accepted; no real
+`ReplayIsolated` intent obligation has been authorized; committed fixture corpus, proof-byte
+serialization, projector revision evidence, and implementation verdict are absent. Push
+authorization/authentication remain unverified after the prior GitHub DNS failure.
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`; local `main` is ahead of the locally known
-  `origin/main` ref. Six documentation-only/review closeout commits were created today; no
-  product or implementation commit was created.
-- The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
-  `github.com` could not be resolved. No push was attempted.
-- The only worktree entries are preserved untracked user artifacts:
-  `docs/plans/P5-intent-provenance-plan.md` (SHA-256
-  `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`) and
-  `kernel/cmd/p6dbprobe/main.go` (SHA-256
-  `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`). They remain untouched,
-  unstaged, and excluded from the documentation checkpoint.
-- No `.agents`, `.codex`, or other session-artifact files were found in the repository.
+- Branch: `main`, tracking `origin/main`, ahead of the locally known remote-tracking ref by 25
+  commits before this documentation checkpoint. The remote tip is unverified.
+- Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
+  `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
+- The new P7 addendum and fixture matrix are draft planning artifacts only.
 
 ## Completed
 
-- P6 final consolidation remains complete: round-C ACCEPTABLE, 327/327 census rows closed, and
-  P1–P5 deep-complete.
-- P7 Gate 1 remains resolved in favor of retaining the P6 snapshot-provider skip.
-- The amended P7 behavior-locks/regeneration planning draft and bounded deterministic
-  `ReplayIsolated` subject were recorded. They are planning only; no provider, feed, vendor,
-  schema, event kind, or implementation was introduced.
-- The first independent P7 planning review remains recorded as `AMEND`. The required fresh
-  non-author P7 planning review round 2 is recorded as `AMEND` in
-  `docs/verification/verdicts/p7-behavior-lock-plan-round2-20261013.md`; the proposed decision
-  now records the same outcome.
-- The decision index and generated P6 artifact-integrity audit were regenerated after the new
-  documentary verdict; both are committed and fresh.
-- The round-2 findings were amended into a planning-only lock profile; no implementation,
-  provider, feed, event kind, wire identity, or writable truth was introduced.
-- Fresh round-3 non-author review accepted the amended planning subject and contract with no
-  findings; the outcome is recorded in `docs/verification/verdicts/p7-behavior-lock-plan-round3-20261013.md`.
-- Today’s work was repository inspection, verification, remote reachability checking, and durable
-  journal/state closeout. No implementation was authorized or changed.
+- P6 consolidation and the P7 snapshot-provider skip remain accepted.
+- Fresh round-3 non-author review accepted the amended P7 `ReplayIsolated` planning subject and
+  contract; the verdict is `docs/verification/verdicts/p7-behavior-lock-plan-round3-20261013.md`.
+- On 2026-10-14, the owner authorized drafting the lock-schema/addendum and fixture-planning slice.
+  Drafts are `docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
+  `docs/plans/P7-replay-lock-fixture-matrix-draft1.md`. No product code, provider, feed, wire
+  identity, event kind, or persistence surface changed.
 
 ## Verification
 
-- Bare `make check` was run on 2026-10-13. The expected negative-control line
-  `index stale; run make index` was not a generated-index failure; generated freshness and the
-  invariant-related checks passed without regeneration. Hook/self-test checks, P6 closure/package
-  acceptance, and the Windows contract completed successfully.
-- The actual gate failure was `commit-cadence: dirty worktree outlived 90m commit window`, caused
-  by the two preserved untracked artifacts. The main DAG therefore did not reach `kernel-check`.
-  A separate Snap confinement diagnostic appeared during the self-test activity; it is not counted
-  as a source failure, but kernel build/tests/lint remain unverified in this run.
-- The post-checkpoint bare `make check` rerun cleared cadence, reached `kernel-check`, and stopped
-  because `/snap/bin/go` could not run under this host's confinement
-  (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests and lint did
-  not complete. This is an environment limitation, not a source or generated-artifact failure.
-- The fresh round-3 planning review accepted the contract for planning only; implementation,
-  regeneration, providers, feeds, new event kinds, and new writable truth remain separately gated.
-- After regeneration, bare `make check` passed repository checks, generated freshness, P6 closure
-  and package acceptance, and the Windows contract. It then reached `kernel-check` and stopped on
-  the same Snap Go confinement limitation; no source failure was observed.
-- The next gate exposed a P6 census text-classification false positive after the decision became
-  accepted: a backtick-qualified symbol was interpreted as a missing mechanism path. The wording
-  correction keeps the symbol distinct from tracked path references; no census logic changed.
-- The same gate then found one identity-inventory false positive for a planning-only wildcard
-  identity literal; replacing it with “shipped wire schema” keeps frozen wire names and live prose
-  classifications distinct without changing identity-inventory logic.
+- Bare `make check` ran on 2026-10-14. The `index stale; run make index` output was an expected
+  negative control; generated freshness and hook tests passed. The actual stop was
+  `commit-cadence: dirty worktree outlived 90m commit window`, so the main DAG did not reach
+  kernel checks. A Snap Go confinement diagnostic in a self-test remains an environment issue.
+- After the documentation checkpoint, rerun bare `make check` and record the final result here.
 
 ## Open, blocked, and unverified
 
-- Open: prepare and authorize the lock-schema/addendum and fixture-planning slice, then obtain its
-  applicable acceptance evidence and independent implementation verdict before implementation.
-- Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
-  pending that review and decision gate; push is blocked while the remote cannot be resolved and
-  authentication/authorization cannot be verified.
-- Unverified assumptions: existing twin-replay evidence is sufficient for a behavior-lock pilot;
-  kernel build/tests/lint can run in this environment; native Windows acceptance remains
-  unconfirmed; and the local remote-tracking ref is current.
+- Open: choose the pilot's honest intent binding; ratify proof-byte serialization and projector
+  revision evidence; build committed fixtures and evidence manifest; obtain non-author review of
+  the draft slice and later of any implementation.
+- Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
+  the applicable review and decision gate is satisfied. Push remains unverified.
+- Unverified: a real requirement applicable to this replay subject, complete clean-clone replay,
+  detector power for a P7 mutation set, kernel build/tests/lint in this host, native Windows
+  acceptance, and remote-tip freshness.
 
 ## Institutionalized improvement
 
-When preserved user-owned untracked artifacts trigger the cadence guard, keep them untouched,
-record exact hashes, commit a documentation-only state/journal checkpoint, and rerun the full
-gate. This lightweight repeatable fix has recurred and is now the standing response; no new
-automation was added.
+When preserved user-owned untracked artifacts trigger cadence, keep them untouched, record their
+ownership, commit only a coherent documentation checkpoint, and rerun the full gate. No new
+automation is justified.
 
 ## Standing cautions
 
 - Preserve frozen `vera.witness.v1`, `vera.verdict.v1`, `vera.replay.v1`, pinned vectors, and
   historical artifacts.
-- No provider, feed, vendor, schema, event kind, or P7+ implementation is authorized by the
-  snapshot-provider decision or by the planning draft.
-- Planning drafts and an `AMEND` review are not implementation authorization.
+- Planning acceptance and draft review do not authorize behavior-lock or regeneration code.
