@@ -1,6 +1,6 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** AMEND REQUIRED after fresh non-author round-1 review on 2026-10-14; see
+**Status:** AMENDED FOR ROUND 2; fresh non-author review required. The round-1 `AMEND` is recorded in
 [`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
 Companion to the
 [proposed twin SPEC addendum](P7-replay-lock-spec-addendum-draft1.md) and the accepted
@@ -12,11 +12,11 @@ fixtures and checks, not claims that they have been run or accepted.
 | Role | Existing route | Required committed evidence |
 |---|---|---|
 | Authored declaration | This lock artifact and an exact P5 requirement revision if declared | Canonical lock bytes; parent digest; requirement artifact bytes and digest or explicit `UNDECLARED`. |
-| Observed source | Append-only `store` ledger through `ThroughSeq` | Event IDs, sequence numbers, exact event payloads, content digests, source digest, and read witness. |
+| Observed source | Append-only `store` ledger through `ThroughSeq`, plus complete-ledger preservation | Canonical complete event bytes (including times and connector version), independently checked payload digests, full-prefix SHA-256, frozen twin source digest, and complete-ledger before/after canonical bytes and SHA-256 on success and failure. |
 | Authored test input | Ordered `twin.Candidate` values | Canonical full event bytes, candidate digest, and explicit candidate role. No ledger append. |
-| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision and manifest, snapshot evidence bytes, twin snapshot digest, and derivation witness. |
+| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision; canonical whole-kernel, build, and runtime manifest bytes; snapshot evidence bytes; twin snapshot digest; derivation witness. |
 | Derived candidate behavior | `ReplayIsolated` in temporary `store` | Candidate snapshot bytes and twin digest, verdict, complete sequence map, source preservation and cleanup witnesses. |
-| Replay proof | Existing `twin.Proof` in the returned result | Exact committed proof bytes under the ratified encoding, SHA-256, and all five matching bindings. |
+| Replay proof | Existing `twin.Proof` in the returned result | Exact committed six-field proof bytes under the pinned encoding, SHA-256, all five matching bindings, and byte-exact serialization control. |
 | Independent intent evidence | Existing P5 review route for the exact requirement and obligation | Content-addressed review evidence and non-author verdict; no inferred satisfaction. |
 | Gate result | Reviewed lock and evidence revision | Case manifest with lock digest, fixture digests, commands, outcomes, reviewer, and commit. |
 
@@ -36,12 +36,12 @@ rejected lock is a passing negative control only if the gate actually rejects it
 |---|---|---|
 | L01 | Canonical lock round-trip, exact ten-member top level, nested shape, reproducible SHA-256 | Pass; changed byte, extra/null/missing member, or noncanonical encoding rejected. |
 | L02 | Revision 1 `genesis` and revision 2 exact parent digest | Pass; skipped number, wrong parent, or rewritten prior artifact rejected. |
-| L03 | Prefix with at least two observed records and a `ThroughSeq` that excludes a later record | Pass; excluded record absent; any event ID, sequence, content, or source digest substitution rejected. |
-| L04 | Ordered authored candidate with canonical full event bytes and a gap after the prefix | Pass; changed payload, duplicate ID, invalid event, reordered or non-increasing sequence rejected; source ledger unchanged. |
-| L05 | Baseline rebuilt from the exact prefix and accepted projector revision | Pass; arbitrary caller baseline, wrong source tuple, wrong snapshot bytes/digest, absent manifest, and stale projector revision produce `UNVERIFIED`. |
-| L06 | Isolated candidate snapshot and `CompareSnapshots` yield both `preserved` and `changed` cases | Pass; swapped snapshot or claimed verdict rejected; temporary store removed on success and failure. |
+| L03 | Prefix with at least two observed records and a `ThroughSeq` that excludes a later record | Pass; excluded record absent from prefix but included in full-ledger evidence. Mutate `occurred_at`, `recorded_at`, or `connector_version` while preserving P4 `source_digest`: full-event and full-prefix binding rejects. Any other event ID, sequence, content, or source digest substitution rejects. |
+| L04 | Ordered authored candidate with canonical full event bytes and a gap after the prefix | Pass; changed payload with unchanged `content_sha`, duplicate ID, invalid event, reordered or non-increasing sequence rejected by independent payload-hash and shape checks. Candidate remains authored input. |
+| L05 | Baseline rebuilt from the exact prefix and accepted projector revision | Pass; arbitrary caller baseline, wrong source tuple, wrong snapshot bytes/digest, absent manifest, changed kernel blob, changed build/toolchain identity, changed Postgres binary or effective settings, and stale projector revision produce `UNVERIFIED`. Manifest must match its canonical bytes and SHA-256. |
+| L06 | Isolated candidate snapshot and `CompareSnapshots` yield both `preserved` and `changed` cases | Pass; swapped snapshot or claimed verdict rejected; temporary store removed on success and failure. Capture entire source ledger before and after each successful and failing replay, including the record beyond `ThroughSeq`; byte-for-byte equality required. A changed excluded record or missing exclusive-writer guarantee yields `UNVERIFIED`. |
 | L07 | Complete source-plus-candidate sequence map | Pass; omitted, duplicate, reordered, or changed mapping rejected. |
-| L08 | Retrievable frozen replay proof bytes match all five lock bindings | Pass; absent bytes, wrong digest, schema, through-sequence, source, candidate, baseline, or candidate snapshot binding rejected. |
+| L08 | Retrievable frozen replay proof bytes match all five lock bindings | Pass; the addendum's no-newline control hashes to `ec7960eda35be3798ac6cb25e0853608937c6d24a2025e8135a146ac8771ca79`, and actual emitted proof bytes round-trip to the six existing fields. Absent bytes, wrong digest, schema, through-sequence, source, candidate, baseline, candidate snapshot, or added field rejected. |
 | L09 | Exact registered P5 requirement revision and one obligation with complete independent review evidence | Pass only for exact source, record ID, artifact digest, obligation ID, and reviewer evidence; cross-provider, stale-revision, absent-obligation, or incomplete-review variants yield `UNVERIFIED`. |
 | L10 | Explicit `UNDECLARED` intent binding | Derived `UNVERIFIED`; no satisfaction claim or stored status row. Missing binding is rejected. |
 | L11 | Hostile JSON, duplicate keys, malformed digest/hex, path escape, spoofed source, and forged candidate-as-observation | All reject without modifying source ledger or accepting proof. |
@@ -53,8 +53,9 @@ replay subject. Existing P5 fixtures may test the resolver, but may not be relab
 `ReplayIsolated` obligation. If no such requirement has been authorized, the first real lock must
 use L10 and remain `UNVERIFIED`; it cannot be reported as a successful intent lock.
 The owner-approved [replay evidence requirement](../intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md)
-is an active declared P5 revision. Its exact independent requirement review and any satisfaction
-verdict remain pending; the L09 positive case cannot be reported green yet.
+is an active declared P5 revision. Its exact `O-1` [independent requirement review](../verification/verdicts/p7-replay-requirement-review-round1-20261014.md)
+found it `VERIFIABLE`, not satisfied. An independent satisfaction verdict and real lock evidence
+remain pending; the L09 positive case cannot be reported green yet.
 
 ## Acceptance record
 
@@ -65,6 +66,7 @@ independent reviewer records findings and `ACCEPT`, `AMEND`, or `REJECT` against
 identifiers. The author records the outcome in a verdict and decision; an `AMEND` requires fresh
 review of the amended revision. A separate non-author verdict is required for implementation.
 
-No fixture, corpus, run result, or implementation acceptance evidence exists in this draft. The
-proof serialization, projector manifest completeness, and real intent requirement remain review
-questions in the [addendum](P7-replay-lock-spec-addendum-draft1.md).
+No runtime fixture corpus, run result, or implementation acceptance evidence exists in this draft.
+The pinned proof encoding and projector manifest are still proposals awaiting fresh independent
+review; the encoding control is not an emitted replay proof. The real intent requirement is
+reviewed for verifiability, but its satisfaction remains unverified.

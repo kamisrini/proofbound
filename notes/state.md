@@ -7,15 +7,15 @@ As of: 2026-10-14
 
 ## Resume — 2026-10-14
 
-Exact next action: amend the P7 lock addendum and fixture matrix for the four findings in
-`docs/verification/verdicts/p7-replay-lock-slice-round1-20261014.md`: complete observed-event
-binding, whole-ledger before/after witness, exact projector/proof evidence bytes, and candidate
-payload digest validation. Then obtain another fresh non-author review of the amended exact
-revision before any implementation.
+Exact next action: obtain a fresh non-author round-2 review of the amended exact revision of
+`docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
+`docs/plans/P7-replay-lock-fixture-matrix-draft1.md`; record `ACCEPT`, `AMEND`, or `REJECT` before
+any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
 
-Immediate blockers: the addendum/fixture review outcome is `AMEND`; the full gate cannot complete
-because the installed linter crashes on a Go 1.27 version marker; committed fixture corpus,
-proof-byte serialization, projector revision evidence, and implementation verdict are absent. Push
+Immediate blockers: the round-1 addendum/fixture review outcome was `AMEND`; the amended revision
+has no round-2 verdict. The full gate cannot complete because the installed linter crashes on a
+Go 1.27 version marker. Committed runtime fixture corpus, projector revision evidence, and
+implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
 
 ## Branch and repository status
@@ -24,7 +24,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The new P7 addendum and fixture matrix are draft planning artifacts only.
+- The amended P7 addendum and fixture matrix remain draft planning artifacts until independently
+  reviewed; no product implementation is authorized.
 
 ## Completed
 
@@ -43,6 +44,11 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 - Fresh non-author reviewer `Fermat` judged the exact active P5 `O-1` `VERIFIABLE`; the P7 addendum
   and fixture planning slice received `AMEND` with one high and three medium findings. The
   requirement review and documentary slice verdict are recorded under `docs/verification/verdicts/`.
+- Amended the addendum and fixture matrix for all four round-1 findings: complete event evidence
+  beyond P4's source digest, whole-ledger before/after witnesses on success and failure, pinned
+  projector/build/runtime and proof evidence encodings with a byte-exact proof control, and
+  independent candidate payload-hash verification. These are proposed contracts, not accepted
+  behavior or runtime fixtures.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 12 documentary verdict artifacts.
@@ -73,8 +79,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Open, blocked, and unverified
 
-- Open: resolve the four planning findings; ratify exact proof/projector evidence bytes; build
-  committed fixtures and evidence manifest; obtain another non-author planning review and a
+- Open: obtain another non-author planning review of the amended exact revision; ratify the
+  proposed proof/projector evidence bytes; build committed runtime fixtures and evidence manifest; obtain a
   separate non-author review of any later implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
   this independently of the P7 contract work.
@@ -87,8 +93,9 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 ## Institutionalized improvement
 
 When preserved user-owned untracked artifacts trigger cadence, keep them untouched, record their
-ownership, commit only a coherent documentation checkpoint, and rerun the full gate. No new
-automation is justified.
+ownership, commit only a coherent documentation checkpoint, and rerun the full gate. For replay
+evidence, check both complete event fields and complete-ledger preservation independently of
+existing P4 digests. No new automation is justified.
 
 ## Standing cautions
 
