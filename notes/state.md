@@ -19,8 +19,8 @@ cannot be verified because the remote DNS lookup failed.
 ## Branch and repository status
 
 - Branch: `main`, tracking `origin/main`; local `main` is ahead of the locally known
-  `origin/main` ref. Two documentation-only closeout commits were created today; no product or
-  implementation commit was created.
+  `origin/main` ref. Five documentation-only/review closeout commits were created today; no
+  product or implementation commit was created.
 - The remote could not be refreshed: `git ls-remote origin refs/heads/main` failed because
   `github.com` could not be resolved. No push was attempted.
 - The only worktree entries are preserved untracked user artifacts:
