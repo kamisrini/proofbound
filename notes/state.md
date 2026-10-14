@@ -72,10 +72,14 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   again passed repository checks and Go build/tests, then the linter panicked: a file requires
   Go 1.27 while the installed linter was built with Go 1.26.7. Lint remains unverified; this is
   a tooling failure, not evidence of a source defect.
-- After the round-1 review was recorded, direct checks of the exact requirement-review packet,
-  artifact-integrity packet, decision index, and links passed. The full `make check` gate has not
-  been rerun after this documentation-only review checkpoint; the known linter toolchain failure
-  remains unresolved.
+- For the amended P7 draft, `git diff --check`, `make link-lint`, `make index-check`,
+  `scripts/p6-task5-review.sh --check`, and `scripts/p6-artifact-integrity.sh --check` passed.
+  The proof encoding control hashed to its documented SHA-256. After commit `210830e`, bare
+  `make check` passed repository/generated checks but stopped at `kernel-check` because sandboxed
+  Snap Go lacks `cap_dac_override`. With the installed linter on PATH outside that confinement,
+  the same gate passed repository checks and Go build/tests, then the linter panicked on a file
+  marked Go 1.27 while it was built with Go 1.26.7. The `index stale` line was an expected
+  negative-test message, not a freshness failure. Full lint remains unverified.
 
 ## Open, blocked, and unverified
 
