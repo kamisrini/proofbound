@@ -17,7 +17,7 @@ provider, vendor, wire identity, or second writable truth.
 
 ## Proposed decision
 
-Use `kernel/internal/twin.ReplayIsolated` as the first behavior-lock subject. Retain injected
+Use the `ReplayIsolated` subject in the twin package as the first behavior-lock subject. Retain injected
 `Replay` as a supporting conformance seam, but do not present it as the product boundary.
 
 The proposed lock binds one exact bounded replay:

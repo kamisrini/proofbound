@@ -8,7 +8,7 @@ As of: 2026-10-13
 ## Resume — 2026-10-13
 
 Exact next action: prepare the separately authorized lock-schema/addendum and fixture-planning
-slice for `kernel/internal/twin.ReplayIsolated`, preserving the accepted planning contract;
+slice for the accepted `ReplayIsolated` subject in the twin package, preserving the accepted planning contract;
 obtain the applicable acceptance evidence and independent implementation review before any
 behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
 
@@ -71,6 +71,9 @@ lookup failed.
 - After regeneration, bare `make check` passed repository checks, generated freshness, P6 closure
   and package acceptance, and the Windows contract. It then reached `kernel-check` and stopped on
   the same Snap Go confinement limitation; no source failure was observed.
+- The next gate exposed a P6 census text-classification false positive after the decision became
+  accepted: a backtick-qualified symbol was interpreted as a missing mechanism path. The wording
+  correction keeps the symbol distinct from tracked path references; no census logic changed.
 
 ## Open, blocked, and unverified
 
