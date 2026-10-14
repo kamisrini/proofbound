@@ -19,8 +19,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Branch and repository status
 
-- Branch: `main`, tracking `origin/main`, ahead of the locally known remote-tracking ref by 25
-  commits before this documentation checkpoint. The remote tip is unverified.
+- Branch: `main`, tracking `origin/main`, ahead of the locally known remote-tracking ref.
+  The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
 - The new P7 addendum and fixture matrix are draft planning artifacts only.
@@ -41,7 +41,11 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   negative control; generated freshness and hook tests passed. The actual stop was
   `commit-cadence: dirty worktree outlived 90m commit window`, so the main DAG did not reach
   kernel checks. A Snap Go confinement diagnostic in a self-test remains an environment issue.
-- After the documentation checkpoint, rerun bare `make check` and record the final result here.
+- After documentation commit `7ca242b`, bare `make check` was rerun. Cadence and the repository,
+  generated freshness, P6 package/verdict, and Windows contract checks passed. It reached
+  `kernel-check` and stopped because this host's Snap Go confinement lacks
+  `cap_dac_override` (`Function not implemented`). Go build/tests/lint remain unverified here;
+  no source or generated-artifact failure was observed.
 
 ## Open, blocked, and unverified
 
