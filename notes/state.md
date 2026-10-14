@@ -74,6 +74,9 @@ lookup failed.
 - The next gate exposed a P6 census text-classification false positive after the decision became
   accepted: a backtick-qualified symbol was interpreted as a missing mechanism path. The wording
   correction keeps the symbol distinct from tracked path references; no census logic changed.
+- The same gate then found one identity-inventory false positive for the planning-only wildcard
+  literal `vera.*`; replacing it with “shipped wire schema” keeps frozen wire names and live prose
+  classifications distinct without changing identity-inventory logic.
 
 ## Open, blocked, and unverified
 

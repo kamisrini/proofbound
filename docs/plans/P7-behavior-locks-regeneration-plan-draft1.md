@@ -85,7 +85,7 @@ production observations.
 ## Round-3 contract amendments
 
 These choices resolve the round-2 review findings for planning purposes. They define a
-planning-only artifact profile; they do not introduce a shipped `vera.*` schema, event kind,
+planning-only artifact profile; they do not introduce a shipped wire schema, event kind,
 persistence surface, or implementation authorization.
 
 ### Baseline provenance and `UNVERIFIED`
