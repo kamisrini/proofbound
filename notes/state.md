@@ -43,6 +43,8 @@ cannot be verified because the remote DNS lookup failed.
   non-author P7 planning review round 2 is recorded as `AMEND` in
   `docs/verification/verdicts/p7-behavior-lock-plan-round2-20261013.md`; the proposed decision
   now records the same outcome.
+- The decision index and generated P6 artifact-integrity audit were regenerated after the new
+  documentary verdict; both are committed and fresh.
 - Today’s work was repository inspection, verification, remote reachability checking, and durable
   journal/state closeout. No implementation was authorized or changed.
 
@@ -62,6 +64,9 @@ cannot be verified because the remote DNS lookup failed.
   not complete. This is an environment limitation, not a source or generated-artifact failure.
 - The fresh round-2 planning review did not authorize implementation; it requires the four
   contract amendments named in the verdict artifact and another non-author review.
+- After regeneration, bare `make check` passed repository checks, generated freshness, P6 closure
+  and package acceptance, and the Windows contract. It then reached `kernel-check` and stopped on
+  the same Snap Go confinement limitation; no source failure was observed.
 
 ## Open, blocked, and unverified
 
