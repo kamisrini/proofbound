@@ -1,6 +1,8 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** AMENDED FOR ROUND 2; fresh non-author review required. The round-1 `AMEND` is recorded in
+**Status:** AMEND REQUIRED after fresh non-author round-2 review; see
+[`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
+The round-1 `AMEND` is recorded in
 [`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
 Companion to the
 [proposed twin SPEC addendum](P7-replay-lock-spec-addendum-draft1.md) and the accepted

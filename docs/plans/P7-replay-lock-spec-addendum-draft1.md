@@ -1,6 +1,8 @@
 # P7 `ReplayIsolated` lock — proposed twin SPEC addendum
 
-**Status:** AMENDED FOR ROUND 2; fresh non-author review required. The round-1 `AMEND` is recorded in
+**Status:** AMEND REQUIRED after fresh non-author round-2 review; see
+[`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
+The round-1 `AMEND` is recorded in
 [`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
 This is a proposed addendum to
 [`internal/twin/SPEC.md`](../../kernel/internal/twin/SPEC.md), not a live package contract.

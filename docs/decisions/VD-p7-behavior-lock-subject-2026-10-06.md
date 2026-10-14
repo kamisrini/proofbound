@@ -137,3 +137,16 @@ encodings, and absent candidate payload digest check. A fresh review of the amen
 required before acceptance. Separately, the exact active `BR-replay-evidence-6e3d2b/0001`
 obligation `O-1` was judged `VERIFIABLE` for P5 requirement review; that is not satisfaction or
 implementation acceptance.
+
+## Subsequent addendum review — round 2 — 2026-10-14
+
+Fresh non-author review of the amended addendum and fixture matrix at
+`730a474c633d0ea320f6aa1eeec4a809b4481b83` is recorded in
+[`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
+**Outcome: AMEND** for this later planning slice. The reviewer found that the full observed-event
+binding, whole-ledger preservation witness, candidate payload check, and proof-byte encoding now
+resolve their corresponding round-1 concerns. Two new findings block addendum acceptance: the
+snapshot evidence rule adds absent empty tables and so cannot round-trip the frozen snapshot
+digest, and the projector/build manifest lacks exact executable and downloaded dependency byte
+identity. Amend those proposals and obtain another fresh non-author review of the exact amended
+revision. The round-3 subject acceptance is unchanged; no implementation is authorized.

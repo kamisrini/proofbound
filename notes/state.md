@@ -7,13 +7,14 @@ As of: 2026-10-14
 
 ## Resume — 2026-10-14
 
-Exact next action: obtain a fresh non-author round-2 review of the amended exact revision of
-`docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
-`docs/plans/P7-replay-lock-fixture-matrix-draft1.md`; record `ACCEPT`, `AMEND`, or `REJECT` before
-any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: amend the P7 replay-lock addendum and fixture matrix for the two findings in
+`docs/verification/verdicts/p7-replay-lock-slice-round2-20261014.md`: snapshot evidence must
+round-trip the actual table map without changing frozen `digestSnapshot`, and the projector/build
+manifest must bind executable and dependency bytes or narrow its reproducibility claim. Then
+obtain a fresh non-author review of the amended exact revision before any implementation.
 
-Immediate blockers: the round-1 addendum/fixture review outcome was `AMEND`; the amended revision
-has no round-2 verdict. The full gate cannot complete because the installed linter crashes on a
+Immediate blockers: the round-2 addendum/fixture review outcome is `AMEND` with one high and one
+medium finding. The full gate cannot complete because the installed linter crashes on a
 Go 1.27 version marker. Committed runtime fixture corpus, projector revision evidence, and
 implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
@@ -24,8 +25,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The amended P7 addendum and fixture matrix remain draft planning artifacts until independently
-  reviewed; no product implementation is authorized.
+- The P7 addendum and fixture matrix remain draft planning artifacts after the round-2 `AMEND`;
+  no product implementation is authorized.
 
 ## Completed
 
@@ -49,9 +50,13 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   projector/build/runtime and proof evidence encodings with a byte-exact proof control, and
   independent candidate payload-hash verification. These are proposed contracts, not accepted
   behavior or runtime fixtures.
+- Fresh non-author reviewer `Mendel` reviewed exact commit `730a474` and returned `AMEND` for the
+  later addendum and fixture slice. The three round-1 source/preservation/candidate findings and
+  proof encoding were judged resolved in the proposal; snapshot-map round-trip and executable/
+  dependency byte identity remain blocking. The accepted round-3 P7 subject is unaffected.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
-  26 schema-bearing verdicts and 12 documentary verdict artifacts.
+  26 schema-bearing verdicts and 13 documentary verdict artifacts after the round-2 verdict.
 
 ## Verification
 
@@ -83,8 +88,9 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Open, blocked, and unverified
 
-- Open: obtain another non-author planning review of the amended exact revision; ratify the
-  proposed proof/projector evidence bytes; build committed runtime fixtures and evidence manifest; obtain a
+- Open: resolve the two round-2 planning findings, obtain another non-author review of the
+  amended exact revision, ratify the proposed proof/projector evidence bytes, build committed
+  runtime fixtures and evidence manifest, and obtain a
   separate non-author review of any later implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
   this independently of the P7 contract work.
