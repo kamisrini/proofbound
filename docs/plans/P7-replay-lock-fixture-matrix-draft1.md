@@ -1,6 +1,8 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** DRAFT FOR REVIEW, 2026-10-14. Companion to the
+**Status:** AMEND REQUIRED after fresh non-author round-1 review on 2026-10-14; see
+[`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
+Companion to the
 [proposed twin SPEC addendum](P7-replay-lock-spec-addendum-draft1.md) and the accepted
 [planning contract](P7-behavior-locks-regeneration-plan-draft1.md). Rows below are required
 fixtures and checks, not claims that they have been run or accepted.

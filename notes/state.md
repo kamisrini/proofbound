@@ -7,15 +7,15 @@ As of: 2026-10-14
 
 ## Resume — 2026-10-14
 
-Exact next action: obtain a fresh non-author review of the exact P5 business-decision and active
-requirement revisions, `O-1`, the draft twin SPEC addendum, and fixture matrix. Record `ACCEPT`,
-`AMEND`, or `REJECT` against the reviewed commit and evidence revision. Keep implementation gated
-until the slice and later implementation have their own independent verdicts.
+Exact next action: amend the P7 lock addendum and fixture matrix for the four findings in
+`docs/verification/verdicts/p7-replay-lock-slice-round1-20261014.md`: complete observed-event
+binding, whole-ledger before/after witness, exact projector/proof evidence bytes, and candidate
+payload digest validation. Then obtain another fresh non-author review of the amended exact
+revision before any implementation.
 
-Immediate blockers: the P5 records and addendum/fixture slice have not been independently
-reviewed; the full gate cannot complete because the installed linter crashes on a Go 1.27
-version marker; committed fixture corpus, proof-byte serialization, projector revision evidence,
-and implementation verdict are absent. Push
+Immediate blockers: the addendum/fixture review outcome is `AMEND`; the full gate cannot complete
+because the installed linter crashes on a Go 1.27 version marker; committed fixture corpus,
+proof-byte serialization, projector revision evidence, and implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
 
 ## Branch and repository status
@@ -40,11 +40,18 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   draft proposal, then approved its business outcome and `O-1` wording and selected existing
   declared roles. Formal records are `BD-replay-evidence-7a91c4` and
   `BR-replay-evidence-6e3d2b/0001`; the active requirement binds the exact decision digest.
+- Fresh non-author reviewer `Fermat` judged the exact active P5 `O-1` `VERIFIABLE`; the P7 addendum
+  and fixture planning slice received `AMEND` with one high and three medium findings. The
+  requirement review and documentary slice verdict are recorded under `docs/verification/verdicts/`.
+- The generated P6 requirement-review packet now includes both active requirements, three active
+  obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
+  26 schema-bearing verdicts and 12 documentary verdict artifacts.
 
 ## Verification
 
 - Bare `make check` ran on 2026-10-14. The `index stale; run make index` output was an expected
-  negative control; generated freshness and hook tests passed. The actual stop was
+  negative control; generated freshness passed. The hook loop's exit status is not sufficient to
+  claim every self-test passed, as discovered later. The actual stop was
   `commit-cadence: dirty worktree outlived 90m commit window`, so the main DAG did not reach
   kernel checks. A Snap Go confinement diagnostic in a self-test remains an environment issue.
 - After documentation commit `7ca242b`, bare `make check` was rerun. Cadence and the repository,
@@ -59,16 +66,22 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   again passed repository checks and Go build/tests, then the linter panicked: a file requires
   Go 1.27 while the installed linter was built with Go 1.26.7. Lint remains unverified; this is
   a tooling failure, not evidence of a source defect.
+- After the round-1 review was recorded, direct checks of the exact requirement-review packet,
+  artifact-integrity packet, decision index, and links passed. The full `make check` gate has not
+  been rerun after this documentation-only review checkpoint; the known linter toolchain failure
+  remains unresolved.
 
 ## Open, blocked, and unverified
 
-- Open: obtain non-author review of the exact requirement and draft slice; ratify proof-byte
-  serialization and projector revision evidence; build committed fixtures and evidence manifest;
-  obtain a separate non-author review of any later implementation.
+- Open: resolve the four planning findings; ratify exact proof/projector evidence bytes; build
+  committed fixtures and evidence manifest; obtain another non-author planning review and a
+  separate non-author review of any later implementation. The `hooks-test` Makefile loop can
+  mask a failing intermediate self-test because it returns only the last test's status; repair
+  this independently of the P7 contract work.
 - Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
   the applicable review and decision gate is satisfied. Push remains unverified.
-- Unverified: independent verifiability of the new requirement, complete clean-clone replay,
-  detector power for a P7 mutation set, lint with a compatible toolchain, native Windows
+- Unverified: satisfaction of the new requirement, complete clean-clone replay, detector power
+  for a P7 mutation set, lint with a compatible toolchain, native Windows
   acceptance, and remote-tip freshness.
 
 ## Institutionalized improvement

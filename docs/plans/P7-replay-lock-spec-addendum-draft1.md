@@ -1,6 +1,8 @@
 # P7 `ReplayIsolated` lock — proposed twin SPEC addendum
 
-**Status:** DRAFT FOR REVIEW, 2026-10-14. This is a proposed addendum to
+**Status:** AMEND REQUIRED after fresh non-author round-1 review on 2026-10-14; see
+[`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
+This is a proposed addendum to
 [`internal/twin/SPEC.md`](../../kernel/internal/twin/SPEC.md), not a live package contract.
 The bounded subject and planning profile were accepted in
 [`VD-p7-behavior-lock-subject-2026-10-06`](../decisions/VD-p7-behavior-lock-subject-2026-10-06.md).

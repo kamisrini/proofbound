@@ -125,3 +125,15 @@ This acceptance is limited to the planning subject and contract. It does not aut
 lock implementation, regeneration, a new wire identity, a new event kind, a provider, an external
 feed, or a second writable truth. Proceed only to a separately authorized lock-schema/addendum and
 fixture-planning slice, followed by independent implementation review.
+
+## Subsequent addendum and requirement review — 2026-10-14
+
+Fresh non-author review of the separately authorized P7 addendum, fixture matrix, and exact P5
+records at `bf2c5ff387f6da7dcc1596ec4666685c5481881b` is recorded in
+[`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
+**Outcome: AMEND** for the addendum and fixture planning slice. The reviewer identified an
+incomplete full-event source binding, missing whole-ledger preservation witness, unpinned evidence
+encodings, and absent candidate payload digest check. A fresh review of the amended slice is
+required before acceptance. Separately, the exact active `BR-replay-evidence-6e3d2b/0001`
+obligation `O-1` was judged `VERIFIABLE` for P5 requirement review; that is not satisfaction or
+implementation acceptance.
