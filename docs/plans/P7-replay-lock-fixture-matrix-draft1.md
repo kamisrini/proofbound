@@ -1,6 +1,6 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** AMEND REQUIRED after fresh non-author round-2 review; see
+**Status:** AMENDED FOR ROUND 3; fresh non-author review required. The round-2 `AMEND` is recorded in
 [`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
 The round-1 `AMEND` is recorded in
 [`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
@@ -16,7 +16,7 @@ fixtures and checks, not claims that they have been run or accepted.
 | Authored declaration | This lock artifact and an exact P5 requirement revision if declared | Canonical lock bytes; parent digest; requirement artifact bytes and digest or explicit `UNDECLARED`. |
 | Observed source | Append-only `store` ledger through `ThroughSeq`, plus complete-ledger preservation | Canonical complete event bytes (including times and connector version), independently checked payload digests, full-prefix SHA-256, frozen twin source digest, and complete-ledger before/after canonical bytes and SHA-256 on success and failure. |
 | Authored test input | Ordered `twin.Candidate` values | Canonical full event bytes, candidate digest, and explicit candidate role. No ledger append. |
-| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision; canonical whole-kernel, build, and runtime manifest bytes; snapshot evidence bytes; twin snapshot digest; derivation witness. |
+| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision; canonical whole-kernel, toolchain, selected-module, executable, and runtime manifest bytes; retrievable `.mod`, `.zip`, and executable bytes and digests; exact snapshot-map evidence bytes; frozen twin snapshot digest; derivation witness. |
 | Derived candidate behavior | `ReplayIsolated` in temporary `store` | Candidate snapshot bytes and twin digest, verdict, complete sequence map, source preservation and cleanup witnesses. |
 | Replay proof | Existing `twin.Proof` in the returned result | Exact committed six-field proof bytes under the pinned encoding, SHA-256, all five matching bindings, and byte-exact serialization control. |
 | Independent intent evidence | Existing P5 review route for the exact requirement and obligation | Content-addressed review evidence and non-author verdict; no inferred satisfaction. |
@@ -40,15 +40,17 @@ rejected lock is a passing negative control only if the gate actually rejects it
 | L02 | Revision 1 `genesis` and revision 2 exact parent digest | Pass; skipped number, wrong parent, or rewritten prior artifact rejected. |
 | L03 | Prefix with at least two observed records and a `ThroughSeq` that excludes a later record | Pass; excluded record absent from prefix but included in full-ledger evidence. Mutate `occurred_at`, `recorded_at`, or `connector_version` while preserving P4 `source_digest`: full-event and full-prefix binding rejects. Any other event ID, sequence, content, or source digest substitution rejects. |
 | L04 | Ordered authored candidate with canonical full event bytes and a gap after the prefix | Pass; changed payload with unchanged `content_sha`, duplicate ID, invalid event, reordered or non-increasing sequence rejected by independent payload-hash and shape checks. Candidate remains authored input. |
-| L05 | Baseline rebuilt from the exact prefix and accepted projector revision | Pass; arbitrary caller baseline, wrong source tuple, wrong snapshot bytes/digest, absent manifest, changed kernel blob, changed build/toolchain identity, changed Postgres binary or effective settings, and stale projector revision produce `UNVERIFIED`. Manifest must match its canonical bytes and SHA-256. |
+| L05 | Baseline rebuilt from the exact prefix and accepted projector revision | Pass; arbitrary caller baseline, wrong source tuple, wrong snapshot bytes/digest, absent manifest, changed kernel blob, changed build/toolchain, selected module, executable or Postgres bytes, changed effective settings, and stale projector revision produce `UNVERIFIED`. Manifest must match its canonical bytes and SHA-256. |
 | L06 | Isolated candidate snapshot and `CompareSnapshots` yield both `preserved` and `changed` cases | Pass; swapped snapshot or claimed verdict rejected; temporary store removed on success and failure. Capture entire source ledger before and after each successful and failing replay, including the record beyond `ThroughSeq`; byte-for-byte equality required. A changed excluded record or missing exclusive-writer guarantee yields `UNVERIFIED`. |
 | L07 | Complete source-plus-candidate sequence map | Pass; omitted, duplicate, reordered, or changed mapping rejected. |
 | L08 | Retrievable frozen replay proof bytes match all five lock bindings | Pass; the addendum's no-newline control hashes to `ec7960eda35be3798ac6cb25e0853608937c6d24a2025e8135a146ac8771ca79`, and actual emitted proof bytes round-trip to the six existing fields. Absent bytes, wrong digest, schema, through-sequence, source, candidate, baseline, candidate snapshot, or added field rejected. |
 | L09 | Exact registered P5 requirement revision and one obligation with complete independent review evidence | Pass only for exact source, record ID, artifact digest, obligation ID, and reviewer evidence; cross-provider, stale-revision, absent-obligation, or incomplete-review variants yield `UNVERIFIED`. |
 | L10 | Explicit `UNDECLARED` intent binding | Derived `UNVERIFIED`; no satisfaction claim or stored status row. Missing binding is rejected. |
 | L11 | Hostile JSON, duplicate keys, malformed digest/hex, path escape, spoofed source, and forged candidate-as-observation | All reject without modifying source ledger or accepting proof. |
-| L12 | Replay from a clean clone using only committed artifacts and exact pinned revisions | Same lock digest, snapshots, proof bytes, verdict, and gate result; no uncommitted cache or private feed required. |
+| L12 | Replay from a clean clone using only committed artifacts and exact pinned revisions | Rebuild with the committed selected `.mod`/`.zip` bytes and toolchain, match the committed executable SHA-256, then run that executable. Same lock digest, snapshots, proof bytes, verdict, and gate result; no uncommitted module cache or private feed required. |
 | L13 | Neutral, compile-invalid, and lethal calibration controls, then the declared P7 mutation set | Neutral survives, compile-invalid is invalid, lethal is killed; every declared mutation is accounted for with zero undeclared survivors. |
+| L14 | Empty snapshot-map encoding versus an injected absent-table key | An actual empty `Snapshot.Tables` map encodes as no table keys and hashes to the addendum's `d4fdaf3e…bb82badc` control; adding `"commits_view":[]` changes evidence bytes and frozen `digestSnapshot` and is rejected. A genuinely present empty key, if produced, remains present; absence is never filled from the query list. |
+| L15 | Executable and dependency-byte substitution with unchanged `kernel/` Git blobs | Changed built executable, changed `.mod` or `.zip` bytes, missing module archive, unexpected selected graph entry, or unrecorded module-cache input yields `UNVERIFIED`; raw SHA-256 checks and applicable `go.sum` cross-checks must both pass before rebuild. |
 
 The declared positive intent case in L09 needs a requirement that genuinely applies to this
 replay subject. Existing P5 fixtures may test the resolver, but may not be relabeled as a real
@@ -63,7 +65,8 @@ remain pending; the L09 positive case cannot be reported green yet.
 
 The evidence manifest must name the canonical lock SHA-256, the exact evidence revision SHA-256,
 the Git commit containing the fixture corpus, projector revision and manifest digest, all fixture
-file digests, toolchain/build identity, case outcomes, and calibrated mutation universe. The
+file digests, toolchain/build identity, selected module `.mod`/`.zip` and executable digests,
+case outcomes, and calibrated mutation universe. The
 independent reviewer records findings and `ACCEPT`, `AMEND`, or `REJECT` against those immutable
 identifiers. The author records the outcome in a verdict and decision; an `AMEND` requires fresh
 review of the amended revision. A separate non-author verdict is required for implementation.

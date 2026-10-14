@@ -1,6 +1,6 @@
 # P7 `ReplayIsolated` lock — proposed twin SPEC addendum
 
-**Status:** AMEND REQUIRED after fresh non-author round-2 review; see
+**Status:** AMENDED FOR ROUND 3; fresh non-author review required. The round-2 `AMEND` is recorded in
 [`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
 The round-1 `AMEND` is recorded in
 [`p7-replay-lock-slice-round1-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round1-20261014.md).
@@ -85,7 +85,7 @@ SHA-256 of the following UTF-8 RFC 8785 canonical JSON manifest bytes, with exac
 and no nulls:
 
 ```json
-{"build":{"build_command":"<exact-command>","cgo_enabled":false,"gcflags":"","goarch":"amd64","goos":"linux","go_version":"go1.26.7","ldflags":"","tags":[],"toolchain_sha256":"<sha256>"},"files":[{"mode":"100644","path":"kernel/go.mod","sha256":"<sha256>"}],"projector_revision":"<full-commit-id>","runtime":{"database_collation":"<value>","database_encoding":"UTF8","database_locale":"<value>","database_timezone":"UTC","postgres_binary_sha256":"<sha256>","postgres_version":"<value>"}}
+{"build":{"build_command":"<exact-command>","cgo_enabled":false,"dependencies":[{"mod_sha256":"<sha256>","module":"<module-path>","version":"<version>","zip_sha256":"<sha256>"}],"executable_sha256":"<sha256>","gcflags":"","go_version":"go1.26.7","goarch":"amd64","goos":"linux","ldflags":"","tags":[],"toolchain_sha256":"<sha256>"},"files":[{"mode":"100644","path":"kernel/go.mod","sha256":"<sha256>"}],"projector_revision":"<full-commit-id>","runtime":{"database_collation":"<value>","database_encoding":"UTF8","database_locale":"<value>","database_timezone":"UTC","postgres_binary_sha256":"<sha256>","postgres_version":"<value>"}}
 ```
 
 The displayed file is shape only: `files` must enumerate **every** tracked Git-tree entry under
@@ -95,23 +95,42 @@ are unsupported and fail this profile. `toolchain_sha256` hashes a separately co
 manifest of all regular Go toolchain files under the selected `GOROOT`, sorted by relative UTF-8
 path with mode and SHA-256 of exact bytes; symlinks are unsupported there too. The `build` values
 are the actual verified values, not hard-coded example values; nonempty tags are sorted strings,
-and unsupported build flags or environment overrides fail. The runtime values are captured from
-the same isolated replay
-environment, including the executable's exact bytes and effective database settings. If any
-additional projection-affecting input is discovered, the manifest is incomplete and the lock is
-`UNVERIFIED` pending amendment. The manifest bytes, full commit ID, toolchain binary identity,
-and toolchain manifest must be retrievable in the reviewed evidence revision. A code, build, or runtime
-change creates a different revision digest; this manifest does not claim that Git commit alone
-fully identifies executable behavior.
+and unsupported build flags or environment overrides fail. `dependencies` enumerates the complete
+selected external Go module graph for that build (`go list -m all`, excluding the main module),
+sorted by UTF-8 module path then version. Each `mod_sha256` hashes the exact downloaded `.mod`
+bytes and each `zip_sha256` hashes the exact raw `.zip` bytes, **not** the `go.sum` `h1` value.
+Both byte artifacts must be retrievable from the reviewed evidence revision; compare the declared
+graph, both SHA-256 values, and the applicable `go.sum` entries before building with those
+verified bytes. A missing archive, unexpected selected module, local `replace`, vendor tree,
+workspace override, or unrecorded module-cache input yields `UNVERIFIED`. `executable_sha256`
+hashes the exact built executable bytes, also retained in that evidence revision. Build with the
+declared command and inputs, require its output to match those bytes, and run that exact executable
+for baseline and candidate projection; `go run` or an unbound binary is insufficient.
+
+The runtime values are captured from the same isolated replay environment, including the
+Postgres executable's exact bytes and effective database settings. If any additional
+projection-affecting input is discovered, the manifest is incomplete and the lock is `UNVERIFIED`
+pending amendment. The manifest, selected module graph, `.mod` and `.zip` files, full commit ID,
+toolchain manifest, and built executable must be retrievable in the reviewed evidence revision.
+A code, dependency, build, or runtime change creates a different revision digest; Git commit
+alone does not identify executable behavior.
 
 ### Snapshot and proof evidence bytes
 
 Snapshot evidence bytes are UTF-8 RFC 8785 canonical JSON with exactly one member, `tables`,
-whose value maps every table name in the existing `projections.Snapshot` to an array of lowercase
-row-digest strings sorted by UTF-8 bytes. Empty tables are present, not omitted; no duplicate
-table names or nulls are allowed. The evidence SHA-256 hashes these bytes. Independently decode
-them into `projections.Snapshot` and recompute the current `digestSnapshot` (sorted table names
-and rows, length-framed bytes). The evidence SHA-256 and twin snapshot digest are distinct checks.
+whose value has **exactly the table-key set actually present** in the returned
+`projections.Snapshot.Tables` map. A missing table key stays absent; never synthesize it from a
+schema or query list. A present key with zero rows, if encountered, remains an empty array; it is
+not equivalent to an absent key for the frozen `digestSnapshot`. Each present value is an array
+of lowercase row-digest strings sorted by UTF-8 bytes. No duplicate table names or nulls are
+allowed. The empty map encodes as `{"tables":{}}`, without a trailing newline, with SHA-256
+`d4fdaf3ef6e7b78dc1a224d36c8f3530f79170316cdaadf83a757322bb82badc`. By contrast,
+`{"tables":{"commits_view":[]}}` hashes to
+`b495215a7b37edf6e10fd4f6715f232b768928426678ebc84d6607c78320ee1a`; that extra key
+must be rejected when the projector omitted it. Independently decode the evidence, require an
+exact key-set and row-list match to the returned snapshot, and recompute the current
+`digestSnapshot` (sorted present table names and rows, length-framed bytes) without changing that
+P4 algorithm. The evidence SHA-256 and twin snapshot digest are separate checks.
 
 Proof evidence bytes are UTF-8 RFC 8785 canonical JSON with exactly six members:
 `baseline_snapshot_digest`, `candidate_digest`, `candidate_snapshot_digest`, `schema`,
