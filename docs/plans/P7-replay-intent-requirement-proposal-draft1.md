@@ -1,7 +1,10 @@
 # P7 replay evidence requirement — proposal for owner approval
 
-**Status:** DRAFT PROPOSAL, 2026-10-14. This file is planning prose. It is not a P5 business
-decision or requirement record, and its presence in Git does not authorize an intent claim.
+**Status:** HISTORICAL PROPOSAL, owner-approved for formal P5 records on 2026-10-14.
+The authoritative records are
+[BD-replay-evidence-7a91c4](../intent/records/business-decisions/BD-replay-evidence-7a91c4/0001.md)
+and [BR-replay-evidence-6e3d2b](../intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md).
+This planning file is not itself a P5 record or satisfaction claim.
 
 ## Proposed business outcome
 
@@ -61,8 +64,10 @@ The proposed owner, approver, record IDs, exact artifact digests, and reviewer a
 unset. They must come from the actual authorization and committed evidence; they cannot be inferred
 from this planning document.
 
-## Owner decision requested
+## Owner decision outcome
 
-Approve, amend, or reject the proposed business outcome and `O-1` wording. Approval of this
-wording authorizes preparation of the formal P5 business decision and requirement records; it does
-not itself assert authenticated approval, satisfy the obligation, or authorize P7 implementation.
+The owner approved the proposed business outcome and `O-1` wording, then selected the existing
+declared roles: `proofbound-founder` for business decision owner and approver, and
+`proofbound-maintainer` for requirement owner. The formal P5 records above carry the exact
+declarations and revision binding. Their independent review and any satisfaction verdict remain
+pending; this approval does not authorize P7 implementation.

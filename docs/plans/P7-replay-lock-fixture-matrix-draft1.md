@@ -50,8 +50,9 @@ The declared positive intent case in L09 needs a requirement that genuinely appl
 replay subject. Existing P5 fixtures may test the resolver, but may not be relabeled as a real
 `ReplayIsolated` obligation. If no such requirement has been authorized, the first real lock must
 use L10 and remain `UNVERIFIED`; it cannot be reported as a successful intent lock.
-The [proposed replay evidence requirement](P7-replay-intent-requirement-proposal-draft1.md) is
-awaiting owner approval and is not yet a P5 requirement revision.
+The owner-approved [replay evidence requirement](../intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md)
+is an active declared P5 revision. Its exact independent requirement review and any satisfaction
+verdict remain pending; the L09 positive case cannot be reported green yet.
 
 ## Acceptance record
 
