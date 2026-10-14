@@ -1,6 +1,6 @@
 # VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject
 
-**Status:** AMEND — planning contract amended; fresh non-author review round 3 pending
+**Status:** ACCEPTED FOR PLANNING — fresh non-author review round 3 on 2026-10-13; implementation separately gated
 **Date:** 2026-10-06
 
 ## Context
@@ -84,10 +84,10 @@ and the lock contract. Acceptance also requires provenance, stale-revision, miss
 clean-clone, hostile, and calibrated mutation controls, followed by an independent verdict on any
 implementation.
 
-Until that review accepts the proposal, the snapshot-provider skip and all existing frozen wire
-identities remain unchanged and implementation is blocked.
+The planning review has accepted this boundary. The snapshot-provider skip and all existing frozen
+wire identities remain unchanged; implementation remains separately gated.
 
-## Fresh non-author review outcome — 2026-10-13
+## Fresh non-author review outcome — round 2 — 2026-10-13
 
 The fresh independent review is recorded in
 [`p7-behavior-lock-plan-round2-20261013.md`](../verification/verdicts/p7-behavior-lock-plan-round2-20261013.md)
@@ -109,3 +109,19 @@ acceptance requires these amendments:
 The proposal remains planning-only. No behavior-lock, regeneration, snapshot-provider, or
 external-feed implementation is authorized. Another fresh non-author review is required for this
 round-3 amendment.
+
+## Fresh non-author review outcome — round 3 — 2026-10-13
+
+The fresh independent review is recorded in
+[`p7-behavior-lock-plan-round3-20261013.md`](../verification/verdicts/p7-behavior-lock-plan-round3-20261013.md)
+against amended planning commit `d9dd491c0140beb110885195a607ed754eec7556`.
+
+**Outcome: ACCEPT for planning.** The reviewer found no blocking, high, medium, or low findings.
+The amended contract coherently specifies baseline provenance, derived `UNVERIFIED` semantics,
+canonical lock identity and revision ancestry, exact `vera.replay.v1` proof binding, provider-
+scoped intent obligation or explicit `UNDECLARED`, and pass/fail acceptance criteria.
+
+This acceptance is limited to the planning subject and contract. It does not authorize behavior-
+lock implementation, regeneration, a new wire identity, a new event kind, a provider, an external
+feed, or a second writable truth. Proceed only to a separately authorized lock-schema/addendum and
+fixture-planning slice, followed by independent implementation review.

@@ -1,7 +1,7 @@
 # P7 Behavior Locks and Witnessed Regeneration — Planning Draft 1
 
-**Status:** DRAFT — amended after P7 planning review rounds 1 and 2; round-3 review pending;
-planning only. No implementation,
+**Status:** ACCEPTED FOR PLANNING — round-3 non-author review accepted the amended contract;
+implementation remains separately gated. No implementation,
 new event kind, provider, wire identity, or production capability is authorized by this document.
 
 **Phase:** P7+ capability planning after P6 closure and the resolved snapshot-provider skip.
@@ -30,7 +30,7 @@ same durable contract rather than against the implementation that happened to ex
 The lock is not a replacement for business intent, independent verification, or observed
 deployment. It is a derived, evidence-bearing contract between intent and implementation.
 
-## Proposed bounded subject — amended for round-3 review
+## Accepted planning subject — implementation separately gated
 
 The exact proposed product subject is `kernel/internal/twin.ReplayIsolated`, as recorded in the
 proposed decision [VD-p7-behavior-lock-subject-2026-10-06](../decisions/VD-p7-behavior-lock-subject-2026-10-06.md).
@@ -56,10 +56,11 @@ same request semantics hold through the injected seam, but it cannot substitute 
 product-boundary evidence.
 
 This subject is narrow, deterministic, non-mutating, and already implemented and evidenced. It is
-still a proposal: the next fresh non-author review must accept, amend, or reject this exact
-boundary and the contract below.
+The planning boundary and contract below were accepted by the fresh round-3 non-author review.
+That acceptance does not authorize implementation, regeneration, a new wire identity, or a new
+writable truth.
 
-## Proposed lock contract — pending decision
+## Accepted planning lock contract — implementation separately gated
 
 The behavior lock is a separate authored, content-addressed artifact. It is not the frozen
 `vera.replay.v1` proof, not a projection table, and not a new ledger event or wire identity. The
@@ -227,9 +228,19 @@ reviewed this amended draft and the proposed decision at commit `d8d0339`. Its v
 `UNVERIFIED` semantics, canonical lock identity and proof binding, intent-obligation/
 `UNDECLARED` semantics, and explicit pass/fail acceptance gates remain underspecified.
 
+## Fresh review outcome — round 3
+
+The fresh non-author review recorded in
+[`p7-behavior-lock-plan-round3-20261013.md`](../verification/verdicts/p7-behavior-lock-plan-round3-20261013.md)
+reviewed this amended draft and the proposed decision at commit
+`d9dd491c0140beb110885195a607ed754eec7556`. Its verdict was `ACCEPT`, with no blocking, high,
+medium, or low findings. The reviewer accepted the planning boundary and contract while noting
+that the current implementation does not materialize the lock artifact or baseline-provenance
+mechanism.
+
 ## Current stop point
 
-Round-2 independent review returned `AMEND`. The four findings are resolved here as a
-planning-only contract amendment. Obtain another fresh non-author review of this amended draft and
-the proposed decision. Until that review records `ACCEPT`, no behavior-lock or regeneration
-implementation is authorized.
+Planning acceptance is complete. The next stage is a separately authorized lock-schema/addendum and
+fixture-planning slice for `ReplayIsolated`. No behavior-lock or regeneration implementation may
+begin until that slice is authorized, its acceptance controls are evidenced, and the resulting
+implementation receives an independent verdict.
