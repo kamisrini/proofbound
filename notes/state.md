@@ -7,13 +7,14 @@ As of: 2026-10-14
 
 ## Resume — 2026-10-14
 
-Exact next action: obtain a fresh non-author round-3 review of the amended exact revision of
-`docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
-`docs/plans/P7-replay-lock-fixture-matrix-draft1.md`; record `ACCEPT`, `AMEND`, or `REJECT` before
-any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: amend the P7 replay-lock addendum and fixture matrix for the two findings in
+`docs/verification/verdicts/p7-replay-lock-slice-round3-20261014.md`: specify retrievable,
+verified Go toolchain and embedded-Postgres bytes for the clean-clone input set (or narrow that
+claim), and pin the nested toolchain manifest's canonical byte shape. Then obtain a fresh
+non-author review of the amended exact revision before any implementation.
 
-Immediate blockers: the round-2 addendum/fixture review outcome is `AMEND`; the revised proposal
-has no round-3 verdict. The full gate cannot complete because the installed linter crashes on a
+Immediate blockers: the round-3 addendum/fixture review outcome is `AMEND` with one high and one
+medium finding. The full gate cannot complete because the installed linter crashes on a
 Go 1.27 version marker. Committed runtime fixture corpus, projector revision evidence, and
 implementation verdict are absent. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
@@ -24,8 +25,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The amended P7 addendum and fixture matrix remain draft planning artifacts pending round-3
-  non-author review; no product implementation is authorized.
+- The P7 addendum and fixture matrix remain draft planning artifacts after the round-3 `AMEND`;
+  no product implementation is authorized.
 
 ## Completed
 
@@ -57,9 +58,13 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   keys present in `Snapshot.Tables`, with empty-map and injected-key controls; the build manifest
   now binds retrievable `.mod`, `.zip`, and exact executable bytes and rejects missing or changed
   inputs. These are proposed contracts, not runtime fixtures or implementation acceptance.
+- Fresh non-author reviewer `Confucius` reviewed exact commit `16c6189` and returned `AMEND` for
+  the later addendum and fixture slice. The round-2 snapshot and executable/module-byte findings
+  were judged resolved in the proposal; committed Go toolchain and Postgres bytes and exact
+  nested toolchain manifest encoding remain blocking. The accepted P7 subject is unaffected.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
-  26 schema-bearing verdicts and 13 documentary verdict artifacts after the round-2 verdict.
+  26 schema-bearing verdicts and 14 documentary verdict artifacts after the round-3 verdict.
 
 ## Verification
 
@@ -96,11 +101,15 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   control. No generated artifact needed regeneration. Go build/tests/lint were not rerun outside
   confinement for this documentation-only edit; the earlier compatible-toolchain lint blocker
   remains unresolved.
+- After recording the round-3 review, link, index, P6 artifact-integrity, exact
+  requirement-review, census, state-freshness, and whitespace checks passed. The derived
+  artifact-integrity packet was regenerated for the new documentary verdict. Bare `make check`
+  was not rerun for this review-record-only checkpoint; its prior Snap Go/linter blockers remain.
 
 ## Open, blocked, and unverified
 
-- Open: obtain another non-author review of the amended exact revision, ratify the proposed
-  proof/projector evidence bytes, build committed
+- Open: resolve the two round-3 planning findings, obtain another non-author review of the
+  amended exact revision, ratify the proposed proof/projector evidence bytes, build committed
   runtime fixtures and evidence manifest, and obtain a
   separate non-author review of any later implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair

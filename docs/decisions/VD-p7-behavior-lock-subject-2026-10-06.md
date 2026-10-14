@@ -150,3 +150,16 @@ snapshot evidence rule adds absent empty tables and so cannot round-trip the fro
 digest, and the projector/build manifest lacks exact executable and downloaded dependency byte
 identity. Amend those proposals and obtain another fresh non-author review of the exact amended
 revision. The round-3 subject acceptance is unchanged; no implementation is authorized.
+
+## Subsequent addendum review — round 3 — 2026-10-14
+
+Fresh non-author review of the amended addendum and fixture matrix at
+`16c6189fd6b39680e8bc5acfd16286fa520cb9a6` is recorded in
+[`p7-replay-lock-slice-round3-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round3-20261014.md).
+**Outcome: AMEND** for this later planning slice. The reviewer found the snapshot-map encoding
+and executable/module-byte bindings sufficient to resolve the specific round-2 findings, but
+identified an incomplete clean-clone input set: retrievable Go toolchain and embedded-Postgres
+bytes are not required by the current proposal. The nested toolchain manifest also lacks an
+exact canonical byte shape. Amend those two findings and obtain another fresh non-author review.
+The accepted round-3 P7 subject remains accepted for planning only; no implementation is
+authorized.
