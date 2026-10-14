@@ -1,6 +1,7 @@
 # P7 Behavior Locks and Witnessed Regeneration — Planning Draft 1
 
-**Status:** DRAFT — amended after P7 planning review rounds 1 and 2; planning only. No implementation,
+**Status:** DRAFT — amended after P7 planning review rounds 1 and 2; round-3 review pending;
+planning only. No implementation,
 new event kind, provider, wire identity, or production capability is authorized by this document.
 
 **Phase:** P7+ capability planning after P6 closure and the resolved snapshot-provider skip.
@@ -29,7 +30,7 @@ same durable contract rather than against the implementation that happened to ex
 The lock is not a replacement for business intent, independent verification, or observed
 deployment. It is a derived, evidence-bearing contract between intent and implementation.
 
-## Proposed bounded subject — amended, pending resolution of round-2 review
+## Proposed bounded subject — amended for round-3 review
 
 The exact proposed product subject is `kernel/internal/twin.ReplayIsolated`, as recorded in the
 proposed decision [VD-p7-behavior-lock-subject-2026-10-06](../decisions/VD-p7-behavior-lock-subject-2026-10-06.md).
@@ -55,13 +56,15 @@ same request semantics hold through the injected seam, but it cannot substitute 
 product-boundary evidence.
 
 This subject is narrow, deterministic, non-mutating, and already implemented and evidenced. It is
-still a proposal: the fresh non-author review must accept, amend, or reject this exact boundary.
+still a proposal: the next fresh non-author review must accept, amend, or reject this exact
+boundary and the contract below.
 
 ## Proposed lock contract — pending decision
 
 The behavior lock is a separate authored, content-addressed artifact. It is not the frozen
-`vera.replay.v1` proof, not a projection table, and not a new ledger event or wire identity. A
-future lock addendum must define the canonical encoding, but its semantic content is fixed here:
+`vera.replay.v1` proof, not a projection table, and not a new ledger event or wire identity. The
+planning profile below defines its canonical encoding and semantic content; a future implementation
+addendum may only materialize this profile under separate authorization:
 
 1. lock revision identity and exact subject (`ReplayIsolated`);
 2. source-prefix boundary, ordered observed source event identities, and source content digests;
@@ -78,6 +81,81 @@ generated property corpus, observed ledger evidence, and derived replay result r
 roles. Synthetic candidates and fixtures may test the contract but must never be presented as
 production observations.
 
+## Round-3 contract amendments
+
+These choices resolve the round-2 review findings for planning purposes. They define a
+planning-only artifact profile; they do not introduce a shipped `vera.*` schema, event kind,
+persistence surface, or implementation authorization.
+
+### Baseline provenance and `UNVERIFIED`
+
+The baseline provenance tuple is exactly:
+
+`(ThroughSeq, ordered source event IDs and sequence numbers, source digest, accepted projector
+revision, accepted projector revision digest, baseline snapshot digest)`.
+
+The source event list and source digest must reproduce the selected append-only ledger prefix. The
+projector revision and its digest must identify the accepted projector used to derive the baseline;
+the baseline snapshot digest must reproduce the content-addressed snapshot for that same prefix and
+projector revision. A caller-supplied snapshot without this tuple is not a valid baseline.
+
+The existing twin `Verdict` remains only `preserved` or `changed`. `UNVERIFIED` is a derived lock
+evaluation result, not a new twin verdict, ledger event, projection row, or authored satisfaction
+outcome. Missing or mismatched baseline provenance produces `UNVERIFIED` and fails the lock gate;
+it cannot be converted to `preserved` or `changed` by a caller.
+
+### Canonical lock identity and proof binding
+
+The planning lock artifact uses UTF-8 RFC 8785 canonical JSON with exactly these required top-level
+members and no unknown or null members: `subject`, `lock_revision`, `source_prefix`, `candidates`,
+`baseline`, `candidate_snapshot`, `verdict`, `sequence_map`, `replay_proof`, and `intent_binding`.
+Arrays are ordered by their declared sequence; byte strings are lowercase hexadecimal; digests are
+lowercase SHA-256 values. The lock identity is the SHA-256 digest of those canonical bytes. A
+`lock_revision` contains the subject, a positive revision number, and either the prior lock digest
+or the literal `genesis`; a later revision is a new artifact and cannot rewrite an earlier one.
+
+`replay_proof` must identify exact committed proof bytes (or a content-addressed evidence artifact)
+and carry `schema=vera.replay.v1`. Its `ThroughSeq`, source digest, candidate digest, baseline
+snapshot digest, and candidate snapshot digest must equal the corresponding lock members. A proof
+digest without retrievable bytes is insufficient evidence. This profile is documentary planning
+syntax until a separately authorized implementation addendum maps it to code.
+
+### Intent obligation binding and `UNDECLARED`
+
+When declared, `intent_binding` must contain the exact P5 provider-scoped requirement revision:
+`record_kind=requirement`, `source=intent.<provider>`, `record_id`, `artifact_sha256`, and one
+`obligation_id`. The requirement artifact digest and obligation ID must resolve to the exact
+revision; a different provider, revision, or obligation fails closed.
+
+When no exact requirement is authorized, `intent_binding` must contain only the explicit state
+`UNDECLARED`. `UNDECLARED` means that the lock author made no intent claim; it is not evidence of
+satisfaction. The lock evaluation therefore remains derived `UNVERIFIED`, consistent with P5
+`P-INV-29`, and no `UNVERIFIED` row is stored. A declared binding with missing, non-verifiable, or
+incomplete review evidence has the same derived `UNVERIFIED` result.
+
+### Explicit pass/fail exit criteria
+
+Every criterion below is evaluated against the lock digest and a content-addressed reviewed
+evidence revision. Any failure blocks planning acceptance or implementation authorization:
+
+1. **Identity:** canonical bytes round-trip exactly, required members are complete, the lock digest
+   is reproducible, and revision ancestry is valid.
+2. **Source/candidates:** the source prefix, event identities, sequence numbers, candidate roles,
+   canonical bytes, and digests match; synthetic candidates never become observations.
+3. **Baseline:** the full provenance tuple verifies, including projector revision and snapshot
+   digest; absent or stale provenance yields `UNVERIFIED` and fails.
+4. **Proof:** the exact `vera.replay.v1` bytes are available and every source, candidate, sequence,
+   baseline, and candidate-snapshot binding matches the lock.
+5. **Intent:** the exact provider-scoped obligation resolves, or explicit `UNDECLARED` yields only
+   derived `UNVERIFIED`; neither route may fabricate satisfaction.
+6. **Evidence controls:** positive, negative, stale-revision, missing-evidence, hostile-input,
+   clean-clone, and replay-from-committed-artifacts cases pass with failure-closed results.
+7. **Detector power:** calibrated neutral, compile-invalid, and lethal controls behave as expected;
+   the declared mutation set has no undeclared survivor, and the result is bound to the lock and
+   reviewed evidence revision.
+8. **Independent acceptance:** the amended plan receives a fresh non-author `ACCEPT`, and any
+   later implementation or regeneration receives its own independent verdict.
+
 ## Planning boundary
 
 This slice may use only existing repository-native intent records, witnesses, checks, projections,
@@ -91,20 +169,16 @@ and accepted feeds. It may not:
   or
 - treat generated tests or a green implementation as proof that the lock matches human intent.
 
-## Questions the plan must settle before implementation
+## Deferred implementation questions after planning acceptance
 
-1. What canonical encoding and revision digest will the lock addendum use, without introducing a
-   new wire identity before a separate authorization?
-2. Which existing intent obligation authorizes the lock, or how will the explicit `UNDECLARED`
-   route be represented until one exists?
-3. What generated property corpus covers source bounds, candidate ordering, baseline provenance,
-   snapshot comparison, proof binding, stale revisions, and missing evidence?
-4. What detector-power and mutation controls show that the generated corpus distinguishes a broken
-   `ReplayIsolated` implementation from a passing one?
-5. What is the smallest regeneration boundary, and what evidence proves that regeneration preserves
+1. Which implementation artifacts will materialize this already-defined planning profile without
+   creating a new wire identity or writable truth?
+2. Which committed fixture corpus and existing provider routes can prove every criterion without
+   adding a provider, feed, or event kind?
+3. What is the smallest regeneration boundary, and what evidence proves that regeneration preserves
    the lock, ledger history, and replay-proof semantics?
-6. What fresh non-author verdict is required before the lock or any regenerated implementation is
-   accepted?
+4. How will the implementation bind the exact independent verdict and reviewed evidence revision
+   while keeping planning acceptance separate from implementation acceptance?
 
 ## Candidate deliverables
 
@@ -155,6 +229,7 @@ reviewed this amended draft and the proposed decision at commit `d8d0339`. Its v
 
 ## Current stop point
 
-Round-2 independent review returned `AMEND`. Amend the planning draft and proposed decision to
-resolve those four findings, then obtain another fresh non-author review. Until that review
-records `ACCEPT`, no behavior-lock or regeneration implementation is authorized.
+Round-2 independent review returned `AMEND`. The four findings are resolved here as a
+planning-only contract amendment. Obtain another fresh non-author review of this amended draft and
+the proposed decision. Until that review records `ACCEPT`, no behavior-lock or regeneration
+implementation is authorized.

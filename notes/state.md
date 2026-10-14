@@ -7,14 +7,14 @@ As of: 2026-10-13
 
 ## Resume — 2026-10-13
 
-Exact next action: amend the P7 planning draft and proposed decision to resolve the round-2
-`AMEND` findings on baseline provenance and `UNVERIFIED` semantics, canonical lock identity and
-proof binding, intent-obligation/`UNDECLARED` semantics, and explicit pass/fail acceptance gates;
-then obtain another fresh non-author review before any behavior-lock, regeneration,
+Exact next action: obtain another fresh non-author review of the amended P7 planning draft and
+proposed decision, now specifying baseline provenance and `UNVERIFIED` semantics, canonical lock
+identity and proof binding, intent-obligation/`UNDECLARED` semantics, and explicit pass/fail
+acceptance gates; record accept, amend, or reject before any behavior-lock, regeneration,
 snapshot-provider, or external-feed implementation.
 
-Immediate blockers: round-2 `AMEND` findings are unresolved; push authorization and authentication
-cannot be verified because the remote DNS lookup failed.
+Immediate blockers: the round-3 fresh review and decision outcome are missing; push authorization
+and authentication cannot be verified because the remote DNS lookup failed.
 
 ## Branch and repository status
 
@@ -45,6 +45,8 @@ cannot be verified because the remote DNS lookup failed.
   now records the same outcome.
 - The decision index and generated P6 artifact-integrity audit were regenerated after the new
   documentary verdict; both are committed and fresh.
+- The round-2 findings were amended into a planning-only lock profile; no implementation,
+  provider, feed, event kind, wire identity, or writable truth was introduced.
 - Today’s work was repository inspection, verification, remote reachability checking, and durable
   journal/state closeout. No implementation was authorized or changed.
 
@@ -62,16 +64,16 @@ cannot be verified because the remote DNS lookup failed.
   because `/snap/bin/go` could not run under this host's confinement
   (`snap-confine ... cap_dac_override ... Function not implemented`). Go build/tests and lint did
   not complete. This is an environment limitation, not a source or generated-artifact failure.
-- The fresh round-2 planning review did not authorize implementation; it requires the four
-  contract amendments named in the verdict artifact and another non-author review.
+- The fresh round-2 planning review did not authorize implementation; its four findings are now
+  addressed in the planning draft and proposed decision, pending round-3 review.
 - After regeneration, bare `make check` passed repository checks, generated freshness, P6 closure
   and package acceptance, and the Windows contract. It then reached `kernel-check` and stopped on
   the same Snap Go confinement limitation; no source failure was observed.
 
 ## Open, blocked, and unverified
 
-- Open: amend the planning draft and proposed decision for the four round-2 findings, then obtain
-  another fresh non-author review and record its outcome.
+- Open: obtain another fresh non-author review of the amended planning draft and proposed decision,
+  then record its outcome.
 - Blocked: all behavior-lock, regeneration, snapshot-provider, and external-feed implementation
   pending that review and decision gate; push is blocked while the remote cannot be resolved and
   authentication/authorization cannot be verified.

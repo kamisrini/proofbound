@@ -1,6 +1,6 @@
 # VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject
 
-**Status:** AMEND — fresh non-author review round 2 on 2026-10-13
+**Status:** AMEND — planning contract amended; fresh non-author review round 3 pending
 **Date:** 2026-10-06
 
 ## Context
@@ -33,8 +33,44 @@ The proposed lock binds one exact bounded replay:
   exists.
 
 The lock is a separate authored, content-addressed artifact. It is not the replay proof, a
-projection table, or a ledger event. Its canonical encoding and revision digest require a future
-lock addendum; no wire identity is introduced by this proposal.
+projection table, or a ledger event. The planning-only artifact profile below now defines its
+canonical encoding, revision identity, provenance, and proof binding; a separately authorized
+implementation addendum is still required and may not introduce a new wire identity or writable
+truth.
+
+## Round-3 planning contract amendment
+
+The amended planning profile uses UTF-8 RFC 8785 canonical JSON with exactly these required
+top-level members and no unknown or null members: `subject`, `lock_revision`, `source_prefix`,
+`candidates`, `baseline`, `candidate_snapshot`, `verdict`, `sequence_map`, `replay_proof`, and
+`intent_binding`. Arrays are sequence-ordered; byte strings are lowercase hexadecimal; digests are
+lowercase SHA-256 values. The lock identity is the SHA-256 digest of its canonical bytes. A
+revision contains the subject, a positive revision number, and either the prior lock digest or
+`genesis`.
+
+The exact baseline provenance tuple is `(ThroughSeq, ordered source event IDs and sequence
+numbers, source digest, accepted projector revision, accepted projector revision digest, baseline
+snapshot digest)`. The source and snapshot values must reproduce the same append-only prefix and
+projector derivation. Missing or mismatched provenance yields derived `UNVERIFIED`; it is not a
+twin verdict, ledger event, projection row, or authored satisfaction outcome.
+
+The exact replay-proof binding requires retrievable committed `vera.replay.v1` proof bytes (or a
+content-addressed evidence artifact). Its through-sequence, source, candidate, baseline, and
+candidate-snapshot digests must equal the lock. A digest without retrievable proof bytes is
+insufficient.
+
+When intent is declared, `intent_binding` must resolve the P5 provider-scoped tuple
+`record_kind=requirement`, `source=intent.<provider>`, `record_id`, `artifact_sha256`, and one
+`obligation_id`. When no exact requirement is authorized, it must be explicit `UNDECLARED`; that
+means no intent claim was made and results in derived `UNVERIFIED`, consistent with P5 P-INV-29.
+No `UNVERIFIED` row is stored and neither route fabricates satisfaction.
+
+Planning acceptance is pass/fail against the lock digest and a reviewed evidence revision:
+canonical identity and ancestry; source/candidate role and digest binding; complete baseline
+provenance; exact replay-proof binding; exact intent resolution or explicit `UNDECLARED`;
+positive/negative, stale-revision, missing-evidence, hostile, clean-clone, and replay controls;
+calibrated neutral/compile-invalid/lethal controls; no undeclared mutation survivor; and a fresh
+non-author acceptance verdict. Any failure blocks acceptance and implementation.
 
 ## Boundaries and acceptance
 
@@ -71,5 +107,5 @@ acceptance requires these amendments:
    reviewed evidence revision.
 
 The proposal remains planning-only. No behavior-lock, regeneration, snapshot-provider, or
-external-feed implementation is authorized. Another fresh non-author review is required after
-these amendments.
+external-feed implementation is authorized. Another fresh non-author review is required for this
+round-3 amendment.
