@@ -7,15 +7,16 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: obtain a fresh non-author round-4 review of the amended exact revision of
-`docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
-`docs/plans/P7-replay-lock-fixture-matrix-draft1.md`; record `ACCEPT`, `AMEND`, or `REJECT` before
-any behavior-lock, regeneration, snapshot-provider, or external-feed implementation.
+Exact next action: propose the smallest separately authorized fixture/implementation slice for
+the accepted P7 `ReplayIsolated` documentary contract, starting with how committed, verified
+Postgres archive bytes reach P4's temporary store `BinariesDir` for L12. Present the bounded
+scope and acceptance evidence to the owner before writing product code; keep behavior-lock,
+regeneration, snapshot-provider, and external-feed implementation gated.
 
-Immediate blockers: the round-3 addendum/fixture review outcome is `AMEND`; the revised proposal
-has no round-4 verdict. The full gate cannot complete because the installed linter crashes on a
-Go 1.27 version marker. Committed runtime fixture corpus, projector revision evidence, and
-implementation verdict are absent. Push
+Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
+runtime fixtures, the L12 offline replay result, implementation authorization and verdict, and
+requirement satisfaction are absent. The full gate cannot complete because the installed linter
+crashes on a Go 1.27 version marker. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
 
 ## Branch and repository status
@@ -24,8 +25,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The amended P7 addendum and fixture matrix remain draft planning artifacts pending round-4
-  non-author review; no product implementation is authorized.
+- The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
+  fixture, product implementation, or independent implementation verdict is accepted.
 
 ## Completed
 
@@ -66,9 +67,14 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   archives require verified Git-tracked bytes in the reviewed evidence revision. L12 remains
   `UNVERIFIED` until a later reviewed implementation can supply the Postgres archive to P4's
   temporary store offline. No archives, runtime fixtures, or product code were created.
+- Fresh non-author reviewer `Gibbs` reviewed exact commit `d37a874` and returned `ACCEPT` for the
+  documentary addendum and fixture matrix, with no blocking finding. The reviewer noted a low
+  implementation caution: verified Postgres binaries must go through `BinariesDir`, not P4's
+  cleared `RuntimeDir`. The acceptance does not extend to L12, a runtime corpus, requirement
+  satisfaction, full-gate success, or implementation.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
-  26 schema-bearing verdicts and 14 documentary verdict artifacts after the round-3 verdict.
+  26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
 
 ## Verification
 
@@ -116,17 +122,22 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   sandboxed Snap Go lacks `cap_dac_override`. `index stale` was an expected negative-test
   message; no generated artifact was stale. Go build/tests/lint were not rerun outside the
   sandbox for this documentation-only change; compatible-toolchain lint remains unverified.
+- After recording the round-4 documentary acceptance, link, index, P6 artifact-integrity,
+  exact requirement-review, census, state-freshness, and whitespace checks passed. The derived
+  artifact-integrity packet was regenerated for the new verdict. Bare `make check` was not
+  rerun for this review-record-only checkpoint; the earlier same-day Snap Go and known linter
+  blockers remain unresolved.
 
 ## Open, blocked, and unverified
 
-- Open: obtain another non-author review of the amended exact revision, ratify the proposed
-  proof/projector evidence bytes, build committed
-  runtime fixtures and evidence manifest, and obtain a
-  separate non-author review of any later implementation. The `hooks-test` Makefile loop can
+- Open: define and authorize the bounded next slice; build committed runtime fixtures and
+  evidence manifest, demonstrate L12 offline replay, and obtain a separate non-author review of
+  any later implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
   this independently of the P7 contract work.
 - Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
-  the applicable review and decision gate is satisfied. Push remains unverified.
+  the applicable authorization, runtime evidence, and independent implementation gate are
+  satisfied. Push remains unverified.
 - Unverified: satisfaction of the new requirement, complete clean-clone replay, detector power
   for a P7 mutation set, lint with a compatible toolchain, native Windows
   acceptance, and remote-tip freshness.

@@ -1,6 +1,9 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** AMENDED FOR ROUND 4; fresh non-author review required. The round-3 `AMEND` is recorded in
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING by fresh non-author round-4 review; runtime fixtures
+and implementation remain separately gated. See
+[`p7-replay-lock-slice-round4-20261015.md`](../verification/verdicts/p7-replay-lock-slice-round4-20261015.md).
+The round-3 `AMEND` is recorded in
 [`p7-replay-lock-slice-round3-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round3-20261014.md).
 The round-2 `AMEND` is recorded in
 [`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).

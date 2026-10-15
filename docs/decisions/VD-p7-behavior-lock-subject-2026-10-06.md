@@ -163,3 +163,18 @@ bytes are not required by the current proposal. The nested toolchain manifest al
 exact canonical byte shape. Amend those two findings and obtain another fresh non-author review.
 The accepted round-3 P7 subject remains accepted for planning only; no implementation is
 authorized.
+
+## Subsequent addendum review — round 4 — 2026-10-15
+
+Fresh non-author review of the amended addendum and fixture matrix at
+`d37a87461389e855a6cb69fbfc795ad9ebba6e9c` is recorded in
+[`p7-replay-lock-slice-round4-20261015.md`](../verification/verdicts/p7-replay-lock-slice-round4-20261015.md).
+**Outcome: ACCEPT for documentary planning only.** The reviewer found the proposed committed-byte
+route for clean-clone inputs and the exact nested toolchain-manifest encoding sufficient to
+resolve both round-3 findings. The low, nonblocking implementation caution is to provision
+verified Postgres binaries through `BinariesDir`, not P4's cleared `RuntimeDir`.
+
+No runtime fixture corpus or L12 pass, requirement satisfaction, full gate, behavior-lock or
+regeneration implementation, or independent implementation verdict was accepted. The accepted
+P7 subject and frozen P4 behavior are unchanged. The next stage needs a separately authorized,
+bounded fixture/implementation plan and its own evidence and review before code acceptance.
