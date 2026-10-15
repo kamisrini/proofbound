@@ -7,19 +7,19 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: obtain a fresh non-author review of the amended exact revision of
-`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md`, record `ACCEPT`,
-`AMEND`, or `REJECT`, and keep product code blocked until the scope is accepted. The first
-slice remains the offline Postgres `BinariesDir` provisioning seam and L17 evidence, not a
-full L12 pass. Keep behavior-lock, regeneration, snapshot-provider, and external-feed
+Exact next action: perform a bounded read-only archive size/provenance and clean-clone retrieval
+feasibility check, report its go/no-go to the owner, then draft the exact API/SPEC and fixture
+plan for the independently accepted offline Postgres `BinariesDir` first slice. Obtain review and
+separate implementation authorization before any product code. L17 runtime evidence and full
+L12 remain unverified; keep behavior-lock, regeneration, snapshot-provider, and external-feed
 implementation gated.
 
 Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
-runtime fixtures, the L12 offline replay result, accepted first-slice scope,
-implementation authorization and verdict, and
-requirement satisfaction are absent. The full gate cannot complete because the installed linter
-crashes on a Go 1.27 version marker. Push
-authorization/authentication remain unverified after the prior GitHub DNS failure.
+runtime fixtures, the L12 offline replay result, archive feasibility, exact API/SPEC/fixture
+plan, implementation authorization and verdict, and requirement satisfaction are absent. The
+full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
+panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
+the prior GitHub DNS failure.
 
 ## Branch and repository status
 
@@ -29,10 +29,10 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
 - The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
   fixture, product implementation, or independent implementation verdict is accepted.
-- The owner approved documentation-only amendments after reviewer `Hume` returned `AMEND` on
-  the first-slice proposal. The amended proposal awaits fresh non-author review; its scope is
-  not yet accepted. It proposes only the offline Postgres provisioning seam and L17 evidence;
-  L12 and the full lock evaluator remain outside this first slice.
+- Fresh non-author reviewer `Kepler` accepted the exact amended first-slice **scope proposal**
+  at commit `beea925`, after reviewer `Hume` returned round-1 `AMEND`. The accepted scope
+  proposes only the offline Postgres provisioning seam and L17 evidence; no code, runtime
+  fixture, L17 result, L12 pass, or full lock evaluator is accepted.
 
 ## Completed
 
@@ -90,7 +90,12 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   The amended proposal now requires a pre-open complete staged-tree/`pg_ctl` check and a
   zero-fetch witness, a post-open projection-failure cleanup case with whole-ledger bytes, and
   byte-exact legacy/companion `Result`/six-field `Proof` fixtures. No product code or runtime
-  corpus was changed; the amended revision awaits fresh non-author review.
+  corpus was changed; the amended revision was then submitted for fresh non-author review.
+- Fresh non-author reviewer `Kepler` reviewed exact amended commit `beea925` and SHA-256
+  `32c74a68fa3a8f74bd7fb6d736acb40c3a9b84ade23d2bea382c08bcf10dfe39`, returning
+  `ACCEPT` for the documentation scope with no findings. The verdict is
+  `docs/verification/verdicts/p7-replay-first-implementation-scope-round2-20261015.md`.
+  This does not authorize or accept product implementation or runtime fixtures.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -156,12 +161,19 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   state-freshness, and P6 artifact-integrity checks passed. The derived artifact-integrity
   packet was regenerated for the new documentary verdict. Bare `make check` was not rerun for
   this verdict-record-only checkpoint; the prior same-day Snap Go stop remains.
+- After amended proposal commit `beea925`, bare `make check` passed repository and generated
+  freshness checks but stopped at `kernel-check` because Snap Go lacks `cap_dac_override` in
+  this sandbox. `index stale` was the expected negative self-test. Go build/tests/lint were not
+  verified by this run; the earlier incompatible-toolchain lint blocker remains unresolved.
+- For the round-2 scope verdict, direct whitespace, link, index, state-freshness, and P6
+  artifact-integrity checks passed; the derived packet now counts 17 documentary verdicts.
+  Bare `make check` was not rerun for this review-record-only checkpoint.
 
 ## Open, blocked, and unverified
 
-- Open: obtain a fresh non-author review of the amended exact first-slice proposal; if accepted,
-  resolve archive budget
-  and exact SPEC/API before implementation. Later build
+- Open: with the first-slice documentation scope accepted, resolve archive size/provenance and
+  clean-clone retrieval go/no-go, then draft and review exact SPEC/API and fixture plan before
+  separate implementation authorization. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
   a separate non-author review of any implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
