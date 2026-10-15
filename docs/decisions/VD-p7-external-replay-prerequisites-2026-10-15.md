@@ -6,12 +6,14 @@ review. This does not replace the accepted P7 evidence contract yet or authorize
 
 ## Decision requested by owner
 
-Keep public third-party Go toolchain and embedded-Postgres binary archives, downloaded Go
-module `.mod`/`.zip` artifacts, and the locally built executable out of Git. Commit authored
-code, small manifests, lock/fixture evidence, and review records only. Document prerequisite
-setup ahead of the replay test. Never commit a Postgres data directory or ledger database.
+Exclude binary artifacts from Git: the public Go toolchain and embedded-Postgres binary
+archives, and the locally built executable. Source code, configuration, READMEs, manifests,
+module source artifacts, lock/fixture evidence, and review records are not excluded merely
+because they are not code. The proposed setup route fetches public binary archives ahead of
+the replay test. Never commit a Postgres data directory or ledger database.
 
-This reverses the Git-tracked build/runtime byte route in the previously accepted
+This changes the binary portion of the Git-tracked build/runtime byte route in the
+previously accepted
 [P7 addendum](../plans/P7-replay-lock-spec-addendum-draft1.md),
 [fixture matrix](../plans/P7-replay-lock-fixture-matrix-draft1.md), and accepted
 [first-slice scope](../plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md).
@@ -23,9 +25,9 @@ and its [setup README](../verification/p7-replay-lock-prerequisites/README.md).
 ## Consequence and gate
 
 A plain clone with empty caches and no network cannot execute L12 under this policy. The
-replacement claim is narrower: prepare exact public inputs in an explicit network-permitted
-phase, verify all bytes against reviewed hashes, then run replay with egress disabled and
-loopback available. Public availability is not a substitute for a matching digest or an
+replacement claim is narrower: prepare exact public binary inputs in an explicit
+network-permitted phase, verify all bytes against reviewed hashes, then run replay with
+egress disabled and loopback available. Public availability is not a substitute for a matching digest or an
 attempt-level zero-fetch witness. Missing, changed, or unavailable inputs yield `UNVERIFIED`;
 they are not an accepted replay result.
 
