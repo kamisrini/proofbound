@@ -7,14 +7,16 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: propose the smallest separately authorized fixture/implementation slice for
-the accepted P7 `ReplayIsolated` documentary contract, starting with how committed, verified
-Postgres archive bytes reach P4's temporary store `BinariesDir` for L12. Present the bounded
-scope and acceptance evidence to the owner before writing product code; keep behavior-lock,
-regeneration, snapshot-provider, and external-feed implementation gated.
+Exact next action: obtain owner scope approval for
+`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md`, then obtain a fresh
+non-author review of that exact proposal and record `ACCEPT`, `AMEND`, or `REJECT` before any
+product code. The proposed first slice is the offline Postgres `BinariesDir` provisioning seam
+and L17 evidence, not a full L12 pass. Keep behavior-lock, regeneration, snapshot-provider,
+and external-feed implementation gated.
 
 Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
-runtime fixtures, the L12 offline replay result, implementation authorization and verdict, and
+runtime fixtures, the L12 offline replay result, first-slice scope approval/review,
+implementation authorization and verdict, and
 requirement satisfaction are absent. The full gate cannot complete because the installed linter
 crashes on a Go 1.27 version marker. Push
 authorization/authentication remain unverified after the prior GitHub DNS failure.
@@ -27,6 +29,9 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
 - The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
   fixture, product implementation, or independent implementation verdict is accepted.
+- A bounded first implementation slice proposal is drafted but not yet owner-approved or
+  independently reviewed. It proposes only the offline Postgres provisioning seam and L17
+  evidence; L12 and the full lock evaluator remain outside this first slice.
 
 ## Completed
 
@@ -72,6 +77,9 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   implementation caution: verified Postgres binaries must go through `BinariesDir`, not P4's
   cleared `RuntimeDir`. The acceptance does not extend to L12, a runtime corpus, requirement
   satisfaction, full-gate success, or implementation.
+- Drafted `docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md` to present
+  a bounded offline Postgres seam, L17 fixture evidence, archive-size/provenance go/no-go,
+  and explicit stop points. This is a proposal only; no product code or runtime corpus changed.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -130,9 +138,10 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Open, blocked, and unverified
 
-- Open: define and authorize the bounded next slice; build committed runtime fixtures and
-  evidence manifest, demonstrate L12 offline replay, and obtain a separate non-author review of
-  any later implementation. The `hooks-test` Makefile loop can
+- Open: obtain owner approval and fresh non-author review of the proposed bounded first slice;
+  if accepted, resolve archive budget and exact SPEC/API before implementation. Later build
+  committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
+  a separate non-author review of any implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
   this independently of the P7 contract work.
 - Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
