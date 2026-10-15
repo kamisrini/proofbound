@@ -7,16 +7,16 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: perform a bounded read-only archive size/provenance and clean-clone retrieval
-feasibility check, report its go/no-go to the owner, then draft the exact API/SPEC and fixture
-plan for the independently accepted offline Postgres `BinariesDir` first slice. Obtain review and
-separate implementation authorization before any product code. L17 runtime evidence and full
-L12 remain unverified; keep behavior-lock, regeneration, snapshot-provider, and external-feed
-implementation gated.
+Exact next action: present the proposed P7 external-prerequisites decision, contract amendment,
+and setup README to the owner for authorization to seek fresh non-author review. Record
+`ACCEPT`, `AMEND`, or `REJECT` on their exact committed revision before any API/SPEC or product
+code. The old Git-tracked-byte/empty-cache clean-clone contract remains accepted until that
+review; L12/L17 remain unverified and implementation stays gated.
 
-Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
-runtime fixtures, the L12 offline replay result, archive feasibility, exact API/SPEC/fixture
-plan, implementation authorization and verdict, and requirement satisfaction are absent. The
+Immediate blockers: the owner's no-public-binaries-in-Git direction conflicts with the
+previously accepted P7 evidence contract. The proposed replacement and setup README await
+fresh independent review; no setup-source manifest, runtime fixtures, L12/L17 result, exact
+API/SPEC/fixture plan, implementation authorization/verdict, or requirement satisfaction exists. The
 full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
 panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
 the prior GitHub DNS failure.
@@ -31,8 +31,9 @@ the prior GitHub DNS failure.
   fixture, product implementation, or independent implementation verdict is accepted.
 - Fresh non-author reviewer `Kepler` accepted the exact amended first-slice **scope proposal**
   at commit `beea925`, after reviewer `Hume` returned round-1 `AMEND`. The accepted scope
-  proposes only the offline Postgres provisioning seam and L17 evidence; no code, runtime
-  fixture, L17 result, L12 pass, or full lock evaluator is accepted.
+  proposes only the offline Postgres provisioning seam and L17 evidence. Its committed-archive
+  route now conflicts with the owner's later direction and is not an implementation authority.
+  No code, runtime fixture, L17 result, L12 pass, or full lock evaluator is accepted.
 
 ## Completed
 
@@ -96,6 +97,16 @@ the prior GitHub DNS failure.
   `ACCEPT` for the documentation scope with no findings. The verdict is
   `docs/verification/verdicts/p7-replay-first-implementation-scope-round2-20261015.md`.
   This does not authorize or accept product implementation or runtime fixtures.
+- Read-only feasibility on 2026-10-15 found a local Linux/amd64 Postgres 16.4.0 `txz` cache:
+  14,730,084 bytes, SHA-256 `d24cafae863e1ba9502bdc27942661391748ce60345725e7a15429be637fc8b6`.
+  It is absent from Git, so the old empty-cache clean-clone route cannot pass. Maven DNS failed;
+  upstream byte identity and redistribution notices were not fully verified. The owner then
+  directed that public binaries stay outside Git and prerequisite setup be documented.
+- Drafted `VD-p7-external-replay-prerequisites-2026-10-15`, a proposed contract amendment, and
+  a prerequisite setup README. These distinguish network-permitted verified preparation from
+  network-disabled replay, retain exact digest/provenance and zero-fetch controls, and make the
+  original empty-cache clean-clone claim explicitly unavailable. No binaries or product code
+  were added; the drafts await owner approval to seek fresh non-author review.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -171,8 +182,8 @@ the prior GitHub DNS failure.
 
 ## Open, blocked, and unverified
 
-- Open: with the first-slice documentation scope accepted, resolve archive size/provenance and
-  clean-clone retrieval go/no-go, then draft and review exact SPEC/API and fixture plan before
+- Open: review the proposed external-prerequisites amendment and setup README; then, if
+  accepted, specify and review exact setup-source manifest, SPEC/API, and fixture plan before
   separate implementation authorization. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
   a separate non-author review of any implementation. The `hooks-test` Makefile loop can

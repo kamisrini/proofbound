@@ -15,6 +15,7 @@
 - [VD-p6-historical-evidence-portability-2026-09-13: strict migration-only historical evidence](VD-p6-historical-evidence-portability-2026-09-13.md) — Accepted (2026-09-13)
 - [VD-p6-private-storage-compat-2026-09-12: freeze migrated private storage identity, retire external aliases](VD-p6-private-storage-compat-2026-09-12.md) — Accepted (2026-09-12)
 - [VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject](VD-p7-behavior-lock-subject-2026-10-06.md) — ACCEPTED FOR PLANNING — fresh non-author review round 3 on 2026-10-13; implementation separately gated (2026-10-06)
+- [VD-p7-external-replay-prerequisites-2026-10-15: public binary setup outside Git](VD-p7-external-replay-prerequisites-2026-10-15.md) — OWNER DIRECTION RECORDED; proposed contract amendment awaits fresh non-author (2026-10-15)
 - [VD-p7-snapshot-provider-skip-2026-10-01: retain the conditional snapshot-provider skip](VD-p7-snapshot-provider-skip-2026-10-01.md) — Accepted (2026-10-01)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
 - [VD-review-ceremony-tiers-v2b6kp: review ceremony is tiered by package class, and the parallel round comes EARLY](VD-review-ceremony-tiers-v2b6kp.md) — Accepted (2026-08-10)
