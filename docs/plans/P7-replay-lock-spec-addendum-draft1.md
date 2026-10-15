@@ -1,6 +1,6 @@
 # P7 `ReplayIsolated` lock — proposed twin SPEC addendum
 
-**Status:** AMEND REQUIRED after fresh non-author round-3 review; see
+**Status:** AMENDED FOR ROUND 4; fresh non-author review required. The round-3 `AMEND` is recorded in
 [`p7-replay-lock-slice-round3-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round3-20261014.md).
 The round-2 `AMEND` is recorded in
 [`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
@@ -87,15 +87,27 @@ SHA-256 of the following UTF-8 RFC 8785 canonical JSON manifest bytes, with exac
 and no nulls:
 
 ```json
-{"build":{"build_command":"<exact-command>","cgo_enabled":false,"dependencies":[{"mod_sha256":"<sha256>","module":"<module-path>","version":"<version>","zip_sha256":"<sha256>"}],"executable_sha256":"<sha256>","gcflags":"","go_version":"go1.26.7","goarch":"amd64","goos":"linux","ldflags":"","tags":[],"toolchain_sha256":"<sha256>"},"files":[{"mode":"100644","path":"kernel/go.mod","sha256":"<sha256>"}],"projector_revision":"<full-commit-id>","runtime":{"database_collation":"<value>","database_encoding":"UTF8","database_locale":"<value>","database_timezone":"UTC","postgres_binary_sha256":"<sha256>","postgres_version":"<value>"}}
+{"build":{"build_command":"<exact-command>","cgo_enabled":false,"dependencies":[{"mod_sha256":"<sha256>","module":"<module-path>","version":"<version>","zip_sha256":"<sha256>"}],"executable_sha256":"<sha256>","gcflags":"","go_version":"go1.26.7","goarch":"amd64","goos":"linux","ldflags":"","tags":[],"toolchain_archive_format":"tar.gz","toolchain_archive_sha256":"<sha256>","toolchain_sha256":"<sha256>"},"files":[{"mode":"100644","path":"kernel/go.mod","sha256":"<sha256>"}],"projector_revision":"<full-commit-id>","runtime":{"database_collation":"<value>","database_encoding":"UTF8","database_locale":"<value>","database_timezone":"UTC","postgres_archive_format":"txz","postgres_archive_sha256":"<sha256>","postgres_binary_sha256":"<sha256>","postgres_version":"<value>"}}
 ```
 
 The displayed file is shape only: `files` must enumerate **every** tracked Git-tree entry under
 `kernel/` at that commit, sorted by UTF-8 path bytes, each with exact Git mode, repo-relative path,
 and SHA-256 of exact blob bytes. Symlinks, submodules, missing blobs, and untracked runtime inputs
-are unsupported and fail this profile. `toolchain_sha256` hashes a separately committed canonical
-manifest of all regular Go toolchain files under the selected `GOROOT`, sorted by relative UTF-8
-path with mode and SHA-256 of exact bytes; symlinks are unsupported there too. The `build` values
+are unsupported and fail this profile. `toolchain_sha256` hashes the separately committed **UTF-8
+RFC 8785 canonical JSON** bytes of the toolchain manifest. Its exact envelope is
+`{"files":[{"mode":"100755","path":"bin/go","sha256":"<sha256>"}]}` (shape only): exactly one
+`files` member, a nonempty array of objects with exactly `mode`, `path`, and `sha256`; no unknown,
+missing, duplicate, or null members. Enumerate every regular file under the extracted `GOROOT`,
+sorted by UTF-8 relative path bytes. Paths use `/`, have no leading slash, `.` or `..` segment,
+and are unique; `sha256` hashes exact file bytes; `mode` is exactly `100644` or `100755` according
+to the executable bit. Directories are not entries; symlinks and other file types fail. The
+manifest has no trailing newline. Recompute its SHA-256 and require equality with
+`toolchain_sha256`, then compare its complete file set, modes, and hashes to the extracted tree.
+
+`toolchain_archive_sha256` hashes the exact `tar.gz` archive bytes for that toolchain; the archive
+is a committed, retrievable artifact, not merely a download URL or hash. Safely unpack its single
+`go/` root into an empty `GOROOT`, reject duplicate, escaping, symlink, and unsupported entries,
+and verify the extracted tree against the nested manifest **before** any build. The `build` values
 are the actual verified values, not hard-coded example values; nonempty tags are sorted strings,
 and unsupported build flags or environment overrides fail. `dependencies` enumerates the complete
 selected external Go module graph for that build (`go list -m all`, excluding the main module),
@@ -109,11 +121,30 @@ hashes the exact built executable bytes, also retained in that evidence revision
 declared command and inputs, require its output to match those bytes, and run that exact executable
 for baseline and candidate projection; `go run` or an unbound binary is insufficient.
 
+`postgres_archive_sha256` hashes the exact embedded-Postgres `txz` archive bytes, also committed
+and retrievable. Safely extract those verified bytes into a fresh runtime directory, rejecting
+escaping paths and unsafe links; verify `postgres_binary_sha256` against the actual server
+executable used by the isolated replay and verify the effective database settings. A cold clone
+must not fetch this archive from the network. Current P4 `ReplayIsolated` creates its temporary
+store without an archive-injection parameter; a later, separately authorized implementation
+design must show how the verified archive is supplied to that store before claiming L12. Until
+that route is proven, the clean-clone case is `UNVERIFIED`.
+
+Every build/runtime byte artifact named by a SHA-256 here (the projector manifest, toolchain
+archive and manifest, Postgres archive, module `.mod` and `.zip` files, and built executable) must be a
+regular Git-tracked file at `docs/verification/p7-replay-lock-fixtures/bytes/sha256/<digest>` in
+the reviewed evidence revision, with exact bytes matching `<digest>`. A plain clean clone must
+retrieve the bytes; a Git LFS pointer, submodule, symlink, uncommitted cache, remote-only blob, or
+network download is insufficient. Verify the path, size, digest, archive safety, and complete
+extracted inputs before use. If retaining these bytes is impractical, revise L12 and the accepted
+evidence contract by separate decision and review; do not silently weaken the clean-clone claim.
+
 The runtime values are captured from the same isolated replay environment, including the
 Postgres executable's exact bytes and effective database settings. If any additional
 projection-affecting input is discovered, the manifest is incomplete and the lock is `UNVERIFIED`
 pending amendment. The manifest, selected module graph, `.mod` and `.zip` files, full commit ID,
-toolchain manifest, and built executable must be retrievable in the reviewed evidence revision.
+toolchain archive and manifest, Postgres archive, and built executable must be retrievable in the
+reviewed evidence revision.
 A code, dependency, build, or runtime change creates a different revision digest; Git commit
 alone does not identify executable behavior.
 

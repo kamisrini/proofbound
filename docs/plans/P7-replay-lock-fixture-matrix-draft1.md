@@ -1,6 +1,6 @@
 # P7 `ReplayIsolated` lock — proposed fixture and evidence matrix
 
-**Status:** AMEND REQUIRED after fresh non-author round-3 review; see
+**Status:** AMENDED FOR ROUND 4; fresh non-author review required. The round-3 `AMEND` is recorded in
 [`p7-replay-lock-slice-round3-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round3-20261014.md).
 The round-2 `AMEND` is recorded in
 [`p7-replay-lock-slice-round2-20261014.md`](../verification/verdicts/p7-replay-lock-slice-round2-20261014.md).
@@ -18,7 +18,7 @@ fixtures and checks, not claims that they have been run or accepted.
 | Authored declaration | This lock artifact and an exact P5 requirement revision if declared | Canonical lock bytes; parent digest; requirement artifact bytes and digest or explicit `UNDECLARED`. |
 | Observed source | Append-only `store` ledger through `ThroughSeq`, plus complete-ledger preservation | Canonical complete event bytes (including times and connector version), independently checked payload digests, full-prefix SHA-256, frozen twin source digest, and complete-ledger before/after canonical bytes and SHA-256 on success and failure. |
 | Authored test input | Ordered `twin.Candidate` values | Canonical full event bytes, candidate digest, and explicit candidate role. No ledger append. |
-| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision; canonical whole-kernel, toolchain, selected-module, executable, and runtime manifest bytes; retrievable `.mod`, `.zip`, and executable bytes and digests; exact snapshot-map evidence bytes; frozen twin snapshot digest; derivation witness. |
+| Derived baseline | Existing `projections.Projector` applied to the selected prefix | Accepted projector revision; canonical whole-kernel, toolchain, selected-module, executable, and runtime manifest bytes; Git-tracked Go toolchain and embedded-Postgres archives, toolchain manifest, `.mod`, `.zip`, and executable bytes and digests; exact snapshot-map evidence bytes; frozen twin snapshot digest; derivation witness. |
 | Derived candidate behavior | `ReplayIsolated` in temporary `store` | Candidate snapshot bytes and twin digest, verdict, complete sequence map, source preservation and cleanup witnesses. |
 | Replay proof | Existing `twin.Proof` in the returned result | Exact committed six-field proof bytes under the pinned encoding, SHA-256, all five matching bindings, and byte-exact serialization control. |
 | Independent intent evidence | Existing P5 review route for the exact requirement and obligation | Content-addressed review evidence and non-author verdict; no inferred satisfaction. |
@@ -49,10 +49,12 @@ rejected lock is a passing negative control only if the gate actually rejects it
 | L09 | Exact registered P5 requirement revision and one obligation with complete independent review evidence | Pass only for exact source, record ID, artifact digest, obligation ID, and reviewer evidence; cross-provider, stale-revision, absent-obligation, or incomplete-review variants yield `UNVERIFIED`. |
 | L10 | Explicit `UNDECLARED` intent binding | Derived `UNVERIFIED`; no satisfaction claim or stored status row. Missing binding is rejected. |
 | L11 | Hostile JSON, duplicate keys, malformed digest/hex, path escape, spoofed source, and forged candidate-as-observation | All reject without modifying source ledger or accepting proof. |
-| L12 | Replay from a clean clone using only committed artifacts and exact pinned revisions | Rebuild with the committed selected `.mod`/`.zip` bytes and toolchain, match the committed executable SHA-256, then run that executable. Same lock digest, snapshots, proof bytes, verdict, and gate result; no uncommitted module cache or private feed required. |
+| L12 | Replay from a clean clone using only committed artifacts and exact pinned revisions | With network disabled and empty build/runtime caches, resolve every build/runtime digest to a regular Git-tracked byte artifact in the reviewed evidence revision. Safely unpack the committed Go archive, match the exact nested toolchain manifest, build from committed `.mod`/`.zip` bytes, match and run the committed executable, and supply the committed embedded-Postgres archive to the temporary store. Same lock digest, snapshots, proof bytes, verdict, and gate result. If the current P4 temporary store cannot use the verified archive without a separately reviewed implementation route, L12 remains `UNVERIFIED`; no external download or private feed fills the gap. |
 | L13 | Neutral, compile-invalid, and lethal calibration controls, then the declared P7 mutation set | Neutral survives, compile-invalid is invalid, lethal is killed; every declared mutation is accounted for with zero undeclared survivors. |
 | L14 | Empty snapshot-map encoding versus an injected absent-table key | An actual empty `Snapshot.Tables` map encodes as no table keys and hashes to the addendum's `d4fdaf3e…bb82badc` control; adding `"commits_view":[]` changes evidence bytes and frozen `digestSnapshot` and is rejected. A genuinely present empty key, if produced, remains present; absence is never filled from the query list. |
 | L15 | Executable and dependency-byte substitution with unchanged `kernel/` Git blobs | Changed built executable, changed `.mod` or `.zip` bytes, missing module archive, unexpected selected graph entry, or unrecorded module-cache input yields `UNVERIFIED`; raw SHA-256 checks and applicable `go.sum` cross-checks must both pass before rebuild. |
+| L16 | Canonical nested Go toolchain manifest and archive closure | Exact `{"files":[{"mode":"100755","path":"bin/go","sha256":"<sha256>"}]}` shape (values illustrative), sorted unique relative paths, complete extracted regular-file set, modes, and raw-byte digests pass. Changed envelope/member, ordering, path escape, missing/extra file, unsafe link, altered archive bytes, absent committed archive, or a hash-only manifest yields `UNVERIFIED`. |
+| L17 | Embedded-Postgres cold-start archive closure | The exact committed `txz` bytes safely provision the temporary store offline and the launched server executable matches `postgres_binary_sha256`. Missing or changed archive, unsafe extraction, unbound launched binary, network fetch, or inability to supply the archive through a reviewed route yields `UNVERIFIED`. |
 
 The declared positive intent case in L09 needs a requirement that genuinely applies to this
 replay subject. Existing P5 fixtures may test the resolver, but may not be relabeled as a real
@@ -67,7 +69,8 @@ remain pending; the L09 positive case cannot be reported green yet.
 
 The evidence manifest must name the canonical lock SHA-256, the exact evidence revision SHA-256,
 the Git commit containing the fixture corpus, projector revision and manifest digest, all fixture
-file digests, toolchain/build identity, selected module `.mod`/`.zip` and executable digests,
+file digests, Go toolchain and Postgres archive digests, nested toolchain manifest digest,
+selected module `.mod`/`.zip` and executable digests,
 case outcomes, and calibrated mutation universe. The
 independent reviewer records findings and `ACCEPT`, `AMEND`, or `REJECT` against those immutable
 identifiers. The author records the outcome in a verdict and decision; an `AMEND` requires fresh
