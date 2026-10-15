@@ -25,13 +25,35 @@ blocking before a case may report `PASS`:
   this route. The current Go toolchain pin is 1.26.7; version suitability should be reviewed
   before binding a build, because later 1.26 patch releases exist.
 - The Maven JAR's published checksum and nested `txz` matched the directly downloaded bytes,
-  but its PGP signing key was not verified and the nested archive carried no license/notice
-  files. The Maven POM declares Apache 2.0; that is not a clearance of every bundled
-  component. Provenance, notices, and any necessary distribution permission remain
-  unverified. No third-party binary is being committed or redistributed here.
+  but the detached JAR signature did **not** verify. The public key returned for signature
+  key ID `6B02ED0ED53F9FD3` has a self-declared `Developers Zonky` identity; that ID is an
+  encryption-only subkey (`C8C07C1C159A1E0087DF0F4E6B02ED0ED53F9FD3`) that expired in
+  January 2020, before the August 2024 signature. GPG reported `Can't check signature: No
+  public key`; neither a valid signature nor an independently authenticated publisher
+  identity has been established. The JAR and its 1,058-member nested `txz` had no
+  license/copyright/notice-named files. Its Maven POM declares Apache 2.0, but the archive
+  also contains PostgreSQL and other shared libraries; the POM alone does not establish
+  their license or notice coverage. Obtain a trusted publisher key or alternative
+  authenticated provenance and a component-license/notice inventory before clearing this
+  input. Distribution permission remains unverified. No third-party binary is being
+  committed or redistributed here.
 - No companion API/live `twin` SPEC, safe-staging implementation, zero-fetch witness,
   complete-ledger/cleanup fixture, L12/L17 run, or independent implementation verdict exists.
   Missing any of these keeps the relevant case `UNVERIFIED`.
+
+Upstream source check (2026-10-15): the publisher's tagged
+[v16.4.0 build configuration](https://github.com/zonkyio/embedded-postgres-binaries/blob/v16.4.0/build.gradle)
+selects the Debian build route for Linux/amd64. Its
+[build script](https://github.com/zonkyio/embedded-postgres-binaries/blob/v16.4.0/scripts/build-postgres-debian.sh)
+uses PostgreSQL source and copies system libraries including OpenSSL, ICU, libxml2, libxslt,
+zlib, liblzma, and OSSP UUID into the bundle. This source route is not a reproducible-build
+attestation for the downloaded JAR. The tagged repository has a project Apache license, but
+no component-license/notice inventory was located there. The
+[release workflow](https://github.com/zonkyio/embedded-postgres-binaries/blob/v16.4.0/.github/workflows/release.yml)
+supplies signing parameters from secrets without publishing a fingerprint; the maintainer's
+[public GitHub GPG key record](https://api.github.com/users/tomix26/gpg_keys) lists a different
+key ID and does not authenticate the Maven signature. These findings do not close the
+provenance or license-coverage blockers above.
 
 ## Before running a fixture
 
