@@ -7,17 +7,18 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: present the independent round-1 `AMEND` findings for the P7 external-
-prerequisites proposal and ask the owner to authorize documentation-only corrections to the
-decision, amendment, and setup README. Commit the corrected exact revision and obtain a fresh
-non-author review before any API/SPEC or product code. The old Git-tracked-byte/empty-cache
+Exact next action: verify and commit the owner-authorized documentation-only corrections to
+the P7 external-prerequisites decision, amendment, and setup README, then obtain and record a
+fresh non-author `ACCEPT`, `AMEND`, or `REJECT` verdict on the exact amended revision. Do not
+start API/SPEC or product code before that gate. The old Git-tracked-byte/empty-cache
 clean-clone contract remains accepted; L12/L17 remain unverified and implementation stays gated.
 
 Immediate blockers: the owner's no-binary-artifacts-in-Git direction conflicts with the
 previously accepted P7 evidence contract. Fresh independent review returned `AMEND` with two
-high, two medium, and one low finding; the proposed replacement is not accepted. No setup-
-source manifest, runtime fixtures, L12/L17 result, exact
-API/SPEC/fixture plan, implementation authorization/verdict, or requirement satisfaction exists. The
+high, two medium, and one low finding; the owner authorized documentary corrections, but the
+amended replacement is not yet reviewed or accepted. No setup-source manifest, runtime
+fixtures, L12/L17 result, exact API/SPEC/fixture plan, implementation authorization/verdict,
+or requirement satisfaction exists. The
 full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
 panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
 the prior GitHub DNS failure.
@@ -119,9 +120,15 @@ the prior GitHub DNS failure.
   findings concern the higher-level clean-clone criterion, companion staging/cleanup route,
   setup-source cross-field validation, redirect provenance, and binary-exclusion precision.
   No contract change or implementation is accepted by that review.
-- The generated P6 requirement-review packet now includes both active requirements, three active
-  obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
-  26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
+- On owner approval, amended the documentary proposal for all five round-1 findings: the P7
+  plan's clean-clone evidence-control subcriterion is explicitly overlaid; the companion
+  receives verified `txz` bytes and stages them inside its own temporary root; setup-source
+  roles have exact cross-field/projector bindings; every HTTP redirect is rejected; and the
+  exclusion names binary payloads while retaining reviewed module source archives. The
+  amended proposal still awaits fresh non-author review and authorizes no implementation.
+- The generated P6 requirement-review packet includes both active requirements, three active
+  obligations, and two exact reviews. The generated P6 artifact-integrity packet enumerates
+  26 schema-bearing verdicts and 18 documentary verdict artifacts at this checkpoint.
 
 ## Verification
 
@@ -207,11 +214,17 @@ the prior GitHub DNS failure.
   state-freshness, and P6 artifact-integrity checks passed. Bare `make check` was not rerun
   for this review-record-only checkpoint; the same-day Snap Go blocker remains the last
   full-gate result.
+- For the owner-authorized round-1 amendments, the decision index was regenerated after its
+  status changed. Direct whitespace, link, index, state-freshness, and P6 artifact-integrity
+  checks passed. Bare `make check` passed repository self-tests and generated freshness but
+  stopped at `kernel-check` because Snap Go lacks `cap_dac_override`. `index stale` was an
+  expected negative self-test, not an actual stale index. Go build/tests/lint remain
+  unverified by this run.
 
 ## Open, blocked, and unverified
 
-- Open: obtain owner authorization for documentary corrections to the round-1 `AMEND`, commit
-  the corrected decision/amendment/README, and seek a fresh non-author review. Then, if
+- Open: commit the owner-authorized documentary corrections and seek a fresh non-author
+  review of the exact amended revision. Then, if
   accepted, specify and review exact setup-source manifest, SPEC/API, and fixture plan before
   separate implementation authorization. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
