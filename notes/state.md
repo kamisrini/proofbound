@@ -179,6 +179,12 @@ the prior GitHub DNS failure.
 - For the round-2 scope verdict, direct whitespace, link, index, state-freshness, and P6
   artifact-integrity checks passed; the derived packet now counts 17 documentary verdicts.
   Bare `make check` was not rerun for this review-record-only checkpoint.
+- For the external-prerequisites documentation draft, direct whitespace, link, index,
+  state-freshness, and P6 artifact-integrity checks passed after regenerating the decision
+  index. After commit `2d6c464`, bare `make check` passed repository and generated-freshness
+  checks, then stopped at `kernel-check` because Snap Go lacks `cap_dac_override`. `index
+  stale` was an expected negative self-test; no generated artifact was stale. Go
+  build/tests/lint were not verified by this run.
 
 ## Open, blocked, and unverified
 
