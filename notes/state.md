@@ -7,16 +7,16 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: present the corrected P7 external-prerequisites decision, contract
-amendment, and setup README to the owner for authorization to seek fresh non-author review.
-Record
-`ACCEPT`, `AMEND`, or `REJECT` on their exact committed revision before any API/SPEC or product
-code. The old Git-tracked-byte/empty-cache clean-clone contract remains accepted until that
-review; L12/L17 remain unverified and implementation stays gated.
+Exact next action: present the independent round-1 `AMEND` findings for the P7 external-
+prerequisites proposal and ask the owner to authorize documentation-only corrections to the
+decision, amendment, and setup README. Commit the corrected exact revision and obtain a fresh
+non-author review before any API/SPEC or product code. The old Git-tracked-byte/empty-cache
+clean-clone contract remains accepted; L12/L17 remain unverified and implementation stays gated.
 
 Immediate blockers: the owner's no-binary-artifacts-in-Git direction conflicts with the
-previously accepted P7 evidence contract. The proposed replacement and setup README await
-fresh independent review; no setup-source manifest, runtime fixtures, L12/L17 result, exact
+previously accepted P7 evidence contract. Fresh independent review returned `AMEND` with two
+high, two medium, and one low finding; the proposed replacement is not accepted. No setup-
+source manifest, runtime fixtures, L12/L17 result, exact
 API/SPEC/fixture plan, implementation authorization/verdict, or requirement satisfaction exists. The
 full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
 panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
@@ -113,6 +113,12 @@ the prior GitHub DNS failure.
   evidence in Git; exact `.mod`/`.zip` module source bytes remain Git-tracked under the
   accepted evidence route. The setup phase would fetch only the public Go and Postgres binary
   distributions. This correction remains proposed, not independently accepted.
+- Fresh non-author reviewer `Godel` reviewed exact commit `0167746` and returned `AMEND` for
+  the external-prerequisites documentary proposal. The verdict is
+  `docs/verification/verdicts/p7-external-replay-prerequisites-round1-20261015.md`. The five
+  findings concern the higher-level clean-clone criterion, companion staging/cleanup route,
+  setup-source cross-field validation, redirect provenance, and binary-exclusion precision.
+  No contract change or implementation is accepted by that review.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -196,11 +202,16 @@ the prior GitHub DNS failure.
   generated freshness, then stopped at `kernel-check` because Snap Go lacks
   `cap_dac_override` in this sandbox. The `index stale` line was an expected negative
   self-test, not an actual stale index. Go build/tests/lint remain unverified by this run.
+- After recording the independent round-1 `AMEND`, the derived P6 artifact-integrity packet
+  was regenerated for 18 documentary verdicts. Direct whitespace, link, index,
+  state-freshness, and P6 artifact-integrity checks passed. Bare `make check` was not rerun
+  for this review-record-only checkpoint; the same-day Snap Go blocker remains the last
+  full-gate result.
 
 ## Open, blocked, and unverified
 
-- Open: obtain owner authorization and fresh non-author review of the corrected proposed
-  external-prerequisites amendment and setup README; then, if
+- Open: obtain owner authorization for documentary corrections to the round-1 `AMEND`, commit
+  the corrected decision/amendment/README, and seek a fresh non-author review. Then, if
   accepted, specify and review exact setup-source manifest, SPEC/API, and fixture plan before
   separate implementation authorization. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
