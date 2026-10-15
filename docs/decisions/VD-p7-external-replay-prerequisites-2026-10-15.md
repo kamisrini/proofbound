@@ -1,8 +1,8 @@
 # VD-p7-external-replay-prerequisites-2026-10-15: public binary setup outside Git
 
-**Status:** OWNER DIRECTION RECORDED; round-1 non-author review AMEND; fresh review pending.
-See the [round-1 verdict](../verification/verdicts/p7-external-replay-prerequisites-round1-20261015.md).
-This does not replace the accepted P7 evidence contract yet or authorize code.
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING — fresh non-author review round 2;
+implementation separately gated. See the [round-1 `AMEND`](../verification/verdicts/p7-external-replay-prerequisites-round1-20261015.md)
+and [round-2 `ACCEPT`](../verification/verdicts/p7-external-replay-prerequisites-round2-20261015.md).
 **Date:** 2026-10-15
 
 ## Decision requested by owner
@@ -44,3 +44,13 @@ source-ledger preservation, and no-new-provider/feed/event/writable-truth exclus
 change. The old L12 clean-clone-offline claim and accepted first-slice provisioning details
 must be amended and freshly reviewed before any implementation. No runtime fixture, L12/L17
 pass, requirement satisfaction, or implementation verdict is accepted by this owner direction.
+
+## Fresh non-author review outcome — round 2 — 2026-10-15
+
+The exact decision, amendment, and setup README at commit
+`a24fc19b29206d0bd2469f5a957af1edde0d9500` received
+[`ACCEPT` for documentary planning](../verification/verdicts/p7-external-replay-prerequisites-round2-20261015.md).
+This post-review status annotation does not alter the reviewed contract bytes at that commit.
+The accepted overlay replaces only the named binary-byte and clean-clone planning obligations;
+it does not approve a setup-source manifest, API/SPEC, runtime fixture, L12/L17 result,
+requirement satisfaction, or product implementation. Those remain separately gated.

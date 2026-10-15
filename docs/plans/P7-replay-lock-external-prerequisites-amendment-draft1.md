@@ -1,9 +1,10 @@
 # P7 replay lock — external-prerequisites evidence amendment
 
-**Status:** AMENDED PROPOSAL 2026-10-15 after the fresh non-author
-[`AMEND`](../verification/verdicts/p7-external-replay-prerequisites-round1-20261015.md);
-new review pending. Documentary amendment only; no product code, binary corpus, runtime
-result, or acceptance claim is authorized. The
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING by fresh non-author
+[round-2 review](../verification/verdicts/p7-external-replay-prerequisites-round2-20261015.md)
+of exact commit `a24fc19b29206d0bd2469f5a957af1edde0d9500`. This status annotation is
+post-review; the normative contract bytes are those at that commit. No product code, binary
+corpus, runtime result, or implementation acceptance is authorized. The
 [owner direction](../decisions/VD-p7-external-replay-prerequisites-2026-10-15.md) excludes
 binary artifacts from Git, not non-code text or source files. Read with the prior
 [addendum](P7-replay-lock-spec-addendum-draft1.md),

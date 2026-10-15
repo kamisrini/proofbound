@@ -7,18 +7,19 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: verify and commit the owner-authorized documentation-only corrections to
-the P7 external-prerequisites decision, amendment, and setup README, then obtain and record a
-fresh non-author `ACCEPT`, `AMEND`, or `REJECT` verdict on the exact amended revision. Do not
-start API/SPEC or product code before that gate. The old Git-tracked-byte/empty-cache
-clean-clone contract remains accepted; L12/L17 remain unverified and implementation stays gated.
+Exact next action: present the accepted P7 external-prerequisites documentary contract to the
+owner and request authorization for the next bounded planning step: establish exact direct
+public setup-source URLs, byte identities, and provenance go/no-go before drafting the
+setup-source manifest, companion API/live `twin` SPEC amendment, and fixture plan. Obtain
+separate review and implementation authorization before product code. L12/L17 remain
+unverified and implementation stays gated.
 
-Immediate blockers: the owner's no-binary-artifacts-in-Git direction conflicts with the
-previously accepted P7 evidence contract. Fresh independent review returned `AMEND` with two
-high, two medium, and one low finding; the owner authorized documentary corrections, but the
-amended replacement is not yet reviewed or accepted. No setup-source manifest, runtime
-fixtures, L12/L17 result, exact API/SPEC/fixture plan, implementation authorization/verdict,
-or requirement satisfaction exists. The
+Immediate blockers: the amended P7 external-prerequisites documentary proposal received fresh
+non-author `ACCEPT`, replacing the old committed-binary/empty-cache clean-clone planning claim
+with prepared offline replay. Direct public sources, exact upstream byte identity, and
+redistribution/provenance remain unverified after Maven DNS failure. No setup-source manifest,
+runtime fixtures, L12/L17 result, exact API/SPEC/fixture plan, implementation authorization/
+verdict, or requirement satisfaction exists. The
 full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
 panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
 the prior GitHub DNS failure.
@@ -29,8 +30,10 @@ the prior GitHub DNS failure.
   The remote tip is unverified.
 - Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
-  fixture, product implementation, or independent implementation verdict is accepted.
+- The P7 addendum and fixture matrix were accepted for documentary planning; the later
+  external-prerequisites amendment is now accepted as an overlay for its named binary and
+  clean-clone obligations only. No runtime fixture, product implementation, or independent
+  implementation verdict is accepted.
 - Fresh non-author reviewer `Kepler` accepted the exact amended first-slice **scope proposal**
   at commit `beea925`, after reviewer `Hume` returned round-1 `AMEND`. The accepted scope
   proposes only the offline Postgres provisioning seam and L17 evidence. Its committed-archive
@@ -125,10 +128,15 @@ the prior GitHub DNS failure.
   receives verified `txz` bytes and stages them inside its own temporary root; setup-source
   roles have exact cross-field/projector bindings; every HTTP redirect is rejected; and the
   exclusion names binary payloads while retaining reviewed module source archives. The
-  amended proposal still awaits fresh non-author review and authorizes no implementation.
+  amended proposal then awaited fresh non-author review and authorized no implementation.
+- Fresh non-author reviewer `Locke` reviewed the exact amended commit `a24fc19`, with all
+  three artifact SHA-256 values matched, and returned `ACCEPT` with no new finding. The
+  verdict is `docs/verification/verdicts/p7-external-replay-prerequisites-round2-20261015.md`.
+  This accepts the documentary overlay only, not prerequisite provenance, runtime fixtures,
+  an L12/L17 result, product implementation, or an independent implementation verdict.
 - The generated P6 requirement-review packet includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet enumerates
-  26 schema-bearing verdicts and 18 documentary verdict artifacts at this checkpoint.
+  26 schema-bearing verdicts and 19 documentary verdict artifacts at this checkpoint.
 
 ## Verification
 
@@ -220,12 +228,15 @@ the prior GitHub DNS failure.
   stopped at `kernel-check` because Snap Go lacks `cap_dac_override`. `index stale` was an
   expected negative self-test, not an actual stale index. Go build/tests/lint remain
   unverified by this run.
+- After recording the round-2 documentary `ACCEPT`, the decision index and P6 artifact-
+  integrity packet were regenerated. Direct whitespace, link, index, state-freshness, and
+  P6 artifact-integrity checks passed. Bare `make check` was not rerun for the verdict/status-
+  only checkpoint; the prior same-day Snap Go stop remains the last full-gate result.
 
 ## Open, blocked, and unverified
 
-- Open: commit the owner-authorized documentary corrections and seek a fresh non-author
-  review of the exact amended revision. Then, if
-  accepted, specify and review exact setup-source manifest, SPEC/API, and fixture plan before
+- Open: verify exact direct public binary sources, byte identities, and redistribution/
+  provenance; specify and review the setup-source manifest, SPEC/API, and fixture plan before
   separate implementation authorization. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
   a separate non-author review of any implementation. The `hooks-test` Makefile loop can
