@@ -135,6 +135,12 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   artifact-integrity packet was regenerated for the new verdict. Bare `make check` was not
   rerun for this review-record-only checkpoint; the earlier same-day Snap Go and known linter
   blockers remain unresolved.
+- For the bounded first-slice proposal, direct whitespace, link, index, state-freshness, and P6
+  artifact-integrity checks passed. After documentation commit `d23140c`, bare `make check`
+  passed repository/generated checks, including generated freshness, but stopped at
+  `kernel-check` because Snap Go lacked `cap_dac_override`. `index stale` was an expected
+  negative self-test, not a stale artifact. This run did not verify Go build/tests/lint; the
+  earlier incompatible-toolchain lint blocker remains unresolved.
 
 ## Open, blocked, and unverified
 
