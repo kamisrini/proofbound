@@ -7,15 +7,15 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: obtain owner scope approval for
-`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md`, then obtain a fresh
-non-author review of that exact proposal and record `ACCEPT`, `AMEND`, or `REJECT` before any
-product code. The proposed first slice is the offline Postgres `BinariesDir` provisioning seam
+Exact next action: ask the owner to approve documentation-only amendments to
+`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md` for all three round-1
+`AMEND` findings, then obtain a fresh non-author review of the amended exact revision before
+any product code. The first slice remains the offline Postgres `BinariesDir` provisioning seam
 and L17 evidence, not a full L12 pass. Keep behavior-lock, regeneration, snapshot-provider,
 and external-feed implementation gated.
 
 Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
-runtime fixtures, the L12 offline replay result, first-slice scope approval/review,
+runtime fixtures, the L12 offline replay result, accepted first-slice scope,
 implementation authorization and verdict, and
 requirement satisfaction are absent. The full gate cannot complete because the installed linter
 crashes on a Go 1.27 version marker. Push
@@ -29,9 +29,10 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
 - The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
   fixture, product implementation, or independent implementation verdict is accepted.
-- A bounded first implementation slice proposal is drafted but not yet owner-approved or
-  independently reviewed. It proposes only the offline Postgres provisioning seam and L17
-  evidence; L12 and the full lock evaluator remain outside this first slice.
+- The owner approved sending the bounded first implementation slice proposal for a fresh
+  non-author review. Reviewer `Hume` returned `AMEND` on the exact proposal; its scope is not
+  accepted. It proposes only the offline Postgres provisioning seam and L17 evidence; L12 and
+  the full lock evaluator remain outside this first slice.
 
 ## Completed
 
@@ -80,6 +81,11 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 - Drafted `docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md` to present
   a bounded offline Postgres seam, L17 fixture evidence, archive-size/provenance go/no-go,
   and explicit stop points. This is a proposal only; no product code or runtime corpus changed.
+- On owner approval to seek review, fresh non-author reviewer `Hume` reviewed exact commit
+  `6129834` and returned `AMEND` for the proposed first slice. The three findings require a
+  zero-fetch witness and complete staged binary verification before store startup, a post-open
+  failure cleanup control, and byte-exact legacy/companion proof fixtures. The verdict is
+  `docs/verification/verdicts/p7-replay-first-implementation-scope-round1-20261015.md`.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -141,11 +147,16 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel-check` because Snap Go lacked `cap_dac_override`. `index stale` was an expected
   negative self-test, not a stale artifact. This run did not verify Go build/tests/lint; the
   earlier incompatible-toolchain lint blocker remains unresolved.
+- For the round-1 first-slice scope verdict, direct whitespace, link, index,
+  state-freshness, and P6 artifact-integrity checks passed. The derived artifact-integrity
+  packet was regenerated for the new documentary verdict. Bare `make check` was not rerun for
+  this verdict-record-only checkpoint; the prior same-day Snap Go stop remains.
 
 ## Open, blocked, and unverified
 
-- Open: obtain owner approval and fresh non-author review of the proposed bounded first slice;
-  if accepted, resolve archive budget and exact SPEC/API before implementation. Later build
+- Open: obtain owner approval for documentation-only amendments to the proposed first slice and
+  a fresh non-author review of the amended exact revision; if accepted, resolve archive budget
+  and exact SPEC/API before implementation. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
   a separate non-author review of any implementation. The `hooks-test` Makefile loop can
   mask a failing intermediate self-test because it returns only the last test's status; repair
