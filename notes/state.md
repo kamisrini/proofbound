@@ -109,6 +109,13 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   requirement-review, census, state-freshness, and whitespace checks passed. The derived
   artifact-integrity packet was regenerated for the new documentary verdict. Bare `make check`
   was not rerun for this review-record-only checkpoint; its prior Snap Go/linter blockers remain.
+- On 2026-10-15, the round-3 planning amendment passed link, index, P6 artifact-integrity,
+  exact requirement-review, state-freshness, and whitespace checks. The main manifest example
+  parsed with canonical key order. Bare `make check` after documentation commit `e4ebf73`
+  passed repository and generated-freshness checks, then stopped at `kernel-check` because the
+  sandboxed Snap Go lacks `cap_dac_override`. `index stale` was an expected negative-test
+  message; no generated artifact was stale. Go build/tests/lint were not rerun outside the
+  sandbox for this documentation-only change; compatible-toolchain lint remains unverified.
 
 ## Open, blocked, and unverified
 
