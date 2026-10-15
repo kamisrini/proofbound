@@ -7,12 +7,12 @@ As of: 2026-10-15
 
 ## Resume — 2026-10-15
 
-Exact next action: ask the owner to approve documentation-only amendments to
-`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md` for all three round-1
-`AMEND` findings, then obtain a fresh non-author review of the amended exact revision before
-any product code. The first slice remains the offline Postgres `BinariesDir` provisioning seam
-and L17 evidence, not a full L12 pass. Keep behavior-lock, regeneration, snapshot-provider,
-and external-feed implementation gated.
+Exact next action: obtain a fresh non-author review of the amended exact revision of
+`docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md`, record `ACCEPT`,
+`AMEND`, or `REJECT`, and keep product code blocked until the scope is accepted. The first
+slice remains the offline Postgres `BinariesDir` provisioning seam and L17 evidence, not a
+full L12 pass. Keep behavior-lock, regeneration, snapshot-provider, and external-feed
+implementation gated.
 
 Immediate blockers: documentary planning was accepted by fresh round-4 non-author review, but
 runtime fixtures, the L12 offline replay result, accepted first-slice scope,
@@ -29,10 +29,10 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
 - The P7 addendum and fixture matrix are accepted for documentary planning only; no runtime
   fixture, product implementation, or independent implementation verdict is accepted.
-- The owner approved sending the bounded first implementation slice proposal for a fresh
-  non-author review. Reviewer `Hume` returned `AMEND` on the exact proposal; its scope is not
-  accepted. It proposes only the offline Postgres provisioning seam and L17 evidence; L12 and
-  the full lock evaluator remain outside this first slice.
+- The owner approved documentation-only amendments after reviewer `Hume` returned `AMEND` on
+  the first-slice proposal. The amended proposal awaits fresh non-author review; its scope is
+  not yet accepted. It proposes only the offline Postgres provisioning seam and L17 evidence;
+  L12 and the full lock evaluator remain outside this first slice.
 
 ## Completed
 
@@ -86,6 +86,11 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
   zero-fetch witness and complete staged binary verification before store startup, a post-open
   failure cleanup control, and byte-exact legacy/companion proof fixtures. The verdict is
   `docs/verification/verdicts/p7-replay-first-implementation-scope-round1-20261015.md`.
+- On 2026-10-15, the owner approved documentation-only amendments for those three findings.
+  The amended proposal now requires a pre-open complete staged-tree/`pg_ctl` check and a
+  zero-fetch witness, a post-open projection-failure cleanup case with whole-ledger bytes, and
+  byte-exact legacy/companion `Result`/six-field `Proof` fixtures. No product code or runtime
+  corpus was changed; the amended revision awaits fresh non-author review.
 - The generated P6 requirement-review packet now includes both active requirements, three active
   obligations, and two exact reviews. The generated P6 artifact-integrity packet now enumerates
   26 schema-bearing verdicts and 15 documentary verdict artifacts after the round-4 verdict.
@@ -154,8 +159,8 @@ authorization/authentication remain unverified after the prior GitHub DNS failur
 
 ## Open, blocked, and unverified
 
-- Open: obtain owner approval for documentation-only amendments to the proposed first slice and
-  a fresh non-author review of the amended exact revision; if accepted, resolve archive budget
+- Open: obtain a fresh non-author review of the amended exact first-slice proposal; if accepted,
+  resolve archive budget
   and exact SPEC/API before implementation. Later build
   committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
   a separate non-author review of any implementation. The `hooks-test` Makefile loop can
