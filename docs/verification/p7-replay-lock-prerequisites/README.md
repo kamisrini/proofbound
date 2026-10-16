@@ -15,11 +15,13 @@ Those module archives are source inputs, not permission to commit executable/run
 
 The [candidate setup-source manifest](../p7-replay-lock-fixtures/setup-sources.json) records
 the two directly fetched Linux/amd64 archives measured on 2026-10-15. It is a **proposed**
-source record, not a reviewed setup manifest or a passing fixture. The following remain
-blocking before a case may report `PASS`:
+source record, not an accepted setup manifest or a passing fixture. Its
+[round-1 non-author review](../verdicts/p7-replay-setup-sources-round1-20261016.md) returned
+`AMEND`. The following remain blocking before a case may report `PASS`:
 
-- Fresh non-author review of the manifest's exact committed bytes, source URLs, role/member
-  rules, and platform. No case manifest binds its SHA-256 and evidence revision yet.
+- Fresh non-author `ACCEPT` of the amended setup documentation's exact committed bytes,
+  source URLs, role/member rules, and platform. No case manifest binds the setup-source
+  manifest's SHA-256 and evidence revision yet.
 - No reviewed projector/build manifest, complete Go module `.mod`/`.zip` byte corpus,
   toolchain-tree inventory, built executable digest, or runtime fixture corpus exists for
   this route. The current Go toolchain pin is 1.26.7; version suitability should be reviewed
@@ -57,11 +59,12 @@ provenance or license-coverage blockers above.
 
 ## Before running a fixture
 
-1. Start with a plain clone at the exact reviewed commit. Require a reviewed
+1. Start with a plain clone at the exact reviewed commit. Require an independently accepted
    `docs/verification/p7-replay-lock-fixtures/setup-sources.json` and its SHA-256 in the case
-   manifest. **The current file is only a draft; it has no independent review or case-manifest
-   binding, and the runtime corpus does not exist. Stop as `UNVERIFIED` until those gates
-   close.** Never infer a digest from a local cache filename.
+   manifest. **The current file remains a draft: round-1 review returned `AMEND`, no
+   independent `ACCEPT` or case-manifest binding exists, and the runtime corpus does not
+   exist. Stop as `UNVERIFIED` until those gates close.** Never infer a digest from a local
+   cache filename.
 2. On a network-enabled setup machine, obtain only the exact public Go toolchain archive and
    embedded-Postgres Maven distribution named by that manifest. Disable HTTP redirect
    following; any 3xx response fails setup. The requested and final URLs must be identical.
@@ -73,11 +76,14 @@ provenance or license-coverage blockers above.
 3. Keep all downloaded and extracted bytes in a dedicated directory **outside the clone**.
    Verify every raw SHA-256 and size before use; safely extract into empty directories and
    compare complete toolchain and Postgres file inventories. For Postgres, require executable
-   `bin/pg_ctl`, bind the actual server binary digest, and reject unsafe links. Build the
-   projector executable from the pinned source and Git-tracked verified module inputs;
-   compare its exact SHA-256 to the reviewed manifest. Record commands, resolved URLs,
-   versions, digests, and effective database settings. Do not use an ambient module or
-   embedded-Postgres cache.
+   `bin/pg_ctl`, bind the actual server binary digest, and reject unsafe links. Verify the
+   Git-tracked module bytes against the projector manifest and applicable `go.sum`; reject
+   unrecorded Go cache/workspace, `replace`, vendor, or other build inputs. Build the
+   projector executable from the verified toolchain, pinned source, and verified modules;
+   compare its exact SHA-256 to the reviewed manifest. Record the exact requested and final
+   URLs (which must match), commands, time, sizes, digests, complete extracted inventories,
+   build flags, versions, and effective database settings. Do not trust the setup directory
+   by path alone or use an ambient module or embedded-Postgres cache.
 4. Only after setup verification, run the replay fixture with outbound network denied and
    loopback available. Supply the exact verified Postgres `txz` bytes and reviewed digest to
    the companion entry point. It must rehash, safely extract inside its own fresh temporary
