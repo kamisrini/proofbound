@@ -29,9 +29,11 @@ implementation verdict. Go 1.26.7 version suitability remains unreviewed. The fu
 - `main` tracks `origin/main`. At the initial 2026-10-17 inspection, HEAD was
   `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` with no ahead/behind count and no
   commits dated today. The documentation-only checkpoint is
-  `de2e3be0b2f0ed53586948bf3b97e5fa69198899` (ahead by one at this writing);
-  the final closeout commit and push are pending. `origin/main` was reachable and
-  still at `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` before final commit.
+  `de2e3be0b2f0ed53586948bf3b97e5fa69198899`; the gate-limitation follow-up
+  is `76dd2d0538ce669f14112274a3f928a74efadf13`. Both pushed successfully
+  to `origin/main`, which was independently verified at the latter hash. The final
+  handoff-note correction was also pushed before end of day. Tracked files are
+  clean; two unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
   (SHA-256 `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`)
   and `kernel/cmd/p6dbprobe/main.go`
