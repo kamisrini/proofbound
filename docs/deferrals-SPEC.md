@@ -46,5 +46,13 @@ not performed. An owner deferral is `status=OPEN` with an appropriate `hold_type
 5. Query with `scripts/deferrals.sh --open`, `--status STATUS`, or `--hold-type HOLD_TYPE`.
 6. On completion, update the same row to `RESOLVED`, `REJECTED`, or `RETIRED`; do not delete it.
 
+## Dormant-until-ready policy
+
+An `OPEN` deferral is a dormant record, not an active work queue. The agent must skip it and must
+not repeatedly ask, remind, or pressure the owner about it. Resume or work an item only when the
+owner explicitly says they are ready, asks to resume it, or names it in a work request. Until then,
+preserve its row and evidence, leave its lifecycle status `OPEN`, and continue with other authorized
+work. The owner may query the register at any time without activating any row.
+
 The ignored `notes/overall-status.md` may summarize this register for local coordination, but it is
 not the source of truth.

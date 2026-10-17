@@ -1,4 +1,4 @@
 # The canonical deferral register. One row per item; fields are tab-separated.
 # status is the lifecycle state. hold_type carries the human reason/synonym for an OPEN item.
 id	status	hold_type	owner	created	phase	subject	reason	review_trigger	unblock_condition	evidence
-DEF-P7-001	OPEN	POSTPONED	project-owner	2026-10-17	P7	third-party-binary-provenance	Owner postponed the provenance and licensing check for the pinned PostgreSQL input	explicit owner decision to resume	publisher-authenticated provenance and complete component-license/notice review	notes/state.md,notes/journal/2026-10-17.md,ROADMAP.md
+DEF-P7-001	OPEN	POSTPONED	project-owner	2026-10-17	P7	third-party-binary-provenance	Owner postponed the provenance and licensing check for the pinned PostgreSQL input	owner explicitly says ready or asks to resume	publisher-authenticated provenance and complete component-license/notice review	notes/state.md,notes/journal/2026-10-17.md,ROADMAP.md

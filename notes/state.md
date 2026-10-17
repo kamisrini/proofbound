@@ -11,7 +11,9 @@ Exact next action: keep deferral `DEF-P7-001`, the third-party binary provenance
 go/no-go, deferred by owner direction. Do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not start companion, behavior-lock, regeneration, snapshot-provider, or
 external-feed implementation from the documentary setup acceptance. Resume the binary
-check only after an explicit owner decision.
+check only after the owner explicitly says they are ready, asks to resume it, or names it in a work
+request. Do not ask, remind, or pressure the owner about this or any other open deferral; skip all
+open deferrals until explicitly activated.
 
 Immediate blockers: the setup-source manifest and README have fresh non-author
 documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
@@ -20,9 +22,9 @@ the pinned PostgreSQL JAR's detached signature did not verify with the public ke
 publisher identity and bundled license/notice coverage remain unverified. There is no
 case-manifest binding, projector/build manifest, complete Go module byte corpus, reviewed
 companion API/live `twin` SPEC or fixture corpus, L12/L17 runtime result, or independent
-implementation verdict. Go 1.26.7 version suitability remains unreviewed. The full
-`make check` gate has not completed on this host; see Verification below. The provenance and
-licensing check is intentionally deferred, not accepted or passed.
+implementation verdict. The full `make check` gate passes outside the restricted sandbox with
+the pinned Go 1.26.7 toolchain; the default sandbox remains capability-limited. The provenance
+and licensing check is intentionally deferred, not accepted or passed.
 
 ## Branch and local ownership
 
@@ -61,6 +63,8 @@ licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-17, aligned `scripts/p6-task1-close.sh` with the current canonical README status
   wording. The targeted P6 closure test, deferral-register check, and artifact-integrity check
   pass. The ignored `notes/overall-status.md` was refreshed for the same closeout.
+- On 2026-10-17, made open deferrals dormant by policy: preserve and query them, but do not ask,
+  remind, or resume them until the owner explicitly activates one.
 
 ## Open and unverified
 

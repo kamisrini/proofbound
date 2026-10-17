@@ -24,6 +24,9 @@ For every newly postponed, deferred, blocked, or owner-pending item, add or upda
 review trigger, unblock condition, and evidence paths. Run `scripts/deferrals.sh --check`; use
 `status=OPEN` with a hold type such as `POSTPONED`, `AWAITING_OWNER`, or `PENDING_PREREQUISITE`.
 Do not delete closed rows; mark them `RESOLVED`, `REJECTED`, or `RETIRED` with closing evidence.
+Treat every `status=OPEN` deferral as dormant until the owner explicitly says they are ready,
+asks to resume it, or names it in a work request. Do not repeatedly ask, remind, or pressure the
+owner about open deferrals; preserve them and skip them while choosing other authorized work.
 
 Run the appropriate verification gate, especially bare `make check`; if generated-index or
 invariant-lock freshness fails, regenerate the derived artifact and rerun the gate. Treat expected

@@ -56,6 +56,9 @@ Files + git + grep ARE the record during bootstrap. Derived indexes only (`make 
   inspection, journal/state durability, `make check`, coherent commit/push, and bundle verification.
   The next action written into `notes/state.md` is agent handoff state, not a second user command.
   `/proofbound-wrap` is optional only when that command exists in the checkout.
+- **Deferrals:** rows with `status=OPEN` are dormant until the owner explicitly says they are ready,
+  asks to resume, or names the item in a work request. Do not repeatedly ask or remind the owner;
+  preserve the row and skip it while selecting other authorized work.
 - **Decisions during work:** `/proofbound-decide` immediately, not at session end.
 - **Before merging a meaningful chunk:** `/proofbound-review` (adversarial pass against these laws + the spec).
 - **Parallel sessions:** exactly one session owns `notes/` writes and `/proofbound-wrap` at a time; subagents never write `notes/state.md` or the journal — they return results to the owning session; parallel worktree sessions write journal fragments to `notes/tmp/` and the owner merges at wrap.
