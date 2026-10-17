@@ -71,6 +71,9 @@ and licensing check is intentionally deferred, not accepted or passed.
   `docs/decisions/VD-p7-readiness-manifest-2026-10-17.md`: exact top-level fields, no-null rules,
   derived case status, outcome vocabulary, content references, and explicit pending review state.
   Fresh non-author review is still required before implementation.
+- On 2026-10-17, froze commit `334b33822cfe2cf35071ee936f260ed079b8a6c1` into
+  `docs/verification/p7-readiness-manifest-review-packet-20261017.md` with the exact corpus
+  digests and review questions. The packet is a review request, not a verdict.
 
 ## Open and unverified
 
