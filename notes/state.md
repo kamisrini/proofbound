@@ -27,13 +27,13 @@ licensing check is intentionally deferred, not accepted or passed.
 ## Branch and local ownership
 
 - `main` tracks `origin/main`. At the initial 2026-10-17 inspection, HEAD was
-  `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` with no ahead/behind count and no
-  commits dated today. The documentation-only checkpoint is
-  `de2e3be0b2f0ed53586948bf3b97e5fa69198899`; the gate-limitation follow-up
-  is `76dd2d0538ce669f14112274a3f928a74efadf13`. Both pushed successfully
-  to `origin/main`, which was independently verified at the latter hash. The final
-  handoff-note correction was also pushed before end of day. Tracked files are
-  clean; two unrelated user-owned untracked paths keep the worktree non-clean.
+  `71d5d192b3a6967ba89bee2eb16ef123f6ae6f7f` before this closeout. The branch
+  contains the P7 alignment, owner-deferral, and queryable deferral-register commits;
+  this closeout adds the stale-validator repair and refreshed durability records.
+  After the closeout commit, `main` is ahead of `origin/main` by four commits.
+  Push was not attempted: it is not authorized for this closeout and the remote was
+  not DNS-reachable from this environment. Tracked files are clean after commit; two
+  unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
   (SHA-256 `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`)
   and `kernel/cmd/p6dbprobe/main.go`
@@ -58,6 +58,9 @@ licensing check is intentionally deferred, not accepted or passed.
   EOD prompt as a lightweight repeatable closeout step. A fail-closed hook-loop repair was
   trialed but withdrawn when the intent-delivery gate required a relevant `Intent:` claim;
   no product code or runtime fixture was changed.
+- On 2026-10-17, aligned `scripts/p6-task1-close.sh` with the current canonical README status
+  wording. The targeted P6 closure test, deferral-register check, and artifact-integrity check
+  pass. The ignored `notes/overall-status.md` was refreshed for the same closeout.
 
 ## Open and unverified
 
@@ -81,13 +84,17 @@ licensing check is intentionally deferred, not accepted or passed.
 - The existing `make hooks-test` loop can mask an intermediate failing self-test by returning
   the last script's status. A fail-closed repair needs a relevant accepted change intent
   before a governed Makefile change is committed. Do not cite the unrelated P5 intent.
+- The P6 closure checker had retained historical README wording and failed against the aligned
+  roadmap text; this is repaired and verified. Keep closure assertions tied to canonical current
+  status vocabulary when roadmap wording changes.
 
 ## Verification
 
-- Initial bare `make check` on 2026-10-17 reached `commit-cadence` and stopped because
-  preserved untracked paths made the old HEAD dirty. The old hook-test loop had masked a
-  real stale P6 packet and a sandbox Snap Go failure. `index stale; run make index` was an
-  expected negative-test message, not an actual stale decision index.
+- The final bare `make check` on 2026-10-17 passed the deferral, generated/documentary,
+  P6 closure, package, and hostile-fixture checks, then failed at live `kernel-check`
+  because the installed Snap Go runtime lacks `cap_dac_override`. `index stale; run make index`
+  was an expected negative-test message, not an actual stale decision index; temporary bundle
+  verification lines were also self-test output, not a failure.
 - Direct `scripts/p6-artifact-integrity.sh --check` found 19 versus 21 documentary
   verdicts; `--write` regenerated the derived packet and direct `--check` now passes.
   `make index-check` and `scripts/invariant-lint.sh` pass.
@@ -100,10 +107,13 @@ licensing check is intentionally deferred, not accepted or passed.
   installed linter on `PATH`, bare `make check` reached lint and failed on a Go
   1.27-versus-1.26 loader panic. Overall gate: **FAIL/UNVERIFIED**, not `PASS`.
   `INERT cleanroom: no readable external pattern file` leaves that control unproved.
+  Overall verification remains **FAIL/UNVERIFIED**, not `PASS`.
 
 ## Institutionalized improvement
 
 The canonical EOD prompt now requires a direct P6 artifact-integrity freshness check after
-documentary verdicts. This is an interim closeout control, not a claim that the existing
-hook-test loop is fail-closed. Preserve reviewed setup bytes; record changing acceptance
-status in verdicts and this state note instead of silently changing reviewed content.
+documentary verdicts and a queryable deferral-register update. The P6 closure assertion was
+aligned to canonical README status wording after the full gate exposed the stale expectation.
+These are lightweight closeout controls, not a claim that the existing hook-test loop is
+fail-closed. Preserve reviewed setup bytes; record changing acceptance status in verdicts and
+this state note instead of silently changing reviewed content.

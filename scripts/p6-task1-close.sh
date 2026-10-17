@@ -23,7 +23,7 @@ mapfile -t c2 < <(awk -F '\t' '$2 == "C2" { print $1 }' "$rows")
 for n in $(seq 1 35); do printf -v id 'C1-%03d' "$n"; [[ " ${c1[*]} " == *" $id "* ]] || die "missing $id"; done
 for n in $(seq 1 41); do printf -v id 'C2-%03d' "$n"; [[ " ${c2[*]} " == *" $id "* ]] || die "missing $id"; done
 
-has "$repo/README.md" 'P5 accepted; P6 consolidation active.'
+has "$repo/README.md" 'Current project status: P6 complete; P7 planning only.'
 for name in check-witnessed verify gates-canary gates-enforce invariants-lock identity-inventory mutants; do
   target "$name" || die "missing Make target $name"
   has "$repo/README.md" "make $name"
