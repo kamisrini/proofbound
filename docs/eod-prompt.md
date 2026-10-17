@@ -23,6 +23,8 @@ negative-test messages separately from actual failures. Commit only coherent com
 unfinished or unverified implementation. Push if authorized and authenticated. Create and verify
 the dated Git bundle fallback. Confirm the final repository is clean and report the commit hash,
 push status, verification result, backup path, unresolved work, and tomorrow’s first action.
+After adding documentary verdicts, check `scripts/p6-artifact-integrity.sh --check`; if its
+generated packet is stale, run `--write` and recheck it before the closeout commit.
 
 If there are no meaningful changes, do not manufacture a commit; still refresh state if needed and
 report that the repository was already complete and clean.

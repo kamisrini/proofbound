@@ -1,280 +1,95 @@
 # Proofbound — Current State
 
-> THE resume note. Overwrite in place; never append and never create a second state file.
-> A fresh session reads CLAUDE.md, then this file, before acting.
+> THE resume note. Rewrite in place; never append or create a second state file.
+> A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-As of: 2026-10-15
+As of: 2026-10-17
 
-## Resume — 2026-10-15
+## Resume — 2026-10-17
 
-Exact next action: present the proposed canonical P7 setup-source manifest and its explicit
-`UNVERIFIED` blockers to the owner. Request direction for the next bounded step: verify Maven
-signing identity, bundled notices, and Go version suitability before seeking non-author
-review of the manifest and drafting the companion API/live `twin` SPEC and fixture plan.
-Obtain separate review and implementation authorization before product code. L12/L17 remain
-unverified and implementation stays gated.
+Exact next action: perform a read-only provenance go/no-go for the pinned Linux/amd64
+PostgreSQL 16.4.0 Maven JAR. Seek a publisher-authenticated signing key or equivalent
+artifact provenance and a component-license/notice inventory for its bundled libraries;
+if unavailable, document `NO-GO` and propose an alternate authenticated source for owner
+review. Do not start companion, behavior-lock, regeneration, snapshot-provider, or
+external-feed implementation from the documentary setup acceptance.
 
-Immediate blockers: the P7 external-prerequisites documentary overlay is accepted, but the
-new setup-source manifest is a draft without independent review or case-manifest binding.
-Direct Go and Maven bytes were retrieved and matched; Maven signature identity, bundled
-license/notice clearance, Go version suitability, and the complete projector/build manifest
-remain unverified. No runtime fixtures, L12/L17 result, exact API/SPEC/fixture plan,
-implementation authorization/verdict, or requirement satisfaction exists. The
-full gate stops here at Snap Go confinement; an outside-sandbox run previously reached a linter
-panic on a Go 1.27 version marker. Push authorization/authentication remain unverified after
-the prior GitHub DNS failure.
+Immediate blockers: the setup-source manifest and README have fresh non-author
+documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
+([verdict](../docs/verification/verdicts/p7-replay-setup-sources-round2-20261016.md)), but
+the pinned PostgreSQL JAR's detached signature did not verify with the public key found;
+publisher identity and bundled license/notice coverage remain unverified. There is no
+case-manifest binding, projector/build manifest, complete Go module byte corpus, reviewed
+companion API/live `twin` SPEC or fixture corpus, L12/L17 runtime result, or independent
+implementation verdict. Go 1.26.7 version suitability remains unreviewed. The full
+`make check` gate has not completed on this host; see Verification below.
 
-## Branch and repository status
+## Branch and local ownership
 
-- Branch: `main`, tracking `origin/main`, ahead of the locally known remote-tracking ref.
-  The remote tip is unverified.
-- Preserved untracked user artifacts: `docs/plans/P5-intent-provenance-plan.md` and
-  `kernel/cmd/p6dbprobe/main.go`. They are untouched and excluded from this checkpoint.
-- The P7 addendum and fixture matrix were accepted for documentary planning; the later
-  external-prerequisites amendment is now accepted as an overlay for its named binary and
-  clean-clone obligations only. No runtime fixture, product implementation, or independent
-  implementation verdict is accepted.
-- Fresh non-author reviewer `Kepler` accepted the exact amended first-slice **scope proposal**
-  at commit `beea925`, after reviewer `Hume` returned round-1 `AMEND`. The accepted scope
-  proposes only the offline Postgres provisioning seam and L17 evidence. Its committed-archive
-  route now conflicts with the owner's later direction and is not an implementation authority.
-  No code, runtime fixture, L17 result, L12 pass, or full lock evaluator is accepted.
+- `main` tracks `origin/main`. At the initial 2026-10-17 inspection, HEAD was
+  `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` with no ahead/behind count and no
+  commits dated today. Closeout commit/push verification is pending.
+- Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
+  (SHA-256 `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`)
+  and `kernel/cmd/p6dbprobe/main.go`
+  (SHA-256 `f2a747ed588141723ce8f0932aa07814fcca63f9901b7dca0d71119b93ee15a0`).
+  They are not part of this checkpoint; do not delete, stage, or relabel them as complete.
+- No database directory, downloaded toolchain/Postgres distribution, or built executable
+  is to be committed. Reviewed `.mod`/`.zip` module source bytes remain eligible under
+  the accepted external-prerequisites amendment.
 
 ## Completed
 
-- P6 consolidation and the P7 snapshot-provider skip remain accepted.
-- Fresh round-3 non-author review accepted the amended P7 `ReplayIsolated` planning subject and
-  contract; the verdict is `docs/verification/verdicts/p7-behavior-lock-plan-round3-20261013.md`.
-- On 2026-10-14, the owner authorized drafting the lock-schema/addendum and fixture-planning slice.
-  Drafts are `docs/plans/P7-replay-lock-spec-addendum-draft1.md` and
-  `docs/plans/P7-replay-lock-fixture-matrix-draft1.md`. No product code, provider, feed, wire
-  identity, event kind, or persistence surface changed.
-- The owner requested a recommendation for the pilot's intent binding. The recommended path is a
-  genuine P5 requirement, retaining `UNDECLARED` as a negative control. The owner authorized a
-  draft proposal, then approved its business outcome and `O-1` wording and selected existing
-  declared roles. Formal records are `BD-replay-evidence-7a91c4` and
-  `BR-replay-evidence-6e3d2b/0001`; the active requirement binds the exact decision digest.
-- Fresh non-author reviewer `Fermat` judged the exact active P5 `O-1` `VERIFIABLE`; the P7 addendum
-  and fixture planning slice received `AMEND` with one high and three medium findings. The
-  requirement review and documentary slice verdict are recorded under `docs/verification/verdicts/`.
-- Amended the addendum and fixture matrix for all four round-1 findings: complete event evidence
-  beyond P4's source digest, whole-ledger before/after witnesses on success and failure, pinned
-  projector/build/runtime and proof evidence encodings with a byte-exact proof control, and
-  independent candidate payload-hash verification. These are proposed contracts, not accepted
-  behavior or runtime fixtures.
-- Fresh non-author reviewer `Mendel` reviewed exact commit `730a474` and returned `AMEND` for the
-  later addendum and fixture slice. The three round-1 source/preservation/candidate findings and
-  proof encoding were judged resolved in the proposal; snapshot-map round-trip and executable/
-  dependency byte identity remain blocking. The accepted round-3 P7 subject is unaffected.
-- On owner approval, amended those two round-2 findings: snapshot evidence preserves exactly the
-  keys present in `Snapshot.Tables`, with empty-map and injected-key controls; the build manifest
-  now binds retrievable `.mod`, `.zip`, and exact executable bytes and rejects missing or changed
-  inputs. These are proposed contracts, not runtime fixtures or implementation acceptance.
-- Fresh non-author reviewer `Confucius` reviewed exact commit `16c6189` and returned `AMEND` for
-  the later addendum and fixture slice. The round-2 snapshot and executable/module-byte findings
-  were judged resolved in the proposal; committed Go toolchain and Postgres bytes and exact
-  nested toolchain manifest encoding remain blocking. The accepted P7 subject is unaffected.
-- On 2026-10-15, amended the two round-3 findings in the proposed documents: the nested Go
-  toolchain manifest has an exact canonical JSON shape, and both the Go and embedded-Postgres
-  archives require verified Git-tracked bytes in the reviewed evidence revision. L12 remains
-  `UNVERIFIED` until a later reviewed implementation can supply the Postgres archive to P4's
-  temporary store offline. No archives, runtime fixtures, or product code were created.
-- Fresh non-author reviewer `Gibbs` reviewed exact commit `d37a874` and returned `ACCEPT` for the
-  documentary addendum and fixture matrix, with no blocking finding. The reviewer noted a low
-  implementation caution: verified Postgres binaries must go through `BinariesDir`, not P4's
-  cleared `RuntimeDir`. The acceptance does not extend to L12, a runtime corpus, requirement
-  satisfaction, full-gate success, or implementation.
-- Drafted `docs/plans/P7-replay-lock-first-implementation-slice-proposal-draft1.md` to present
-  a bounded offline Postgres seam, L17 fixture evidence, archive-size/provenance go/no-go,
-  and explicit stop points. This is a proposal only; no product code or runtime corpus changed.
-- On owner approval to seek review, fresh non-author reviewer `Hume` reviewed exact commit
-  `6129834` and returned `AMEND` for the proposed first slice. The three findings require a
-  zero-fetch witness and complete staged binary verification before store startup, a post-open
-  failure cleanup control, and byte-exact legacy/companion proof fixtures. The verdict is
-  `docs/verification/verdicts/p7-replay-first-implementation-scope-round1-20261015.md`.
-- On 2026-10-15, the owner approved documentation-only amendments for those three findings.
-  The amended proposal now requires a pre-open complete staged-tree/`pg_ctl` check and a
-  zero-fetch witness, a post-open projection-failure cleanup case with whole-ledger bytes, and
-  byte-exact legacy/companion `Result`/six-field `Proof` fixtures. No product code or runtime
-  corpus was changed; the amended revision was then submitted for fresh non-author review.
-- Fresh non-author reviewer `Kepler` reviewed exact amended commit `beea925` and SHA-256
-  `32c74a68fa3a8f74bd7fb6d736acb40c3a9b84ade23d2bea382c08bcf10dfe39`, returning
-  `ACCEPT` for the documentation scope with no findings. The verdict is
-  `docs/verification/verdicts/p7-replay-first-implementation-scope-round2-20261015.md`.
-  This does not authorize or accept product implementation or runtime fixtures.
-- Read-only feasibility on 2026-10-15 found a local Linux/amd64 Postgres 16.4.0 `txz` cache:
-  14,730,084 bytes, SHA-256 `d24cafae863e1ba9502bdc27942661391748ce60345725e7a15429be637fc8b6`.
-  It is absent from Git, so the old empty-cache clean-clone route cannot pass. Maven DNS failed;
-  upstream byte identity and redistribution notices were not fully verified. The owner then
-  directed that public binaries stay outside Git and prerequisite setup be documented.
-- Drafted `VD-p7-external-replay-prerequisites-2026-10-15`, a proposed contract amendment, and
-  a prerequisite setup README. These distinguish network-permitted verified preparation from
-  network-disabled replay, retain exact digest/provenance and zero-fetch controls, and make the
-  original empty-cache clean-clone claim explicitly unavailable. No binaries or product code
-  were added; the drafts await owner approval to seek fresh non-author review.
-- The owner clarified that the exclusion is for binary artifacts, not for everything except
-  code. Corrected the proposal to allow configuration, READMEs, manifests, source, and text
-  evidence in Git; exact `.mod`/`.zip` module source bytes remain Git-tracked under the
-  accepted evidence route. The setup phase would fetch only the public Go and Postgres binary
-  distributions. This correction remains proposed, not independently accepted.
-- Fresh non-author reviewer `Godel` reviewed exact commit `0167746` and returned `AMEND` for
-  the external-prerequisites documentary proposal. The verdict is
-  `docs/verification/verdicts/p7-external-replay-prerequisites-round1-20261015.md`. The five
-  findings concern the higher-level clean-clone criterion, companion staging/cleanup route,
-  setup-source cross-field validation, redirect provenance, and binary-exclusion precision.
-  No contract change or implementation is accepted by that review.
-- On owner approval, amended the documentary proposal for all five round-1 findings: the P7
-  plan's clean-clone evidence-control subcriterion is explicitly overlaid; the companion
-  receives verified `txz` bytes and stages them inside its own temporary root; setup-source
-  roles have exact cross-field/projector bindings; every HTTP redirect is rejected; and the
-  exclusion names binary payloads while retaining reviewed module source archives. The
-  amended proposal then awaited fresh non-author review and authorized no implementation.
-- Fresh non-author reviewer `Locke` reviewed the exact amended commit `a24fc19`, with all
-  three artifact SHA-256 values matched, and returned `ACCEPT` with no new finding. The
-  verdict is `docs/verification/verdicts/p7-external-replay-prerequisites-round2-20261015.md`.
-  This accepts the documentary overlay only, not prerequisite provenance, runtime fixtures,
-  an L12/L17 result, product implementation, or an independent implementation verdict.
-- On 2026-10-15, direct no-redirect downloads outside the sandbox verified Go 1.26.7
-  Linux/amd64 at 66,890,901 bytes and its official SHA-256, and the Maven Postgres 16.4.0
-  JAR at 14,734,966 bytes with its published SHA-256. The JAR's single
-  `postgres-linux-x86_64.txz` member was 14,730,084 bytes and matched the earlier local cache
-  SHA-256 exactly. A proposed canonical two-input
-  `docs/verification/p7-replay-lock-fixtures/setup-sources.json` now records those source
-  bytes; it is not reviewed or a runtime result. No binary was committed.
-- The generated P6 requirement-review packet includes both active requirements, three active
-  obligations, and two exact reviews. The generated P6 artifact-integrity packet enumerates
-  26 schema-bearing verdicts and 19 documentary verdict artifacts at this checkpoint.
+- The P7 replay-lock documentary plan, addendum, fixture matrix, bounded first-slice scope,
+  and external-prerequisites overlay have their recorded non-author planning verdicts.
+  None is a product implementation or behavior-lock acceptance.
+- The proposed two-input canonical setup manifest and human README were amended after
+  round-1 `AMEND` and accepted by a different non-author reviewer in round 2 for their
+  exact 2026-10-16 bytes. The manifest's SHA-256 is
+  `e312bf28cea20d516e3b21704a53ba3ebc8ac84ff988eccb7da555317b900b33`.
+  The verdict did not re-run live downloads or authenticate publishers.
+- On 2026-10-17, regenerated the derived P6 artifact-integrity packet after the two new
+  documentary verdicts; its direct check now passes. Added the direct check to the canonical
+  EOD prompt as a lightweight repeatable closeout step. A fail-closed hook-loop repair was
+  trialed but withdrawn when the intent-delivery gate required a relevant `Intent:` claim;
+  no product code or runtime fixture was changed.
+
+## Open and unverified
+
+- Publisher signing identity, component license/notice and distribution clearance, exact
+  Go toolchain patch suitability, complete Phase-A projector/module/toolchain/executable
+  evidence, source-manifest binding in a case manifest, companion API/live SPEC and fixture
+  review, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
+  an independent implementation review are open. The old empty-cache/no-network
+  clean-clone claim remains ineligible for `PASS` under the accepted overlay.
+- Sandbox Snap Go lacks `cap_dac_override`; the compatible-toolchain lint result remains
+  unverified. Native Windows acceptance and P7 mutation detector power are also unverified.
+- Process debt: the gate registry describes advisory-expiry enforcement, but the inspected
+  `scripts/link-lint.sh` checks decision-index membership only; the advisory rows dated
+  2026-10-16 need a separate policy decision and a real enforcement check. Do not treat a
+  green link-lint as proof of advisory expiry compliance.
+- The existing `make hooks-test` loop can mask an intermediate failing self-test by returning
+  the last script's status. A fail-closed repair needs a relevant accepted change intent
+  before a governed Makefile change is committed. Do not cite the unrelated P5 intent.
 
 ## Verification
 
-- Bare `make check` ran on 2026-10-14. The `index stale; run make index` output was an expected
-  negative control; generated freshness passed. The hook loop's exit status is not sufficient to
-  claim every self-test passed, as discovered later. The actual stop was
-  `commit-cadence: dirty worktree outlived 90m commit window`, so the main DAG did not reach
-  kernel checks. A Snap Go confinement diagnostic in a self-test remains an environment issue.
-- After documentation commit `7ca242b`, bare `make check` was rerun. Cadence and the repository,
-  generated freshness, P6 package/verdict, and Windows contract checks passed. It reached
-  `kernel-check` and stopped because this host's Snap Go confinement lacks
-  `cap_dac_override` (`Function not implemented`). Go build/tests/lint remain unverified here;
-  no source or generated-artifact failure was observed.
-- After formal P5 record commit `9e0621f`, both normalized self-digests and the exact decision
-  reference were verified; JSON metadata parses. The P5 records package tests passed with Go
-  outside the sandbox. Bare `make check` passed repository checks and Go build/tests, then stopped
-  because `golangci-lint` was absent from PATH. With its installed directory on PATH, the gate
-  again passed repository checks and Go build/tests, then the linter panicked: a file requires
-  Go 1.27 while the installed linter was built with Go 1.26.7. Lint remains unverified; this is
-  a tooling failure, not evidence of a source defect.
-- For the amended P7 draft, `git diff --check`, `make link-lint`, `make index-check`,
-  `scripts/p6-task5-review.sh --check`, and `scripts/p6-artifact-integrity.sh --check` passed.
-  The proof encoding control hashed to its documented SHA-256. After commit `210830e`, bare
-  `make check` passed repository/generated checks but stopped at `kernel-check` because sandboxed
-  Snap Go lacks `cap_dac_override`. With the installed linter on PATH outside that confinement,
-  the same gate passed repository checks and Go build/tests, then the linter panicked on a file
-  marked Go 1.27 while it was built with Go 1.26.7. The `index stale` line was an expected
-  negative-test message, not a freshness failure. Full lint remains unverified.
-- For the round-2 amendments, link, index, P6 artifact-integrity, exact requirement-review,
-  state-freshness, and whitespace checks passed; both snapshot byte-control hashes reproduced.
-  The canonical manifest shape parsed and its key order matched canonical ordering. Bare
-  `make check` again passed repository and generated checks but stopped at `kernel-check` because
-  sandboxed Snap Go lacks `cap_dac_override`. The `index stale` message was the expected negative
-  control. No generated artifact needed regeneration. Go build/tests/lint were not rerun outside
-  confinement for this documentation-only edit; the earlier compatible-toolchain lint blocker
-  remains unresolved.
-- After recording the round-3 review, link, index, P6 artifact-integrity, exact
-  requirement-review, census, state-freshness, and whitespace checks passed. The derived
-  artifact-integrity packet was regenerated for the new documentary verdict. Bare `make check`
-  was not rerun for this review-record-only checkpoint; its prior Snap Go/linter blockers remain.
-- On 2026-10-15, the round-3 planning amendment passed link, index, P6 artifact-integrity,
-  exact requirement-review, state-freshness, and whitespace checks. The main manifest example
-  parsed with canonical key order. Bare `make check` after documentation commit `e4ebf73`
-  passed repository and generated-freshness checks, then stopped at `kernel-check` because the
-  sandboxed Snap Go lacks `cap_dac_override`. `index stale` was an expected negative-test
-  message; no generated artifact was stale. Go build/tests/lint were not rerun outside the
-  sandbox for this documentation-only change; compatible-toolchain lint remains unverified.
-- After recording the round-4 documentary acceptance, link, index, P6 artifact-integrity,
-  exact requirement-review, census, state-freshness, and whitespace checks passed. The derived
-  artifact-integrity packet was regenerated for the new verdict. Bare `make check` was not
-  rerun for this review-record-only checkpoint; the earlier same-day Snap Go and known linter
-  blockers remain unresolved.
-- For the bounded first-slice proposal, direct whitespace, link, index, state-freshness, and P6
-  artifact-integrity checks passed. After documentation commit `d23140c`, bare `make check`
-  passed repository/generated checks, including generated freshness, but stopped at
-  `kernel-check` because Snap Go lacked `cap_dac_override`. `index stale` was an expected
-  negative self-test, not a stale artifact. This run did not verify Go build/tests/lint; the
-  earlier incompatible-toolchain lint blocker remains unresolved.
-- For the round-1 first-slice scope verdict, direct whitespace, link, index,
-  state-freshness, and P6 artifact-integrity checks passed. The derived artifact-integrity
-  packet was regenerated for the new documentary verdict. Bare `make check` was not rerun for
-  this verdict-record-only checkpoint; the prior same-day Snap Go stop remains.
-- After amended proposal commit `beea925`, bare `make check` passed repository and generated
-  freshness checks but stopped at `kernel-check` because Snap Go lacks `cap_dac_override` in
-  this sandbox. `index stale` was the expected negative self-test. Go build/tests/lint were not
-  verified by this run; the earlier incompatible-toolchain lint blocker remains unresolved.
-- For the round-2 scope verdict, direct whitespace, link, index, state-freshness, and P6
-  artifact-integrity checks passed; the derived packet now counts 17 documentary verdicts.
-  Bare `make check` was not rerun for this review-record-only checkpoint.
-- For the external-prerequisites documentation draft, direct whitespace, link, index,
-  state-freshness, and P6 artifact-integrity checks passed after regenerating the decision
-  index. After commit `2d6c464`, bare `make check` passed repository and generated-freshness
-  checks, then stopped at `kernel-check` because Snap Go lacks `cap_dac_override`. `index
-  stale` was an expected negative self-test; no generated artifact was stale. Go
-  build/tests/lint were not verified by this run.
-- After the owner wording correction, direct whitespace, link, index, state-freshness,
-  and P6 artifact-integrity checks passed. Bare `make check` passed repository self-tests and
-  generated freshness, then stopped at `kernel-check` because Snap Go lacks
-  `cap_dac_override` in this sandbox. The `index stale` line was an expected negative
-  self-test, not an actual stale index. Go build/tests/lint remain unverified by this run.
-- After recording the independent round-1 `AMEND`, the derived P6 artifact-integrity packet
-  was regenerated for 18 documentary verdicts. Direct whitespace, link, index,
-  state-freshness, and P6 artifact-integrity checks passed. Bare `make check` was not rerun
-  for this review-record-only checkpoint; the same-day Snap Go blocker remains the last
-  full-gate result.
-- For the owner-authorized round-1 amendments, the decision index was regenerated after its
-  status changed. Direct whitespace, link, index, state-freshness, and P6 artifact-integrity
-  checks passed. Bare `make check` passed repository self-tests and generated freshness but
-  stopped at `kernel-check` because Snap Go lacks `cap_dac_override`. `index stale` was an
-  expected negative self-test, not an actual stale index. Go build/tests/lint remain
-  unverified by this run.
-- After recording the round-2 documentary `ACCEPT`, the decision index and P6 artifact-
-  integrity packet were regenerated. Direct whitespace, link, index, state-freshness, and
-  P6 artifact-integrity checks passed. Bare `make check` was not rerun for the verdict/status-
-  only checkpoint; the prior same-day Snap Go stop remains the last full-gate result.
-- For the proposed setup-source manifest, strict two-role/schema, duplicate-key, canonical
-  JSON byte, no-trailing-newline, and cross-field checks passed; its 911 bytes hash to
-  `e312bf28cea20d516e3b21704a53ba3ebc8ac84ff988eccb7da555317b900b33`.
-  Direct whitespace, link, index, state-freshness, and P6 artifact-integrity checks passed.
-  Bare `make check` passed repository self-tests and generated freshness, then stopped at
-  `kernel-check` because Snap Go lacks `cap_dac_override`. `index stale` was the expected
-  negative self-test, not an actual stale index. Go build/tests/lint remain unverified here.
-
-## Open, blocked, and unverified
-
-- Open: verify Maven signing identity and bundled notice/licensing evidence, review the Go
-  version pin, and obtain fresh non-author review of the proposed setup-source manifest and
-  later SPEC/API and fixture plan before
-  separate implementation authorization. Later build
-  committed runtime fixtures and evidence manifest, demonstrate L12 offline replay, and obtain
-  a separate non-author review of any implementation. The `hooks-test` Makefile loop can
-  mask a failing intermediate self-test because it returns only the last test's status; repair
-  this independently of the P7 contract work.
-- Blocked: behavior-lock, regeneration, snapshot-provider, and external-feed implementation until
-  the applicable authorization, runtime evidence, and independent implementation gate are
-  satisfied. Push remains unverified.
-- Unverified: satisfaction of the new requirement, complete clean-clone replay, detector power
-  for a P7 mutation set, lint with a compatible toolchain, native Windows
-  acceptance, and remote-tip freshness.
+- Initial bare `make check` on 2026-10-17 reached `commit-cadence` and stopped because
+  preserved untracked paths made the old HEAD dirty. The old hook-test loop had masked a
+  real stale P6 packet and a sandbox Snap Go failure. `index stale; run make index` was an
+  expected negative-test message, not an actual stale decision index.
+- Direct `scripts/p6-artifact-integrity.sh --check` found 19 versus 21 documentary
+  verdicts; `--write` regenerated the derived packet and direct `--check` now passes.
+  `make index-check` and `scripts/invariant-lint.sh` pass.
+- A temporary fail-closed loop control, mutation-harness self-test, and full hook suite
+  passed outside Snap confinement. That loop change was withdrawn; the post-checkpoint
+  bare `make check` stopped at the delivery self-test because its trial Makefile commit
+  lacked a relevant `Intent:` trailer. A final bare rerun after the documentation-only
+  correction is pending. No full gate or kernel lint success is claimed.
 
 ## Institutionalized improvement
 
-When preserved user-owned untracked artifacts trigger cadence, keep them untouched, record their
-ownership, commit only a coherent documentation checkpoint, and rerun the full gate. For replay
-evidence, check both complete event fields and complete-ledger preservation independently of
-existing P4 digests. Fixture matrices must distinguish absent map keys from present empty values
-and bind build inputs separately from source revision. An offline replay claim requires both an
-exact digest and retrievable bytes for each runtime input. No new automation is justified.
-
-## Standing cautions
-
-- Preserve frozen `vera.witness.v1`, `vera.verdict.v1`, `vera.replay.v1`, pinned vectors, and
-  historical artifacts.
-- Planning acceptance and draft review do not authorize behavior-lock or regeneration code.
+The canonical EOD prompt now requires a direct P6 artifact-integrity freshness check after
+documentary verdicts. This is an interim closeout control, not a claim that the existing
+hook-test loop is fail-closed. Preserve reviewed setup bytes; record changing acceptance
+status in verdicts and this state note instead of silently changing reviewed content.
