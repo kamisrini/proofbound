@@ -7,8 +7,8 @@ As of: 2026-10-17
 
 ## Resume — 2026-10-17
 
-Exact next action: keep the third-party binary provenance/licensing go/no-go deferred by
-owner direction. Do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
+Exact next action: keep deferral `DEF-P7-001`, the third-party binary provenance/licensing
+go/no-go, deferred by owner direction. Do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not start companion, behavior-lock, regeneration, snapshot-provider, or
 external-feed implementation from the documentary setup acceptance. Resume the binary
 check only after an explicit owner decision.
@@ -67,7 +67,7 @@ licensing check is intentionally deferred, not accepted or passed.
   review, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
   an independent implementation review are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
-- The third-party binary provenance and licensing go/no-go is owner-deferred. Its open
+- Deferral `DEF-P7-001` covers the third-party binary provenance and licensing go/no-go. Its open
   findings remain unresolved and must not be relabeled `PASS` or `NO-GO` until the check
   is resumed or an alternate source is explicitly selected.
 - Sandbox Snap Go lacks `cap_dac_override`; outside the sandbox the installed

@@ -37,6 +37,7 @@ Proofbound is the trust layer for AI-built software: an event-sourced delivery r
 | Why we chose X | `docs/decisions/VD-*.md` | cite the ID |
 | Current state / resume note | `notes/state.md` (overwrite-in-place, ONE file) | never a second status file |
 | Session history | `notes/journal/YYYY-MM-DD.md` (append-only) | — |
+| Deferral register | `docs/deferrals.tsv` | summaries and plans link to the stable `DEF-*` ID |
 | Quality gates + advisory registry | `docs/gates.md` | — |
 | Plan | `ROADMAP.md` | — |
 | Package contracts | `kernel/internal/<pkg>/SPEC.md` | code cites spec |

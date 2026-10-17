@@ -19,6 +19,11 @@ immediate blockers there rather than buried later in the file.
 Also rewrite the ignored local file `notes/overall-status.md` with the current roadmap phase status,
 capability progress, built and unbuilt components, open blockers, verification health, and next
 authorized action. Keep it internal and do not commit it.
+For every newly postponed, deferred, blocked, or owner-pending item, add or update one row in
+`docs/deferrals.tsv` with a stable `DEF-*` ID, canonical lifecycle status, human `hold_type`, owner,
+review trigger, unblock condition, and evidence paths. Run `scripts/deferrals.sh --check`; use
+`status=OPEN` with a hold type such as `POSTPONED`, `AWAITING_OWNER`, or `PENDING_PREREQUISITE`.
+Do not delete closed rows; mark them `RESOLVED`, `REJECTED`, or `RETIRED` with closing evidence.
 
 Run the appropriate verification gate, especially bare `make check`; if generated-index or
 invariant-lock freshness fails, regenerate the derived artifact and rerun the gate. Treat expected
