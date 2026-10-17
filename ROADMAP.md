@@ -176,9 +176,9 @@ accepted for documentary planning in round 2. The planning drafts are
 [P7-snapshot-provider-plan-draft1.md](docs/plans/P7-snapshot-provider-plan-draft1.md) and
 [P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md).
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
-continue only within existing feeds and separately authorized slices. The current next gate is a
-read-only provenance and licensing go/no-go for the pinned replay setup inputs. A successful go/no-go
-does not authorize product code; implementation still requires explicit scope authorization and a
-separate independent implementation verdict.
+continue only within existing feeds and separately authorized slices. The read-only provenance and
+licensing go/no-go for the pinned replay setup inputs is currently deferred by owner direction. It
+remains an unresolved prerequisite, not a pass or `NO-GO`; implementation still requires explicit
+scope authorization and a separate independent implementation verdict.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

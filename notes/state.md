@@ -7,12 +7,11 @@ As of: 2026-10-17
 
 ## Resume — 2026-10-17
 
-Exact next action: perform a read-only provenance go/no-go for the pinned Linux/amd64
-PostgreSQL 16.4.0 Maven JAR. Seek a publisher-authenticated signing key or equivalent
-artifact provenance and a component-license/notice inventory for its bundled libraries;
-if unavailable, document `NO-GO` and propose an alternate authenticated source for owner
-review. Do not start companion, behavior-lock, regeneration, snapshot-provider, or
-external-feed implementation from the documentary setup acceptance.
+Exact next action: keep the third-party binary provenance/licensing go/no-go deferred by
+owner direction. Do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
+approved, and do not start companion, behavior-lock, regeneration, snapshot-provider, or
+external-feed implementation from the documentary setup acceptance. Resume the binary
+check only after an explicit owner decision.
 
 Immediate blockers: the setup-source manifest and README have fresh non-author
 documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
@@ -22,7 +21,8 @@ publisher identity and bundled license/notice coverage remain unverified. There 
 case-manifest binding, projector/build manifest, complete Go module byte corpus, reviewed
 companion API/live `twin` SPEC or fixture corpus, L12/L17 runtime result, or independent
 implementation verdict. Go 1.26.7 version suitability remains unreviewed. The full
-`make check` gate has not completed on this host; see Verification below.
+`make check` gate has not completed on this host; see Verification below. The provenance and
+licensing check is intentionally deferred, not accepted or passed.
 
 ## Branch and local ownership
 
@@ -67,6 +67,9 @@ implementation verdict. Go 1.26.7 version suitability remains unreviewed. The fu
   review, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
   an independent implementation review are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
+- The third-party binary provenance and licensing go/no-go is owner-deferred. Its open
+  findings remain unresolved and must not be relabeled `PASS` or `NO-GO` until the check
+  is resumed or an alternate source is explicitly selected.
 - Sandbox Snap Go lacks `cap_dac_override`; outside the sandbox the installed
   `golangci-lint` v2.13.2 built with Go 1.26.7 panicked while loading a file
   requiring Go 1.27. A compatible-toolchain lint result remains unverified.
