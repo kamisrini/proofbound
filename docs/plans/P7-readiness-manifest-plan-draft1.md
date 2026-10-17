@@ -1,12 +1,14 @@
 # P7 readiness manifest — planning draft 1
 
-**Status:** DRAFT FOR PLANNING ONLY — no runtime implementation, fixture corpus, binary
-validation, or acceptance claim is authorized by this document.
+**Status:** OWNER-APPROVED FOR PLANNING — non-author review required before implementation;
+no runtime implementation, fixture corpus, binary validation, or acceptance claim is authorized.
 
 **Date:** 2026-10-17
 
 **Purpose:** define the evidence index needed before a separately authorized P7 implementation
-slice can be reviewed. This document organizes existing P7 requirements; it does not replace the
+slice can be reviewed. The planning shape is settled by
+[`VD-p7-readiness-manifest-2026-10-17`](../decisions/VD-p7-readiness-manifest-2026-10-17.md).
+This document organizes existing P7 requirements; it does not replace the
 [ReplayIsolated lock contract](P7-replay-lock-spec-addendum-draft1.md), the
 [fixture matrix](P7-replay-lock-fixture-matrix-draft1.md), or the
 [external-prerequisites amendment](P7-replay-lock-external-prerequisites-amendment-draft1.md).
@@ -26,10 +28,11 @@ The manifest may be designed now because its shape is independent of the deferre
 binary provenance/licensing go-no-go. Any case that needs the PostgreSQL input remains
 `UNVERIFIED` until that prerequisite is explicitly activated and cleared.
 
-## Proposed case-manifest shape
+## Settled planning shape
 
-The following is a planning shape only. Before implementation, it requires its own review and a
-decision binding the exact canonical encoding, field set, and evidence paths.
+The following is the owner-approved planning shape. It still requires fresh non-author review
+before implementation. The emitted manifest uses UTF-8 RFC 8785 canonical JSON with exactly the
+listed top-level fields, no unknown/missing/null members, and explicit pending status objects.
 
 ```json
 {
@@ -58,8 +61,8 @@ decision binding the exact canonical encoding, field set, and evidence paths.
       "network_policy": "<exact-policy>",
       "environment_digest": "<digest>",
       "exit_code": 0,
-      "stdout_sha256": "<digest>",
-      "stderr_sha256": "<digest>"
+      "stdout": {"path": "<path>", "sha256": "<digest>"},
+      "stderr": {"path": "<path>", "sha256": "<digest>"}
     }
   ],
   "witnesses": [
@@ -69,47 +72,47 @@ decision binding the exact canonical encoding, field set, and evidence paths.
     {"kind": "<cleanup-observation>", "path": "<path>", "sha256": "<digest>"}
   ],
   "outcomes": {
-    "source_binding": "UNVERIFIED",
-    "baseline_provenance": "UNVERIFIED",
-    "candidate_binding": "UNVERIFIED",
-    "ledger_preserved": "UNVERIFIED",
-    "snapshot_comparison": "UNVERIFIED",
-    "proof_binding": "UNVERIFIED",
-    "no_fetch": "UNVERIFIED",
-    "cleanup": "UNVERIFIED",
-    "intent_binding": "UNVERIFIED"
+    "source_binding": {"status": "UNVERIFIED", "evidence": []},
+    "baseline_provenance": {"status": "UNVERIFIED", "evidence": []},
+    "candidate_binding": {"status": "UNVERIFIED", "evidence": []},
+    "ledger_preserved": {"status": "UNVERIFIED", "evidence": []},
+    "snapshot_comparison": {"status": "UNVERIFIED", "evidence": []},
+    "proof_binding": {"status": "UNVERIFIED", "evidence": []},
+    "no_fetch": {"status": "UNVERIFIED", "evidence": []},
+    "cleanup": {"status": "UNVERIFIED", "evidence": []},
+    "intent_binding": {"status": "UNVERIFIED", "evidence": []}
   },
   "artifacts": [
-    {"role": "<evidence-role>", "path": "<path>", "size_bytes": 0, "sha256": "<digest>"}
+    {"role": "<evidence-role>", "path": "<path>", "size_bytes": 1, "sha256": "<digest>"}
   ],
   "review": {
     "author_commit": "<full-git-commit-id>",
     "independent_verdict": "PENDING",
-    "verdict_path": null
+    "independent_verdict": {"status": "PENDING"}
   }
 }
 ```
 
-## Field rules to settle before implementation
+## Field rules before implementation
 
 | Area | Required decision or evidence | Current state |
 |---|---|---|
-| Identity | Stable case ID, exact subject, evidence revision, and canonical bytes | Proposed only |
-| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Existing documents; no case binding |
+| Identity | Stable case ID, exact subject, evidence revision, and canonical bytes | Settled for planning; non-author review pending |
+| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Shape settled; no case binding exists |
 | Lock/source/candidate | Content-addressed paths and bytes for the exact case inputs | No runtime corpus exists |
 | Setup inputs | Setup-source manifest and projector/build-manifest relationship | Documentary setup accepted; provenance/licensing remains deferred |
 | Commands | Exact argv, working directory, relevant environment, network policy, exit code, and output digests | No case run exists |
 | Ledger witness | Complete before/after ledger bytes, including records beyond `ThroughSeq` | Required by the accepted matrix; not run |
 | Network witness | Observable zero-fetch evidence, not merely a blocked request | Required; not run |
 | Cleanup witness | Temporary store and staging removal on success and every failure path | Required; not run |
-| Outcome vocabulary | Explicit `PASS`, `FAIL`, or `UNVERIFIED` semantics per outcome; no inferred pass | Needs separate decision |
-| Review | Non-author verdict against immutable manifest and artifact digests | No implementation verdict exists |
+| Outcome vocabulary | `PASS`, `FAIL`, `UNVERIFIED`, `UNDECLARED`, or `PENDING` with key-specific rules | Settled for planning; no outcomes exist |
+| Review | Non-author verdict against immutable manifest and artifact digests; pending uses an explicit status object | No implementation verdict exists |
 
 ## Readiness checklist
 
 This checklist is a planning gate, not a claim that the items are complete.
 
-1. Review and approve the canonical manifest encoding and exact member set.
+1. Obtain fresh non-author review of the canonical manifest encoding and exact member set.
 2. Bind the case to one authorized implementation scope and one evidence revision.
 3. Resolve the deferred binary provenance/licensing item before any case requiring that input is
    run or labeled beyond `UNVERIFIED`.

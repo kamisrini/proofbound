@@ -7,9 +7,8 @@ As of: 2026-10-17
 
 ## Resume — 2026-10-17
 
-Exact next action: continue the authorized P7 planning-only readiness slice by reviewing
-`docs/plans/P7-readiness-manifest-plan-draft1.md`, then settle its proposed case/evidence manifest
-shape and readiness checklist. Do not add a parser, runtime fixture, or P7 implementation. Keep
+Exact next action: prepare the owner-approved P7 readiness-manifest shape and checklist for fresh
+non-author review. Do not add a parser, runtime fixture, or P7 implementation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -68,6 +67,10 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-17, added the planning-only P7 readiness-manifest draft and linked it from the
   roadmap. It organizes the future case/evidence index without authorizing code, fixtures, or
   binary validation.
+- On 2026-10-17, settled the planning shape in
+  `docs/decisions/VD-p7-readiness-manifest-2026-10-17.md`: exact top-level fields, no-null rules,
+  derived case status, outcome vocabulary, content references, and explicit pending review state.
+  Fresh non-author review is still required before implementation.
 
 ## Open and unverified
 
