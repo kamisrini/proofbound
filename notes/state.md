@@ -28,7 +28,10 @@ implementation verdict. Go 1.26.7 version suitability remains unreviewed. The fu
 
 - `main` tracks `origin/main`. At the initial 2026-10-17 inspection, HEAD was
   `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` with no ahead/behind count and no
-  commits dated today. Closeout commit/push verification is pending.
+  commits dated today. The documentation-only checkpoint is
+  `de2e3be0b2f0ed53586948bf3b97e5fa69198899` (ahead by one at this writing);
+  the final closeout commit and push are pending. `origin/main` was reachable and
+  still at `724c365e66cb97d95c201c74bbb4c4cc5d4611c8` before final commit.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
   (SHA-256 `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`)
   and `kernel/cmd/p6dbprobe/main.go`
@@ -62,8 +65,10 @@ implementation verdict. Go 1.26.7 version suitability remains unreviewed. The fu
   review, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
   an independent implementation review are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
-- Sandbox Snap Go lacks `cap_dac_override`; the compatible-toolchain lint result remains
-  unverified. Native Windows acceptance and P7 mutation detector power are also unverified.
+- Sandbox Snap Go lacks `cap_dac_override`; outside the sandbox the installed
+  `golangci-lint` v2.13.2 built with Go 1.26.7 panicked while loading a file
+  requiring Go 1.27. A compatible-toolchain lint result remains unverified.
+  Native Windows acceptance and P7 mutation detector power are also unverified.
 - Process debt: the gate registry describes advisory-expiry enforcement, but the inspected
   `scripts/link-lint.sh` checks decision-index membership only; the advisory rows dated
   2026-10-16 need a separate policy decision and a real enforcement check. Do not treat a
@@ -82,10 +87,14 @@ implementation verdict. Go 1.26.7 version suitability remains unreviewed. The fu
   verdicts; `--write` regenerated the derived packet and direct `--check` now passes.
   `make index-check` and `scripts/invariant-lint.sh` pass.
 - A temporary fail-closed loop control, mutation-harness self-test, and full hook suite
-  passed outside Snap confinement. That loop change was withdrawn; the post-checkpoint
-  bare `make check` stopped at the delivery self-test because its trial Makefile commit
-  lacked a relevant `Intent:` trailer. A final bare rerun after the documentation-only
-  correction is pending. No full gate or kernel lint success is claimed.
+  passed outside Snap confinement. That loop change was withdrawn; the trial checkpoint's
+  bare `make check` had stopped at the delivery self-test because its Makefile change
+  lacked a relevant `Intent:` trailer. After the documentation-only correction, bare
+  `make check` passed generated/documentary checks but stopped at sandbox Snap Go.
+  Outside confinement, a first bare run stopped at missing linter `PATH`; with the
+  installed linter on `PATH`, bare `make check` reached lint and failed on a Go
+  1.27-versus-1.26 loader panic. Overall gate: **FAIL/UNVERIFIED**, not `PASS`.
+  `INERT cleanroom: no readable external pattern file` leaves that control unproved.
 
 ## Institutionalized improvement
 
