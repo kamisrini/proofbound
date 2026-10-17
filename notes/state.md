@@ -117,3 +117,16 @@ aligned to canonical README status wording after the full gate exposed the stale
 These are lightweight closeout controls, not a claim that the existing hook-test loop is
 fail-closed. Preserve reviewed setup bytes; record changing acceptance status in verdicts and
 this state note instead of silently changing reviewed content.
+
+## Final EOD handoff
+
+- Closeout commit: `876cad66230cf0d5e5c6c580d613131a7dac7c80`.
+- Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
+  environment. `main` is ahead of `origin/main` by four commits.
+- Verification: targeted checks pass; bare `make check` is **FAIL/UNVERIFIED** at live
+  `kernel-check` because Snap Go lacks `cap_dac_override`.
+- Bundle fallback: `/home/thamm/Backups/proofbound-20261017T162518Z.bundle`; independent
+  `git bundle verify` passed and its SHA-256 is
+  `23528a6ff2c06b5877b694b966266133cfc5a835fbf43964a069d51a2ec36350`.
+- Tomorrow's first action: preserve `DEF-P7-001` as owner-postponed and await an explicit
+  owner decision before resuming the binary provenance/licensing check or starting P7 work.
