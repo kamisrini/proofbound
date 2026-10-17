@@ -16,6 +16,9 @@ unverified assumptions, the exact next action, and any institutionalized improve
 next action is durable agent state; the user must not be asked to run a separate resume prompt.
 Per Build Law 10, put `## Resume — YYYY-MM-DD` first after `As of`, with the exact next action and
 immediate blockers there rather than buried later in the file.
+Also rewrite the ignored local file `notes/overall-status.md` with the current roadmap phase status,
+capability progress, built and unbuilt components, open blockers, verification health, and next
+authorized action. Keep it internal and do not commit it.
 
 Run the appropriate verification gate, especially bare `make check`; if generated-index or
 invariant-lock freshness fails, regenerate the derived artifact and rerun the gate. Treat expected

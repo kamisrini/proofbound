@@ -70,5 +70,7 @@ canonical record to make an unmappable export appear complete.
 ## Current stop point
 
 Gate 1 is resolved in favor of retaining the skip. The snapshot provider remains deferred and the
-repository remains implementation-frozen with respect to this capability. The next planning step
-is a bounded behavior-locks/regeneration plan within existing feeds.
+repository remains implementation-frozen with respect to this capability. The behavior-lock and
+regeneration planning slice has since received its documentary planning reviews. The snapshot
+provider remains outside the current P7 work; no provider implementation or external-feed selection
+may begin without a new lawful-feed decision and separate authorization.

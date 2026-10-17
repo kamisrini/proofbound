@@ -1,9 +1,10 @@
 # P7 replay lock — first implementation slice proposal
 
-**Status:** AMENDED PROPOSAL 2026-10-15; the owner authorized documentary amendments to the
-round-1 [AMEND verdict](../verification/verdicts/p7-replay-first-implementation-scope-round1-20261015.md).
-Fresh non-author review of this amended revision is pending. This document authorizes no
-product code, runtime corpus, or acceptance claim.
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING 2026-10-15 by the round-2 non-author review. The
+owner authorized documentary amendments after the round-1 [AMEND verdict](../verification/verdicts/p7-replay-first-implementation-scope-round1-20261015.md),
+and the amended scope was accepted by
+[`p7-replay-first-implementation-scope-round2-20261015.md`](../verification/verdicts/p7-replay-first-implementation-scope-round2-20261015.md).
+This document authorizes no product code, runtime corpus, or acceptance claim.
 The [round-4 verdict](../verification/verdicts/p7-replay-lock-slice-round4-20261015.md)
 accepted the [addendum](P7-replay-lock-spec-addendum-draft1.md) and
 [fixture matrix](P7-replay-lock-fixture-matrix-draft1.md) for documentary planning only.
@@ -83,9 +84,9 @@ than weakening L12/L17 in code.
 
 ## Stop points and exclusions
 
-First obtain owner scope approval and a fresh non-author review of this exact proposal. Resolve
-any `AMEND` and review the amended revision before code. Then settle the archive budget and
-exact API/SPEC amendment before implementation. Stop if the embedded-Postgres library cannot
+The documentary scope review is complete. Before product code, settle the archive provenance and
+license/notice evidence, exact API/SPEC amendment, and explicit implementation authorization.
+Stop if the embedded-Postgres library cannot
 consume the verified staged bytes without a fetch, if the launched executable cannot be bound,
 or if an exclusive ledger witness cannot be established. Do not infer a green L12 from a local
 cache or a failed network test.

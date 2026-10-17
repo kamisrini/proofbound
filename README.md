@@ -41,12 +41,13 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 This repository is an early-stage working scaffold, not yet a finished end-user product.
 
-As of 2026-09-12, P1 Tasks 0–9, P2 gates-as-data, P3’s first external connector, the P4 twin spike,
-and P5 intent provenance are implemented and accepted under the repository’s independent
-verification rule. P6 consolidation is active: it adds no capability and instead closes the
-remaining mechanically inventoried P1–P5 debt before P7+ begins.
+As of 2026-09-22, P0 through P5 are implemented and accepted under the repository’s independent
+verification rule. P6 consolidation is also closed: its final census contains 327/327 closed rows
+with zero unclassified items. P6 added no new product capability; it deep-completed and re-proved
+the earlier phases before any P7 implementation work could begin.
 
-Current project status: P5 accepted; P6 consolidation active.
+Current project status: P6 complete; P7 planning only. No P7 provider, feed, schema, event kind,
+behavior-lock, or regeneration implementation is currently authorized.
 
 Currently implemented and verified:
 
@@ -74,16 +75,24 @@ Currently implemented and verified:
 - P3 live GitHub sync/report acceptance evidence
 - Verification and mutation-testing infrastructure
 
-Remaining work in P6:
+P7 is a capability-planning phase, not a product release milestone. Its current contents are:
 
-- Close the ratified C1–C8 consolidation census with cited command and artifact evidence.
-- Re-prove connector, event-universe, reproducibility, intent-coverage, measurement, and package
-  acceptance claims already within P1–P5 scope.
-- Keep durable prediction events deferred until P7+ and a real prediction feed decision.
+- Behavior locks and witnessed regeneration for the existing `ReplayIsolated` twin-replay path.
+  The planning contract defines provenance, canonical lock identity, intent/obligation binding,
+  hostile fixtures, clean-clone evidence, and independent acceptance requirements.
+- A bounded offline setup slice for the replay work, including pinned Go and embedded-PostgreSQL
+  inputs. The setup documentation has been reviewed, but the runtime fixture and implementation
+  are not accepted.
+- A deferred snapshot-provider option. The provider skip was retained; no provider, vendor, or
+  external feed has been selected or authorized.
 
-The mutation harness’s report-package integration calibration currently exceeds its 30-second
-ceiling after cache initialization; this limitation is documented in the Task 8 evidence. The
-standard `make check` gate is green.
+P7 is currently blocked at the planning-to-implementation boundary. Publisher provenance and
+component-license evidence for the pinned PostgreSQL input remain open, as do the complete
+projector/build manifest, clean-clone runtime checks, companion SPEC and fixture corpus, and an
+independent implementation verdict. The full `make check` gate is also environment-unverified on
+the current host because of Go/Snap permissions and a `golangci-lint` toolchain mismatch. These
+limitations do not change the historical P6 closure, but they mean this checkout should not be
+described as product-ready.
 
 ## Quick start
 

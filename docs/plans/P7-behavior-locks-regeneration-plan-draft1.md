@@ -240,7 +240,10 @@ mechanism.
 
 ## Current stop point
 
-Planning acceptance is complete. The next stage is a separately authorized lock-schema/addendum and
-fixture-planning slice for `ReplayIsolated`. No behavior-lock or regeneration implementation may
-begin until that slice is authorized, its acceptance controls are evidenced, and the resulting
-implementation receives an independent verdict.
+Planning acceptance is complete. The lock-schema/addendum, fixture matrix, amended first
+implementation-slice scope, and setup-source documentation have each received their applicable
+documentary planning review. The current next gate is the read-only provenance and licensing
+go/no-go for the pinned replay setup inputs. No behavior-lock or regeneration implementation may
+begin until the setup prerequisites are acceptable, the implementation slice is explicitly
+authorized, its acceptance controls are evidenced, and the resulting implementation receives an
+independent verdict.

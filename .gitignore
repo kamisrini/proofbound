@@ -21,3 +21,6 @@ Backups/
 
 # Local, working FAQ draft (not part of the repository yet)
 docs/FAQ.md
+
+# Local-only overall project status (internal working document)
+notes/overall-status.md

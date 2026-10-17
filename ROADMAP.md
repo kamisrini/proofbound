@@ -168,15 +168,17 @@ acceptance remains an evidence requirement, not an assumed green result.
 ## P7+ — Capability planning (Gate 1 resolved; no implementation authorized)
 
 P6 is closed. P7 Gate 1 is resolved: the founder retained the conditional snapshot-provider skip.
-The no-width doctrine and pinned provider contract remain in force. The planning drafts are
+The no-width doctrine and pinned provider contract remain in force. The behavior-lock planning
+subject was accepted by a fresh non-author review in round 3. The replay-lock addendum and fixture
+matrix were accepted for documentary planning in round 4, the amended first implementation-slice
+scope was accepted for documentary planning in round 2, and the setup-source documentation was
+accepted for documentary planning in round 2. The planning drafts are
 [P7-snapshot-provider-plan-draft1.md](docs/plans/P7-snapshot-provider-plan-draft1.md) and
 [P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md).
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
-continue only within existing feeds and separately authorized slices. The first independent review
-of the proposed twin-replay subject is recorded as AMEND in
-[`p7-behavior-lock-plan-round1.md`](docs/verification/verdicts/p7-behavior-lock-plan-round1.md).
-The amended `ReplayIsolated` subject and proposed lock contract are recorded in
-[`VD-p7-behavior-lock-subject-2026-10-06`](docs/decisions/VD-p7-behavior-lock-subject-2026-10-06.md)
-and require a fresh non-author review before implementation.
+continue only within existing feeds and separately authorized slices. The current next gate is a
+read-only provenance and licensing go/no-go for the pinned replay setup inputs. A successful go/no-go
+does not authorize product code; implementation still requires explicit scope authorization and a
+separate independent implementation verdict.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
