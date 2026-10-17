@@ -7,13 +7,13 @@ As of: 2026-10-17
 
 ## Resume — 2026-10-17
 
-Exact next action: keep deferral `DEF-P7-001`, the third-party binary provenance/licensing
-go/no-go, deferred by owner direction. Do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
-approved, and do not start companion, behavior-lock, regeneration, snapshot-provider, or
-external-feed implementation from the documentary setup acceptance. Resume the binary
-check only after the owner explicitly says they are ready, asks to resume it, or names it in a work
-request. Do not ask, remind, or pressure the owner about this or any other open deferral; skip all
-open deferrals until explicitly activated.
+Exact next action: continue the authorized P7 planning-only readiness slice by reviewing
+`docs/plans/P7-readiness-manifest-plan-draft1.md`, then settle its proposed case/evidence manifest
+shape and readiness checklist. Do not add a parser, runtime fixture, or P7 implementation. Keep
+deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
+approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
+are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
+owner about any open deferral; skip all open deferrals until explicitly activated.
 
 Immediate blockers: the setup-source manifest and README have fresh non-author
 documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
@@ -65,6 +65,9 @@ and licensing check is intentionally deferred, not accepted or passed.
   pass. The ignored `notes/overall-status.md` was refreshed for the same closeout.
 - On 2026-10-17, made open deferrals dormant by policy: preserve and query them, but do not ask,
   remind, or resume them until the owner explicitly activates one.
+- On 2026-10-17, added the planning-only P7 readiness-manifest draft and linked it from the
+  roadmap. It organizes the future case/evidence index without authorizing code, fixtures, or
+  binary validation.
 
 ## Open and unverified
 
