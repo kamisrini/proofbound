@@ -73,9 +73,11 @@ licensing check is intentionally deferred, not accepted or passed.
 - Deferral `DEF-P7-001` covers the third-party binary provenance and licensing go/no-go. Its open
   findings remain unresolved and must not be relabeled `PASS` or `NO-GO` until the check
   is resumed or an alternate source is explicitly selected.
-- Sandbox Snap Go lacks `cap_dac_override`; outside the sandbox the installed
-  `golangci-lint` v2.13.2 built with Go 1.26.7 panicked while loading a file
-  requiring Go 1.27. A compatible-toolchain lint result remains unverified.
+- The default restricted sandbox's Snap Go lacks `cap_dac_override`; its mutation self-test
+  remains unavailable there. Outside that restriction, the repository-pinned Go 1.26.7
+  toolchain was available through the Go toolchain cache and, with `/home/thamm/go/bin` on
+  `PATH`, the installed `golangci-lint` completed successfully. No PostgreSQL validation was
+  performed.
   Native Windows acceptance and P7 mutation detector power are also unverified.
 - Process debt: the gate registry describes advisory-expiry enforcement, but the inspected
   `scripts/link-lint.sh` checks decision-index membership only; the advisory rows dated
@@ -105,9 +107,15 @@ licensing check is intentionally deferred, not accepted or passed.
   `make check` passed generated/documentary checks but stopped at sandbox Snap Go.
   Outside confinement, a first bare run stopped at missing linter `PATH`; with the
   installed linter on `PATH`, bare `make check` reached lint and failed on a Go
-  1.27-versus-1.26 loader panic. Overall gate: **FAIL/UNVERIFIED**, not `PASS`.
-  `INERT cleanroom: no readable external pattern file` leaves that control unproved.
-  Overall verification remains **FAIL/UNVERIFIED**, not `PASS`.
+  1.27-versus-1.26 loader panic. That old compatibility result is superseded by the pinned
+  toolchain rerun below. `INERT cleanroom: no readable external pattern file` leaves that
+  control unproved.
+
+- Latest environment rerun: `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check`
+  passed outside the restricted sandbox with `golangci-lint` reporting `0 issues.` The plain
+  restricted-sandbox invocation remains unavailable only at the Snap capability-dependent
+  mutation self-test; this is an execution-environment distinction, not a P7 or PostgreSQL
+  acceptance result.
 
 ## Institutionalized improvement
 
