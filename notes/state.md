@@ -28,13 +28,10 @@ and licensing check is intentionally deferred, not accepted or passed.
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main`. At the initial 2026-10-17 inspection, HEAD was
-  `71d5d192b3a6967ba89bee2eb16ef123f6ae6f7f` before this closeout. The branch
-  contains the P7 alignment, owner-deferral, and queryable deferral-register commits;
-  this closeout adds the stale-validator repair and refreshed durability records.
-  After the closeout commit, `main` is ahead of `origin/main` by four commits.
-  Push was not attempted: it is not authorized for this closeout and the remote was
-  not DNS-reachable from this environment. Tracked files are clean after commit; two
+- `main` tracks `origin/main`. The current checkpoint is commit
+  `38d90e0` (`docs: define P7 twin companion review boundary`), and `main` is ahead of
+  `origin/main` by twelve commits. Push was not attempted: it is not authorized and the
+  remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
   (SHA-256 `eacb706918adf23cb90ae74547e1d519b76c613beb042c26425503b9a0358439`)
@@ -132,8 +129,9 @@ and licensing check is intentionally deferred, not accepted or passed.
   toolchain rerun below. `INERT cleanroom: no readable external pattern file` leaves that
   control unproved.
 
-- Latest environment rerun: `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check`
-  passed outside the restricted sandbox with `golangci-lint` reporting `0 issues.` The plain
+- Latest environment rerun after commit `38d90e0`:
+  `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check` passed outside the restricted
+  sandbox with `golangci-lint` reporting `0 issues.` The plain
   restricted-sandbox invocation remains unavailable only at the Snap capability-dependent
   mutation self-test; this is an execution-environment distinction, not a P7 or PostgreSQL
   acceptance result.
@@ -147,15 +145,15 @@ These are lightweight closeout controls, not a claim that the existing hook-test
 fail-closed. Preserve reviewed setup bytes; record changing acceptance status in verdicts and
 this state note instead of silently changing reviewed content.
 
-## Final EOD handoff
+## Current checkpoint handoff
 
-- Closeout commit: `876cad66230cf0d5e5c6c580d613131a7dac7c80`.
+- Current checkpoint commit: `38d90e0`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
-  environment. `main` is ahead of `origin/main` by four commits.
-- Verification: targeted checks pass; bare `make check` is **FAIL/UNVERIFIED** at live
-  `kernel-check` because Snap Go lacks `cap_dac_override`.
-- Bundle fallback: `/home/thamm/Backups/proofbound-20261017T162518Z.bundle`; independent
-  `git bundle verify` passed and its SHA-256 is
-  `23528a6ff2c06b5877b694b966266133cfc5a835fbf43964a069d51a2ec36350`.
-- Tomorrow's first action: preserve `DEF-P7-001` as owner-postponed and await an explicit
-  owner decision before resuming the binary provenance/licensing check or starting P7 work.
+  environment. `main` is ahead of `origin/main` by twelve commits.
+- Verification: targeted documentary checks and the full pinned-toolchain `make check` pass.
+  The restricted sandbox remains capability-limited; expected negative-test output was not a
+  live failure.
+- Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
+  this mid-day planning checkpoint.
+- Next action: obtain separate non-author review of the proposed API/SPEC amendment and fixture
+  plan. Keep `DEF-P7-001` dormant and do not begin implementation.
