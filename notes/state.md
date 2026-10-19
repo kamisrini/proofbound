@@ -7,9 +7,9 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: complete the authorized P7 companion implementation slice, then run the full
-pinned verification gate and prepare a separate independent implementation-review packet. Do not
-add runtime fixture acceptance or binary validation. Keep
+Exact next action: prepare a separate independent implementation-review packet for the completed
+verified-archive preflight/staging seam, binding the implementation commit and focused test
+corpus. Do not add runtime fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -20,17 +20,18 @@ documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
 ([verdict](../docs/verification/verdicts/p7-replay-setup-sources-round2-20261016.md)), but
 the pinned PostgreSQL JAR's detached signature did not verify with the public key found;
 publisher identity and bundled license/notice coverage remain unverified. There is no
-case-manifest binding, projector/build manifest, complete Go module byte corpus, reviewed
-companion API/live `twin` SPEC or fixture corpus, L12/L17 runtime result, or independent
-implementation verdict. The full `make check` gate passes outside the restricted sandbox with
-the pinned Go 1.26.7 toolchain; the default sandbox remains capability-limited. The provenance
+case-manifest binding, projector/build manifest, complete Go module byte corpus, runtime fixture
+corpus, L12/L17 runtime result, or independent implementation verdict. The full `make check`
+gate has passed all substantive checks outside the restricted sandbox; the latest attempt stopped
+only at stale durable state before this rewrite. The pinned Go 1.26.7 toolchain is available;
+the default sandbox remains capability-limited. The provenance
 and licensing check is intentionally deferred, not accepted or passed.
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main`. The current checkpoint is commit
-  `38d90e0` (`docs: define P7 twin companion review boundary`), and `main` is ahead of
-  `origin/main` by twelve commits. Push was not attempted: it is not authorized and the
+- `main` tracks `origin/main`. The current implementation checkpoint is commit
+  `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and `main` is ahead of
+  `origin/main` by twenty commits before this state refresh. Push was not attempted: it is not authorized and the
   remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
@@ -90,6 +91,11 @@ and licensing check is intentionally deferred, not accepted or passed.
   The live `twin` SPEC and code now contain only the verified-archive preflight/staging seam;
   runtime fixtures, binary provenance/licensing, and independent implementation acceptance remain
   pending.
+- On 2026-10-19, implemented `ReplayIsolatedWithVerifiedPostgres` with exact archive-byte and
+  inventory binding, safe regular-file extraction, executable checks, cancellation-aware staging,
+  `BinariesDir` routing, cleanup through the existing isolated replay path, and focused negative
+  tests. The relevant intent is `CI-p7-companion-1a2b3c`; the implementation checkpoint is
+  `849b1e7` after generated route-matrix refresh.
 
 ## Open and unverified
 
@@ -140,9 +146,9 @@ and licensing check is intentionally deferred, not accepted or passed.
   toolchain rerun below. `INERT cleanroom: no readable external pattern file` leaves that
   control unproved.
 
-- Latest environment rerun after commit `38d90e0`:
-  `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check` passed outside the restricted
-  sandbox with `golangci-lint` reporting `0 issues.` The plain
+- Latest environment rerun through commit `849b1e7`:
+  `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check` passed all substantive checks
+  outside the restricted sandbox and reached only the stale-state freshness gate. The plain
   restricted-sandbox invocation remains unavailable only at the Snap capability-dependent
   mutation self-test; this is an execution-environment distinction, not a P7 or PostgreSQL
   acceptance result.
@@ -158,13 +164,14 @@ this state note instead of silently changing reviewed content.
 
 ## Current checkpoint handoff
 
-- Current checkpoint commit: `38d90e0`.
+- Current implementation checkpoint: `849b1e7`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
   environment. `main` is ahead of `origin/main` by twelve commits.
-- Verification: targeted documentary checks and the full pinned-toolchain `make check` pass.
+- Verification: targeted documentary checks and all substantive pinned-toolchain checks pass;
+  the state-freshness failure is being repaired by this rewrite before the final rerun.
   The restricted sandbox remains capability-limited; expected negative-test output was not a
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: obtain separate non-author review of the proposed API/SPEC amendment and fixture
-  plan. Keep `DEF-P7-001` dormant and do not begin implementation.
+- Next action: prepare the independent implementation-review packet. Keep `DEF-P7-001` dormant;
+  do not perform runtime binary validation.
