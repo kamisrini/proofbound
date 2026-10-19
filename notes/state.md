@@ -7,11 +7,9 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: obtain a separate independent implementation verdict against
-`docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md`, bound to
-reviewed commit `fd4a90122a62820ae897141e4755d7a386281367` and packet SHA-256
-`2d89d69f4dfa81a5d6e12249aa66228c238fb120cb1dbf4bcf571ef68f44f900`. Do not add runtime fixture
-acceptance or binary validation. Keep
+Exact next action: preserve the independent non-author `ACCEPT` for the verified-archive
+preflight/staging companion slice and wait for explicit authorization of the next runtime/evidence
+slice. Do not add runtime fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -23,7 +21,7 @@ documentary `ACCEPT` for exact commit `d07f3ffee70d1acd5f917d4fa06362aaac594718`
 the pinned PostgreSQL JAR's detached signature did not verify with the public key found;
 publisher identity and bundled license/notice coverage remain unverified. There is no
 case-manifest binding, projector/build manifest, complete Go module byte corpus, runtime fixture
-corpus, L12/L17 runtime result, or independent implementation verdict. The full `make check`
+corpus, L12/L17 runtime result, or runtime acceptance. The full `make check`
 gate has passed all substantive checks outside the restricted sandbox; the latest attempt stopped
 only at stale durable state before this rewrite. The pinned Go 1.26.7 toolchain is available;
 the default sandbox remains capability-limited. The provenance
@@ -32,8 +30,8 @@ and licensing check is intentionally deferred, not accepted or passed.
 ## Branch and local ownership
 
 - `main` tracks `origin/main`. The current implementation checkpoint is commit
-  `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and `main` is ahead of
-  `origin/main` by twenty commits before this state refresh. Push was not attempted: it is not authorized and the
+  `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and the acceptance checkpoint is
+  `a9db727`; `main` is ahead of `origin/main` by twenty-three commits. Push was not attempted: it is not authorized and the
   remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
@@ -87,12 +85,11 @@ and licensing check is intentionally deferred, not accepted or passed.
   `5bbfea2a51393c20e27a052a5e6761bd2d8419c9320b509ce4d60596b2a6c5ff`; no verdict has been
   recorded.
 - On 2026-10-19, recorded Srini K's independent non-author `ACCEPT` with no findings for the
-  exact packet and commit. The acceptance is documentary planning only; no live contract,
-  runtime fixture, binary validation, or implementation was authorized.
+  exact documentary packet and commit. That acceptance remained planning-only; no live contract,
+  runtime fixture, binary validation, or implementation was authorized by it.
 - On 2026-10-19, the owner authorized implementation of the accepted narrow companion slice.
   The live `twin` SPEC and code now contain only the verified-archive preflight/staging seam;
-  runtime fixtures, binary provenance/licensing, and independent implementation acceptance remain
-  pending.
+  runtime fixtures and binary provenance/licensing remain pending.
 - On 2026-10-19, implemented `ReplayIsolatedWithVerifiedPostgres` with exact archive-byte and
   inventory binding, safe regular-file extraction, executable checks, cancellation-aware staging,
   `BinariesDir` routing, cleanup through the existing isolated replay path, and focused negative
@@ -100,8 +97,10 @@ and licensing check is intentionally deferred, not accepted or passed.
   `849b1e7` after generated route-matrix refresh.
 - On 2026-10-19, froze the independent implementation-review packet at
   `docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md` with
-  SHA-256 `2d89d69f4dfa81a5d6e12249aa66228c238fb120cb1dbf4bcf571ef68f44f900`. No implementation
-  verdict has been recorded.
+  SHA-256 `2d89d69f4dfa81a5d6e12249aa66228c238fb120cb1dbf4bcf571ef68f44f900`.
+- On 2026-10-19, recorded Srini K's independent non-author implementation `ACCEPT` with no
+  findings for the verified-archive preflight/staging slice. Runtime fixtures, PostgreSQL
+  execution, behavior-lock evidence, and binary provenance/licensing remain separately gated.
 
 ## Open and unverified
 
@@ -109,7 +108,7 @@ and licensing check is intentionally deferred, not accepted or passed.
   Go toolchain patch suitability, complete Phase-A projector/module/toolchain/executable
   evidence, source-manifest binding in a case manifest, runtime fixture corpus, zero-fetch and
   cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
-  an independent implementation review are open. The old empty-cache/no-network
+  runtime acceptance and the remaining implementation evidence are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
 - Deferral `DEF-P7-001` covers the third-party binary provenance and licensing go/no-go. Its open
   findings remain unresolved and must not be relabeled `PASS` or `NO-GO` until the check
@@ -170,14 +169,16 @@ this state note instead of silently changing reviewed content.
 
 ## Current checkpoint handoff
 
-- Current implementation checkpoint: `849b1e7`.
+- Current implementation checkpoint: `849b1e7`; independent implementation verdict is recorded
+  at `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
-  environment. `main` is ahead of `origin/main` by twelve commits.
-- Verification: targeted documentary checks and all substantive pinned-toolchain checks pass;
-  the state-freshness failure is being repaired by this rewrite before the final rerun.
+  environment. `main` is ahead of `origin/main` by twenty-three commits.
+- Verification: targeted link, index, deferral, artifact-integrity, state-freshness, and
+  whitespace checks pass after the acceptance commit; the prior full pinned-toolchain gate passed
+  at the implementation checkpoint.
   The restricted sandbox remains capability-limited; expected negative-test output was not a
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: prepare the independent implementation-review packet. Keep `DEF-P7-001` dormant;
-  do not perform runtime binary validation.
+- Next action: wait for explicit authorization of the next runtime/evidence slice. Keep
+  `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any open deferral.

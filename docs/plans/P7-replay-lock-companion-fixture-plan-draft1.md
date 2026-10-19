@@ -89,8 +89,10 @@ implementation review, and all required witnesses are separately satisfied.
    PostgreSQL input. Until then, leave those cases dormant and `UNVERIFIED`.
 5. Build the fixture corpus and case manifests, run the direct controls, then run the appropriate
    full verification gate.
-6. Obtain a separate independent implementation verdict. Do not relabel planning acceptance as
-   implementation acceptance.
+6. Obtain a separate independent implementation verdict. This gate is now satisfied for the
+   preflight/staging companion slice by
+   [`p7-replay-lock-companion-implementation-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md);
+   do not treat it as runtime fixture or behavior-lock acceptance.
 
 ## Explicit non-goals
 
@@ -102,5 +104,8 @@ feed, or reopen any dormant deferral.
 
 Round-1 non-author documentary review by Srini K accepted this fixture plan with no findings. See
 [`p7-replay-lock-companion-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
-The acceptance is limited to documentary planning; no fixture has been run and implementation
-remains separately gated.
+The acceptance is limited to documentary planning. The authorized preflight/staging implementation
+was independently accepted with no findings by Srini K in
+[`p7-replay-lock-companion-implementation-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md).
+No runtime fixture has been run; runtime evidence, L12/L17, and binary provenance/licensing remain
+separately gated.

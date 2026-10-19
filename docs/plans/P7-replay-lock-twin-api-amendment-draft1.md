@@ -155,5 +155,8 @@ approve a third-party binary, or reopen `DEF-P7-001`.
 
 Round-1 non-author documentary review by Srini K accepted this planning boundary with no findings.
 See [`p7-replay-lock-companion-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
-The acceptance is limited to documentary planning; the live API/SPEC and implementation remain
-separately gated.
+The acceptance is limited to documentary planning. The separately authorized preflight/staging
+implementation slice was independently accepted with no findings by Srini K in
+[`p7-replay-lock-companion-implementation-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md).
+Runtime fixtures, PostgreSQL execution, behavior-lock evidence, and third-party binary
+provenance/licensing remain separately gated.

@@ -186,11 +186,13 @@ The review corpus is frozen in
 round-1 non-author documentary review accepted it with no findings in
 [p7-replay-lock-companion-round1-20261019.md](docs/verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
 This remains planning acceptance only. Owner authorization was subsequently given for the narrow
-companion implementation slice. The live `twin` SPEC now records the verified-archive
-preflight/staging seam; runtime fixtures and independent implementation acceptance remain pending.
+companion implementation slice. The live `twin` SPEC and code now record the verified-archive
+preflight/staging seam, and the slice has an independent non-author `ACCEPT` with no findings.
+Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);
-no implementation verdict has been recorded.
+the implementation verdict is recorded in
+[p7-replay-lock-companion-implementation-round1-20261019.md](docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md).
 No provider, vendor, feed, schema, or event kind is authorized. The read-only provenance and
 licensing go/no-go for the pinned replay setup inputs remains deferred by owner direction. It is an
 unresolved prerequisite, not a pass or `NO-GO`; no runtime binary validation is part of this slice.
