@@ -152,7 +152,7 @@ func extractVerifiedArchive(ctx context.Context, archiveBytes []byte, destinatio
 			if err := os.MkdirAll(target, 0o755); err != nil {
 				return fmt.Errorf("twin: create archive directory %q: %w", name, err)
 			}
-		case tar.TypeReg, tar.TypeRegA:
+		case tar.TypeReg:
 			if _, ok := seen[name]; ok {
 				return fmt.Errorf("twin: duplicate postgres archive entry %q", name)
 			}

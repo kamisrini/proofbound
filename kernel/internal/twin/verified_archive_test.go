@@ -53,7 +53,7 @@ func TestStageVerifiedPostgresRejectsDigestAndInventoryFailures(t *testing.T) {
 }
 
 func TestReplayIsolatedWithVerifiedPostgresValidatesBeforeStore(t *testing.T) {
-	_, err := ReplayIsolatedWithVerifiedPostgres(nil, nil, Request{}, emptySnapshot(), VerifiedPostgresInput{})
+	_, err := ReplayIsolatedWithVerifiedPostgres(context.Background(), nil, Request{}, emptySnapshot(), VerifiedPostgresInput{})
 	if err == nil || !strings.Contains(err.Error(), "archive is empty") {
 		t.Fatalf("error=%v", err)
 	}
