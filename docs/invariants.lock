@@ -225,3 +225,9 @@ kernel/internal/twin/SPEC.md	TWIN-INV-8	Ephemeral isolation.
 kernel/internal/twin/SPEC.md	TWIN-INV-9	Bound proof.
 kernel/internal/twin/SPEC.md	TWIN-INV-10	Honest calibration.
 kernel/internal/twin/SPEC.md	TWIN-INV-11	Complete route proof.
+kernel/internal/twin/SPEC.md	TWIN-INV-12	Exact archive binding.
+kernel/internal/twin/SPEC.md	TWIN-INV-13	Complete safe staging.
+kernel/internal/twin/SPEC.md	TWIN-INV-14	Executable binding.
+kernel/internal/twin/SPEC.md	TWIN-INV-15	Offline provisioning.
+kernel/internal/twin/SPEC.md	TWIN-INV-16	Binary-directory correctness.
+kernel/internal/twin/SPEC.md	TWIN-INV-17	Cleanup closure.
