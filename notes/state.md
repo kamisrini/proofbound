@@ -7,9 +7,10 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: preserve the accepted P7 readiness-manifest planning shape and freeze the
-proposed documentation-only live `twin` API/SPEC amendment and companion fixture plan for separate
-non-author review. Do not add a parser, runtime fixture, or P7 implementation. Keep
+Exact next action: obtain a separate non-author documentary verdict against the frozen companion
+review packet `docs/verification/p7-replay-lock-companion-review-packet-20261019.md` at exact
+commit `9d22128aeef5bb5fe0ed79f36f69cecab382a158`. Do not add a parser, runtime fixture, or P7
+implementation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -79,6 +80,10 @@ and licensing check is intentionally deferred, not accepted or passed.
   fixture plan for separate review. The proposal makes archive-byte binding, safe staging,
   `BinariesDir` routing, no-fetch behavior, cleanup, ledger preservation, and negative controls
   explicit without changing the live API or authorizing implementation.
+- On 2026-10-19, froze the exact planning corpus in
+  `docs/verification/p7-replay-lock-companion-review-packet-20261019.md`. The packet SHA-256 is
+  `5bbfea2a51393c20e27a052a5e6761bd2d8419c9320b509ce4d60596b2a6c5ff`; no verdict has been
+  recorded.
 
 ## Open and unverified
 

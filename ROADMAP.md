@@ -181,6 +181,9 @@ The next documentary slice is now captured in the proposed
 [twin API/SPEC amendment](docs/plans/P7-replay-lock-twin-api-amendment-draft1.md) and
 [companion fixture plan](docs/plans/P7-replay-lock-companion-fixture-plan-draft1.md), both awaiting
 separate review before any implementation authorization.
+The review corpus is frozen in
+[p7-replay-lock-companion-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-review-packet-20261019.md);
+the packet has no verdict yet.
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
 continue only within existing feeds and separately authorized slices. The read-only provenance and
 licensing go/no-go for the pinned replay setup inputs is currently deferred by owner direction. It
