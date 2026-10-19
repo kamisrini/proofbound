@@ -1,8 +1,8 @@
 # P7 replay lock — proposed companion fixture plan
 
-**Status:** PROPOSED FOR DOCUMENTARY PLANNING ONLY — 2026-10-19. The rows below define the
-fixture and evidence work needed after separate API/SPEC review and explicit implementation
-authorization. No row has been run, and no runtime result is claimed.
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19;
+implementation separately gated. The rows below define the fixture and evidence work needed
+after explicit implementation authorization. No row has been run, and no runtime result is claimed.
 
 **Companion:** [proposed `twin` API/SPEC amendment](P7-replay-lock-twin-api-amendment-draft1.md)
 and the accepted [P7 fixture matrix](P7-replay-lock-fixture-matrix-draft1.md). This plan is a
@@ -97,3 +97,10 @@ implementation review, and all required witnesses are separately satisfied.
 This plan does not create fixture files, download or approve third-party binaries, alter the live
 `twin` API/SPEC, implement the companion, add a parser, run L12/L17, add a provider or external
 feed, or reopen any dormant deferral.
+
+## Review outcome
+
+Round-1 non-author documentary review by Srini K accepted this fixture plan with no findings. See
+[`p7-replay-lock-companion-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
+The acceptance is limited to documentary planning; no fixture has been run and implementation
+remains separately gated.

@@ -183,7 +183,9 @@ The next documentary slice is now captured in the proposed
 separate review before any implementation authorization.
 The review corpus is frozen in
 [p7-replay-lock-companion-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-review-packet-20261019.md);
-the packet has no verdict yet.
+round-1 non-author documentary review accepted it with no findings in
+[p7-replay-lock-companion-round1-20261019.md](docs/verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
+This remains planning acceptance only.
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
 continue only within existing feeds and separately authorized slices. The read-only provenance and
 licensing go/no-go for the pinned replay setup inputs is currently deferred by owner direction. It

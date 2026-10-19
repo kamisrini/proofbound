@@ -7,9 +7,8 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: obtain a separate non-author documentary verdict against the frozen companion
-review packet `docs/verification/p7-replay-lock-companion-review-packet-20261019.md` at exact
-commit `9d22128aeef5bb5fe0ed79f36f69cecab382a158`. Do not add a parser, runtime fixture, or P7
+Exact next action: preserve the accepted documentary companion boundary and await explicit
+implementation authorization before any parser, runtime fixture, live API/SPEC change, or P7
 implementation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
@@ -84,6 +83,9 @@ and licensing check is intentionally deferred, not accepted or passed.
   `docs/verification/p7-replay-lock-companion-review-packet-20261019.md`. The packet SHA-256 is
   `5bbfea2a51393c20e27a052a5e6761bd2d8419c9320b509ce4d60596b2a6c5ff`; no verdict has been
   recorded.
+- On 2026-10-19, recorded Srini K's independent non-author `ACCEPT` with no findings for the
+  exact packet and commit. The acceptance is documentary planning only; no live contract,
+  runtime fixture, binary validation, or implementation was authorized.
 
 ## Open and unverified
 

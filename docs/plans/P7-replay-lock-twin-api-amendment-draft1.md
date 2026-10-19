@@ -1,7 +1,7 @@
 # P7 replay lock — proposed `twin` API/SPEC amendment
 
-**Status:** PROPOSED FOR DOCUMENTARY PLANNING ONLY — 2026-10-19. This is a proposed
-companion contract for separate review. It does not modify the live
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19;
+implementation separately gated. This remains a proposed companion contract and does not modify the live
 [`internal/twin` SPEC](../../kernel/internal/twin/SPEC.md), add product code, authorize
 runtime fixtures, validate PostgreSQL, or reopen dormant deferral `DEF-P7-001`.
 
@@ -150,3 +150,10 @@ approves nor rejects the pinned PostgreSQL input.
 This draft does not change the live API, implement a parser, create runtime fixtures, regenerate
 snapshots, add a provider or external feed, add an event kind, evaluate a lock, claim L12/L17,
 approve a third-party binary, or reopen `DEF-P7-001`.
+
+## Review outcome
+
+Round-1 non-author documentary review by Srini K accepted this planning boundary with no findings.
+See [`p7-replay-lock-companion-round1-20261019.md`](../verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
+The acceptance is limited to documentary planning; the live API/SPEC and implementation remain
+separately gated.
