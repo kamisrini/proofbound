@@ -50,8 +50,9 @@ The P7 companion consumes exact caller-supplied `.txz` bytes and a complete regu
 inventory. It hashes the bytes, safely extracts only regular files into a fresh replay root,
 requires executable `bin/pg_ctl` and `bin/postgres`, binds the launched `postgres` digest, and
 passes the staged directory as `store.Config.BinariesDir`. It accepts no URL, path-only input,
-ambient cache, or network fallback. The implementation seam is present; real PostgreSQL runtime
-fixtures, no-fetch witnesses, and independent implementation acceptance remain pending.
+ambient cache, or network fallback. The implementation seam is present and has independent
+non-author implementation acceptance; real PostgreSQL runtime fixtures and no-fetch witnesses
+remain pending.
 
 ## Invariants
 
@@ -99,4 +100,8 @@ predictions. Those require a separate decision and acceptance evidence.
 | TWIN-INV-11 | frozen proof covers every registered source-kind pair | replay_test.go::TestReplayProofCoversEveryRegisteredEventPair |
 | TWIN-INV-12/13/14 | exact archive digest, safe extraction, inventory, and executable binding | verified_archive_test.go::TestStageVerifiedPostgresBindsArchiveInventoryAndExecutable |
 | TWIN-INV-12/13/14 | digest, unsafe inventory, wrong executable, and missing-required-file rejection | verified_archive_test.go::TestStageVerifiedPostgresRejectsDigestAndInventoryFailures |
+| TWIN-INV-13/14 | inventory ordering, duplicate/mode/required-file rejection | verified_archive_test.go::TestValidateVerifiedPostgresInputRejectsInventoryShape |
+| TWIN-INV-13/14 | unsafe archive paths fail closed | verified_archive_test.go::TestNormalizeArchivePathRejectsUnsafeForms |
+| TWIN-INV-13/14 | staged-file drift fails closed | verified_archive_test.go::TestVerifyStagedPostgresRejectsUnexpectedFileAndModeDrift |
+| TWIN-INV-17 | cancellation is rejected before staging begins | verified_archive_test.go::TestStageVerifiedPostgresHonorsCancellationBeforeExtraction |
 | P7 preflight | companion validates its verified input before touching the source store | verified_archive_test.go::TestReplayIsolatedWithVerifiedPostgresValidatesBeforeStore |

@@ -39,9 +39,10 @@ source record, not an accepted setup manifest or a passing fixture. Its
   authenticated provenance and a component-license/notice inventory before clearing this
   input. Distribution permission remains unverified. No third-party binary is being
   committed or redistributed here.
-- No companion API/live `twin` SPEC, safe-staging implementation, zero-fetch witness,
-  complete-ledger/cleanup fixture, L12/L17 run, or independent implementation verdict exists.
-  Missing any of these keeps the relevant case `UNVERIFIED`.
+- The companion API/live `twin` SPEC and safe-staging implementation now exist and have an
+  independent implementation `ACCEPT`; zero-fetch witness, complete-ledger/cleanup fixture,
+  L12/L17 run, and runtime case verdict do not exist. Missing any of these keeps the relevant
+  case `UNVERIFIED`.
 
 Upstream source check (2026-10-15): the publisher's tagged
 [v16.4.0 build configuration](https://github.com/zonkyio/embedded-postgres-binaries/blob/v16.4.0/build.gradle)

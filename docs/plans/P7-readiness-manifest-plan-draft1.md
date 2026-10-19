@@ -1,8 +1,9 @@
 # P7 readiness manifest — planning draft 1
 
 **Status:** ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19;
-implementation separately gated. No runtime implementation, fixture corpus, binary validation,
-or acceptance claim is authorized.
+the preflight/staging implementation slice is independently accepted, while runtime evidence
+remains separately gated. No runtime fixture corpus, binary validation, or runtime acceptance claim
+is authorized.
 
 **Date:** 2026-10-17
 
@@ -98,7 +99,7 @@ listed top-level fields, no unknown/missing/null members, and explicit pending s
 | Area | Required decision or evidence | Current state |
 |---|---|---|
 | Identity | Stable case ID, exact subject, evidence revision, and canonical bytes | Accepted for planning; no runtime case exists |
-| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Shape accepted; no case binding exists |
+| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Shape accepted; no runtime case binding exists |
 | Lock/source/candidate | Content-addressed paths and bytes for the exact case inputs | No runtime corpus exists |
 | Setup inputs | Setup-source manifest and projector/build-manifest relationship | Documentary setup accepted; provenance/licensing remains deferred |
 | Commands | Exact argv, working directory, relevant environment, network policy, exit code, and output digests | No case run exists |
@@ -106,7 +107,7 @@ listed top-level fields, no unknown/missing/null members, and explicit pending s
 | Network witness | Observable zero-fetch evidence, not merely a blocked request | Required; not run |
 | Cleanup witness | Temporary store and staging removal on success and every failure path | Required; not run |
 | Outcome vocabulary | `PASS`, `FAIL`, `UNVERIFIED`, `UNDECLARED`, or `PENDING` with key-specific rules | Settled for planning; no outcomes exist |
-| Review | Non-author verdict against immutable manifest and artifact digests; pending uses an explicit status object | No implementation verdict exists |
+| Review | Non-author verdict against immutable manifest and artifact digests; pending uses an explicit status object | Preflight/staging implementation verdict accepted; no runtime case verdict exists |
 
 ## Readiness checklist
 

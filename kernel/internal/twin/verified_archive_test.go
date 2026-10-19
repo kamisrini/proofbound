@@ -52,6 +52,103 @@ func TestStageVerifiedPostgresRejectsDigestAndInventoryFailures(t *testing.T) {
 	}
 }
 
+func TestValidateVerifiedPostgresInputRejectsInventoryShape(t *testing.T) {
+	tests := map[string]func(*VerifiedPostgresInput){
+		"unsorted inventory": func(input *VerifiedPostgresInput) {
+			input.Inventory[0], input.Inventory[1] = input.Inventory[1], input.Inventory[0]
+		},
+		"duplicate inventory": func(input *VerifiedPostgresInput) {
+			input.Inventory[1].Path = input.Inventory[0].Path
+		},
+		"unsupported mode": func(input *VerifiedPostgresInput) {
+			input.Inventory[0].Mode = "100600"
+		},
+		"non-executable pg_ctl": func(input *VerifiedPostgresInput) {
+			input.Inventory[0].Mode = "100644"
+		},
+		"missing pg_ctl": func(input *VerifiedPostgresInput) {
+			input.Inventory = input.Inventory[1:]
+		},
+		"missing postgres": func(input *VerifiedPostgresInput) {
+			input.Inventory = input.Inventory[:1]
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			input := fixtureVerifiedPostgresInput(t)
+			mutate(&input)
+			if err := validateVerifiedPostgresInput(input); err == nil {
+				t.Fatal("expected inventory validation failure")
+			}
+		})
+	}
+}
+
+func TestNormalizeArchivePathRejectsUnsafeForms(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		path string
+	}{
+		{name: "empty", path: ""},
+		{name: "absolute", path: "/absolute"},
+		{name: "parent", path: "../parent"},
+		{name: "escape", path: "nested/../../escape"},
+		{name: "windows", path: "windows\\path"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			name := test.path
+			if _, err := normalizeArchivePath(name); err == nil {
+				t.Fatalf("expected unsafe archive path rejection for %q", name)
+			}
+		})
+	}
+}
+
+func TestStageVerifiedPostgresHonorsCancellationBeforeExtraction(t *testing.T) {
+	input := fixtureVerifiedPostgresInput(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	root := t.TempDir()
+	if _, err := stageVerifiedPostgres(ctx, root, input); err == nil {
+		t.Fatal("expected canceled staging to fail")
+	} else if !strings.Contains(err.Error(), context.Canceled.Error()) {
+		t.Fatalf("error=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "pgbin")); !os.IsNotExist(err) {
+		t.Fatalf("canceled staging created binaries directory: %v", err)
+	}
+}
+
+func TestVerifyStagedPostgresRejectsUnexpectedFileAndModeDrift(t *testing.T) {
+	t.Run("unexpected file", func(t *testing.T) {
+		input := fixtureVerifiedPostgresInput(t)
+		binaries, err := stageVerifiedPostgres(context.Background(), t.TempDir(), input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(binaries, "unexpected"), []byte("fixture"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := verifyStagedPostgres(binaries, input); err == nil {
+			t.Fatal("expected unexpected-file rejection")
+		}
+	})
+
+	t.Run("mode drift", func(t *testing.T) {
+		input := fixtureVerifiedPostgresInput(t)
+		binaries, err := stageVerifiedPostgres(context.Background(), t.TempDir(), input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(filepath.Join(binaries, "bin", "pg_ctl"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := verifyStagedPostgres(binaries, input); err == nil {
+			t.Fatal("expected mode-drift rejection")
+		}
+	})
+}
+
 func TestReplayIsolatedWithVerifiedPostgresValidatesBeforeStore(t *testing.T) {
 	_, err := ReplayIsolatedWithVerifiedPostgres(context.Background(), nil, Request{}, emptySnapshot(), VerifiedPostgresInput{})
 	if err == nil || !strings.Contains(err.Error(), "archive is empty") {

@@ -7,9 +7,9 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: preserve the independent non-author `ACCEPT` for the verified-archive
-preflight/staging companion slice and wait for explicit authorization of the next runtime/evidence
-slice. Do not add runtime fixture acceptance or binary validation. Keep
+Exact next action: freeze an independent implementation-review packet for the synthetic
+archive-control test expansion, then obtain a non-author verdict against its exact commit. Do not
+add runtime fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -101,6 +101,10 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-19, recorded Srini K's independent non-author implementation `ACCEPT` with no
   findings for the verified-archive preflight/staging slice. Runtime fixtures, PostgreSQL
   execution, behavior-lock evidence, and binary provenance/licensing remain separately gated.
+- On 2026-10-19, added synthetic archive-control coverage for inventory ordering, duplicate and
+  mode/required-file rejection, unsafe paths, staged-file drift, and cancellation before staging.
+  The live SPEC and planning/prerequisite documents now distinguish this tested preflight boundary
+  from still-unverified runtime evidence. The pinned full `make check` passed with `0 issues`.
 
 ## Open and unverified
 
@@ -169,16 +173,18 @@ this state note instead of silently changing reviewed content.
 
 ## Current checkpoint handoff
 
-- Current implementation checkpoint: `849b1e7`; independent implementation verdict is recorded
-  at `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md`.
+- Current accepted implementation checkpoint: `c5f65a4`; independent implementation verdict is
+  recorded at `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md`.
+  The synthetic archive-control expansion is the next reviewable checkpoint.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
   environment. `main` is ahead of `origin/main` by twenty-three commits.
-- Verification: targeted link, index, deferral, artifact-integrity, state-freshness, and
-  whitespace checks pass after the acceptance commit; the prior full pinned-toolchain gate passed
-  at the implementation checkpoint.
+- Verification: the pinned full `make check` passed with `golangci-lint` reporting `0 issues`;
+  expected `index stale; run make index` output was a negative-test message. Focused archive
+  control tests pass outside the restricted Snap sandbox.
   The restricted sandbox remains capability-limited; expected negative-test output was not a
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: wait for explicit authorization of the next runtime/evidence slice. Keep
-  `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any open deferral.
+- Next action: prepare and freeze the independent implementation-review packet for the synthetic
+  archive-control expansion. Keep `DEF-P7-001` dormant; do not perform runtime binary validation
+  or ask about any open deferral.
