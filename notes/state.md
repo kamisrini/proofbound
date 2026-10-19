@@ -7,9 +7,11 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: prepare a separate independent implementation-review packet for the completed
-verified-archive preflight/staging seam, binding the implementation commit and focused test
-corpus. Do not add runtime fixture acceptance or binary validation. Keep
+Exact next action: obtain a separate independent implementation verdict against
+`docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md`, bound to
+reviewed commit `fd4a90122a62820ae897141e4755d7a386281367` and packet SHA-256
+`2d89d69f4dfa81a5d6e12249aa66228c238fb120cb1dbf4bcf571ef68f44f900`. Do not add runtime fixture
+acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -96,6 +98,10 @@ and licensing check is intentionally deferred, not accepted or passed.
   `BinariesDir` routing, cleanup through the existing isolated replay path, and focused negative
   tests. The relevant intent is `CI-p7-companion-1a2b3c`; the implementation checkpoint is
   `849b1e7` after generated route-matrix refresh.
+- On 2026-10-19, froze the independent implementation-review packet at
+  `docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md` with
+  SHA-256 `2d89d69f4dfa81a5d6e12249aa66228c238fb120cb1dbf4bcf571ef68f44f900`. No implementation
+  verdict has been recorded.
 
 ## Open and unverified
 
