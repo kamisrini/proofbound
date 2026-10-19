@@ -177,6 +177,10 @@ accepted for documentary planning in round 2. The planning drafts are
 [P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md), and
 the planning-only [P7-readiness-manifest-plan-draft1.md](docs/plans/P7-readiness-manifest-plan-draft1.md)
 for the future case/evidence index.
+The next documentary slice is now captured in the proposed
+[twin API/SPEC amendment](docs/plans/P7-replay-lock-twin-api-amendment-draft1.md) and
+[companion fixture plan](docs/plans/P7-replay-lock-companion-fixture-plan-draft1.md), both awaiting
+separate review before any implementation authorization.
 No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
 continue only within existing feeds and separately authorized slices. The read-only provenance and
 licensing go/no-go for the pinned replay setup inputs is currently deferred by owner direction. It

@@ -7,9 +7,9 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: preserve the accepted P7 readiness-manifest planning shape and prepare the
-documentation-only live `twin` API/SPEC amendment and fixture plan for their separate review. Do
-not add a parser, runtime fixture, or P7 implementation. Keep
+Exact next action: preserve the accepted P7 readiness-manifest planning shape and freeze the
+proposed documentation-only live `twin` API/SPEC amendment and companion fixture plan for separate
+non-author review. Do not add a parser, runtime fixture, or P7 implementation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -78,13 +78,17 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-19, recorded Srini K's independent non-author `ACCEPT` against the exact planning
   commit in `docs/verification/verdicts/p7-readiness-manifest-round1-20261019.md`. This accepts
   documentary planning only; implementation remains separately gated.
+- On 2026-10-19, prepared the proposed documentation-only companion API/SPEC amendment and
+  fixture plan for separate review. The proposal makes archive-byte binding, safe staging,
+  `BinariesDir` routing, no-fetch behavior, cleanup, ledger preservation, and negative controls
+  explicit without changing the live API or authorizing implementation.
 
 ## Open and unverified
 
 - Publisher signing identity, component license/notice and distribution clearance, exact
   Go toolchain patch suitability, complete Phase-A projector/module/toolchain/executable
-  evidence, source-manifest binding in a case manifest, companion API/live SPEC and fixture
-  review, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
+  evidence, source-manifest binding in a case manifest, separate review of the proposed
+  companion API/live SPEC and fixture plan, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
   an independent implementation review are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
 - Deferral `DEF-P7-001` covers the third-party binary provenance and licensing go/no-go. Its open
