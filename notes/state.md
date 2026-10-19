@@ -3,12 +3,13 @@
 > THE resume note. Rewrite in place; never append or create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-As of: 2026-10-17
+As of: 2026-10-19
 
-## Resume — 2026-10-17
+## Resume — 2026-10-19
 
-Exact next action: prepare the owner-approved P7 readiness-manifest shape and checklist for fresh
-non-author review. Do not add a parser, runtime fixture, or P7 implementation. Keep
+Exact next action: preserve the accepted P7 readiness-manifest planning shape and prepare the
+documentation-only live `twin` API/SPEC amendment and fixture plan for their separate review. Do
+not add a parser, runtime fixture, or P7 implementation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -70,10 +71,13 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-17, settled the planning shape in
   `docs/decisions/VD-p7-readiness-manifest-2026-10-17.md`: exact top-level fields, no-null rules,
   derived case status, outcome vocabulary, content references, and explicit pending review state.
-  Fresh non-author review is still required before implementation.
+  Fresh non-author review was subsequently completed with `ACCEPT` for documentary planning only.
 - On 2026-10-17, froze commit `334b33822cfe2cf35071ee936f260ed079b8a6c1` into
   `docs/verification/p7-readiness-manifest-review-packet-20261017.md` with the exact corpus
   digests and review questions. The packet is a review request, not a verdict.
+- On 2026-10-19, recorded Srini K's independent non-author `ACCEPT` against the exact planning
+  commit in `docs/verification/verdicts/p7-readiness-manifest-round1-20261019.md`. This accepts
+  documentary planning only; implementation remains separately gated.
 
 ## Open and unverified
 

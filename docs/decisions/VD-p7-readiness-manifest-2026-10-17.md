@@ -1,6 +1,7 @@
 # VD-p7-readiness-manifest-2026-10-17: case/evidence manifest shape
 
-**Status:** OWNER-APPROVED FOR PLANNING — non-author review required before implementation
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19;
+implementation separately gated
 
 **Date:** 2026-10-17
 
@@ -57,8 +58,18 @@ The following rules are part of the planning shape:
   hash without retrievable bytes.
 - Missing fixtures, missing witnesses, dormant prerequisites, and absent independent review remain
   `UNVERIFIED`/`PENDING`; they are not silently converted to failures or passes.
-- The exact shape still requires fresh non-author review before a parser, runtime corpus, or P7
-  implementation is accepted.
+- The exact shape required fresh non-author review before a parser, runtime corpus, or P7
+  implementation could be accepted.
+
+## Fresh non-author review outcome — round 1 — 2026-10-19
+
+The exact planning corpus at commit `334b33822cfe2cf35071ee936f260ed079b8a6c1` was reviewed by
+Srini K as an independent non-author reviewer. The verdict is recorded in
+[`p7-readiness-manifest-round1-20261019.md`](../verification/verdicts/p7-readiness-manifest-round1-20261019.md).
+
+**Outcome: ACCEPT for documentary planning only.** No findings were reported. This does not
+authorize a parser, runtime fixture, PostgreSQL validation, live API/SPEC change, behavior-lock
+implementation, regeneration, provider, or external feed.
 
 ## Authority
 

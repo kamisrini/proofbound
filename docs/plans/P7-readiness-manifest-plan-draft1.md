@@ -1,7 +1,8 @@
 # P7 readiness manifest — planning draft 1
 
-**Status:** OWNER-APPROVED FOR PLANNING — non-author review required before implementation;
-no runtime implementation, fixture corpus, binary validation, or acceptance claim is authorized.
+**Status:** ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19;
+implementation separately gated. No runtime implementation, fixture corpus, binary validation,
+or acceptance claim is authorized.
 
 **Date:** 2026-10-17
 
@@ -30,8 +31,8 @@ binary provenance/licensing go-no-go. Any case that needs the PostgreSQL input r
 
 ## Settled planning shape
 
-The following is the owner-approved planning shape. It still requires fresh non-author review
-before implementation. The emitted manifest uses UTF-8 RFC 8785 canonical JSON with exactly the
+The following is the accepted documentary planning shape. Implementation remains separately
+gated. The emitted manifest uses UTF-8 RFC 8785 canonical JSON with exactly the
 listed top-level fields, no unknown/missing/null members, and explicit pending status objects.
 
 ```json
@@ -87,7 +88,6 @@ listed top-level fields, no unknown/missing/null members, and explicit pending s
   ],
   "review": {
     "author_commit": "<full-git-commit-id>",
-    "independent_verdict": "PENDING",
     "independent_verdict": {"status": "PENDING"}
   }
 }
@@ -97,8 +97,8 @@ listed top-level fields, no unknown/missing/null members, and explicit pending s
 
 | Area | Required decision or evidence | Current state |
 |---|---|---|
-| Identity | Stable case ID, exact subject, evidence revision, and canonical bytes | Settled for planning; non-author review pending |
-| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Shape settled; no case binding exists |
+| Identity | Stable case ID, exact subject, evidence revision, and canonical bytes | Accepted for planning; no runtime case exists |
+| Contract binding | Exact digests for the addendum, fixture matrix, and authorized implementation scope | Shape accepted; no case binding exists |
 | Lock/source/candidate | Content-addressed paths and bytes for the exact case inputs | No runtime corpus exists |
 | Setup inputs | Setup-source manifest and projector/build-manifest relationship | Documentary setup accepted; provenance/licensing remains deferred |
 | Commands | Exact argv, working directory, relevant environment, network policy, exit code, and output digests | No case run exists |
@@ -112,8 +112,9 @@ listed top-level fields, no unknown/missing/null members, and explicit pending s
 
 This checklist is a planning gate, not a claim that the items are complete.
 
-1. Obtain fresh non-author review of the canonical manifest encoding and exact member set.
-2. Bind the case to one authorized implementation scope and one evidence revision.
+1. Preserve the accepted planning shape; implementation still requires a separately authorized
+   scope and fresh implementation review.
+2. Bind any future case to one authorized implementation scope and one evidence revision.
 3. Resolve the deferred binary provenance/licensing item before any case requiring that input is
    run or labeled beyond `UNVERIFIED`.
 4. Separately review the live `twin` API/SPEC amendment and implementation route.
@@ -130,3 +131,9 @@ The owner may leave any prerequisite dormant; the deferral register governs that
 This draft does not select or validate a PostgreSQL binary, resolve licensing, download runtime
 inputs, add a case-manifest parser, alter the live twin API, add fixtures, implement behavior
 locks, implement regeneration, or reopen any dormant deferral.
+
+## Review outcome
+
+Round-1 non-author documentary review by Srini K accepted this planning shape with no findings.
+See [`p7-readiness-manifest-round1-20261019.md`](../verification/verdicts/p7-readiness-manifest-round1-20261019.md).
+The acceptance is limited to documentary planning; implementation remains separately gated.
