@@ -106,6 +106,25 @@ func replayRecords(ctx context.Context, req Request, records []store.Record, bas
 // The source store is read-only from this path and the temporary store is
 // removed on every return path.
 func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot) (result Result, err error) {
+	return replayIsolated(ctx, s, req, baseline, nil)
+}
+
+// ReplayIsolatedWithVerifiedPostgres runs the real projector against a temporary
+// embedded store provisioned from exact caller-supplied PostgreSQL archive bytes.
+// It never accepts a path, URL, ambient cache, or network fallback.
+func ReplayIsolatedWithVerifiedPostgres(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, input VerifiedPostgresInput) (result Result, err error) {
+	if err := validateVerifiedPostgresInput(input); err != nil {
+		return Result{}, err
+	}
+	return replayIsolated(ctx, s, req, baseline, func(root string) (string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", fmt.Errorf("twin: stage verified postgres archive: %w", err)
+		}
+		return stageVerifiedPostgres(ctx, root, input)
+	})
+}
+
+func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, prepare func(string) (string, error)) (result Result, err error) {
 	if s == nil || req.ThroughSeq < 0 {
 		return Result{}, fmt.Errorf("twin: invalid replay request")
 	}
@@ -131,7 +150,14 @@ func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 	if err != nil {
 		return Result{}, err
 	}
-	candidateStore, err = store.Open(ctx, store.Config{Root: root, Port: port, AllowReplayImport: true})
+	var binariesDir string
+	if prepare != nil {
+		binariesDir, err = prepare(root)
+		if err != nil {
+			return Result{}, fmt.Errorf("twin: prepare verified postgres archive: %w", err)
+		}
+	}
+	candidateStore, err = store.Open(ctx, store.Config{Root: root, Port: port, BinariesDir: binariesDir, AllowReplayImport: true})
 	if err != nil {
 		return Result{}, fmt.Errorf("twin: open temporary store: %w", err)
 	}

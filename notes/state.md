@@ -7,9 +7,9 @@ As of: 2026-10-19
 
 ## Resume — 2026-10-19
 
-Exact next action: preserve the accepted documentary companion boundary and await explicit
-implementation authorization before any parser, runtime fixture, live API/SPEC change, or P7
-implementation. Keep
+Exact next action: complete the authorized P7 companion implementation slice, then run the full
+pinned verification gate and prepare a separate independent implementation-review packet. Do not
+add runtime fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -86,13 +86,17 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-19, recorded Srini K's independent non-author `ACCEPT` with no findings for the
   exact packet and commit. The acceptance is documentary planning only; no live contract,
   runtime fixture, binary validation, or implementation was authorized.
+- On 2026-10-19, the owner authorized implementation of the accepted narrow companion slice.
+  The live `twin` SPEC and code now contain only the verified-archive preflight/staging seam;
+  runtime fixtures, binary provenance/licensing, and independent implementation acceptance remain
+  pending.
 
 ## Open and unverified
 
 - Publisher signing identity, component license/notice and distribution clearance, exact
   Go toolchain patch suitability, complete Phase-A projector/module/toolchain/executable
-  evidence, source-manifest binding in a case manifest, separate review of the proposed
-  companion API/live SPEC and fixture plan, zero-fetch and cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
+  evidence, source-manifest binding in a case manifest, runtime fixture corpus, zero-fetch and
+  cleanup witnesses, L12/L17 `PASS`, requirement satisfaction, and
   an independent implementation review are open. The old empty-cache/no-network
   clean-clone claim remains ineligible for `PASS` under the accepted overlay.
 - Deferral `DEF-P7-001` covers the third-party binary provenance and licensing go/no-go. Its open

@@ -165,7 +165,7 @@ P6 retains both Linux and native Windows execution for the existing tooling unde
 [`VD-p6-dual-platform-2026-09-13`](docs/decisions/VD-p6-dual-platform-2026-09-13.md); native Windows
 acceptance remains an evidence requirement, not an assumed green result.
 
-## P7+ — Capability planning (Gate 1 resolved; no implementation authorized)
+## P7+ — Capability planning and authorized companion slice (Gate 1 resolved)
 
 P6 is closed. P7 Gate 1 is resolved: the founder retained the conditional snapshot-provider skip.
 The no-width doctrine and pinned provider contract remain in force. The behavior-lock planning
@@ -177,7 +177,7 @@ accepted for documentary planning in round 2. The planning drafts are
 [P7-behavior-locks-regeneration-plan-draft1.md](docs/plans/P7-behavior-locks-regeneration-plan-draft1.md), and
 the planning-only [P7-readiness-manifest-plan-draft1.md](docs/plans/P7-readiness-manifest-plan-draft1.md)
 for the future case/evidence index.
-The next documentary slice is now captured in the proposed
+The documentary slice is captured in the proposed
 [twin API/SPEC amendment](docs/plans/P7-replay-lock-twin-api-amendment-draft1.md) and
 [companion fixture plan](docs/plans/P7-replay-lock-companion-fixture-plan-draft1.md), both awaiting
 separate review before any implementation authorization.
@@ -185,11 +185,11 @@ The review corpus is frozen in
 [p7-replay-lock-companion-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-review-packet-20261019.md);
 round-1 non-author documentary review accepted it with no findings in
 [p7-replay-lock-companion-round1-20261019.md](docs/verification/verdicts/p7-replay-lock-companion-round1-20261019.md).
-This remains planning acceptance only.
-No provider, vendor, feed, schema, event kind, or implementation is authorized. P7 planning may
-continue only within existing feeds and separately authorized slices. The read-only provenance and
-licensing go/no-go for the pinned replay setup inputs is currently deferred by owner direction. It
-remains an unresolved prerequisite, not a pass or `NO-GO`; implementation still requires explicit
-scope authorization and a separate independent implementation verdict.
+This remains planning acceptance only. Owner authorization was subsequently given for the narrow
+companion implementation slice. The live `twin` SPEC now records the verified-archive
+preflight/staging seam; runtime fixtures and independent implementation acceptance remain pending.
+No provider, vendor, feed, schema, or event kind is authorized. The read-only provenance and
+licensing go/no-go for the pinned replay setup inputs remains deferred by owner direction. It is an
+unresolved prerequisite, not a pass or `NO-GO`; no runtime binary validation is part of this slice.
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

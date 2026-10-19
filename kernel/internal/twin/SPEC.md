@@ -1,6 +1,7 @@
 # SPEC — `internal/twin`
 
-**Status:** implemented slice · P4 twin spike · 2026-08-27
+**Status:** implemented P4 slice plus P7 verified-archive preflight/staging seam; runtime acceptance
+pending · 2026-10-19
 **Authority:** [ROADMAP.md](../../../ROADMAP.md) § P4 · [CLAUDE.md](../../../CLAUDE.md) Law 6
 
 ## Purpose
@@ -16,6 +17,12 @@ type Candidate struct { Seq int64; Event core.Event }
 type Request struct { ThroughSeq int64; Candidate []Candidate }
 type SequenceBinding struct { EventID core.EventID; Requested, Effective int64 }
 type Proof struct { Schema string; ThroughSeq int64; SourceDigest, CandidateDigest string; BaselineSnapshotDigest, CandidateSnapshotDigest string }
+type VerifiedArchiveEntry struct { Path, Mode, SHA256 string }
+type VerifiedPostgresInput struct {
+    ArchiveBytes []byte
+    ArchiveSHA256, PostgresBinarySHA256 string
+    Inventory []VerifiedArchiveEntry
+}
 type Forecast struct { ID string; Probability float64; Outcome bool }
 type Calibration struct { Count int; BrierScore, MeanProbability, ObservedRate float64 }
 type Result struct {
@@ -34,8 +41,17 @@ const VerdictChanged Verdict = "changed"
 func Replay(context.Context, *store.Store, Request, projections.Snapshot,
     func(context.Context, []store.Record) (projections.Snapshot, error)) (Result, error)
 func ReplayIsolated(context.Context, *store.Store, Request, projections.Snapshot) (Result, error)
+func ReplayIsolatedWithVerifiedPostgres(context.Context, *store.Store, Request,
+    projections.Snapshot, VerifiedPostgresInput) (Result, error)
 func Calibrate([]Forecast) (Calibration, error)
 ```
+
+The P7 companion consumes exact caller-supplied `.txz` bytes and a complete regular-file
+inventory. It hashes the bytes, safely extracts only regular files into a fresh replay root,
+requires executable `bin/pg_ctl` and `bin/postgres`, binds the launched `postgres` digest, and
+passes the staged directory as `store.Config.BinariesDir`. It accepts no URL, path-only input,
+ambient cache, or network fallback. The implementation seam is present; real PostgreSQL runtime
+fixtures, no-fetch witnesses, and independent implementation acceptance remain pending.
 
 ## Invariants
 
@@ -50,6 +66,18 @@ func Calibrate([]Forecast) (Calibration, error)
 9. **TWIN-INV-10 — Honest calibration.** Calibration rejects empty, malformed, duplicate, or out-of-range feed records and computes the Brier score over the supplied outcomes.
 10. **TWIN-INV-11 — Complete route proof.** The frozen replay proof binds every registered
     source-kind pair without rewriting its identity.
+11. **TWIN-INV-12 — Exact archive binding.** The companion consumes archive bytes whose SHA-256
+    equals the declared identity.
+12. **TWIN-INV-13 — Complete safe staging.** Extracted regular-file paths, modes, and digests
+    equal the reviewed inventory; unsafe paths, links, and unsupported file types fail closed.
+13. **TWIN-INV-14 — Executable binding.** `bin/pg_ctl` and `bin/postgres` are executable, and the
+    launched `postgres` bytes equal the declared digest.
+14. **TWIN-INV-15 — Offline provisioning.** The companion has no URL, download, or ambient-cache
+    fallback route.
+15. **TWIN-INV-16 — Binary-directory correctness.** Verified binaries are supplied through
+    `BinariesDir`, never `RuntimeDir`.
+16. **TWIN-INV-17 — Cleanup closure.** The owned temporary root is removed on success and every
+    failure path.
 
 ## Non-goals
 
@@ -69,3 +97,6 @@ predictions. Those require a separate decision and acceptance evidence.
 | TWIN-INV-9 | successful replay includes deterministic proof metadata | replay_test.go::TestReplayIsDeterministic |
 | TWIN-INV-10 | calibration validates records and computes the Brier score | calibration_test.go::TestCalibrateComputesBrierScoreAndRates |
 | TWIN-INV-11 | frozen proof covers every registered source-kind pair | replay_test.go::TestReplayProofCoversEveryRegisteredEventPair |
+| TWIN-INV-12/13/14 | exact archive digest, safe extraction, inventory, and executable binding | verified_archive_test.go::TestStageVerifiedPostgresBindsArchiveInventoryAndExecutable |
+| TWIN-INV-12/13/14 | digest, unsafe inventory, wrong executable, and missing-required-file rejection | verified_archive_test.go::TestStageVerifiedPostgresRejectsDigestAndInventoryFailures |
+| P7 preflight | companion validates its verified input before touching the source store | verified_archive_test.go::TestReplayIsolatedWithVerifiedPostgresValidatesBeforeStore |
