@@ -7,9 +7,9 @@ As of: 2026-10-20
 
 ## Resume — 2026-10-20
 
-Exact next action: complete the non-PostgreSQL projector/build evidence foundation by binding a
-canonical build manifest and reviewed Go/module byte corpus to the Phase-A probe. Do not add runtime
-fixture acceptance or binary validation. Keep
+Exact next action: decide whether to commit the measured 171 MB selected Go module source corpus
+under the accepted evidence route or amend that evidence contract. Do not add runtime fixture
+acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -31,8 +31,8 @@ and licensing check is intentionally deferred, not accepted or passed.
 
 - `main` tracks `origin/main`. The current implementation checkpoint is commit
   `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and the acceptance checkpoint is
-  `bd54595`; the latest evidence commit is `0fb4b47`; `main` is ahead of `origin/main` by
-  twenty-seven commits. Push was not attempted: it is not authorized and the
+  `bd54595`; the latest evidence commit is `c6a0873`; `main` is ahead of `origin/main` by
+  twenty-eight commits. Push was not attempted: it is not authorized and the
   remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
@@ -117,6 +117,11 @@ and licensing check is intentionally deferred, not accepted or passed.
   environment and local `cmd/proofbound` build passed, but the evidence is explicitly `UNVERIFIED`
   because the canonical build manifest, committed module/toolchain bytes, runtime evidence, and
   dormant PostgreSQL prerequisite are still missing.
+- On 2026-10-20, retrieved the selected Go module source corpus into the external local cache:
+  77 modules, 154 `.mod`/`.zip` artifacts, and 171,215,534 bytes. Recorded the inventory in
+  `docs/verification/p7-replay-lock-fixtures/phase-a-module-corpus-inventory-20261020.md`.
+  The corpus is not Git-tracked; committing it is a material owner decision, and no PostgreSQL
+  binary was retrieved.
 
 ## Open and unverified
 
@@ -190,7 +195,7 @@ this state note instead of silently changing reviewed content.
   The synthetic archive-control expansion is independently accepted by
   `docs/verification/verdicts/p7-replay-lock-companion-archive-controls-round1-20261020.md`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
-  environment. `main` is ahead of `origin/main` by twenty-seven commits.
+  environment. `main` is ahead of `origin/main` by twenty-eight commits.
 - Verification: the pinned full `make check` passed with `golangci-lint` reporting `0 issues`;
   expected `index stale; run make index` output was a negative-test message. Focused archive
   control tests pass outside the restricted Snap sandbox.
@@ -198,6 +203,6 @@ this state note instead of silently changing reviewed content.
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: complete the non-PostgreSQL projector/build evidence foundation by binding a
-  canonical build manifest and reviewed Go/module byte corpus to the Phase-A probe. Keep
-  `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any open deferral.
+- Next action: decide whether to commit the measured Go module source corpus or amend the evidence
+  contract. Keep `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any
+  open deferral.
