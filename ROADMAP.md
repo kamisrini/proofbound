@@ -189,7 +189,8 @@ This remains planning acceptance only. Owner authorization was subsequently give
 companion implementation slice. The live `twin` SPEC and code now record the verified-archive
 preflight/staging seam, and the slice has an independent non-author `ACCEPT` with no findings.
 Additional synthetic archive-control tests cover inventory shape, unsafe paths, staged-file drift,
-and cancellation; that test expansion remains pending its own independent review.
+and cancellation; that test expansion has an independent non-author `ACCEPT` with no findings in
+[p7-replay-lock-companion-archive-controls-round1-20261020.md](docs/verification/verdicts/p7-replay-lock-companion-archive-controls-round1-20261020.md).
 Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);

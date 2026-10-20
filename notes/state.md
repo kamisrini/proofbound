@@ -3,14 +3,13 @@
 > THE resume note. Rewrite in place; never append or create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-As of: 2026-10-19
+As of: 2026-10-20
 
-## Resume — 2026-10-19
+## Resume — 2026-10-20
 
-Exact next action: obtain an independent non-author verdict against
-`docs/verification/p7-replay-lock-companion-archive-controls-review-packet-20261019.md`, bound to
-implementation commit `bd5459592cc2ea53a95845a0c61fc8bb6f5e3e93`. Do not add runtime fixture
-acceptance or binary validation. Keep
+Exact next action: preserve the independent non-author `ACCEPT` for the synthetic archive-control
+test expansion and wait for explicit authorization of the next runtime/evidence slice. Do not add
+runtime fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -23,8 +22,8 @@ the pinned PostgreSQL JAR's detached signature did not verify with the public ke
 publisher identity and bundled license/notice coverage remain unverified. There is no
 case-manifest binding, projector/build manifest, complete Go module byte corpus, runtime fixture
 corpus, L12/L17 runtime result, or runtime acceptance. The full `make check`
-gate has passed all substantive checks outside the restricted sandbox; the latest attempt stopped
-only at stale durable state before this rewrite. The pinned Go 1.26.7 toolchain is available;
+gate has passed all substantive checks outside the restricted sandbox. The pinned Go 1.26.7
+toolchain is available;
 the default sandbox remains capability-limited. The provenance
 and licensing check is intentionally deferred, not accepted or passed.
 
@@ -32,7 +31,8 @@ and licensing check is intentionally deferred, not accepted or passed.
 
 - `main` tracks `origin/main`. The current implementation checkpoint is commit
   `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and the acceptance checkpoint is
-  `bd54595`; `main` is ahead of `origin/main` by twenty-four commits. Push was not attempted: it is not authorized and the
+  `bd54595`; the latest acceptance commit is `1606b5a`; `main` is ahead of `origin/main` by
+  twenty-six commits. Push was not attempted: it is not authorized and the
   remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
@@ -108,7 +108,10 @@ and licensing check is intentionally deferred, not accepted or passed.
   from still-unverified runtime evidence. The pinned full `make check` passed with `0 issues`.
 - On 2026-10-19, froze the independent review packet at
   `docs/verification/p7-replay-lock-companion-archive-controls-review-packet-20261019.md` for
-  implementation commit `bd5459592cc2ea53a95845a0c61fc8bb6f5e3e93`. No verdict is recorded yet.
+-  implementation commit `bd5459592cc2ea53a95845a0c61fc8bb6f5e3e93`.
+- On 2026-10-20, recorded Srini K's independent non-author `ACCEPT` with no findings for the
+  synthetic archive-control test expansion. Runtime fixtures, PostgreSQL execution, behavior-lock
+  evidence, and binary provenance/licensing remain separately gated.
 
 ## Open and unverified
 
@@ -179,10 +182,10 @@ this state note instead of silently changing reviewed content.
 
 - Current accepted implementation checkpoint: `c5f65a4`; independent implementation verdict is
   recorded at `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md`.
-  The synthetic archive-control expansion is implementation commit `bd54595`, pending independent
-  review.
+  The synthetic archive-control expansion is independently accepted by
+  `docs/verification/verdicts/p7-replay-lock-companion-archive-controls-round1-20261020.md`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
-  environment. `main` is ahead of `origin/main` by twenty-four commits.
+  environment. `main` is ahead of `origin/main` by twenty-six commits.
 - Verification: the pinned full `make check` passed with `golangci-lint` reporting `0 issues`;
   expected `index stale; run make index` output was a negative-test message. Focused archive
   control tests pass outside the restricted Snap sandbox.
@@ -190,6 +193,5 @@ this state note instead of silently changing reviewed content.
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: obtain the independent implementation verdict against the frozen synthetic
-  archive-control review packet. Keep `DEF-P7-001` dormant; do not perform runtime binary
-  validation or ask about any open deferral.
+- Next action: wait for explicit authorization of the next runtime/evidence slice. Keep
+  `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any open deferral.
