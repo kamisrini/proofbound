@@ -7,9 +7,9 @@ As of: 2026-10-20
 
 ## Resume — 2026-10-20
 
-Exact next action: preserve the independent non-author `ACCEPT` for the synthetic archive-control
-test expansion and wait for explicit authorization of the next runtime/evidence slice. Do not add
-runtime fixture acceptance or binary validation. Keep
+Exact next action: complete the non-PostgreSQL projector/build evidence foundation by binding a
+canonical build manifest and reviewed Go/module byte corpus to the Phase-A probe. Do not add runtime
+fixture acceptance or binary validation. Keep
 deferral `DEF-P7-001` dormant: do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as
 approved, and do not resume its provenance/licensing go/no-go until the owner explicitly says they
 are ready, asks to resume it, or names it in a work request. Do not ask, remind, or pressure the
@@ -31,8 +31,8 @@ and licensing check is intentionally deferred, not accepted or passed.
 
 - `main` tracks `origin/main`. The current implementation checkpoint is commit
   `849b1e7` (`chore: refresh P6 route matrix after lint fix`), and the acceptance checkpoint is
-  `bd54595`; the latest acceptance commit is `1606b5a`; `main` is ahead of `origin/main` by
-  twenty-six commits. Push was not attempted: it is not authorized and the
+  `bd54595`; the latest evidence commit is `0fb4b47`; `main` is ahead of `origin/main` by
+  twenty-seven commits. Push was not attempted: it is not authorized and the
   remote was not DNS-reachable from this environment. Tracked files are clean after commit; two
   unrelated user-owned untracked paths keep the worktree non-clean.
 - Preserve the unrelated untracked `docs/plans/P5-intent-provenance-plan.md`
@@ -112,6 +112,11 @@ and licensing check is intentionally deferred, not accepted or passed.
 - On 2026-10-20, recorded Srini K's independent non-author `ACCEPT` with no findings for the
   synthetic archive-control test expansion. Runtime fixtures, PostgreSQL execution, behavior-lock
   evidence, and binary provenance/licensing remain separately gated.
+- On 2026-10-20, captured the first non-PostgreSQL Phase-A Go/projector build probe in
+  `docs/verification/p7-replay-lock-fixtures/phase-a-build-probe-20261020.md`. The pinned Go
+  environment and local `cmd/proofbound` build passed, but the evidence is explicitly `UNVERIFIED`
+  because the canonical build manifest, committed module/toolchain bytes, runtime evidence, and
+  dormant PostgreSQL prerequisite are still missing.
 
 ## Open and unverified
 
@@ -185,7 +190,7 @@ this state note instead of silently changing reviewed content.
   The synthetic archive-control expansion is independently accepted by
   `docs/verification/verdicts/p7-replay-lock-companion-archive-controls-round1-20261020.md`.
 - Push status: not attempted; not authorized, and GitHub DNS was unavailable from this
-  environment. `main` is ahead of `origin/main` by twenty-six commits.
+  environment. `main` is ahead of `origin/main` by twenty-seven commits.
 - Verification: the pinned full `make check` passed with `golangci-lint` reporting `0 issues`;
   expected `index stale; run make index` output was a negative-test message. Focused archive
   control tests pass outside the restricted Snap sandbox.
@@ -193,5 +198,6 @@ this state note instead of silently changing reviewed content.
   live failure.
 - Existing bundle fallback remains the prior closeout bundle; no new EOD bundle was created for
   this mid-day planning checkpoint.
-- Next action: wait for explicit authorization of the next runtime/evidence slice. Keep
+- Next action: complete the non-PostgreSQL projector/build evidence foundation by binding a
+  canonical build manifest and reviewed Go/module byte corpus to the Phase-A probe. Keep
   `DEF-P7-001` dormant; do not perform runtime binary validation or ask about any open deferral.

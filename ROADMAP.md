@@ -191,6 +191,9 @@ preflight/staging seam, and the slice has an independent non-author `ACCEPT` wit
 Additional synthetic archive-control tests cover inventory shape, unsafe paths, staged-file drift,
 and cancellation; that test expansion has an independent non-author `ACCEPT` with no findings in
 [p7-replay-lock-companion-archive-controls-round1-20261020.md](docs/verification/verdicts/p7-replay-lock-companion-archive-controls-round1-20261020.md).
+The first non-PostgreSQL Phase-A Go/projector build probe is captured as explicitly `UNVERIFIED`
+evidence in [phase-a-build-probe-20261020.md](docs/verification/p7-replay-lock-fixtures/phase-a-build-probe-20261020.md);
+it does not satisfy the complete projector/build manifest or clean-clone evidence contract.
 Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);
