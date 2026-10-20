@@ -196,7 +196,8 @@ evidence in [phase-a-build-probe-20261020.md](docs/verification/p7-replay-lock-f
 it does not satisfy the complete projector/build manifest or clean-clone evidence contract.
 The selected module corpus inventory is captured separately at
 [phase-a-module-corpus-inventory-20261020.md](docs/verification/p7-replay-lock-fixtures/phase-a-module-corpus-inventory-20261020.md);
-its 171 MB source set remains outside Git pending an owner decision or contract amendment.
+its 171 MB source set remains outside Git pending the owner-pending decision recorded as
+`DEF-P7-002`: commit it under the accepted evidence route or amend that evidence contract.
 Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);
