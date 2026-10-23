@@ -5,6 +5,7 @@
 **Review date:** 2026-10-23
 **Scope:** resolve the five open API/SPEC questions while preserving all runtime and provenance
 gates
+**Documentation freeze commit:** `b2982d0c8b35cdb7cb71e70bab1989c2d07c9b8a`
 
 ## Review corpus
 
@@ -21,6 +22,22 @@ packet and fresh review.
 | live package contract | `kernel/internal/twin/SPEC.md` |
 | accepted implementation boundary | `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md` |
 | current state/roadmap | `notes/state.md`, `ROADMAP.md` |
+
+### Corpus digests at the documentation freeze
+
+| Path | SHA-256 |
+|---|---|
+| `docs/plans/P7-replay-lock-twin-api-amendment-draft2.md` | `88ff99e1a3fd53e6a3553b5bad9d170eed9b5a969c2584c876196a38ffead2c0` |
+| `docs/decisions/VD-p7-replay-lock-companion-api-boundary-2026-10-23.md` | `2a6f39d92048dbe4af498d2c065cb1b770544fbd17f9ab01bb0a60f76e15ebdc` |
+| `docs/plans/P7-replay-lock-twin-api-amendment-draft1.md` | `c562eb6690d378a358a368d78135d471b6c5c139324793ed0dd63907f2946ed2` |
+| `docs/plans/P7-replay-lock-companion-fixture-plan-draft1.md` | `093179a9a69e90d90292607ad70c50eb8a671658cb21ea38b77bbc0df69f4b27` |
+| `kernel/internal/twin/SPEC.md` | `fec7f8947807e03139fc0ddb79f5fbe2c88f1cd90da207446038727254437424` |
+| `docs/verification/verdicts/p7-replay-lock-companion-implementation-round1-20261019.md` | `86cc4c6b8b7471ea3a4f3be2968c4b510e08a103243d3e8284eed5ae15ac5504` |
+| `ROADMAP.md` | `1dbe75e836c615872e462421e687b46baadde71f4b4fca52cd22b243e7a5d201` |
+| `notes/state.md` | `0eaa109d541752ab885d5397d49fa2e6488be3bdf5e4d8c542845148b260ab2e` |
+
+The packet's own SHA-256 must be recorded by the independent reviewer against the final packet
+commit; it is intentionally not self-embedded.
 
 ## Questions for the reviewer
 
