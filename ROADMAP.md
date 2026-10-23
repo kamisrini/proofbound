@@ -195,9 +195,11 @@ The first non-PostgreSQL Phase-A Go/projector build probe is captured as explici
 evidence in [phase-a-build-probe-20261020.md](docs/verification/p7-replay-lock-fixtures/phase-a-build-probe-20261020.md);
 it does not satisfy the complete projector/build manifest or clean-clone evidence contract.
 The selected module corpus inventory is captured separately at
-[phase-a-module-corpus-inventory-20261020.md](docs/verification/p7-replay-lock-fixtures/phase-a-module-corpus-inventory-20261020.md);
-its 171 MB source set remains outside Git pending the owner-pending decision recorded as
-`DEF-P7-002`: commit it under the accepted evidence route or amend that evidence contract.
+[phase-a-module-corpus-inventory-20261020.md](docs/verification/p7-replay-lock-fixtures/phase-a-module-corpus-inventory-20261020.md).
+The owner activated `DEF-P7-002`, approved the narrow nested-source-archive payload boundary in
+[VD-p7-go-module-source-archive-payload-scope-2026-10-23](docs/decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md),
+and the 171 MB source set is now bound under the accepted content-addressed evidence route.
+Independent non-author review of the exact corpus remains required before the deferral closes.
 Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);

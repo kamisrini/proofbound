@@ -3,31 +3,31 @@
 > THE resume note. Rewrite in place; never append or create a second state file.
 > A fresh session reads `CLAUDE.md`, then this file, before acting.
 
-As of: 2026-10-20
+As of: 2026-10-23
 
-## Resume — 2026-10-20
+## Resume — 2026-10-23
 
-Exact next action: when the owner explicitly activates `DEF-P7-002`, decide whether to commit the
-measured 171 MB selected Go module source corpus under the accepted evidence route or amend that
-evidence contract. Until then, skip all open deferrals and continue only with separately authorized
-non-deferred work. Do not add runtime fixture acceptance or binary validation. Keep `DEF-P7-001`
-dormant; do not treat the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
+Exact next action: obtain independent non-author review of the owner-approved nested source-archive
+payload scope and the committed 171 MB selected Go module corpus, then resolve `DEF-P7-002`.
+Do not add runtime fixture acceptance or binary validation. Keep `DEF-P7-001` dormant; do not treat
+the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 
 Immediate blockers: the complete projector/build manifest, source/toolchain binding, runtime fixture
 corpus, no-fetch and cleanup witnesses, L12/L17 runtime result, behavior-lock acceptance, and
 independent runtime verdict are absent. `DEF-P7-001` remains owner-postponed because the pinned
 PostgreSQL JAR's detached signature did not verify with the public key found; publisher identity and
-bundled license/notice coverage remain unverified. `DEF-P7-002` records the separate owner decision
-about the 171 MB Go module corpus. Neither deferral is active.
+bundled license/notice coverage remain unverified. `DEF-P7-002` is active and awaiting independent
+review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main` and is ahead by twenty-nine commits after the documentation-only
-  closeout commit (`docs: close out P7 evidence session`). Push was not attempted or authorized.
+- `main` tracks `origin/main` and is ahead by thirty commits after the P7 corpus-binding commit;
+  push was not attempted or authorized.
 - Preserve the unrelated user-owned untracked paths `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`; do not stage, delete, or relabel them as complete.
-- No PostgreSQL binary, database directory, downloaded toolchain, built executable, or external Go
-  module cache was added to Git. The selected `.mod`/`.zip` corpus remains outside the repository.
+- No PostgreSQL binary, database directory, downloaded toolchain, or built executable was added to
+  Git. The selected `.mod`/`.zip` corpus is bound under the accepted content-addressed route; nested
+  test-data members are covered by the owner-approved scope decision.
 
 ## Completed
 
@@ -37,10 +37,11 @@ about the 171 MB Go module corpus. Neither deferral is active.
 - The verified-archive preflight/staging seam is implemented and independently accepted. Synthetic
   archive-control tests are implemented and independently accepted with no findings.
 - The first non-PostgreSQL Phase-A Go/projector build probe is recorded as explicitly `UNVERIFIED`.
-- The selected Go module source inventory is recorded: 77 modules, 154 `.mod`/`.zip` artifacts,
-  totaling 171,215,534 bytes in the external cache only.
-- The canonical deferral process is active: `DEF-P7-001` is the postponed binary check and
-  `DEF-P7-002` is the owner-pending corpus-binding decision. Open deferrals are dormant by policy.
+- The selected Go module source corpus is bound: 77 modules, 154 `.mod`/`.zip` artifacts, totaling
+  171,215,534 bytes under the accepted content-addressed route. The owner-approved nested payload
+  scope is recorded in `docs/decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md`.
+- The canonical deferral process remains active: `DEF-P7-001` is postponed and dormant; `DEF-P7-002`
+  is awaiting independent review of the committed corpus.
 
 ## Open, blocked, and unverified
 
@@ -48,8 +49,8 @@ about the 171 MB Go module corpus. Neither deferral is active.
   acceptance, clean-clone proof, and the complete build/projector evidence remain unverified.
 - PostgreSQL publisher identity, detached-signature resolution, and component license/notice
   coverage remain unresolved under dormant `DEF-P7-001`.
-- The external 171 MB module corpus is not repository-bound; the owner decision is recorded under
-  dormant `DEF-P7-002`.
+- The 171 MB module corpus is repository-bound, but `DEF-P7-002` remains open until independent
+  non-author review accepts the exact corpus and scope decision.
 - The restricted Snap sandbox cannot run the capability-dependent mutation self-test. The pinned
   Go 1.26.7 toolchain and installed linter completed substantive checks outside that restriction.
 - Existing process debt remains around fail-closed hook-test behavior and advisory-expiry
@@ -70,8 +71,8 @@ about the 171 MB Go module corpus. Neither deferral is active.
 
 The EOD prompt now requires a queryable deferral row for every newly postponed, blocked, or
 owner-pending item, plus a direct P6 artifact-integrity freshness check after documentary verdicts.
-The current closeout also records cache-backed evidence as explicitly unverified until its corpus
-and contract binding are decided.
+The current closeout records the selected module corpus as repository-bound while preserving the
+separate independent-review gate; runtime and PostgreSQL evidence remain explicitly unverified.
 
 ## Current checkpoint handoff
 
@@ -80,5 +81,5 @@ and contract binding are decided.
 - Push status: not attempted and not authorized; `main` remains twenty-nine commits ahead.
 - Verification: final pinned full gate passed with `0 issues`; no PostgreSQL or P7 runtime
   acceptance was implied.
-- Next action: skip dormant `DEF-P7-001` and `DEF-P7-002` until explicit owner activation; then
-  resolve the activated item with a recorded decision and appropriate independent review.
+- Next action: skip dormant `DEF-P7-001`; obtain the independent non-author review required to
+  resolve the activated `DEF-P7-002`.

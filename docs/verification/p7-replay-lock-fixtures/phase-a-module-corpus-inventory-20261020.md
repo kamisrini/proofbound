@@ -49,3 +49,12 @@ manifest remains incomplete and all clean-clone/runtime claims remain `UNVERIFIE
 This inventory does not activate `DEF-P7-001`, validate a PostgreSQL binary, establish licensing
 or provenance, or create a runtime case manifest. No source archive is being claimed as accepted
 evidence merely because it is present in the local cache.
+
+## Subsequent binding
+
+On 2026-10-23, the owner approved the narrow treatment of nested test-data members inside the
+required source archives; see
+[`VD-p7-go-module-source-archive-payload-scope-2026-10-23`](../../decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md).
+The complete 154-artifact corpus was then bound under
+`docs/verification/p7-replay-lock-fixtures/bytes/sha256/<digest>`. Independent non-author review
+of that exact Git corpus remains required, and this dated Phase-A inventory remains `UNVERIFIED`.

@@ -63,3 +63,11 @@ This probe remains `UNVERIFIED` because the accepted P7 evidence contract still 
 
 The local module cache and temporary executable are observations only. They do not satisfy the
 clean-clone or content-addressed-byte requirements and must not be relabeled as `PASS`.
+
+## Subsequent corpus binding
+
+On 2026-10-23, the selected module `.mod`/`.zip` artifacts were copied into the accepted
+content-addressed route under owner-approved scope decision
+[`VD-p7-go-module-source-archive-payload-scope-2026-10-23`](../../decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md).
+That later binding does not change this probe's `UNVERIFIED` status: the complete projector/build
+manifest, verified toolchain, runtime inputs, witnesses, and independent review remain absent.
