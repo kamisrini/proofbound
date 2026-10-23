@@ -7,8 +7,9 @@ As of: 2026-10-23
 
 ## Resume — 2026-10-23
 
-Exact next action: obtain independent documentary review of the proposed P7 companion API/SPEC
-boundary revision and its review packet; continue only with separately authorized non-deferred work.
+Exact next action: obtain the still-required independent documentary review of the P7 companion
+API/SPEC boundary; the owner acceptance is recorded but does not replace that gate. Continue only
+with separately authorized non-deferred work.
 Do not add runtime fixture acceptance or binary validation. Keep `DEF-P7-001` dormant; do not treat
 the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 
@@ -21,7 +22,8 @@ scope decision and independent non-author corpus review. `DEF-P7-001` remains do
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main` and is ahead by thirty-one commits after the P7 corpus review verdict;
+- `main` tracks `origin/main` and is ahead by thirty-three commits after the P7 documentary review
+  closeout;
   push was not attempted or authorized.
 - Preserve the unrelated user-owned untracked paths `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`; do not stage, delete, or relabel them as complete.
@@ -36,7 +38,8 @@ scope decision and independent non-author corpus review. `DEF-P7-001` remains do
   applicable.
 - The five open companion API/SPEC questions are resolved as a documentary recommendation in
   `docs/plans/P7-replay-lock-twin-api-amendment-draft2.md`; the independent review packet is
-  prepared but has no verdict.
+  prepared but has no independent verdict. The owner acceptance is recorded separately in
+  `docs/verification/verdicts/p7-replay-lock-companion-api-owner-acceptance-20261023.md`.
 - The verified-archive preflight/staging seam is implemented and independently accepted. Synthetic
   archive-control tests are implemented and independently accepted with no findings.
 - The first non-PostgreSQL Phase-A Go/projector build probe is recorded as explicitly `UNVERIFIED`.
@@ -81,9 +84,9 @@ review verdict; runtime and PostgreSQL evidence remain explicitly unverified.
 
 - Accepted implementation and synthetic-control evidence remains bounded to preflight/staging and
   archive controls; it is not runtime or PostgreSQL acceptance.
-- Push status: not attempted and not authorized; `main` remains thirty-one commits ahead.
+- Push status: not attempted and not authorized; `main` remains thirty-three commits ahead.
 - Verification: final pinned full gate passed with `0 issues`; no PostgreSQL or P7 runtime
   acceptance was implied.
-- Next action: obtain independent documentary review of the draft-2 companion API/SPEC boundary;
-  skip resolved `DEF-P7-002` and dormant `DEF-P7-001`, and continue only with separately authorized
-  non-deferred work.
+- Next action: obtain the still-required independent documentary review of the draft-2 companion
+  API/SPEC boundary; skip resolved `DEF-P7-002` and dormant `DEF-P7-001`, and continue only with
+  separately authorized non-deferred work.

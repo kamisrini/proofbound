@@ -184,7 +184,10 @@ accepted for documentary planning; the narrow preflight/staging implementation w
 authorized and independently accepted. The revised documentary API/SPEC boundary is now captured
 in [draft 2](docs/plans/P7-replay-lock-twin-api-amendment-draft2.md) with a separate
 [API review packet](docs/verification/p7-replay-lock-companion-api-review-packet-20261023.md).
-Neither document authorizes runtime fixtures or changes the live contract.
+The owner accepted the documentary recommendation in
+[the owner-acceptance record](docs/verification/verdicts/p7-replay-lock-companion-api-owner-acceptance-20261023.md);
+the independent non-author review remains open. Neither document authorizes runtime fixtures or
+changes the live contract.
 The review corpus is frozen in
 [p7-replay-lock-companion-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-review-packet-20261019.md);
 round-1 non-author documentary review accepted it with no findings in

@@ -1,6 +1,6 @@
 # VD-p7-replay-lock-companion-api-boundary-2026-10-23
 
-**Status:** PROPOSED FOR INDEPENDENT DOCUMENTARY REVIEW; not an accepted live API decision.
+**Status:** OWNER-ACCEPTED DOCUMENTARY RECOMMENDATION; not an accepted live API decision.
 
 ## Recommendation
 
@@ -33,6 +33,9 @@ and independent runtime verdict remain future gates.
 
 ## Decision record
 
-This recommendation is pending a non-author review packet:
+The owner acceptance is recorded in
+[`p7-replay-lock-companion-api-owner-acceptance-20261023.md`](../verification/verdicts/p7-replay-lock-companion-api-owner-acceptance-20261023.md).
+The independent non-author review packet remains open:
 [`p7-replay-lock-companion-api-review-packet-20261023.md`](../verification/p7-replay-lock-companion-api-review-packet-20261023.md).
-Until that review records `ACCEPT`, this document must not be cited as an accepted live contract.
+Until that independent review records `ACCEPT`, this document must not be cited as an accepted live
+contract or implementation authorization.
