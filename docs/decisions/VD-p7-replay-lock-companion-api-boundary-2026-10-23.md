@@ -1,0 +1,38 @@
+# VD-p7-replay-lock-companion-api-boundary-2026-10-23
+
+**Status:** PROPOSED FOR INDEPENDENT DOCUMENTARY REVIEW; not an accepted live API decision.
+
+## Recommendation
+
+Adopt the companion boundary described in
+[`P7-replay-lock-twin-api-amendment-draft2.md`](../plans/P7-replay-lock-twin-api-amendment-draft2.md)
+for the next independent API/SPEC review:
+
+- keep one complete in-memory `Inventory` in `VerifiedPostgresInput`;
+- consume exact `.txz` bytes and reject path-only, URL, cache, and network inputs;
+- allow only regular files with modes `100644`/`100755`, with no links or unsupported tar types;
+- use replay-owned temporary storage and `BinariesDir`, with unconditional cleanup;
+- retain the proposed names `VerifiedArchiveEntry`, `VerifiedPostgresInput`, and
+  `ReplayIsolatedWithVerifiedPostgres`;
+- distinguish preflight hashing of staged `bin/postgres` from future observation of the actually
+  launched daemon executable.
+
+This is the narrowest contract that answers the five open review questions without creating a
+second inventory truth, weakening extraction safety, or overstating the current implementation.
+
+## Boundaries
+
+This recommendation does not edit the live `kernel/internal/twin/SPEC.md`, authorize runtime
+fixtures, validate or approve PostgreSQL, perform binary validation, claim L12/L17, accept the
+behavior lock, or reopen `DEF-P7-001`. The owner-approved and independently reviewed Go module
+corpus under resolved `DEF-P7-002` is unrelated to this API boundary.
+
+The current implementation may be reviewed only for its independently accepted preflight/staging
+seam. Process-level executable observation, no-fetch/cleanup witnesses, runtime fixture results,
+and independent runtime verdict remain future gates.
+
+## Decision record
+
+This recommendation is pending a non-author review packet:
+[`p7-replay-lock-companion-api-review-packet-20261023.md`](../verification/p7-replay-lock-companion-api-review-packet-20261023.md).
+Until that review records `ACCEPT`, this document must not be cited as an accepted live contract.
