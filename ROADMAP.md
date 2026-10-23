@@ -199,7 +199,9 @@ The selected module corpus inventory is captured separately at
 The owner activated `DEF-P7-002`, approved the narrow nested-source-archive payload boundary in
 [VD-p7-go-module-source-archive-payload-scope-2026-10-23](docs/decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md),
 and the 171 MB source set is now bound under the accepted content-addressed evidence route.
-Independent non-author review of the exact corpus remains required before the deferral closes.
+The independent non-author review is recorded in
+[p7-go-module-corpus-round1-20261023.md](docs/verification/verdicts/p7-go-module-corpus-round1-20261023.md);
+`DEF-P7-002` is resolved.
 Runtime fixtures and runtime acceptance remain pending.
 The implementation review corpus is frozen in
 [p7-replay-lock-companion-implementation-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-implementation-review-packet-20261019.md);

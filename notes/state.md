@@ -7,8 +7,8 @@ As of: 2026-10-23
 
 ## Resume — 2026-10-23
 
-Exact next action: obtain independent non-author review of the owner-approved nested source-archive
-payload scope and the committed 171 MB selected Go module corpus, then resolve `DEF-P7-002`.
+Exact next action: skip resolved `DEF-P7-002` and dormant `DEF-P7-001`; continue only with separately
+authorized non-deferred work.
 Do not add runtime fixture acceptance or binary validation. Keep `DEF-P7-001` dormant; do not treat
 the pinned Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 
@@ -16,12 +16,12 @@ Immediate blockers: the complete projector/build manifest, source/toolchain bind
 corpus, no-fetch and cleanup witnesses, L12/L17 runtime result, behavior-lock acceptance, and
 independent runtime verdict are absent. `DEF-P7-001` remains owner-postponed because the pinned
 PostgreSQL JAR's detached signature did not verify with the public key found; publisher identity and
-bundled license/notice coverage remain unverified. `DEF-P7-002` is active and awaiting independent
-review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
+bundled license/notice coverage remain unverified. `DEF-P7-002` is resolved by the owner-approved
+scope decision and independent non-author corpus review. `DEF-P7-001` remains dormant.
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main` and is ahead by thirty commits after the P7 corpus-binding commit;
+- `main` tracks `origin/main` and is ahead by thirty-one commits after the P7 corpus review verdict;
   push was not attempted or authorized.
 - Preserve the unrelated user-owned untracked paths `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`; do not stage, delete, or relabel them as complete.
@@ -41,7 +41,7 @@ review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
   171,215,534 bytes under the accepted content-addressed route. The owner-approved nested payload
   scope is recorded in `docs/decisions/VD-p7-go-module-source-archive-payload-scope-2026-10-23.md`.
 - The canonical deferral process remains active: `DEF-P7-001` is postponed and dormant; `DEF-P7-002`
-  is awaiting independent review of the committed corpus.
+  is resolved with the recorded independent non-author review.
 
 ## Open, blocked, and unverified
 
@@ -49,8 +49,8 @@ review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
   acceptance, clean-clone proof, and the complete build/projector evidence remain unverified.
 - PostgreSQL publisher identity, detached-signature resolution, and component license/notice
   coverage remain unresolved under dormant `DEF-P7-001`.
-- The 171 MB module corpus is repository-bound, but `DEF-P7-002` remains open until independent
-  non-author review accepts the exact corpus and scope decision.
+- The 171 MB module corpus is repository-bound and `DEF-P7-002` is resolved by the recorded
+  independent non-author review; this does not change any runtime or PostgreSQL blocker.
 - The restricted Snap sandbox cannot run the capability-dependent mutation self-test. The pinned
   Go 1.26.7 toolchain and installed linter completed substantive checks outside that restriction.
 - Existing process debt remains around fail-closed hook-test behavior and advisory-expiry
@@ -58,7 +58,7 @@ review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
 
 ## Verification
 
-- Targeted checks: link lint, index check, deferral check (`rows=2 open=2`), P6
+- Targeted checks: link lint, index check, deferral check (`rows=2 open=1`), P6
   artifact-integrity, state freshness, route-matrix freshness, and whitespace checks passed.
 - The pinned clean-tree `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check` passed
   with `0 issues` outside the restricted Snap sandbox. Expected `index stale; run make index`,
@@ -71,15 +71,15 @@ review after the owner-approved corpus binding. `DEF-P7-001` remains dormant.
 
 The EOD prompt now requires a queryable deferral row for every newly postponed, blocked, or
 owner-pending item, plus a direct P6 artifact-integrity freshness check after documentary verdicts.
-The current closeout records the selected module corpus as repository-bound while preserving the
-separate independent-review gate; runtime and PostgreSQL evidence remain explicitly unverified.
+The current closeout records the selected module corpus as repository-bound with its independent
+review verdict; runtime and PostgreSQL evidence remain explicitly unverified.
 
 ## Current checkpoint handoff
 
 - Accepted implementation and synthetic-control evidence remains bounded to preflight/staging and
   archive controls; it is not runtime or PostgreSQL acceptance.
-- Push status: not attempted and not authorized; `main` remains twenty-nine commits ahead.
+- Push status: not attempted and not authorized; `main` remains thirty-one commits ahead.
 - Verification: final pinned full gate passed with `0 issues`; no PostgreSQL or P7 runtime
   acceptance was implied.
-- Next action: skip dormant `DEF-P7-001`; obtain the independent non-author review required to
-  resolve the activated `DEF-P7-002`.
+- Next action: skip resolved `DEF-P7-002` and dormant `DEF-P7-001`; continue only with separately
+  authorized non-deferred work.
