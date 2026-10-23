@@ -22,9 +22,7 @@ scope decision and independent non-author corpus review. `DEF-P7-001` remains do
 
 ## Branch and local ownership
 
-- `main` tracks `origin/main` and is ahead by thirty-three commits after the P7 documentary review
-  closeout;
-  push was not attempted or authorized.
+- `main` tracks `origin/main`; push was not attempted or authorized.
 - Preserve the unrelated user-owned untracked paths `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`; do not stage, delete, or relabel them as complete.
 - No PostgreSQL binary, database directory, downloaded toolchain, or built executable was added to
@@ -84,7 +82,7 @@ review verdict; runtime and PostgreSQL evidence remain explicitly unverified.
 
 - Accepted implementation and synthetic-control evidence remains bounded to preflight/staging and
   archive controls; it is not runtime or PostgreSQL acceptance.
-- Push status: not attempted and not authorized; `main` remains thirty-three commits ahead.
+- Push status: not attempted and not authorized; `main` remains ahead of `origin/main`.
 - Verification: final pinned full gate passed with `0 issues`; no PostgreSQL or P7 runtime
   acceptance was implied.
 - Next action: obtain the still-required independent documentary review of the draft-2 companion
