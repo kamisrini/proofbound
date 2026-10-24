@@ -9,9 +9,11 @@ Adopt the companion boundary described in
 for the next independent API/SPEC review:
 
 - keep one complete in-memory `Inventory` in `VerifiedPostgresInput`;
-- consume exact `.txz` bytes and reject path-only, URL, cache, and network inputs;
+- consume exactly one fully consumed xz-compressed POSIX `ustar` `.txz` stream, with canonical
+  slash-path and regular-file-only extraction; reject path-only, URL, cache, and network inputs;
 - allow only regular files with modes `100644`/`100755`, with no links or unsupported tar types;
-- use replay-owned temporary storage and `BinariesDir`, with unconditional cleanup;
+- use replay-owned temporary storage and `BinariesDir`, with unconditional close-before-remove
+  cleanup and explicit combined-error handling;
 - retain the proposed names `VerifiedArchiveEntry`, `VerifiedPostgresInput`, and
   `ReplayIsolatedWithVerifiedPostgres`;
 - distinguish preflight hashing of staged `bin/postgres` from future observation of the actually
@@ -30,6 +32,10 @@ corpus under resolved `DEF-P7-002` is unrelated to this API boundary.
 The current implementation may be reviewed only for its independently accepted preflight/staging
 seam. Process-level executable observation, no-fetch/cleanup witnesses, runtime fixture results,
 and independent runtime verdict remain future gates.
+
+The current live SPEC's `TWIN-INV-14` launched-executable wording is future runtime wording for
+this boundary, not runtime acceptance. Any correction or adoption of that wording requires a
+separately authorized SPEC change and fresh review.
 
 ## Decision record
 

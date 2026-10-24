@@ -1,6 +1,6 @@
 # P7 replay lock — companion API/SPEC boundary revision
 
-**Status:** PROPOSED FOR INDEPENDENT DOCUMENTARY REVIEW — 2026-10-23. This revision resolves
+**Status:** PROPOSED FOR FOLLOW-UP INDEPENDENT DOCUMENTARY REVIEW — 2026-10-24. This revision resolves
 the five open questions from draft 1. It does not modify the live `twin` SPEC, authorize runtime
 fixtures, validate PostgreSQL, approve `DEF-P7-001`, or claim L12/L17 or behavior-lock acceptance.
 
@@ -60,11 +60,20 @@ the exact bytes cannot satisfy the call.
 
 ### 2. Archive format and link policy
 
-The archive is the exact caller-supplied `.txz`: an xz-compressed tar stream. Directory headers are
-allowed as structure; only regular-file payloads are accepted. The contract rejects symlinks,
-hard links, devices, FIFOs, other tar types, duplicate regular-file paths, absolute paths,
-backslash-containing paths, `.`/`..` traversal, and unsupported modes. There is no safe-link
-allowance in this boundary.
+The archive is the exact caller-supplied `.txz`: exactly one xz stream whose decoder consumes every
+input byte. Concatenated xz streams, xz stream padding, trailing bytes, and truncated or
+checksum-invalid streams are rejected. The decompressed payload is one POSIX `ustar` tar stream;
+PAX and GNU extension headers, long-name/long-link records, sparse records, and unknown header
+types are rejected. Header metadata other than type, path, mode, and size is not trusted or used.
+
+Archive paths are valid UTF-8 slash paths with no NUL, backslash, leading slash, empty segment,
+`.` segment, or `..` segment. File paths have no trailing slash. Directory paths may have exactly
+one trailing slash, which is removed for comparison; the root directory is not an entry. After that
+normalization, every path is nonempty and unique across both files and directories, and a path
+cannot be both a file and a directory. Directory entries have zero size; implicit parent
+directories are allowed. Symlinks, hard links, devices, FIFOs, other tar types, duplicate paths,
+absolute paths, and unsupported modes are rejected. There is no safe-link allowance in this
+boundary.
 
 Required regular files are `bin/pg_ctl` and `bin/postgres`, both mode `100755`. All other files
 must be present in the declared inventory with matching mode and digest. Extra, missing, changed,
@@ -93,9 +102,13 @@ caller supplies no directory and receives no reusable path.
 
 Cleanup is unconditional and covers archive validation/staging, cancellation, partial extraction,
 store-open failure, import/projector/snapshot failure, comparison failure, success, and close
-failure. The companion closes the temporary store before removing the root. A cleanup failure is
-an error and leaves the case unverified; it is never downgraded to a warning. `ArchiveBytes` are
-consumed synchronously, never mutated, and not retained after return.
+failure. The companion attempts every required store close before attempting root removal, even
+when close fails. Cancellation does not suppress or interrupt close or root removal; cleanup runs
+synchronously after cancellation. If both the primary operation and cleanup fail, the returned
+error preserves both failures, with the primary failure retained as the primary cause. If cleanup
+alone fails, the call returns that cleanup error and no successful result; a root that could not be
+removed leaves the case unverified. Cleanup failure is never downgraded to a warning.
+`ArchiveBytes` are consumed synchronously, never mutated, and not retained after return.
 
 ### 5. Names and live SPEC wording
 
@@ -115,6 +128,12 @@ The exact wording proposed for a future live SPEC amendment is:
 
 No live SPEC edit is part of this revision. Adoption requires a separate implementation/API
 authorization and a fresh review of the runtime evidence contract.
+
+The reviewed live `kernel/internal/twin/SPEC.md` currently contains the proposed `TWIN-INV-14`
+phrase that the companion “binds the launched” digest. For this documentary boundary, that phrase
+is a future runtime requirement only and is not evidence that the current implementation observes
+the launched process. It must not be cited as runtime acceptance. Correcting or adopting that live
+SPEC wording requires a separately authorized SPEC change and fresh review.
 
 ## Unchanged gates and non-goals
 
