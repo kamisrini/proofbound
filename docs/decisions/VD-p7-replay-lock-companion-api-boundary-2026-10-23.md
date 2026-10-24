@@ -9,8 +9,10 @@ Adopt the companion boundary described in
 for the next independent API/SPEC review:
 
 - keep one complete in-memory `Inventory` in `VerifiedPostgresInput`;
-- consume exactly one fully consumed xz-compressed POSIX `ustar` `.txz` stream, with canonical
-  slash-path and regular-file-only extraction; reject path-only, URL, cache, and network inputs;
+- consume exactly one fully consumed xz-compressed POSIX `ustar` `.txz` stream with validated
+  512-byte framing, checksum, numeric fields, exactly two final zero blocks, canonical slash-path
+  and regular-file-only extraction; reject trailing/concatenated tar data, path-only, URL, cache,
+  and network inputs;
 - allow only regular files with modes `100644`/`100755`, with no links or unsupported tar types;
 - use replay-owned temporary storage and `BinariesDir`, with unconditional close-before-remove
   cleanup and explicit combined-error handling;

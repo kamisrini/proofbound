@@ -1,6 +1,6 @@
 # P7 replay lock — companion API/SPEC boundary revision
 
-**Status:** PROPOSED FOR FOLLOW-UP INDEPENDENT DOCUMENTARY REVIEW — 2026-10-24. This revision resolves
+**Status:** PROPOSED FOR THIRD-ROUND INDEPENDENT DOCUMENTARY REVIEW — 2026-10-24. This revision resolves
 the five open questions from draft 1. It does not modify the live `twin` SPEC, authorize runtime
 fixtures, validate PostgreSQL, approve `DEF-P7-001`, or claim L12/L17 or behavior-lock acceptance.
 
@@ -62,18 +62,26 @@ the exact bytes cannot satisfy the call.
 
 The archive is the exact caller-supplied `.txz`: exactly one xz stream whose decoder consumes every
 input byte. Concatenated xz streams, xz stream padding, trailing bytes, and truncated or
-checksum-invalid streams are rejected. The decompressed payload is one POSIX `ustar` tar stream;
-PAX and GNU extension headers, long-name/long-link records, sparse records, and unknown header
-types are rejected. Header metadata other than type, path, mode, and size is not trusted or used.
+checksum-invalid streams are rejected. The decompressed payload is one POSIX `ustar` tar stream. It
+is an exact sequence of 512-byte blocks with POSIX `ustar\0` magic and version `00` on every entry
+header, valid POSIX ASCII-octal numeric fields only (no base-256, signed, overflowing, or malformed
+encodings), and a valid header checksum computed with the checksum field treated as spaces. PAX and
+GNU extension headers, long-name/long-link records, sparse records, and unknown header types are
+rejected. The reader must consume the entire decompressed payload: it requires exactly two
+consecutive zero blocks as the final blocks, rejects a partial block, an extra end block, any
+trailing bytes, or a concatenated tar payload, and accepts no bytes after the final end block. Header
+metadata other than type, path, mode, and size is not trusted or used.
 
-Archive paths are valid UTF-8 slash paths with no NUL, backslash, leading slash, empty segment,
-`.` segment, or `..` segment. File paths have no trailing slash. Directory paths may have exactly
-one trailing slash, which is removed for comparison; the root directory is not an entry. After that
-normalization, every path is nonempty and unique across both files and directories, and a path
-cannot be both a file and a directory. Directory entries have zero size; implicit parent
-directories are allowed. Symlinks, hard links, devices, FIFOs, other tar types, duplicate paths,
-absolute paths, and unsupported modes are rejected. There is no safe-link allowance in this
-boundary.
+For each header, the POSIX `prefix` and `name` fields are combined with one slash when `prefix` is
+nonempty, then validated as a valid UTF-8 slash path with no NUL, backslash, leading slash, empty
+segment, `.` segment, or `..` segment. File paths have no trailing slash. Directory paths may have
+exactly one trailing slash, which is removed for comparison; the root directory is not an entry.
+After that normalization, every path is nonempty and unique across both files and directories, and
+a path cannot be both a file and a directory. Directory entries have zero size. Implicit parent
+directories are allowed only when no file path is equal to an implicit parent path; a regular file
+that is an ancestor of another entry is rejected. Symlinks, hard links, devices, FIFOs, other tar
+types, duplicate paths, absolute paths, and unsupported modes are rejected. There is no safe-link
+allowance in this boundary.
 
 Required regular files are `bin/pg_ctl` and `bin/postgres`, both mode `100755`. All other files
 must be present in the declared inventory with matching mode and digest. Extra, missing, changed,
