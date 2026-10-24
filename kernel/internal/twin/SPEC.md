@@ -1,8 +1,10 @@
 # SPEC — `internal/twin`
 
-**Status:** implemented P4 slice plus P7 verified-archive preflight/staging seam; runtime acceptance
-pending · 2026-10-19
-**Authority:** [ROADMAP.md](../../../ROADMAP.md) § P4 · [CLAUDE.md](../../../CLAUDE.md) Law 6
+**Status:** implemented P4 slice plus adopted P7 verified-archive preflight/staging API/SPEC
+boundary; runtime acceptance pending · 2026-10-24
+**Authority:** [ROADMAP.md](../../../ROADMAP.md) § P4 · [CLAUDE.md](../../../CLAUDE.md) Law 6 ·
+[P7-SPEC-ADOPT-1](../../../docs/intent/records/change-intents/CI-p7-spec-adopt-1a2b3c/0001.md) ·
+[P7 companion boundary decision](../../../docs/decisions/VD-p7-replay-lock-companion-api-boundary-2026-10-23.md)
 
 ## Purpose
 
@@ -46,13 +48,15 @@ func ReplayIsolatedWithVerifiedPostgres(context.Context, *store.Store, Request,
 func Calibrate([]Forecast) (Calibration, error)
 ```
 
-The P7 companion consumes exact caller-supplied `.txz` bytes and a complete regular-file
+The adopted P7 companion consumes exact caller-supplied `.txz` bytes and a complete regular-file
 inventory. It hashes the bytes, safely extracts only regular files into a fresh replay root,
-requires executable `bin/pg_ctl` and `bin/postgres`, binds the launched `postgres` digest, and
-passes the staged directory as `store.Config.BinariesDir`. It accepts no URL, path-only input,
-ambient cache, or network fallback. The implementation seam is present and has independent
-non-author implementation acceptance; real PostgreSQL runtime fixtures and no-fetch witnesses
-remain pending.
+requires executable `bin/pg_ctl` and `bin/postgres`, verifies the staged `bin/postgres` digest
+before store open, and passes the staged directory as `store.Config.BinariesDir`. It accepts no
+URL, path-only input, ambient cache, or network fallback. The current implementation seam does
+not observe the daemonized process's launched executable; launched-process observation and binding
+to the declared digest are future runtime requirements. The implementation seam is independently
+accepted within its recorded scope; real PostgreSQL runtime fixtures and no-fetch witnesses remain
+pending.
 
 ## Invariants
 
@@ -71,8 +75,10 @@ remain pending.
     equals the declared identity.
 12. **TWIN-INV-13 — Complete safe staging.** Extracted regular-file paths, modes, and digests
     equal the reviewed inventory; unsafe paths, links, and unsupported file types fail closed.
-13. **TWIN-INV-14 — Executable binding.** `bin/pg_ctl` and `bin/postgres` are executable, and the
-    launched `postgres` bytes equal the declared digest.
+13. **TWIN-INV-14 — Executable binding.** The adopted preflight/staging seam requires executable
+    `bin/pg_ctl` and `bin/postgres`, and the staged `bin/postgres` bytes equal the declared digest.
+    A future runtime witness must additionally show that the launched `postgres` bytes equal the
+    declared digest; the current seam does not establish that runtime fact.
 14. **TWIN-INV-15 — Offline provisioning.** The companion has no URL, download, or ambient-cache
     fallback route.
 15. **TWIN-INV-16 — Binary-directory correctness.** Verified binaries are supplied through
@@ -98,7 +104,7 @@ predictions. Those require a separate decision and acceptance evidence.
 | TWIN-INV-9 | successful replay includes deterministic proof metadata | replay_test.go::TestReplayIsDeterministic |
 | TWIN-INV-10 | calibration validates records and computes the Brier score | calibration_test.go::TestCalibrateComputesBrierScoreAndRates |
 | TWIN-INV-11 | frozen proof covers every registered source-kind pair | replay_test.go::TestReplayProofCoversEveryRegisteredEventPair |
-| TWIN-INV-12/13/14 | exact archive digest, safe extraction, inventory, and executable binding | verified_archive_test.go::TestStageVerifiedPostgresBindsArchiveInventoryAndExecutable |
+| TWIN-INV-12/13/14 | exact archive digest, safe extraction, inventory, required executables, and staged executable binding | verified_archive_test.go::TestStageVerifiedPostgresBindsArchiveInventoryAndExecutable |
 | TWIN-INV-12/13/14 | digest, unsafe inventory, wrong executable, and missing-required-file rejection | verified_archive_test.go::TestStageVerifiedPostgresRejectsDigestAndInventoryFailures |
 | TWIN-INV-13/14 | inventory ordering, duplicate/mode/required-file rejection | verified_archive_test.go::TestValidateVerifiedPostgresInputRejectsInventoryShape |
 | TWIN-INV-13/14 | unsafe archive paths fail closed | verified_archive_test.go::TestNormalizeArchivePathRejectsUnsafeForms |
