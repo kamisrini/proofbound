@@ -181,13 +181,15 @@ The documentary slice is captured in the proposed
 [twin API/SPEC amendment](docs/plans/P7-replay-lock-twin-api-amendment-draft1.md) and
 [companion fixture plan](docs/plans/P7-replay-lock-companion-fixture-plan-draft1.md). Both were
 accepted for documentary planning; the narrow preflight/staging implementation was subsequently
-authorized and independently accepted. The revised documentary API/SPEC boundary is now captured
-in [draft 2](docs/plans/P7-replay-lock-twin-api-amendment-draft2.md) with a separate
-[API review packet](docs/verification/p7-replay-lock-companion-api-review-packet-20261023.md).
-The owner accepted the documentary recommendation in
-[the owner-acceptance record](docs/verification/verdicts/p7-replay-lock-companion-api-owner-acceptance-20261023.md);
-the independent non-author review remains open. Neither document authorizes runtime fixtures or
-changes the live contract.
+authorized and independently accepted. The revised documentary API/SPEC boundary is captured in
+[draft 2](docs/plans/P7-replay-lock-twin-api-amendment-draft2.md) and was accepted after the
+follow-up [round-3 non-author verdict](docs/verification/verdicts/p7-replay-lock-companion-api-round3-20261024.md).
+The owner then authorized `P7-SPEC-ADOPT-1` through its
+[change intent](docs/intent/records/change-intents/CI-p7-spec-adopt-1a2b3c/0001.md); the live
+SPEC/API wording was adopted within that narrow documentary slice and independently accepted in
+[the SPEC adoption verdict](docs/verification/verdicts/p7-spec-adopt-round2-20261024.md).
+Launched-process observation remains future runtime evidence; neither acceptance authorizes runtime
+fixtures, binary validation, PostgreSQL approval, or L12/L17.
 The review corpus is frozen in
 [p7-replay-lock-companion-review-packet-20261019.md](docs/verification/p7-replay-lock-companion-review-packet-20261019.md);
 round-1 non-author documentary review accepted it with no findings in
