@@ -69,7 +69,7 @@ only the live SPEC/API wording and preserves the future runtime gate.
   passed with `0 issues`; expected `index stale; run make index` and `INERT cleanroom` messages were
   negative-test/environment diagnostics, not gate failures.
 - `scripts/deferrals.sh --check`, `scripts/p6-route-matrix.sh --check`, and the dated bundle verify
-  passed. The verified fallback is `/home/thamm/Backups/proofbound-20261025T010939Z.bundle`.
+  passed. The final bundle path is reported in the closeout handoff.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
