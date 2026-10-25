@@ -64,8 +64,12 @@ only the live SPEC/API wording and preserves the future runtime gate.
 - `scripts/p6-artifact-integrity.sh --check` passes after refreshing its generated documentary count.
 - The native `P7-SPEC-ADOPT-1` intent self-digest now reproduces exactly under the repository’s
   normalization rule; link lint and diff whitespace checks passed.
-- The authoritative pinned bare `make check` result and dated bundle verification are recorded in
-  the final closeout journal after this state refresh.
+- The restricted bare `make check` stopped at the known Snap `cap_dac_override` limitation. The
+  authoritative pinned unrestricted `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check`
+  passed with `0 issues`; expected `index stale; run make index` and `INERT cleanroom` messages were
+  negative-test/environment diagnostics, not gate failures.
+- `scripts/deferrals.sh --check`, `scripts/p6-route-matrix.sh --check`, and the dated bundle verify
+  passed. The verified fallback is `/home/thamm/Backups/proofbound-20261025T010939Z.bundle`.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
