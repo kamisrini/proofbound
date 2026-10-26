@@ -7,13 +7,15 @@ As of: 2026-10-26
 
 ## Resume — 2026-10-26
 
-Exact next action: remain stopped at the completed `P7-NONRUNTIME-MANIFEST-1` slice. Before any
-further P7 work, obtain separately recorded authorization for another bounded non-runtime slice;
-do not start runtime fixtures or binary validation, do not activate `DEF-P7-001`, and do not claim
-L12/L17 or behavior-lock acceptance.
+Exact next action: obtain independent non-author review of
+`docs/verification/p7-nonruntime-binding-review-packet-20261026.md` against reviewed revision
+`385274060b62e0dd912b80bd946b494b45277e05`; accept, amend, or reject that exact slice before any
+further implementation. Do not start runtime fixtures or binary validation, do not activate
+`DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
-Immediate blockers: the complete projector/build manifest and source/toolchain binding remain
-incomplete beyond the accepted shape/validation contract; runtime fixture corpus,
+Immediate blockers: independent non-author review of the binding slice is pending. The complete
+projector/build manifest and source/toolchain binding remain incomplete beyond the accepted
+shape/validation and caller-supplied byte-binding contracts; runtime fixture corpus,
 process/network/no-fetch/cleanup witnesses, L12/L17 runtime result, behavior-lock acceptance,
 clean-clone proof, and independent runtime verdict are absent. `DEF-P7-001` remains
 owner-postponed because PostgreSQL publisher identity, detached-signature resolution, and bundled
@@ -75,6 +77,9 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   and intent-record tests passed separately. Independent reviewer `Srinivas Kamisetty` accepted
   exact revision `66cd3441ab4952eb0c50d16a2e39071020035492`; artifact-integrity was refreshed from
   32 to 33 documentary verdict artifacts and rechecked successfully.
+- The binding and intent-record tests passed, and the pinned unrestricted gate passed after the
+  binding implementation and route-matrix refresh. Its frozen review packet is bound to
+  `385274060b62e0dd912b80bd946b494b45277e05`.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
@@ -94,10 +99,11 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 - `P7-SPEC-ADOPT-1` is complete and independently accepted; it is live SPEC/API adoption only.
 - `P7-NONRUNTIME-MANIFEST-1` is authorized, implemented within scope, and independently accepted;
   it is non-runtime preparation only.
+- `P7-NONRUNTIME-BINDING-1` is separately authorized and implemented within scope, but its
+  independent review remains pending in the frozen packet for revision `385274060b…`.
 - The P7 documentary and preflight/staging acceptances do not establish runtime or PostgreSQL
   acceptance.
 - `DEF-P7-001` remains dormant and the pinned PostgreSQL JAR remains unapproved; `DEF-P7-002` is
   resolved.
-- Tomorrow’s first action: remain at the completed manifest slice and select further work only from
-  a separately recorded authorization; keep runtime, binary, PostgreSQL, L12/L17, and behavior-lock
-  work stopped.
+- Tomorrow’s first action: obtain or record the independent non-author verdict for the binding
+  packet; keep runtime, binary, PostgreSQL, L12/L17, and behavior-lock work stopped.
