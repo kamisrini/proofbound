@@ -61,8 +61,10 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   freshness, hostile closure, package, verdict, and Windows-contract checks passed. Expected
   `index stale; run make index` and `INERT cleanroom` diagnostics were not failures; Snap’s
   missing `cap_dac_override` is an environment limitation.
-- Final bare-gate status, the closeout commit hash, and dated bundle verification are recorded in
-  the journal after the handoff checkpoint.
+- The pinned unrestricted `GOTOOLCHAIN=go1.26.7 PATH=/home/thamm/go/bin:$PATH make check` passed
+  with `0 issues`.
+- Closeout commit `ef9f7ba` was created; the dated bundle path and SHA-256 are recorded in today’s
+  journal. The final handoff-note update is the only subsequent tracked documentation change.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
