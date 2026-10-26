@@ -64,7 +64,12 @@ func Parse([]byte) (Manifest, error)
 func Validate(Manifest) error
 func CanonicalBytes(Manifest) ([]byte, error)
 func Digest([]byte) (string, error)
+func Bind(BindingInput) (Manifest, error)
 ```
+
+`Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
+SHA-256 values, and validates the resulting manifest. It performs no filesystem, network,
+external-artifact, process, toolchain, executable, or runtime operation.
 
 ## Invariants and proving tests
 
@@ -76,3 +81,5 @@ func Digest([]byte) (string, error)
 | MAN-INV-4 | Toolchain and module digests are lowercase SHA-256 declarations | manifest_test.go::TestValidateRejectsBindingOrderAndDigest |
 | MAN-INV-5 | Equal typed inputs produce equal canonical bytes and digest | manifest_test.go::TestDigestAndRevisionBinding |
 | MAN-INV-6 | Non-canonical, missing, unknown, null, and malformed inputs fail closed | manifest_test.go::TestParseRejectsShapeAndCanonicality |
+| MAN-INV-7 | Caller-supplied bytes bind deterministically without external operations | manifest_test.go::TestBindComputesByteIdentitiesAndSorts |
+| MAN-INV-8 | Duplicate or invalid source/module bindings fail closed | manifest_test.go::TestBindRejectsDuplicateAndInvalidInputs |

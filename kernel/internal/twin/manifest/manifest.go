@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
@@ -71,6 +72,32 @@ type Build struct {
 	GCFlags    string   `json:"gcflags"`
 	LDFlags    string   `json:"ldflags"`
 	Tags       []string `json:"tags"`
+}
+
+// BindingInput supplies already-owned bytes to Bind. Bind hashes bytes but never reads paths,
+// fetches inputs, executes content, or retains the supplied byte slices.
+type BindingInput struct {
+	EvidenceRevision  string
+	ProjectorRevision string
+	SourceFiles       []SourceInput
+	Toolchain         Toolchain
+	Modules           []ModuleInput
+	Build             Build
+}
+
+// SourceInput is one caller-supplied source file and its declared Git mode.
+type SourceInput struct {
+	Path  string
+	Mode  string
+	Bytes []byte
+}
+
+// ModuleInput is one caller-supplied module metadata/archive byte pair.
+type ModuleInput struct {
+	Module  string
+	Version string
+	Mod     []byte
+	Zip     []byte
 }
 
 // Parse validates strict canonical JSON and returns its typed manifest.
@@ -137,6 +164,41 @@ func Digest(raw []byte) (string, error) {
 	}
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:]), nil
+}
+
+// Bind computes content identities from caller-supplied bytes and returns a validated manifest.
+// It performs no filesystem, network, process, toolchain, or runtime operation.
+func Bind(input BindingInput) (Manifest, error) {
+	files := make([]File, 0, len(input.SourceFiles))
+	for _, source := range input.SourceFiles {
+		files = append(files, File{Path: source.Path, Mode: source.Mode, SHA256: digestBytes(source.Bytes)})
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
+
+	modules := make([]Module, 0, len(input.Modules))
+	for _, module := range input.Modules {
+		modules = append(modules, Module{Module: module.Module, Version: module.Version, ModSHA256: digestBytes(module.Mod), ZipSHA256: digestBytes(module.Zip)})
+	}
+	sort.Slice(modules, func(i, j int) bool {
+		if modules[i].Module != modules[j].Module {
+			return modules[i].Module < modules[j].Module
+		}
+		return modules[i].Version < modules[j].Version
+	})
+
+	manifest := Manifest{
+		Schema:            Schema,
+		EvidenceRevision:  input.EvidenceRevision,
+		ProjectorRevision: input.ProjectorRevision,
+		Source:            Source{Files: files},
+		Toolchain:         input.Toolchain,
+		Modules:           modules,
+		Build:             input.Build,
+	}
+	if err := Validate(manifest); err != nil {
+		return Manifest{}, err
+	}
+	return manifest, nil
 }
 
 // Validate validates a typed manifest. Parse should be preferred for untrusted bytes.
@@ -297,6 +359,11 @@ func validateSHA256(label, value string) error {
 		return fmt.Errorf("manifest: %s must be a lowercase 64-hex SHA-256", label)
 	}
 	return nil
+}
+
+func digestBytes(value []byte) string {
+	sum := sha256.Sum256(value)
+	return hex.EncodeToString(sum[:])
 }
 
 func validateRelativePath(value string) error {

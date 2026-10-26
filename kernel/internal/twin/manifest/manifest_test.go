@@ -50,6 +50,69 @@ func TestDigestAndRevisionBinding(t *testing.T) {
 	}
 }
 
+func TestBindComputesByteIdentitiesAndSorts(t *testing.T) {
+	base := validManifest()
+	bound, err := Bind(BindingInput{
+		EvidenceRevision:  base.EvidenceRevision,
+		ProjectorRevision: base.ProjectorRevision,
+		SourceFiles: []SourceInput{
+			{Path: "kernel/internal/twin/replay.go", Mode: "100644", Bytes: []byte("replay")},
+			{Path: "kernel/go.mod", Mode: "100644", Bytes: []byte("module")},
+		},
+		Toolchain: base.Toolchain,
+		Modules: []ModuleInput{
+			{Module: "example.com/z", Version: "v1.0.0", Mod: []byte("z-mod"), Zip: []byte("z-zip")},
+			{Module: "example.com/a", Version: "v1.0.0", Mod: []byte("a-mod"), Zip: []byte("a-zip")},
+		},
+		Build: base.Build,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := bound.Source.Files[0].Path; got != "kernel/go.mod" {
+		t.Fatalf("source order=%q", got)
+	}
+	if got := bound.Source.Files[0].SHA256; got != digestBytes([]byte("module")) {
+		t.Fatalf("source digest=%s", got)
+	}
+	if got := bound.Modules[0].Module; got != "example.com/a" {
+		t.Fatalf("module order=%q", got)
+	}
+	if got := bound.Modules[0].ZipSHA256; got != digestBytes([]byte("a-zip")) {
+		t.Fatalf("module zip digest=%s", got)
+	}
+}
+
+func TestBindRejectsDuplicateAndInvalidInputs(t *testing.T) {
+	base := validManifest()
+	tests := map[string]func(*BindingInput){
+		"duplicate source": func(input *BindingInput) {
+			input.SourceFiles = append(input.SourceFiles, input.SourceFiles[0])
+		},
+		"duplicate module": func(input *BindingInput) {
+			input.Modules = append(input.Modules, input.Modules[0])
+		},
+		"invalid source mode": func(input *BindingInput) { input.SourceFiles[0].Mode = "100600" },
+		"invalid revision":    func(input *BindingInput) { input.EvidenceRevision = "working-tree" },
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			input := BindingInput{
+				EvidenceRevision:  base.EvidenceRevision,
+				ProjectorRevision: base.ProjectorRevision,
+				SourceFiles:       []SourceInput{{Path: "kernel/go.mod", Mode: "100644", Bytes: []byte("module")}},
+				Toolchain:         base.Toolchain,
+				Modules:           []ModuleInput{{Module: "example.com/module", Version: "v1.0.0", Mod: []byte("mod"), Zip: []byte("zip")}},
+				Build:             base.Build,
+			}
+			mutate(&input)
+			if _, err := Bind(input); err == nil {
+				t.Fatal("invalid binding accepted")
+			}
+		})
+	}
+}
+
 func TestParseRejectsShapeAndCanonicality(t *testing.T) {
 	raw, err := CanonicalBytes(validManifest())
 	if err != nil {
