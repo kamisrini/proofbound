@@ -12,6 +12,10 @@ boundary; runtime acceptance pending · 2026-10-24
 production ledger or projection tables. `Replay` injects a projector for fast tests;
 `ReplayIsolated` runs the real projector in a temporary embedded store.
 
+The authorized P7 non-runtime manifest preparation contract is implemented by
+[`internal/twin/manifest`](manifest/SPEC.md); it declares source/toolchain/build identities only
+and does not retrieve, build, execute, or validate runtime inputs.
+
 ## Interface
 
 ```go
