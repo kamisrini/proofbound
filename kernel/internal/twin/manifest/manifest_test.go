@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -163,6 +164,121 @@ func TestValidateRejectsBindingOrderAndDigest(t *testing.T) {
 				t.Fatal("invalid manifest accepted")
 			}
 		})
+	}
+}
+
+func TestInventoryBindsManifestAndEvidence(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	inventory.Fields[len(inventory.Fields)-1] = InventoryField{
+		Field: inventory.Fields[len(inventory.Fields)-1].Field,
+		State: InventoryUnverified,
+	}
+	raw, err := CanonicalInventoryBytes(inventory, manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := ParseInventory(raw, manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(parsed, inventory) {
+		t.Fatalf("parsed inventory differs:\n%+v\n%+v", parsed, inventory)
+	}
+}
+
+func TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := map[string]func(*EvidenceInventory){
+		"missing field": func(inventory *EvidenceInventory) {
+			inventory.Fields = inventory.Fields[:len(inventory.Fields)-1]
+		},
+		"extra field": func(inventory *EvidenceInventory) {
+			inventory.Fields = append(inventory.Fields, inventory.Fields[len(inventory.Fields)-1])
+		},
+		"duplicate field": func(inventory *EvidenceInventory) {
+			inventory.Fields[1].Field = inventory.Fields[0].Field
+		},
+		"stale revision": func(inventory *EvidenceInventory) {
+			inventory.Fields[0].EvidenceRevision = strings.Repeat("b", 40)
+		},
+		"digest mismatch": func(inventory *EvidenceInventory) {
+			inventory.ManifestDigest = strings.Repeat("0", 64)
+		},
+		"unverified evidence": func(inventory *EvidenceInventory) {
+			inventory.Fields[0].State = InventoryUnverified
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			inventory := validInventory(manifest, manifestBytes)
+			mutate(&inventory)
+			if err := ValidateInventory(inventory, manifest); err == nil {
+				t.Fatal("invalid inventory accepted")
+			}
+		})
+	}
+}
+
+func TestParseInventoryRejectsUnknownAndNonCanonicalShape(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := CanonicalInventoryBytes(validInventory(manifest, manifestBytes), manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var object map[string]any
+	if err := json.Unmarshal(raw, &object); err != nil {
+		t.Fatal(err)
+	}
+	object["unexpected"] = true
+	mutated, err := json.Marshal(object)
+	if err != nil {
+		t.Fatal(err)
+	}
+	canonical, err := core.Canonicalize(mutated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseInventory(canonical, manifest); err == nil {
+		t.Fatal("unknown inventory field accepted")
+	}
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, raw, "", "  "); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseInventory(pretty.Bytes(), manifest); err == nil {
+		t.Fatal("non-canonical inventory accepted")
+	}
+}
+
+func validInventory(manifest Manifest, manifestBytes []byte) EvidenceInventory {
+	fields := make([]InventoryField, 0, len(inventoryFields))
+	for i, name := range inventoryFields {
+		fields = append(fields, InventoryField{
+			Field:            name,
+			State:            InventoryBound,
+			EvidencePath:     "docs/evidence/p7-source-toolchain.md",
+			EvidenceRevision: manifest.EvidenceRevision,
+			EvidenceSHA256:   fmt.Sprintf("%064x", i+1),
+		})
+	}
+	return EvidenceInventory{
+		Schema:           InventorySchema,
+		EvidenceRevision: manifest.EvidenceRevision,
+		ManifestDigest:   digestBytes(manifestBytes),
+		Fields:           fields,
 	}
 }
 

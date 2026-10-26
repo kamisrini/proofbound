@@ -1,11 +1,12 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-MANIFEST-1 authorized non-runtime preparation slice · 2026-10-26
-**Authority:** [`CI-p7-nonruntime-manifest-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-nonruntime-manifest-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-SOURCE-TOOLCHAIN-INVENTORY-1 authorized non-runtime preparation slice · 2026-10-26
+**Authority:** [`CI-p7-source-toolchain-inventory-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-source-toolchain-inventory-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
-This package validates the documentary `proofbound.p7.projector-manifest.v1` contract. It binds
+This package validates the documentary `proofbound.p7.projector-manifest.v1` contract and its
+`proofbound.p7.source-toolchain-inventory.v1` evidence inventory. It binds
 exact source and projector revisions, declared Go/toolchain identity, selected module byte
 identities, and build settings. It only validates supplied bytes and declarations; it does not
 retrieve, build, execute, or validate a binary or runtime input.
@@ -56,6 +57,19 @@ non-canonical fields. `Digest` hashes the validated canonical bytes only.
 The toolchain archive digest is an identity declaration, not proof that the archive was fetched,
 licensed, extracted, or executed. Those activities remain outside this authorized slice.
 
+## Source/toolchain evidence inventory
+
+The inventory is strict RFC 8785 canonical JSON with exactly `schema`, `evidence_revision`,
+`manifest_digest`, and `fields`. `fields` contains the exact sorted set of manifest paths: schema,
+revision fields, source files, toolchain fields, modules, and build fields. Each field is either
+`BOUND`, with a safe relative committed evidence path, matching evidence revision, and lowercase
+SHA-256 declaration, or `UNVERIFIED` with all evidence fields empty. `manifest_digest` must equal
+the SHA-256 of the validated canonical projector manifest supplied by the caller.
+
+The inventory validates declarations only. It does not read the evidence path, resolve a Git tree,
+retrieve a toolchain or module, build an executable, or establish completeness beyond the declared
+field coverage.
+
 ## Interface
 
 ```go
@@ -65,6 +79,10 @@ func Validate(Manifest) error
 func CanonicalBytes(Manifest) ([]byte, error)
 func Digest([]byte) (string, error)
 func Bind(BindingInput) (Manifest, error)
+const InventorySchema = "proofbound.p7.source-toolchain-inventory.v1"
+func ParseInventory([]byte, Manifest) (EvidenceInventory, error)
+func ValidateInventory(EvidenceInventory, Manifest) error
+func CanonicalInventoryBytes(EvidenceInventory, Manifest) ([]byte, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -83,3 +101,6 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | MAN-INV-6 | Non-canonical, missing, unknown, null, and malformed inputs fail closed | manifest_test.go::TestParseRejectsShapeAndCanonicality |
 | MAN-INV-7 | Caller-supplied bytes bind deterministically without external operations | manifest_test.go::TestBindComputesByteIdentitiesAndSorts |
 | MAN-INV-8 | Duplicate or invalid source/module bindings fail closed | manifest_test.go::TestBindRejectsDuplicateAndInvalidInputs |
+| INV-INV-1 | Inventory has exact canonical shape and complete sorted field coverage | manifest_test.go::TestInventoryBindsManifestAndEvidence; TestParseInventoryRejectsUnknownAndNonCanonicalShape |
+| INV-INV-2 | Every field is BOUND with a committed path and matching revision or explicit UNVERIFIED | manifest_test.go::TestInventoryBindsManifestAndEvidence; TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
+| INV-INV-3 | Inventory manifest digest binds the supplied canonical manifest exactly | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
