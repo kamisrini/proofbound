@@ -1,7 +1,7 @@
 # P7 non-runtime binding — independent implementation review packet
 
 **Review type:** independent non-author review of the authorized binding slice
-**Status:** `PENDING`
+**Status:** `ACCEPT`
 **Intent:** `P7-NONRUNTIME-BINDING-1`
 **Change intent:** [`CI-p7-nonruntime-binding-1a2b3c`](../intent/records/change-intents/CI-p7-nonruntime-binding-1a2b3c/0001.md)
 **Reviewed revision:** `385274060b62e0dd912b80bd946b494b45277e05`
