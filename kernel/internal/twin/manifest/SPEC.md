@@ -101,6 +101,6 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | MAN-INV-6 | Non-canonical, missing, unknown, null, and malformed inputs fail closed | manifest_test.go::TestParseRejectsShapeAndCanonicality |
 | MAN-INV-7 | Caller-supplied bytes bind deterministically without external operations | manifest_test.go::TestBindComputesByteIdentitiesAndSorts |
 | MAN-INV-8 | Duplicate or invalid source/module bindings fail closed | manifest_test.go::TestBindRejectsDuplicateAndInvalidInputs |
-| INV-INV-1 | Inventory has exact canonical shape and complete sorted field coverage | manifest_test.go::TestInventoryBindsManifestAndEvidence; TestParseInventoryRejectsUnknownAndNonCanonicalShape |
-| INV-INV-2 | Every field is BOUND with a committed path and matching revision or explicit UNVERIFIED | manifest_test.go::TestInventoryBindsManifestAndEvidence; TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
+| INV-INV-1 | Inventory has exact canonical shape and complete sorted field coverage | manifest_test.go::TestParseInventoryRejectsUnknownAndNonCanonicalShape |
+| INV-INV-2 | Every field is BOUND with a committed path and matching revision or explicit UNVERIFIED | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
 | INV-INV-3 | Inventory manifest digest binds the supplied canonical manifest exactly | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
