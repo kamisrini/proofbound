@@ -85,8 +85,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   binding implementation and route-matrix refresh. Its frozen review packet is bound to
   `385274060b62e0dd912b80bd946b494b45277e05`.
 - The inventory and intent-record tests passed; deferrals, artifact integrity, route-matrix, and
-  whitespace checks passed. The pinned gate reached all product checks and exposed a stale-state
-  freshness condition, which this state refresh addresses before rerun.
+  whitespace checks passed. After the durable state refresh, the pinned unrestricted gate passed
+  with `0 issues`; its expected negative-test and cleanroom diagnostics were non-failures.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
