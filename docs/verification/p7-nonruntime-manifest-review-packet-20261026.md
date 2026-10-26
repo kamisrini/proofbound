@@ -1,7 +1,7 @@
 # P7 non-runtime manifest — independent implementation review packet
 
 **Review type:** independent non-author review of the authorized non-runtime slice
-**Status:** `PENDING`
+**Status:** `ACCEPT`
 **Intent:** `P7-NONRUNTIME-MANIFEST-1`
 **Change intent:** [`CI-p7-nonruntime-manifest-1a2b3c`](../intent/records/change-intents/CI-p7-nonruntime-manifest-1a2b3c/0001.md)
 **Reviewed revision:** `66cd3441ab4952eb0c50d16a2e39071020035492`
