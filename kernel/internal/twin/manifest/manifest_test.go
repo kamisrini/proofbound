@@ -341,6 +341,99 @@ func TestResolveInventoryRejectsMissingRevisionUnsafeAndDigestEvidence(t *testin
 	}
 }
 
+func TestEvaluateEvidenceClosureClassifiesWithoutClaimingAcceptance(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	resolutions := closureResolutions(inventory)
+	closure, err := EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if closure.Overall != EvidenceClosureBound {
+		t.Fatalf("complete closure=%q want %q", closure.Overall, EvidenceClosureBound)
+	}
+
+	inventory.Fields[len(inventory.Fields)-1] = InventoryField{Field: inventory.Fields[len(inventory.Fields)-1].Field, State: InventoryUnverified}
+	resolutions = closureResolutions(inventory)
+	closure, err = EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if closure.Overall != EvidenceClosureUnverified {
+		t.Fatalf("unverified closure=%q want %q", closure.Overall, EvidenceClosureUnverified)
+	}
+
+	inventory = validInventory(manifest, manifestBytes)
+	resolutions = closureResolutions(inventory)
+	resolutions[0] = EvidenceResolution{Field: resolutions[0].Field, State: EvidenceResolutionPending, Reason: "committed evidence is not yet available"}
+	closure, err = EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if closure.Overall != EvidenceClosurePending {
+		t.Fatalf("pending closure=%q want %q", closure.Overall, EvidenceClosurePending)
+	}
+}
+
+func TestEvaluateEvidenceClosureRejectsMissingExtraContradictoryAndStaleInputs(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := map[string]func(*[]EvidenceResolution){
+		"missing": func(resolutions *[]EvidenceResolution) { *resolutions = (*resolutions)[:len(*resolutions)-1] },
+		"extra": func(resolutions *[]EvidenceResolution) {
+			*resolutions = append(*resolutions, (*resolutions)[len(*resolutions)-1])
+		},
+		"duplicate": func(resolutions *[]EvidenceResolution) { (*resolutions)[1].Field = (*resolutions)[0].Field },
+		"contradictory": func(resolutions *[]EvidenceResolution) {
+			(*resolutions)[0] = EvidenceResolution{Field: (*resolutions)[0].Field, State: InventoryUnverified, Reason: "contradictory"}
+		},
+		"stale": func(resolutions *[]EvidenceResolution) {
+			(*resolutions)[0].EvidenceRevision = strings.Repeat("b", 40)
+		},
+		"pending without reason": func(resolutions *[]EvidenceResolution) {
+			(*resolutions)[0] = EvidenceResolution{Field: (*resolutions)[0].Field, State: EvidenceResolutionPending}
+		},
+		"invalid state": func(resolutions *[]EvidenceResolution) {
+			(*resolutions)[0].State = InventoryState("MAYBE")
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			inventory := validInventory(manifest, manifestBytes)
+			resolutions := closureResolutions(inventory)
+			mutate(&resolutions)
+			if _, err := EvaluateEvidenceClosure(inventory, manifest, resolutions); err == nil {
+				t.Fatal("invalid closure input accepted")
+			}
+		})
+	}
+}
+
+func closureResolutions(inventory EvidenceInventory) []EvidenceResolution {
+	resolutions := make([]EvidenceResolution, 0, len(inventory.Fields))
+	for _, field := range inventory.Fields {
+		if field.State == InventoryUnverified {
+			resolutions = append(resolutions, EvidenceResolution{Field: field.Field, State: InventoryUnverified, Reason: "inventory explicitly UNVERIFIED"})
+			continue
+		}
+		resolutions = append(resolutions, EvidenceResolution{
+			Field:            field.Field,
+			State:            InventoryBound,
+			EvidencePath:     field.EvidencePath,
+			EvidenceRevision: field.EvidenceRevision,
+			EvidenceSHA256:   field.EvidenceSHA256,
+		})
+	}
+	return resolutions
+}
+
 type memoryCommittedReader struct {
 	revision string
 	files    map[string][]byte

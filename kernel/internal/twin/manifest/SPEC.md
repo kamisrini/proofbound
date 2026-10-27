@@ -1,7 +1,7 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1 authorized non-runtime preparation slice · 2026-10-27
-**Authority:** [`CI-p7-committed-evidence-resolution-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-committed-evidence-resolution-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-EVIDENCE-CLOSURE-1 authorized non-runtime preparation slice · 2026-10-27
+**Authority:** [`CI-p7-evidence-closure-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-evidence-closure-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
@@ -80,6 +80,17 @@ bytes to hash to the declared SHA-256. A missing path, unavailable revision, uns
 mismatch fails closed. `UNVERIFIED` fields are returned unchanged and are never passed to the
 reader.
 
+## Evidence closure evaluator
+
+`EvaluateEvidenceClosure` is a pure evaluator over an accepted inventory and resolution list. It
+requires exact sorted coverage of every required field and classifies each field as `BOUND`,
+`UNVERIFIED`, or explicit `PENDING`. Missing, extra, duplicate, contradictory, stale, malformed,
+or evidence-bearing non-`BOUND` inputs fail closed. Overall status precedence is `PENDING`, then
+`UNVERIFIED`, then `BOUND`; an incomplete result can never become `BOUND` by absence.
+
+This result is documentary completeness evidence only. It does not establish a reproducible build,
+binary validity, runtime behavior, PostgreSQL approval, or any behavior-lock acceptance.
+
 ## Interface
 
 ```go
@@ -97,6 +108,8 @@ type CommittedEvidenceReader interface {
     ReadCommittedFile(revision, path string) ([]byte, error)
 }
 func ResolveInventory(EvidenceInventory, Manifest, CommittedEvidenceReader) ([]EvidenceResolution, error)
+const EvidenceClosureSchema = "proofbound.p7.evidence-closure.v1"
+func EvaluateEvidenceClosure(EvidenceInventory, Manifest, []EvidenceResolution) (EvidenceClosure, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -120,3 +133,5 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | INV-INV-3 | Inventory manifest digest binds the supplied canonical manifest exactly | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
 | RES-INV-1 | BOUND bytes resolve at the declared revision and UNVERIFIED fields are preserved without reader calls | manifest_test.go::TestResolveInventoryVerifiesCommittedBytesAndPreservesUnverified |
 | RES-INV-2 | Missing paths, unavailable revisions, unsafe paths, and digest mismatches fail closed | manifest_test.go::TestResolveInventoryRejectsMissingRevisionUnsafeAndDigestEvidence |
+| CLOSURE-INV-1 | Exact resolution coverage classifies complete, unverified, and pending fields deterministically | manifest_test.go::TestEvaluateEvidenceClosureClassifiesWithoutClaimingAcceptance |
+| CLOSURE-INV-2 | Missing, extra, duplicate, contradictory, stale, and malformed closure inputs fail closed | manifest_test.go::TestEvaluateEvidenceClosureRejectsMissingExtraContradictoryAndStaleInputs |
