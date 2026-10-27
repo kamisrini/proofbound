@@ -114,9 +114,9 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   record was refreshed and rechecked successfully.
 - The skeleton focused tests and intent-record checks pass; deferrals, artifact integrity,
   route-matrix, and whitespace checks pass. The first final gate attempt was blocked only by the
-  missing PATH entry for repository-local `golangci-lint`; after adding that path, the gate reached
-  the state-freshness check and required this durable refresh. Expected index, negative-test,
-  package-count, and cleanroom diagnostics remain non-failures.
+  missing PATH entry for repository-local `golangci-lint`; after adding that path and refreshing
+  durable state, the pinned unrestricted `make check` passed with `0 issues`. Expected index,
+  negative-test, package-count, and cleanroom diagnostics remain non-failures.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
