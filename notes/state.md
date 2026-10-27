@@ -7,13 +7,14 @@ As of: 2026-10-27
 
 ## Resume — 2026-10-27
 
-Exact next action: remain stopped at the completed
-`P7-NONRUNTIME-EVIDENCE-MANIFEST-SKELETON-1` slice. Before any further P7 work, obtain separately
-recorded authorization for another bounded non-runtime evidence/implementation slice; do not
-start runtime fixtures or binary validation, do not activate `DEF-P7-001`, and do not claim L12/L17
-or behavior-lock acceptance.
+Exact next action: obtain independent non-author review of
+`docs/verification/p7-projector-manifest-declaration-review-packet-20261027.md` against reviewed
+revision `ded357462fa6dfdad6d0a5348e989e75aadb6f78`, then accept, amend, or reject that exact
+declaration slice before any further implementation. Do not start runtime fixtures or binary
+validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
-Immediate blockers: complete projector/build manifest, source/toolchain binding, runtime fixture
+Immediate blockers: independent review is pending; complete projector/build manifest,
+source/toolchain binding, runtime fixture
 corpus, process/network/no-fetch/cleanup witnesses,
 L12/L17 runtime result, behavior-lock acceptance, clean-clone proof, and independent runtime
 verdict are absent. `DEF-P7-001` remains owner-postponed because PostgreSQL publisher identity,
@@ -68,6 +69,11 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   synthetic serialization/validation tests, and independently accepted by Srinivas Kamisetty
   with no findings for reviewed revision `c9daba2d4afdef4a2966e54813da81c1b56363db` in
   `docs/verification/verdicts/p7-evidence-manifest-skeleton-round1-20261027.md`.
+- `P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1` is authorized by
+  `CI-p7-projector-manifest-declaration-1a2b3c`, implemented through the injected committed-byte
+  reader, and prepared for independent review at
+  `docs/verification/p7-projector-manifest-declaration-review-packet-20261027.md`. It is not
+  yet accepted.
 
 ## Open, blocked, and unverified
 
@@ -119,6 +125,9 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   negative-test, package-count, and cleanroom diagnostics remain non-failures.
 - Artifact integrity was refreshed from 37 to 38 documentary verdict artifacts and rechecked
   successfully after the skeleton acceptance.
+- Declaration focused tests, intent-record checks, route-matrix refresh, and whitespace checks
+  pass. The declaration review packet is pending; the final pinned unrestricted gate will run
+  after this durable state refresh. No new deferral row was required.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
@@ -159,6 +168,7 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   acceptance.
 - `DEF-P7-001` remains dormant and the pinned PostgreSQL JAR remains unapproved; `DEF-P7-002` is
   resolved.
-- Tomorrow’s first action: remain stopped at the accepted evidence-manifest skeleton slice and
-  obtain separately recorded authorization before selecting any further P7 slice. Keep runtime,
-  binary, PostgreSQL, L12/L17, and behavior-lock work stopped.
+- Tomorrow’s first action: obtain and process the independent non-author verdict for the pending
+  projector-manifest declaration packet; if accepted, record it and refresh artifact integrity
+  before selecting any further separately authorized slice. Keep runtime, binary, PostgreSQL,
+  L12/L17, and behavior-lock work stopped.
