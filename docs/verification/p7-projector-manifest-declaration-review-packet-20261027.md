@@ -4,7 +4,7 @@
 **Status:** `PENDING`
 **Intent:** `P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1`
 **Change intent:** [`CI-p7-projector-manifest-declaration-1a2b3c`](../intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md)
-**Reviewed revision:** `ded357462fa6dfdad6d0a5348e989e75aadb6f78`
+**Reviewed revision:** `a2fbfa034355d177779c26d7d7c897b62cdc01a2`
 **Owner:** `project-owner`
 
 ## Review question
@@ -20,7 +20,7 @@ runtime, binary, PostgreSQL, complete, or reproducible-build claims?
 | Path | SHA-256 |
 |---|---|
 | `docs/intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md` | `897c609dd1577b7425c1b15a0d610a562b0d7310c9007f12bdd30a3f84341804` |
-| `kernel/internal/twin/manifest/SPEC.md` | `49fc920c54e75bf212e7c85d9cb182f24fc643210e851d3d95c875a9a03cf2ae` |
+| `kernel/internal/twin/manifest/SPEC.md` | `731c7f789c3362d9afb6199d6d721c629f73beb2a0c16b40295b44581de5abdb` |
 | `kernel/internal/twin/manifest/manifest.go` | `0f0f30c4e08beb08150121421c7af684b6da7060c57936b2e6d34f430e8abe00` |
 | `kernel/internal/twin/manifest/inventory.go` | `6873d8831c68e76a0dc9258a7be6eafb02516df7231ea860beeb67fb1fe48524` |
 | `kernel/internal/twin/manifest/evidence.go` | `c2f5c38128f43aa17861352bf6b746b88d9d75b8eb77c00b35df4ba9b069d56d` |

@@ -9,7 +9,7 @@ As of: 2026-10-27
 
 Exact next action: obtain independent non-author review of
 `docs/verification/p7-projector-manifest-declaration-review-packet-20261027.md` against reviewed
-revision `ded357462fa6dfdad6d0a5348e989e75aadb6f78`, then accept, amend, or reject that exact
+revision `a2fbfa034355d177779c26d7d7c897b62cdc01a2`, then accept, amend, or reject that exact
 declaration slice before any further implementation. Do not start runtime fixtures or binary
 validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
@@ -128,6 +128,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 - Declaration focused tests, intent-record checks, route-matrix refresh, and whitespace checks
   pass. The declaration review packet is pending; the final pinned unrestricted gate will run
   after this durable state refresh. No new deferral row was required.
+- The first final gate reached invariant-table-lint and found one malformed multi-test citation;
+  the citation was split into valid rows and the frozen review revision/hash were refreshed.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
