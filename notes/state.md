@@ -8,14 +8,15 @@ As of: 2026-10-27
 ## Resume — 2026-10-27
 
 Exact next action: remain stopped at the completed
-`P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1` slice. Before any further P7 work, obtain
-separately recorded authorization for another bounded non-runtime slice; do not start runtime
-fixtures or binary validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or
-behavior-lock acceptance.
+`P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1` slice. The separately authorized
+`P7-NONRUNTIME-EVIDENCE-CLOSURE-1` implementation is complete but awaits independent review;
+obtain that verdict before any further implementation. Do not start runtime fixtures or binary
+validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
-Immediate blockers: the complete projector/build manifest and source/toolchain binding remain
-incomplete beyond the accepted shape/validation, caller-supplied byte-binding, inventory, and
-injected-reader contracts; runtime fixture corpus,
+Immediate blockers: independent non-author review of evidence closure is pending. The complete
+projector/build manifest and source/toolchain binding remain incomplete beyond the accepted
+shape/validation, caller-supplied byte-binding, inventory, injected-reader, and closure-evaluator
+contracts; runtime fixture corpus,
 process/network/no-fetch/cleanup witnesses, L12/L17 runtime result, behavior-lock acceptance,
 clean-clone proof, and independent runtime verdict are absent. `DEF-P7-001` remains
 owner-postponed because PostgreSQL publisher identity, detached-signature resolution, and bundled
@@ -59,6 +60,10 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   independently accepted with no findings in
   `docs/verification/verdicts/p7-committed-evidence-resolution-round1-20261027.md` for reviewed
   revision `dd497f2ae419f0d38af759c86ffe0029fe012aab`.
+- `P7-NONRUNTIME-EVIDENCE-CLOSURE-1` is authorized by
+  `CI-p7-evidence-closure-1a2b3c`, implemented as a pure evaluator with synthetic tests, and
+  covered by the pending review packet for revision
+  `3e31c3a191a15113cd26e007caf848c0d2a9b79a`.
 
 ## Open, blocked, and unverified
 
@@ -99,6 +104,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   route-matrix, and whitespace checks passed; the pinned unrestricted gate passed with `0 issues`.
 - The resolver verdict increased documentary artifact integrity from 35 to 36; the generated
   record was refreshed and rechecked successfully.
+- The closure evaluator and intent-record tests passed; deferrals, artifact integrity,
+  route-matrix, and whitespace checks passed; the pinned unrestricted gate passed with `0 issues`.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
@@ -130,10 +137,12 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 - `P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1` is separately authorized and implemented within
   scope; its independent review is accepted with no findings in
   `docs/verification/verdicts/p7-committed-evidence-resolution-round1-20261027.md`.
+- `P7-NONRUNTIME-EVIDENCE-CLOSURE-1` is separately authorized and implemented within scope;
+  independent review is pending in
+  `docs/verification/p7-evidence-closure-review-packet-20261027.md`.
 - The P7 documentary and preflight/staging acceptances do not establish runtime or PostgreSQL
   acceptance.
 - `DEF-P7-001` remains dormant and the pinned PostgreSQL JAR remains unapproved; `DEF-P7-002` is
   resolved.
-- Tomorrow’s first action: remain at the completed committed-evidence resolution slice and select
-  further work only from a separately recorded authorization; keep runtime, binary, PostgreSQL,
-  L12/L17, and behavior-lock work stopped.
+- Tomorrow’s first action: obtain or record the independent non-author verdict for the evidence-
+  closure packet; keep runtime, binary, PostgreSQL, L12/L17, and behavior-lock work stopped.
