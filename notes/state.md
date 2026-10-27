@@ -24,9 +24,9 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 
 ## Branch status
 
-- Branch: `main`, tracking `origin/main`, ahead by 97 local commits; no push was authorized or
+- Branch: `main`, tracking `origin/main`, ahead by 98 local commits; no push was authorized or
   attempted.
-- Final tracked HEAD: `e8d192a5666e12d89029945a2d534b689253ed30`.
+- Final tracked HEAD: `90d0f785e9f190e9f1e7eeb9dd05be18a069964a`.
 - Preserved unrelated user-owned untracked paths: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`. They were not staged, deleted, or relabeled.
 - No PostgreSQL binary, database directory, downloaded toolchain, built executable, runtime
@@ -70,7 +70,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   cache. The repository-local `golangci-lint` path was required because the Snap wrapper is
   unavailable in this environment.
 - A dated Git bundle was created and verified at
-  `/home/thamm/Backups/proofbound-20261027T222231Z.bundle`.
+  `/home/thamm/Backups/proofbound-20261027T233606Z.bundle` with SHA-256
+  `18906f7872562dda7bc8da791a94a254d11c19fcc569f6cea50b60ba3f9af20a`.
 
 ## Institutionalized improvements
 
