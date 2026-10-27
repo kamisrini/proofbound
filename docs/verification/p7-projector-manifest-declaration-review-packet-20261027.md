@@ -4,7 +4,7 @@
 **Status:** `PENDING`
 **Intent:** `P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1`
 **Change intent:** [`CI-p7-projector-manifest-declaration-1a2b3c`](../intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md)
-**Reviewed revision:** `a2fbfa034355d177779c26d7d7c897b62cdc01a2`
+**Reviewed revision:** `55d27c982b07de5506e46102913aacdb72021aef`
 **Owner:** `project-owner`
 
 ## Review question
@@ -27,7 +27,7 @@ runtime, binary, PostgreSQL, complete, or reproducible-build claims?
 | `kernel/internal/twin/manifest/skeleton.go` | `5bac76b646c2fca4c593c703b707ccd0718b4ce6076d25767b842e25dc8e8c44` |
 | `kernel/internal/twin/manifest/declaration.go` | `d56410145cf6e83b8563f4bea748e7a70d5204e03f865ab3f6cdae373a389202` |
 | `kernel/internal/twin/manifest/manifest_test.go` | `9d699ecc1146a170a3b9edbb9ecdca93257a9ac5b0b4c862768c0e21f39e763d` |
-| `docs/verification/p6-event-route-matrix.md` | `f425538c65b105b722dff0ffa9807e7bfe602a27b1341c51151db07ce2bb7966` |
+| `docs/verification/p6-event-route-matrix.md` | `88c2b589bc221785cbd42819060762bc386c296f4ce43df284b2ab8993ed0ca3` |
 
 ## Required reviewer checks
 

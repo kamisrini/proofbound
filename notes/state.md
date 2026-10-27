@@ -9,7 +9,7 @@ As of: 2026-10-27
 
 Exact next action: obtain independent non-author review of
 `docs/verification/p7-projector-manifest-declaration-review-packet-20261027.md` against reviewed
-revision `a2fbfa034355d177779c26d7d7c897b62cdc01a2`, then accept, amend, or reject that exact
+revision `55d27c982b07de5506e46102913aacdb72021aef`, then accept, amend, or reject that exact
 declaration slice before any further implementation. Do not start runtime fixtures or binary
 validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
