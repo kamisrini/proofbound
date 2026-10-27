@@ -60,14 +60,7 @@ func BuildEvidenceManifest(manifest Manifest, inventory EvidenceInventory, resol
 		Fields:           make([]EvidenceManifestField, 0, len(closure.Fields)),
 	}
 	for _, field := range closure.Fields {
-		skeleton.Fields = append(skeleton.Fields, EvidenceManifestField{
-			Field:            field.Field,
-			State:            field.State,
-			EvidencePath:     field.EvidencePath,
-			EvidenceRevision: field.EvidenceRevision,
-			EvidenceSHA256:   field.EvidenceSHA256,
-			Reason:           field.Reason,
-		})
+		skeleton.Fields = append(skeleton.Fields, EvidenceManifestField(field))
 	}
 	if err := ValidateEvidenceManifest(skeleton, manifest, inventory, resolutions, closure); err != nil {
 		return EvidenceManifest{}, err
