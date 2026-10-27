@@ -1,7 +1,7 @@
 # P7 committed-evidence resolution — independent implementation review packet
 
 **Review type:** independent non-author review of the authorized evidence-resolution slice
-**Status:** `PENDING`
+**Status:** `ACCEPT`
 **Intent:** `P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1`
 **Change intent:** [`CI-p7-committed-evidence-resolution-1a2b3c`](../intent/records/change-intents/CI-p7-committed-evidence-resolution-1a2b3c/0001.md)
 **Reviewed revision:** `dd497f2ae419f0d38af759c86ffe0029fe012aab`
