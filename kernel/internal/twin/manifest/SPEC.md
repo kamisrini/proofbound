@@ -1,15 +1,16 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-SOURCE-TOOLCHAIN-INVENTORY-1 authorized non-runtime preparation slice · 2026-10-26
-**Authority:** [`CI-p7-source-toolchain-inventory-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-source-toolchain-inventory-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-COMMITTED-EVIDENCE-RESOLUTION-1 authorized non-runtime preparation slice · 2026-10-27
+**Authority:** [`CI-p7-committed-evidence-resolution-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-committed-evidence-resolution-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
 This package validates the documentary `proofbound.p7.projector-manifest.v1` contract and its
 `proofbound.p7.source-toolchain-inventory.v1` evidence inventory. It binds
 exact source and projector revisions, declared Go/toolchain identity, selected module byte
-identities, and build settings. It only validates supplied bytes and declarations; it does not
-retrieve, build, execute, or validate a binary or runtime input.
+identities, and build settings. It validates supplied declarations and verifies bytes returned by
+an injected committed-tree reader; it does not itself access the filesystem, invoke Git, retrieve,
+build, execute, or validate a binary or runtime input.
 
 The package does not add a provider, event kind, writable truth, case-manifest parser, lock
 evaluator, regeneration path, runtime fixture, PostgreSQL route, or external feed. Incomplete
@@ -66,9 +67,18 @@ revision fields, source files, toolchain fields, modules, and build fields. Each
 SHA-256 declaration, or `UNVERIFIED` with all evidence fields empty. `manifest_digest` must equal
 the SHA-256 of the validated canonical projector manifest supplied by the caller.
 
-The inventory validates declarations only. It does not read the evidence path, resolve a Git tree,
-retrieve a toolchain or module, build an executable, or establish completeness beyond the declared
-field coverage.
+Inventory validation validates declarations only. `ResolveInventory` reads only bytes returned by
+the caller’s `CommittedEvidenceReader` at each declared revision/path. It does not itself read the
+filesystem, resolve a Git tree, retrieve a toolchain or module, build an executable, or establish
+completeness beyond the declared field coverage.
+
+## Committed evidence resolution
+
+`ResolveInventory` first validates the inventory and manifest. For each `BOUND` field it asks the
+injected reader for the declared path at the declared evidence revision and requires the returned
+bytes to hash to the declared SHA-256. A missing path, unavailable revision, unsafe path, or digest
+mismatch fails closed. `UNVERIFIED` fields are returned unchanged and are never passed to the
+reader.
 
 ## Interface
 
@@ -83,6 +93,10 @@ const InventorySchema = "proofbound.p7.source-toolchain-inventory.v1"
 func ParseInventory([]byte, Manifest) (EvidenceInventory, error)
 func ValidateInventory(EvidenceInventory, Manifest) error
 func CanonicalInventoryBytes(EvidenceInventory, Manifest) ([]byte, error)
+type CommittedEvidenceReader interface {
+    ReadCommittedFile(revision, path string) ([]byte, error)
+}
+func ResolveInventory(EvidenceInventory, Manifest, CommittedEvidenceReader) ([]EvidenceResolution, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -104,3 +118,5 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | INV-INV-1 | Inventory has exact canonical shape and complete sorted field coverage | manifest_test.go::TestParseInventoryRejectsUnknownAndNonCanonicalShape |
 | INV-INV-2 | Every field is BOUND with a committed path and matching revision or explicit UNVERIFIED | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
 | INV-INV-3 | Inventory manifest digest binds the supplied canonical manifest exactly | manifest_test.go::TestInventoryRejectsMissingExtraDuplicateStaleAndDigestInputs |
+| RES-INV-1 | BOUND bytes resolve at the declared revision and UNVERIFIED fields are preserved without reader calls | manifest_test.go::TestResolveInventoryVerifiesCommittedBytesAndPreservesUnverified |
+| RES-INV-2 | Missing paths, unavailable revisions, unsafe paths, and digest mismatches fail closed | manifest_test.go::TestResolveInventoryRejectsMissingRevisionUnsafeAndDigestEvidence |

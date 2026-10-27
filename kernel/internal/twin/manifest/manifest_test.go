@@ -263,6 +263,107 @@ func TestParseInventoryRejectsUnknownAndNonCanonicalShape(t *testing.T) {
 	}
 }
 
+func TestResolveInventoryVerifiesCommittedBytesAndPreservesUnverified(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	content := []byte("committed evidence")
+	contentDigest := digestBytes(content)
+	for i := range inventory.Fields {
+		inventory.Fields[i].EvidenceSHA256 = contentDigest
+	}
+	last := len(inventory.Fields) - 1
+	inventory.Fields[last] = InventoryField{Field: inventory.Fields[last].Field, State: InventoryUnverified}
+	reader := &memoryCommittedReader{
+		revision: manifest.EvidenceRevision,
+		files:    map[string][]byte{"docs/evidence/p7-source-toolchain.md": content},
+	}
+	resolved, err := ResolveInventory(inventory, manifest, reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resolved) != len(inventory.Fields) {
+		t.Fatalf("resolved fields=%d want=%d", len(resolved), len(inventory.Fields))
+	}
+	if len(reader.calls) != len(inventory.Fields)-1 {
+		t.Fatalf("reader calls=%d want=%d", len(reader.calls), len(inventory.Fields)-1)
+	}
+	if resolved[last].State != InventoryUnverified || resolved[last].EvidencePath != "" {
+		t.Fatalf("unverified resolution=%+v", resolved[last])
+	}
+	for _, call := range reader.calls {
+		if call.revision != manifest.EvidenceRevision || call.path != "docs/evidence/p7-source-toolchain.md" {
+			t.Fatalf("reader call=%+v", call)
+		}
+	}
+}
+
+func TestResolveInventoryRejectsMissingRevisionUnsafeAndDigestEvidence(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := []byte("committed evidence")
+	tests := map[string]func(*EvidenceInventory, *memoryCommittedReader){
+		"missing path": func(inventory *EvidenceInventory, reader *memoryCommittedReader) {
+			reader.files = map[string][]byte{}
+		},
+		"revision mismatch": func(inventory *EvidenceInventory, reader *memoryCommittedReader) {
+			reader.revision = strings.Repeat("b", 40)
+		},
+		"unsafe path": func(inventory *EvidenceInventory, reader *memoryCommittedReader) {
+			inventory.Fields[0].EvidencePath = "../escape"
+		},
+		"digest mismatch": func(inventory *EvidenceInventory, reader *memoryCommittedReader) {
+			reader.files["docs/evidence/p7-source-toolchain.md"] = []byte("different bytes")
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			inventory := validInventory(manifest, manifestBytes)
+			contentDigest := digestBytes(content)
+			for i := range inventory.Fields {
+				inventory.Fields[i].EvidenceSHA256 = contentDigest
+			}
+			reader := &memoryCommittedReader{
+				revision: manifest.EvidenceRevision,
+				files:    map[string][]byte{"docs/evidence/p7-source-toolchain.md": content},
+			}
+			mutate(&inventory, reader)
+			if _, err := ResolveInventory(inventory, manifest, reader); err == nil {
+				t.Fatal("invalid committed evidence accepted")
+			}
+		})
+	}
+}
+
+type memoryCommittedReader struct {
+	revision string
+	files    map[string][]byte
+	calls    []memoryCommittedCall
+}
+
+type memoryCommittedCall struct {
+	revision string
+	path     string
+}
+
+func (reader *memoryCommittedReader) ReadCommittedFile(revision, path string) ([]byte, error) {
+	reader.calls = append(reader.calls, memoryCommittedCall{revision: revision, path: path})
+	if revision != reader.revision {
+		return nil, fmt.Errorf("revision %q is not available", revision)
+	}
+	content, ok := reader.files[path]
+	if !ok {
+		return nil, fmt.Errorf("path %q is missing", path)
+	}
+	return append([]byte(nil), content...), nil
+}
+
 func validInventory(manifest Manifest, manifestBytes []byte) EvidenceInventory {
 	fields := make([]InventoryField, 0, len(inventoryFields))
 	for i, name := range inventoryFields {
