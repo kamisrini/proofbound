@@ -126,8 +126,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 - Artifact integrity was refreshed from 37 to 38 documentary verdict artifacts and rechecked
   successfully after the skeleton acceptance.
 - Declaration focused tests, intent-record checks, route-matrix refresh, and whitespace checks
-  pass. The declaration review packet is pending; the final pinned unrestricted gate will run
-  after this durable state refresh. No new deferral row was required.
+  pass. The declaration review packet is pending; the final pinned unrestricted `make check`
+  passed with `0 issues`. No new deferral row was required.
 - The first final gate reached invariant-table-lint and found one malformed multi-test citation;
   the citation was split into valid rows and the frozen review revision/hash were refreshed.
 - No push was attempted or authorized.
