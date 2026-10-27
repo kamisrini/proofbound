@@ -1,7 +1,7 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-EVIDENCE-CLOSURE-1 authorized non-runtime preparation slice · 2026-10-27
-**Authority:** [`CI-p7-evidence-closure-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-evidence-closure-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-EVIDENCE-MANIFEST-SKELETON-1 authorized non-runtime preparation slice · 2026-10-27
+**Authority:** [`CI-p7-evidence-manifest-skeleton-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-evidence-manifest-skeleton-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
@@ -91,6 +91,18 @@ or evidence-bearing non-`BOUND` inputs fail closed. Overall status precedence is
 This result is documentary completeness evidence only. It does not establish a reproducible build,
 binary validity, runtime behavior, PostgreSQL approval, or any behavior-lock acceptance.
 
+## Evidence-manifest skeleton
+
+`BuildEvidenceManifest` deterministically derives a strict documentary skeleton from the accepted
+projector manifest, source/toolchain inventory, committed-evidence resolutions, and closure result.
+It records the manifest and inventory digests, closure overall state, and one exact status row per
+required field. It preserves `UNVERIFIED` and `PENDING` states and rejects any supplied closure or
+digest that does not exactly match the derivation inputs.
+
+The skeleton is an evidence index only. It does not claim complete projector/build evidence,
+reproducibility, binary validity, runtime behavior, PostgreSQL approval, or behavior-lock
+acceptance.
+
 ## Interface
 
 ```go
@@ -110,6 +122,11 @@ type CommittedEvidenceReader interface {
 func ResolveInventory(EvidenceInventory, Manifest, CommittedEvidenceReader) ([]EvidenceResolution, error)
 const EvidenceClosureSchema = "proofbound.p7.evidence-closure.v1"
 func EvaluateEvidenceClosure(EvidenceInventory, Manifest, []EvidenceResolution) (EvidenceClosure, error)
+const EvidenceManifestSchema = "proofbound.p7.evidence-manifest.v1"
+func BuildEvidenceManifest(Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) (EvidenceManifest, error)
+func ValidateEvidenceManifest(EvidenceManifest, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) error
+func ParseEvidenceManifest([]byte, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) (EvidenceManifest, error)
+func CanonicalEvidenceManifestBytes(EvidenceManifest, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) ([]byte, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -135,3 +152,6 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | RES-INV-2 | Missing paths, unavailable revisions, unsafe paths, and digest mismatches fail closed | manifest_test.go::TestResolveInventoryRejectsMissingRevisionUnsafeAndDigestEvidence |
 | CLOSURE-INV-1 | Exact resolution coverage classifies complete, unverified, and pending fields deterministically | manifest_test.go::TestEvaluateEvidenceClosureClassifiesWithoutClaimingAcceptance |
 | CLOSURE-INV-2 | Missing, extra, duplicate, contradictory, stale, and malformed closure inputs fail closed | manifest_test.go::TestEvaluateEvidenceClosureRejectsMissingExtraContradictoryAndStaleInputs |
+| SKELETON-INV-1 | Skeleton serialization binds exact manifest/inventory digests and closure-derived fields | manifest_test.go::TestEvidenceManifestBuildsCanonicalSkeleton |
+| SKELETON-INV-2 | UNVERIFIED and PENDING states survive deterministic assembly without false completeness | manifest_test.go::TestEvidenceManifestPreservesUnverifiedAndPending |
+| SKELETON-INV-3 | Missing, extra, stale, mismatched, contradictory, unknown, and non-canonical inputs fail closed | manifest_test.go::TestEvidenceManifestRejectsMismatchedAndNonCanonicalInputs |

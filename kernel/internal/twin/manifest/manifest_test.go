@@ -416,6 +416,146 @@ func TestEvaluateEvidenceClosureRejectsMissingExtraContradictoryAndStaleInputs(t
 	}
 }
 
+func TestEvidenceManifestBuildsCanonicalSkeleton(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	resolutions := closureResolutions(inventory)
+	closure, err := EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	skeleton, err := BuildEvidenceManifest(manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := CanonicalEvidenceManifestBytes(skeleton, manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := ParseEvidenceManifest(raw, manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(parsed, skeleton) {
+		t.Fatalf("parsed skeleton differs:\n%+v\n%+v", parsed, skeleton)
+	}
+}
+
+func TestEvidenceManifestPreservesUnverifiedAndPending(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	last := len(inventory.Fields) - 1
+	inventory.Fields[last] = InventoryField{Field: inventory.Fields[last].Field, State: InventoryUnverified}
+	resolutions := closureResolutions(inventory)
+	closure, err := EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	skeleton, err := BuildEvidenceManifest(manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if skeleton.ClosureOverall != EvidenceClosureUnverified || skeleton.Fields[last].State != EvidenceClosureUnverified {
+		t.Fatalf("unverified skeleton=%+v", skeleton)
+	}
+
+	inventory = validInventory(manifest, manifestBytes)
+	resolutions = closureResolutions(inventory)
+	resolutions[0] = EvidenceResolution{Field: resolutions[0].Field, State: EvidenceResolutionPending, Reason: "evidence is pending owner review"}
+	closure, err = EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	skeleton, err = BuildEvidenceManifest(manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if skeleton.ClosureOverall != EvidenceClosurePending || skeleton.Fields[0].State != EvidenceClosurePending {
+		t.Fatalf("pending skeleton=%+v", skeleton)
+	}
+}
+
+func TestEvidenceManifestRejectsMismatchedAndNonCanonicalInputs(t *testing.T) {
+	manifest := validManifest()
+	manifestBytes, err := CanonicalBytes(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	inventory := validInventory(manifest, manifestBytes)
+	resolutions := closureResolutions(inventory)
+	closure, err := EvaluateEvidenceClosure(inventory, manifest, resolutions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	skeleton, err := BuildEvidenceManifest(manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := map[string]func(*EvidenceManifest){
+		"missing field":    func(value *EvidenceManifest) { value.Fields = value.Fields[:len(value.Fields)-1] },
+		"extra field":      func(value *EvidenceManifest) { value.Fields = append(value.Fields, value.Fields[len(value.Fields)-1]) },
+		"stale revision":   func(value *EvidenceManifest) { value.EvidenceRevision = strings.Repeat("b", 40) },
+		"manifest digest":  func(value *EvidenceManifest) { value.ManifestDigest = strings.Repeat("0", 64) },
+		"inventory digest": func(value *EvidenceManifest) { value.InventoryDigest = strings.Repeat("0", 64) },
+		"closure overall":  func(value *EvidenceManifest) { value.ClosureOverall = EvidenceClosureUnverified },
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			value := skeleton
+			value.Fields = append([]EvidenceManifestField(nil), skeleton.Fields...)
+			mutate(&value)
+			if err := ValidateEvidenceManifest(value, manifest, inventory, resolutions, closure); err == nil {
+				t.Fatal("invalid skeleton accepted")
+			}
+		})
+	}
+	badClosure := closure
+	badClosure.Overall = EvidenceClosurePending
+	if _, err := BuildEvidenceManifest(manifest, inventory, resolutions, badClosure); err == nil {
+		t.Fatal("mismatched closure accepted")
+	}
+	staleResolutions := closureResolutions(inventory)
+	staleResolutions[0].EvidenceRevision = strings.Repeat("b", 40)
+	if _, err := BuildEvidenceManifest(manifest, inventory, staleResolutions, closure); err == nil {
+		t.Fatal("stale resolution accepted")
+	}
+	raw, err := CanonicalEvidenceManifestBytes(skeleton, manifest, inventory, resolutions, closure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var object map[string]any
+	if err := json.Unmarshal(raw, &object); err != nil {
+		t.Fatal(err)
+	}
+	object["unexpected"] = true
+	mutated, err := json.Marshal(object)
+	if err != nil {
+		t.Fatal(err)
+	}
+	canonical, err := core.Canonicalize(mutated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseEvidenceManifest(canonical, manifest, inventory, resolutions, closure); err == nil {
+		t.Fatal("unknown skeleton field accepted")
+	}
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, raw, "", "  "); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseEvidenceManifest(pretty.Bytes(), manifest, inventory, resolutions, closure); err == nil {
+		t.Fatal("non-canonical skeleton accepted")
+	}
+}
+
 func closureResolutions(inventory EvidenceInventory) []EvidenceResolution {
 	resolutions := make([]EvidenceResolution, 0, len(inventory.Fields))
 	for _, field := range inventory.Fields {
