@@ -7,18 +7,18 @@ As of: 2026-10-27
 
 ## Resume — 2026-10-27
 
-Exact next action: remain stopped at the completed
-`P7-NONRUNTIME-EVIDENCE-CLOSURE-1` slice. Before any further P7 work, obtain separately recorded
-authorization for another bounded non-runtime slice; do not start runtime fixtures or binary
+Exact next action: obtain independent non-author review of
+`docs/verification/p7-evidence-manifest-skeleton-review-packet-20261027.md` against reviewed
+revision `c9daba2d4afdef4a2966e54813da81c1b56363db`, then accept, amend, or reject that exact
+skeleton slice before any further implementation. Do not start runtime fixtures or binary
 validation, do not activate `DEF-P7-001`, and do not claim L12/L17 or behavior-lock acceptance.
 
-Immediate blockers: the complete projector/build manifest and source/toolchain binding remain
-incomplete beyond the accepted shape/validation, caller-supplied byte-binding, inventory,
-injected-reader, and closure-evaluator contracts; runtime fixture corpus,
-process/network/no-fetch/cleanup witnesses, L12/L17 runtime result, behavior-lock acceptance,
-clean-clone proof, and independent runtime verdict are absent. `DEF-P7-001` remains
-owner-postponed because PostgreSQL publisher identity, detached-signature resolution, and bundled
-license/notice coverage remain unresolved. `DEF-P7-001` is dormant; `DEF-P7-002` is resolved.
+Immediate blockers: independent review is pending; complete projector/build manifest,
+source/toolchain binding, runtime fixture corpus, process/network/no-fetch/cleanup witnesses,
+L12/L17 runtime result, behavior-lock acceptance, clean-clone proof, and independent runtime
+verdict are absent. `DEF-P7-001` remains owner-postponed because PostgreSQL publisher identity,
+detached-signature resolution, and bundled license/notice coverage remain unresolved.
+`DEF-P7-001` is dormant; `DEF-P7-002` is resolved.
 
 Do not treat the accepted live SPEC/API wording as runtime acceptance. Do not treat the pinned
 Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
@@ -63,6 +63,11 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   independently accepted with no findings in
   `docs/verification/verdicts/p7-evidence-closure-round1-20261027.md` for reviewed revision
   `3e31c3a191a15113cd26e007caf848c0d2a9b79a`.
+- `P7-NONRUNTIME-EVIDENCE-MANIFEST-SKELETON-1` is authorized by
+  `CI-p7-evidence-manifest-skeleton-1a2b3c`, implemented as a pure deterministic skeleton with
+  synthetic serialization/validation tests, and prepared for independent review in
+  `docs/verification/p7-evidence-manifest-skeleton-review-packet-20261027.md`. It is not yet
+  accepted.
 
 ## Open, blocked, and unverified
 
@@ -107,6 +112,11 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   route-matrix, and whitespace checks passed; the pinned unrestricted gate passed with `0 issues`.
 - The closure verdict increased documentary artifact integrity from 36 to 37; the generated
   record was refreshed and rechecked successfully.
+- The skeleton focused tests and intent-record checks pass; deferrals, artifact integrity,
+  route-matrix, and whitespace checks pass. The first final gate attempt was blocked only by the
+  missing PATH entry for repository-local `golangci-lint`; after adding that path, the gate reached
+  the state-freshness check and required this durable refresh. Expected index, negative-test,
+  package-count, and cleanroom diagnostics remain non-failures.
 - No push was attempted or authorized.
 
 ## Institutionalized improvement
@@ -123,6 +133,8 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
 - Run `invariant-table-lint` before the final gate and refresh the generated route matrix after the
   last commit touching `kernel/internal/twin`, so documentary citations and generated identities
   are frozen before review.
+- Include the repository-local Go toolchain and `golangci-lint` paths explicitly when the Snap
+  wrappers are unavailable; use an isolated writable `GOCACHE` for verification.
 
 ## Current checkpoint handoff
 
@@ -145,6 +157,7 @@ Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
   acceptance.
 - `DEF-P7-001` remains dormant and the pinned PostgreSQL JAR remains unapproved; `DEF-P7-002` is
   resolved.
-- Tomorrow’s first action: remain at the completed evidence-closure slice and select further work
-  only from a separately recorded authorization; keep runtime, binary, PostgreSQL, L12/L17, and
-  behavior-lock work stopped.
+- Tomorrow’s first action: obtain and process the independent non-author verdict for the pending
+  evidence-manifest skeleton packet; if accepted, record it and refresh artifact integrity before
+  selecting any further separately authorized slice. Keep runtime, binary, PostgreSQL, L12/L17,
+  and behavior-lock work stopped.
