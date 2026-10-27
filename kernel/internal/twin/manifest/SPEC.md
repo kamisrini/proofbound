@@ -175,4 +175,5 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | SKELETON-INV-3 | Missing, extra, stale, mismatched, contradictory, unknown, and non-canonical inputs fail closed | manifest_test.go::TestEvidenceManifestRejectsMismatchedAndNonCanonicalInputs |
 | DECL-INV-1 | Committed source/module bytes bind exact sorted paths and SHA-256 identities at one revision | manifest_test.go::TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence |
 | DECL-INV-2 | Toolchain/archive unavailability and incomplete declaration coverage remain explicit `UNVERIFIED` or `PENDING` | manifest_test.go::TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence |
-| DECL-INV-3 | Declaration serialization is canonical and invalid, stale, duplicate, unsafe, missing, or contradictory inputs fail closed | manifest_test.go::TestManifestDeclarationCanonicalSerializationAndValidation; manifest_test.go::TestDeclareCommittedManifestRejectsInvalidAndUnavailableInputs |
+| DECL-INV-3 | Declaration serialization is canonical and contradictory declaration evidence fails closed | manifest_test.go::TestManifestDeclarationCanonicalSerializationAndValidation |
+| DECL-INV-4 | Invalid, stale, duplicate, unsafe, or missing committed inputs fail closed | manifest_test.go::TestDeclareCommittedManifestRejectsInvalidAndUnavailableInputs |
