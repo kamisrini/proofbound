@@ -1,7 +1,7 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-EVIDENCE-MANIFEST-SKELETON-1 authorized non-runtime preparation slice · 2026-10-27
-**Authority:** [`CI-p7-evidence-manifest-skeleton-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-evidence-manifest-skeleton-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1 authorized non-runtime preparation slice · 2026-10-27
+**Authority:** [`CI-p7-projector-manifest-declaration-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
@@ -103,6 +103,19 @@ The skeleton is an evidence index only. It does not claim complete projector/bui
 reproducibility, binary validity, runtime behavior, PostgreSQL approval, or behavior-lock
 acceptance.
 
+## Projector/build manifest declaration
+
+`DeclareCommittedManifest` reads only bytes returned by the caller-supplied committed-tree reader
+at one exact evidence revision. It binds sorted source paths and accepted module artifact paths to
+the manifest’s SHA-256 identities, carries the exact projector revision and build settings, and
+emits a canonical declaration with explicit evidence states. Toolchain/archive bytes remain
+`UNVERIFIED` when unavailable in the committed slice; declaration fields whose completeness is not
+established remain `PENDING`.
+
+This declaration is a non-runtime identity record. It does not retrieve, build, execute, validate,
+or approve a toolchain, executable, PostgreSQL artifact, complete source corpus, or reproducible
+build.
+
 ## Interface
 
 ```go
@@ -127,6 +140,11 @@ func BuildEvidenceManifest(Manifest, EvidenceInventory, []EvidenceResolution, Ev
 func ValidateEvidenceManifest(EvidenceManifest, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) error
 func ParseEvidenceManifest([]byte, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) (EvidenceManifest, error)
 func CanonicalEvidenceManifestBytes(EvidenceManifest, Manifest, EvidenceInventory, []EvidenceResolution, EvidenceClosure) ([]byte, error)
+const ManifestDeclarationSchema = "proofbound.p7.projector-manifest-declaration.v1"
+func DeclareCommittedManifest(ManifestDeclarationInput, CommittedEvidenceReader) (ManifestDeclaration, error)
+func ValidateManifestDeclaration(ManifestDeclaration, ManifestDeclarationInput) error
+func ParseManifestDeclaration([]byte, ManifestDeclarationInput) (ManifestDeclaration, error)
+func CanonicalManifestDeclarationBytes(ManifestDeclaration, ManifestDeclarationInput) ([]byte, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -155,3 +173,6 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | SKELETON-INV-1 | Skeleton serialization binds exact manifest/inventory digests and closure-derived fields | manifest_test.go::TestEvidenceManifestBuildsCanonicalSkeleton |
 | SKELETON-INV-2 | UNVERIFIED and PENDING states survive deterministic assembly without false completeness | manifest_test.go::TestEvidenceManifestPreservesUnverifiedAndPending |
 | SKELETON-INV-3 | Missing, extra, stale, mismatched, contradictory, unknown, and non-canonical inputs fail closed | manifest_test.go::TestEvidenceManifestRejectsMismatchedAndNonCanonicalInputs |
+| DECL-INV-1 | Committed source/module bytes bind exact sorted paths and SHA-256 identities at one revision | manifest_test.go::TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence |
+| DECL-INV-2 | Toolchain/archive unavailability and incomplete declaration coverage remain explicit `UNVERIFIED` or `PENDING` | manifest_test.go::TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence |
+| DECL-INV-3 | Declaration serialization is canonical and invalid, stale, duplicate, unsafe, missing, or contradictory inputs fail closed | manifest_test.go::TestManifestDeclarationCanonicalSerializationAndValidation; manifest_test.go::TestDeclareCommittedManifestRejectsInvalidAndUnavailableInputs |

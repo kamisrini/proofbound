@@ -114,6 +114,148 @@ func TestBindRejectsDuplicateAndInvalidInputs(t *testing.T) {
 	}
 }
 
+func TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence(t *testing.T) {
+	base := validManifest()
+	input := ManifestDeclarationInput{
+		EvidenceRevision:  base.EvidenceRevision,
+		ProjectorRevision: base.ProjectorRevision,
+		SourceFiles: []CommittedSourceDeclaration{
+			{Path: "kernel/go.mod", Mode: "100644"},
+			{Path: "kernel/internal/twin/replay.go", Mode: "100644"},
+		},
+		Toolchain: base.Toolchain,
+		Modules: []CommittedModuleDeclaration{
+			{Module: "example.com/module", Version: "v1.0.0", ModPath: "modules/example.mod", ZipPath: "modules/example.zip"},
+		},
+		Build: base.Build,
+	}
+	reader := &memoryCommittedReader{
+		revision: input.EvidenceRevision,
+		files: map[string][]byte{
+			"kernel/go.mod":                  []byte("module committed"),
+			"kernel/internal/twin/replay.go": []byte("replay committed"),
+			"modules/example.mod":            []byte("module example.com/module"),
+			"modules/example.zip":            []byte("zip example.com/module"),
+		},
+	}
+	declaration, err := DeclareCommittedManifest(input, reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if declaration.Manifest.Source.Files[0].SHA256 != digestBytes(reader.files["kernel/go.mod"]) {
+		t.Fatalf("source digest=%q", declaration.Manifest.Source.Files[0].SHA256)
+	}
+	if declaration.Manifest.Modules[0].ModSHA256 != digestBytes(reader.files["modules/example.mod"]) {
+		t.Fatalf("module mod digest=%q", declaration.Manifest.Modules[0].ModSHA256)
+	}
+	if declaration.Manifest.Modules[0].ZipSHA256 != digestBytes(reader.files["modules/example.zip"]) {
+		t.Fatalf("module zip digest=%q", declaration.Manifest.Modules[0].ZipSHA256)
+	}
+	if got := declaration.Evidence[0].State; got != EvidenceClosurePending {
+		t.Fatalf("schema evidence state=%q", got)
+	}
+	for _, field := range declaration.Evidence {
+		switch field.Field {
+		case "source.files", "modules":
+			if field.State != EvidenceClosureBound || len(field.EvidencePaths) == 0 || field.Reason != "" {
+				t.Fatalf("committed evidence=%+v", field)
+			}
+		case "toolchain.archive_format", "toolchain.archive_sha256", "toolchain.go_version", "toolchain.goarch", "toolchain.goos":
+			if field.State != EvidenceClosureUnverified || len(field.EvidencePaths) != 0 || field.Reason == "" {
+				t.Fatalf("toolchain evidence=%+v", field)
+			}
+		}
+	}
+	if len(reader.calls) != 4 {
+		t.Fatalf("reader calls=%d want=4", len(reader.calls))
+	}
+}
+
+func TestManifestDeclarationCanonicalSerializationAndValidation(t *testing.T) {
+	base := validManifest()
+	input := ManifestDeclarationInput{
+		EvidenceRevision:  base.EvidenceRevision,
+		ProjectorRevision: base.ProjectorRevision,
+		SourceFiles:       []CommittedSourceDeclaration{{Path: "kernel/go.mod", Mode: "100644"}},
+		Toolchain:         base.Toolchain,
+		Modules:           []CommittedModuleDeclaration{{Module: "example.com/module", Version: "v1.0.0", ModPath: "modules/a.mod", ZipPath: "modules/a.zip"}},
+		Build:             base.Build,
+	}
+	reader := &memoryCommittedReader{
+		revision: input.EvidenceRevision,
+		files: map[string][]byte{
+			"kernel/go.mod": []byte("module committed"),
+			"modules/a.mod": []byte("mod"),
+			"modules/a.zip": []byte("zip"),
+		},
+	}
+	declaration, err := DeclareCommittedManifest(input, reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := CanonicalManifestDeclarationBytes(declaration, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsed, err := ParseManifestDeclaration(raw, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(parsed, declaration) {
+		t.Fatalf("parsed declaration differs:\n%+v\n%+v", parsed, declaration)
+	}
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, raw, "", "  "); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ParseManifestDeclaration(pretty.Bytes(), input); err == nil {
+		t.Fatal("non-canonical declaration accepted")
+	}
+	mutated := declaration
+	mutated.Evidence = append([]ManifestDeclarationEvidence(nil), declaration.Evidence...)
+	mutated.Evidence[0].State = EvidenceClosureBound
+	if err := ValidateManifestDeclaration(mutated, input); err == nil {
+		t.Fatal("contradictory declaration evidence accepted")
+	}
+}
+
+func TestDeclareCommittedManifestRejectsInvalidAndUnavailableInputs(t *testing.T) {
+	base := validManifest()
+	input := ManifestDeclarationInput{
+		EvidenceRevision:  base.EvidenceRevision,
+		ProjectorRevision: base.ProjectorRevision,
+		SourceFiles:       []CommittedSourceDeclaration{{Path: "kernel/go.mod", Mode: "100644"}},
+		Toolchain:         base.Toolchain,
+		Modules:           []CommittedModuleDeclaration{{Module: "example.com/module", Version: "v1.0.0", ModPath: "modules/a.mod", ZipPath: "modules/a.zip"}},
+		Build:             base.Build,
+	}
+	reader := &memoryCommittedReader{revision: input.EvidenceRevision, files: map[string][]byte{
+		"kernel/go.mod": []byte("module committed"), "modules/a.mod": []byte("mod"), "modules/a.zip": []byte("zip"),
+	}}
+	tests := map[string]func(*ManifestDeclarationInput){
+		"duplicate source": func(value *ManifestDeclarationInput) {
+			value.SourceFiles = append(value.SourceFiles, value.SourceFiles[0])
+		},
+		"unsafe module path": func(value *ManifestDeclarationInput) { value.Modules[0].ModPath = "../a.mod" },
+		"stale revision":     func(value *ManifestDeclarationInput) { value.EvidenceRevision = strings.Repeat("c", 40) },
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			value := input
+			value.SourceFiles = append([]CommittedSourceDeclaration(nil), input.SourceFiles...)
+			value.Modules = append([]CommittedModuleDeclaration(nil), input.Modules...)
+			mutate(&value)
+			if _, err := DeclareCommittedManifest(value, reader); err == nil {
+				t.Fatal("invalid declaration accepted")
+			}
+		})
+	}
+	missing := &memoryCommittedReader{revision: input.EvidenceRevision, files: map[string][]byte{"kernel/go.mod": []byte("module committed")}}
+	if _, err := DeclareCommittedManifest(input, missing); err == nil {
+		t.Fatal("missing committed module bytes accepted")
+	}
+}
+
 func TestParseRejectsShapeAndCanonicality(t *testing.T) {
 	raw, err := CanonicalBytes(validManifest())
 	if err != nil {
