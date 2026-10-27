@@ -13,8 +13,8 @@ recorded authorization for another bounded non-runtime evidence/implementation s
 start runtime fixtures or binary validation, do not activate `DEF-P7-001`, and do not claim L12/L17
 or behavior-lock acceptance.
 
-Immediate blockers: independent review is pending; complete projector/build manifest,
-source/toolchain binding, runtime fixture corpus, process/network/no-fetch/cleanup witnesses,
+Immediate blockers: complete projector/build manifest, source/toolchain binding, runtime fixture
+corpus, process/network/no-fetch/cleanup witnesses,
 L12/L17 runtime result, behavior-lock acceptance, clean-clone proof, and independent runtime
 verdict are absent. `DEF-P7-001` remains owner-postponed because PostgreSQL publisher identity,
 detached-signature resolution, and bundled license/notice coverage remain unresolved.
