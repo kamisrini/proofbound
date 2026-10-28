@@ -2,7 +2,23 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-10-27
+As of: 2026-10-28
+
+## Resume — 2026-10-28
+
+The owner `sk` authorized `P7-NONRUNTIME-PROJECTOR-BUILD-EVIDENCE-1` on 2026-10-28. The
+bounded documentary capture is recorded in
+`docs/verification/p7-projector-build-evidence-capture-20261028.md`, with native intent
+`CI-p7-projector-build-evidence-1a2b3c`. It inventories the existing Phase-A build probe,
+current committed source references, and accepted module source corpus. Historical command
+outputs remain diagnostic; toolchain, complete source/build binding, and executable proof remain
+`UNVERIFIED` or `PENDING`. No new build or independent verdict was performed.
+
+Exact next action: request independent non-author review of the documentary capture at a frozen
+revision before treating this slice as accepted. Further P7 work requires its own separately
+recorded authorization. Keep runtime fixtures, binary validation, network/process/cleanup
+witnesses, L12/L17, behavior-lock acceptance, clean-clone proof, independent runtime verdict,
+`DEF-P7-001` activation, and PostgreSQL JAR approval stopped. `DEF-P7-002` remains resolved.
 
 ## Resume — 2026-10-27
 
