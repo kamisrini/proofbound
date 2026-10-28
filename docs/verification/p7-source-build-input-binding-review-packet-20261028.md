@@ -4,6 +4,7 @@
 **Owner:** `sk`
 **Target artifact:** `proofbound.p7.projector-manifest.v1`
 **Evidence revision:** `fa11ed3cdc33262a4a3886f7e896f6a2570dcff9`
+**Reviewed implementation revision:** `6a09a9806fe968115e0ac3a5b938166d10553c76`
 **Status:** `PENDING` independent non-author review
 
 ## Review question

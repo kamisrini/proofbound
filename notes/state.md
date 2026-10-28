@@ -15,10 +15,11 @@ recorded alongside the intent `CI-p7-source-build-input-binding-1a2b3c`. Compile
 full selected module graph, complete build settings, toolchain/archive evidence, and a complete
 projector manifest remain `PENDING` or `UNVERIFIED`.
 
-Exact next action: freeze this bounded inventory and review corpus at an implementation commit,
-then obtain independent non-author review before accepting the slice. Further P7 work requires
-separate authorization. No runtime fixture, binary validation, L12/L17 result, behavior-lock
-acceptance, clean-clone proof, `DEF-P7-001` activation, or PostgreSQL JAR approval is implied.
+The implementation corpus is frozen at `6a09a9806fe968115e0ac3a5b938166d10553c76`.
+Exact next action: obtain independent non-author review of that revision and the review packet
+before accepting the slice. Further P7 work requires separate authorization. No runtime
+fixture, binary validation, L12/L17 result, behavior-lock acceptance, clean-clone proof,
+`DEF-P7-001` activation, or PostgreSQL JAR approval is implied.
 
 ## Resume — 2026-10-28
 
