@@ -4,6 +4,22 @@
 
 As of: 2026-10-28
 
+## Resume — source/build input binding authorization
+
+Owner `sk` authorized `P7-NONRUNTIME-SOURCE-BUILD-INPUT-BINDING-1` on 2026-10-28. The
+non-runtime inventory at
+`docs/verification/p7-source-build-input-inventory-20261028.json` binds 42 committed
+candidate source paths and 77 unique pairs from the accepted module source corpus to evidence
+revision `fa11ed3cdc33262a4a3886f7e896f6a2570dcff9`. Its generator and review packet are
+recorded alongside the intent `CI-p7-source-build-input-binding-1a2b3c`. Compiled-file closure,
+full selected module graph, complete build settings, toolchain/archive evidence, and a complete
+projector manifest remain `PENDING` or `UNVERIFIED`.
+
+Exact next action: freeze this bounded inventory and review corpus at an implementation commit,
+then obtain independent non-author review before accepting the slice. Further P7 work requires
+separate authorization. No runtime fixture, binary validation, L12/L17 result, behavior-lock
+acceptance, clean-clone proof, `DEF-P7-001` activation, or PostgreSQL JAR approval is implied.
+
 ## Resume — 2026-10-28
 
 The owner `sk` authorized `P7-NONRUNTIME-PROJECTOR-BUILD-EVIDENCE-1` on 2026-10-28. Its
