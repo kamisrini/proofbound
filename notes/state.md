@@ -15,10 +15,16 @@ recorded alongside the intent `CI-p7-source-build-input-binding-1a2b3c`. Compile
 full selected module graph, complete build settings, toolchain/archive evidence, and a complete
 projector manifest remain `PENDING` or `UNVERIFIED`.
 
-The implementation corpus is frozen at `6a09a9806fe968115e0ac3a5b938166d10553c76`.
-Exact next action: obtain independent non-author review of that revision and the review packet
-before accepting the slice. Further P7 work requires separate authorization. No runtime
-fixture, binary validation, L12/L17 result, behavior-lock acceptance, clean-clone proof,
+The implementation corpus is frozen at `6a09a9806fe968115e0ac3a5b938166d10553c76`; its
+packet is frozen at `cbfec84beaf372468493fafb5702e25e9002f327`. Owner `sk` supplied an
+independent non-author `ACCEPT` attributed to Srinivas Kamisetty, with no findings, for this
+bounded documentary scope. It is recorded in
+`docs/verification/verdicts/p7-source-build-input-binding-round1-20261028.md`; reviewer
+identity was not separately authenticated by this record.
+
+Exact next action: remain stopped at the accepted non-runtime source/build input binding slice
+and obtain separately recorded authorization before further P7 work. No runtime fixture,
+binary validation, L12/L17 result, behavior-lock acceptance, clean-clone proof,
 `DEF-P7-001` activation, or PostgreSQL JAR approval is implied.
 
 ## Resume — 2026-10-28
