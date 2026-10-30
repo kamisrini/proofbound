@@ -26,7 +26,7 @@ gates-enforce:
 short: hooks-test
 	@cd kernel && GOCACHE=$${GOCACHE:-/tmp/proofbound-go-build} go test ./... -short -count=1
 hooks-test:
-	@for f in scripts/tests/*.test.sh; do bash "$$f"; done
+	@for f in scripts/tests/*.test.sh; do bash "$$f" || exit 1; done
 index:
 	@scripts/gen-index.sh
 index-check:

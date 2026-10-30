@@ -117,7 +117,7 @@ case $mode in
   all|open|query)
     printf '%s\n' "$header"
     for row in "${rows[@]}"; do
-      matches "$row" && printf '%s\n' "$row"
+      if matches "$row"; then printf '%s\n' "$row"; fi
     done
     ;;
 esac
