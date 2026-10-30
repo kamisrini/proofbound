@@ -2,9 +2,13 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-scripts/deferrals.sh --check | grep -Fq 'deferrals: PASS'
-scripts/deferrals.sh --open | grep -Fq $'DEF-P7-001\tOPEN\tPOSTPONED'
-scripts/deferrals.sh --hold-type POSTPONED | grep -Fq 'DEF-P7-001'
+# Capture then grep a here-string rather than `producer | grep -Fq`: grep -q closes
+# the pipe on first match, the producer dies of SIGPIPE, and pipefail promotes 141
+# to the pipeline's exit. The `out=$(...)` assignment still fails the test under
+# set -e if the producer errors, so producer-exit-status coverage is preserved.
+out=$(scripts/deferrals.sh --check); grep -Fq 'deferrals: PASS' <<<"$out"
+out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-P7-001\tOPEN\tPOSTPONED' <<<"$out"
+out=$(scripts/deferrals.sh --hold-type POSTPONED); grep -Fq 'DEF-P7-001' <<<"$out"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
