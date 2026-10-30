@@ -2,128 +2,88 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-10-28
+As of: 2026-10-30
 
-## Resume — source/build input binding authorization
+## Resume — 2026-10-30
 
-Owner `sk` authorized `P7-NONRUNTIME-SOURCE-BUILD-INPUT-BINDING-1` on 2026-10-28. The
-non-runtime inventory at
-`docs/verification/p7-source-build-input-inventory-20261028.json` binds 42 committed
-candidate source paths and 77 unique pairs from the accepted module source corpus to evidence
-revision `fa11ed3cdc33262a4a3886f7e896f6a2570dcff9`. Its generator and review packet are
-recorded alongside the intent `CI-p7-source-build-input-binding-1a2b3c`. Compiled-file closure,
-full selected module graph, complete build settings, toolchain/archive evidence, and a complete
-projector manifest remain `PENDING` or `UNVERIFIED`.
+**Exact next action:** pick one of three unblocked items — fix `.claude/hooks/block-generated-edit.sh`
+scope-blindness, reconcile `scripts/link-lint.sh` with its `docs/gates.md` claims (and decide the two
+expired advisories), or build the remaining `/proofbound-decide|review|spec` commands. Each is a clean,
+self-contained slice. Do NOT start the twin/manifest package acceptance (`DEF-P7-003`) or any other P7
+work without explicit owner authorization.
 
-The implementation corpus is frozen at `6a09a9806fe968115e0ac3a5b938166d10553c76`; its
-packet is frozen at `cbfec84beaf372468493fafb5702e25e9002f327`. Owner `sk` supplied an
-independent non-author `ACCEPT` attributed to Srinivas Kamisetty, with no findings, for this
-bounded documentary scope. It is recorded in
-`docs/verification/verdicts/p7-source-build-input-binding-round1-20261028.md`; reviewer
-identity was not separately authenticated by this record.
+**Immediate blockers / honest gate state:**
 
-Exact next action: remain stopped at the accepted non-runtime source/build input binding slice
-and obtain separately recorded authorization before further P7 work. No runtime fixture,
-binary validation, L12/L17 result, behavior-lock acceptance, clean-clone proof,
-`DEF-P7-001` activation, or PostgreSQL JAR approval is implied.
-
-## Resume — 2026-10-28
-
-The owner `sk` authorized `P7-NONRUNTIME-PROJECTOR-BUILD-EVIDENCE-1` on 2026-10-28. Its
-documentary capture was frozen at `a1f0a83a33f0d5522fd6572efb374f482b3d9b61`. A supplied
-independent non-author verdict from Srinivas Kamisetty returned `ACCEPT` with no findings for
-that revision; it is recorded in
-`docs/verification/verdicts/p7-projector-build-evidence-round1-20261028.md`. The accepted
-scope is the bounded non-runtime evidence capture only. Historical command outputs remain
-diagnostic; complete toolchain/source/build binding and executable proof remain `UNVERIFIED` or
-`PENDING`.
-
-Exact next action: remain stopped at the accepted documentary capture and obtain separately
-recorded authorization before any further P7 work. Keep runtime fixtures, binary validation,
-network/process/cleanup witnesses, L12/L17, behavior-lock acceptance, clean-clone proof,
-independent runtime verdict, `DEF-P7-001` activation, and PostgreSQL JAR approval stopped.
-`DEF-P7-002` remains resolved.
-
-## Resume — 2026-10-27
-
-Exact next action: remain stopped at the completed
-`P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1` slice. Before any further P7 work, obtain
-separately recorded authorization for another bounded non-runtime evidence/implementation slice;
-do not start runtime fixtures or binary validation, do not activate `DEF-P7-001`, and do not claim
-L12/L17 or behavior-lock acceptance.
-
-Immediate blockers: complete projector/build evidence, complete source/toolchain binding,
-runtime fixture corpus, process/network/no-fetch/cleanup witnesses, L12/L17 runtime result,
-behavior-lock acceptance, clean-clone proof, and an independent runtime verdict remain absent.
-`DEF-P7-001` remains owner-postponed and dormant because PostgreSQL publisher identity,
-detached-signature resolution, and bundled license/notice coverage remain unresolved.
-`DEF-P7-002` is resolved.
-
-Do not treat accepted live SPEC/API wording as runtime acceptance. Do not treat the pinned
-Linux/amd64 PostgreSQL 16.4.0 Maven JAR as approved.
+- `make check` is **RED** at `p6-task8-package-universe` (17 production packages vs the frozen 16).
+  The 17th is `kernel/internal/twin/manifest`, outside the Task 8 acceptance manifest. This is a real
+  pre-existing defect now honestly surfaced by the fail-closed loop fix — not a regression. Tracked as
+  `DEF-P7-003` (AWAITING_OWNER). The gate cannot go green until that package is accepted or classified,
+  which is owner-gated P7 work.
+- `kernel-check` lint cannot pass in this environment: `golangci-lint` 2.13.2 is built with Go 1.26.7
+  and panics under the active Go 1.27.3 (`file requires newer Go version go1.27`); the Makefile also
+  calls bare `golangci-lint`, which lives at `~/go/bin` and is not on PATH. `go build` and `go test`
+  pass. Rebuild `golangci-lint` under Go 1.27 (as the P6 closeout did) and add `~/go/bin` to PATH.
+- `commit-cadence` fails whenever the tree is dirty and HEAD is older than 90m; the two preserved
+  untracked user paths keep the tree dirty between commits, so this gate is red at the start of each
+  session until they are resolved.
 
 ## Branch status
 
-- Branch: `main`, tracking `origin/main`; local closeout commits are ahead and unpushed because no
-  push was authorized.
-- Preserved unrelated user-owned untracked paths: `docs/plans/P5-intent-provenance-plan.md` and
-  `kernel/cmd/p6dbprobe/`. They were not staged, deleted, or relabeled.
-- No PostgreSQL binary, database directory, downloaded toolchain, built executable, runtime
-  fixture, or binary-validation artifact was added to Git.
+- Branch `main`, tracking `origin/main`; local commits are ahead and unpushed (no push authorized).
+- Today's commits: `bfeb31f` (gate-integrity fix — governed paths, committed plain by owner direction,
+  no Intent trailer) and `933e579` (workflow tooling — ungoverned). A closeout commit for the
+  journal/state/deferral durability artifacts follows.
+- Preserved unrelated untracked user paths: `docs/plans/P5-intent-provenance-plan.md` and
+  `kernel/cmd/p6dbprobe/`. Never staged, deleted, or relabeled.
 
-## Completed work
+## Completed this session
 
-- P0–P6 and prior P7 documentary/preflight acceptances remain complete within their recorded
-  scopes.
-- P7 non-runtime manifest, binding, source/toolchain inventory, committed-evidence resolution,
-  evidence closure, and evidence-manifest skeleton slices are independently accepted.
-- `P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1` is independently accepted by Srinivas
-  Kamisetty with no findings for reviewed revision
-  `55d27c982b07de5506e46102913aacdb72021aef`; verdict:
-  `docs/verification/verdicts/p7-projector-manifest-declaration-round1-20261027.md`.
-- Artifact-integrity is current at 39 documentary verdict artifacts.
-- Today’s closeout commits recorded the declaration implementation, review corpus, acceptance,
-  artifact audit, journal, and durable state.
+- Migrated the project from Codex to Claude; oriented from durable state, ROADMAP, CLAUDE.md, kernel.
+- **Gate-integrity repair (`bfeb31f`):** `make hooks-test` now fails closed on the first failing
+  self-test (was returning only the last status, masking failures); `scripts/deferrals.sh` no longer
+  leaks its last row's match status as the exit code; `scripts/tests/make-contract.test.sh` gained a
+  calibrated positive/negative control running the real recipe; `docs/gates.md` corrected. This lands
+  the fix the 2026-10-17 session attempted and withdrew. See the journal LESSON
+  (`class=detector-inert-or-scope-blind`, compiled response = the make-contract control).
+- **Workflow tooling (`933e579`):** SessionStart orientation hook + `/proofbound-next` +
+  `/proofbound-wrap`, which CLAUDE.md referenced but did not exist in the checkout.
 
 ## Open, blocked, and unverified work
 
-- Complete projector/build and source/toolchain evidence is still not established as complete or
-  reproducible.
-- Runtime fixtures, real PostgreSQL execution, process/network/no-fetch/cleanup witnesses,
-  L12/L17, behavior-lock acceptance, clean-clone proof, and runtime verdict remain unverified.
-- `DEF-P7-001` remains `OPEN`/`POSTPONED` and dormant; no new deferral row was needed today.
-- The restricted Snap sandbox cannot run the capability-dependent mutation self-test; this is an
-  environment limitation, not acceptance evidence.
-- Existing fail-closed hook-test and advisory-expiry process debt remains unchanged.
-- Session-artifact inspection found no relevant files under `.agents` or `.codex`.
+- `DEF-P7-003` (AWAITING_OWNER): accept or classify `kernel/internal/twin/manifest`. Real red-gate
+  cause. Owner-gated.
+- `.claude/hooks/block-generated-edit.sh` is scope-blind — blocks editing ANY file containing the
+  string `@generated` (e.g. gates.md, CLAUDE.md, journals), not only generated files. BLOCKING hook;
+  fix needs calibration. Unblocked to start.
+- `scripts/link-lint.sh` does not resolve `VD-` references or enforce advisory expiry despite
+  `docs/gates.md` claiming it does and naming it the sole expiry mechanism. The two ADVISORY rows with
+  expiry `2026-10-16` (meta-tax budget, backup cadence) are past due with the build still green — a
+  live Law 4 violation. Needs an owner decision (graduate to blocking or delete) plus script/registry
+  reconciliation.
+- `/proofbound-decide`, `/proofbound-review`, `/proofbound-spec` remain unbuilt.
+- Both of today's commits were author-made (Law 9): not "accepted" until a non-author verdict.
+- Standing P7 stop unchanged: no runtime fixtures, binary validation, L12/L17, behavior-lock
+  acceptance, clean-clone proof, PostgreSQL JAR approval. `DEF-P7-001` dormant and untouched;
+  `DEF-P7-002` resolved.
 
 ## Verification health
 
-- `scripts/deferrals.sh --check`: PASS, 2 rows, 1 open.
-- `scripts/p6-artifact-integrity.sh --check`: PASS, 39 documentary verdicts.
-- `scripts/p6-route-matrix.sh --check`: PASS.
-- `git diff --check`: PASS.
-- Pinned unrestricted `make check`: PASS, `0 issues`. Expected `index stale; run make index`,
-  negative-test, package-count, and `INERT cleanroom` diagnostics were non-failures.
-- Focused declaration and intent-record tests passed with Go 1.26.7 and an isolated writable
-  cache. The repository-local `golangci-lint` path was required because the Snap wrapper is
-  unavailable in this environment.
-- A final dated Git bundle is recorded in today’s journal and closeout report.
+- `make check`: RED at `p6-task8-package-universe` (verified this session). `commit-cadence` and the
+  lint toolchain mismatch are the other red/blocked points above.
+- `scripts/deferrals.sh --check`: PASS, 3 rows, 2 open.
+- `make hooks-test` now fails closed (confirmed: it stops at the first real failure rather than
+  running green past it).
 
 ## Institutionalized improvements
 
-- Put the exact next action and immediate blockers in the first resume section.
-- Verify native intent self-digests before staging and freeze review-corpus hashes after the last
-  implementation and generated-route commit.
-- After documentary verdicts, run artifact-integrity check; regenerate only expected count drift,
-  then recheck before committing.
-- Refresh durable state before the final gate so state-freshness and commit-cadence checks measure
-  the closeout commit; preserve unrelated untracked paths.
-- Run invariant-table-lint and refresh the route matrix after changes under
-  `kernel/internal/twin`; explicitly provide the pinned Go/linter paths and isolated `GOCACHE`.
+- A fail-closed loop is not a fix until a control runs the REAL recipe against a fail-then-pass
+  fixture and rejects it; a bare `|| exit 1` with no such control is a second unproven mechanism.
+- A prior PASS recorded in this file is not evidence; re-verify the gate each session before trusting
+  it. This session's inherited "PASS, 0 issues" was false.
+- When editing a `docs/gates.md` row, preserve the first-column Check name — the p6-census binds to it.
 
-## Tomorrow’s first action
+## Tomorrow's first action
 
-Remain stopped at the accepted projector-manifest declaration slice. Obtain separately recorded
-authorization before selecting any further P7 slice. Keep runtime, binary, PostgreSQL,
-`DEF-P7-001`, L12/L17, and behavior-lock work stopped.
+Run `/proofbound-next`. Then pick one unblocked slice (block-generated-edit scope fix, link-lint
+reconciliation, or the remaining commands). Keep all P7 and `DEF-P7-003` work stopped until the owner
+authorizes it.
