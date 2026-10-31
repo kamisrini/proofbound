@@ -6,11 +6,13 @@ As of: 2026-10-31
 
 ## Resume — 2026-10-31
 
-**Exact next action:** the link-lint / advisory-expiry slice is COMMITTED (`7e936f1`, owner Srinivas
-Kamisetty authorized + accepted per Law 9) and pushed. Next: pick the still-unbuilt
-`/proofbound-decide|review|spec` commands, or another authorized unblocked slice. Do NOT start
-`DEF-P7-003` (twin/manifest acceptance), `DEF-METATAX-001`, or any other P7/dormant work without
-explicit owner authorization.
+**Exact next action:** two slices landed + pushed this session — advisory-expiry (`7e936f1`) and the
+three backfilled `/proofbound-decide|review|spec` commands (`1e8d40a`), both owner-accepted (Srinivas
+Kamisetty, non-author, Law 9). The session-protocol command set is now complete. Next unblocked
+options: the golangci-lint/Go 1.27 toolchain fix (clears `kernel-check`, moves the gate toward
+green — touches the local Go install, confirm with owner first), or exercise a new command on real
+work. Do NOT start `DEF-P7-003`, `DEF-METATAX-001`, or any other P7/dormant work without explicit
+owner authorization.
 
 **Immediate blockers / honest gate state:**
 
@@ -30,9 +32,10 @@ explicit owner authorization.
 
 ## Branch status
 
-- Branch `main`, tracking `origin/main`. Governed advisory-expiry slice committed `7e936f1`; this
-  non-governed closeout (deferrals row + notes) becomes HEAD so `delivery-enforce` HEAD is not a
-  governed delivery candidate. Both pushed this session.
+- Branch `main`, tracking `origin/main`. This session: advisory-expiry `7e936f1` (+ closeout
+  `208b24f`), then the three commands `1e8d40a` (+ this notes closeout). All pushed. The governed
+  commit (`7e936f1`) is followed by non-governed commits so `delivery-enforce` HEAD is not a
+  governed delivery candidate.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
@@ -59,6 +62,11 @@ explicit owner authorization.
   `VD-local-only-backup-mjic4a`), meta-tax re-dated to `2026-12-31` — it cannot graduate as-built
   (71% cumulative lifetime ratio, no bootstrap/steady regime), redesign tracked as `DEF-METATAX-001`.
   See `notes/journal/2026-10-31.md`.
+- **Session-protocol commands backfilled (`1e8d40a`, owner-accepted):** `/proofbound-decide`,
+  `/proofbound-review`, `/proofbound-spec` built as `.claude/commands/*.md`, grounded in the real
+  template/verdict/SPEC conventions and the review-ceremony/verification-asymmetry/verdicts-are
+  -artifacts decisions. Non-governed. See `notes/journal/2026-10-31.md` (incl. a
+  `hook-false-positive-prose` LESSON on `block-secrets.sh`).
 - **Gate-integrity repair (`bfeb31f`):** `make hooks-test` fails closed; `scripts/deferrals.sh`
   exit-code leak fixed; `make-contract.test.sh` control added; `docs/gates.md` corrected. (See journal.)
 - **Workflow tooling (`933e579`):** SessionStart orientation hook + `/proofbound-next` + `/proofbound-wrap`.
@@ -76,7 +84,8 @@ explicit owner authorization.
   red-gate cause. Owner-gated.
 - `DEF-METATAX-001` (DEFERRED): redesign `meta-tax.sh` to a phase-windowed measure so the Law 5
   budget can graduate or be retired. Dormant until owner authorizes.
-- `/proofbound-decide`, `/proofbound-review`, `/proofbound-spec` remain unbuilt.
+- Toolchain: rebuild `golangci-lint` under Go 1.27 and add `~/go/bin` to PATH so `kernel-check` lint
+  can run (unblocked local-env fix; touches the Go install — confirm with owner before running).
 - Optional, non-blocking: `block-generated-edit.sh` leaves `cat`/`git` unguarded (exit 127 →
   fail-open); a one-line extension would make it strictly all-deps fail-closed. Flagged by the F2
   verdict; not closed because it would reopen a verdict round.
