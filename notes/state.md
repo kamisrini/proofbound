@@ -6,36 +6,46 @@ As of: 2026-10-31
 
 ## Resume — 2026-10-31
 
-**Exact next action:** three slices landed + pushed this session — advisory-expiry (`7e936f1`), the
-three backfilled `/proofbound-decide|review|spec` commands (`1e8d40a`), and the session-command
-catalog (`a1460e1`) — all owner-accepted (Srinivas Kamisetty, non-author, Law 9). The
-session-protocol command set is complete and documented. Next unblocked
-options: the golangci-lint/Go 1.27 toolchain fix (clears `kernel-check`, moves the gate toward
-green — touches the local Go install, confirm with owner first), or exercise a new command on real
-work. Do NOT start `DEF-P7-003`, `DEF-METATAX-001`, or any other P7/dormant work without explicit
-owner authorization.
+**STANDING AUTHORIZATION IN FORCE** ([[VD-agent-standing-authorization-5ouz7q]], 2026-10-31): the
+owner (Srinivas Kamisetty) authorized a product push. The agent self-authorizes governed commits
+under the owner's name, works ACROSS the normally-dormant P7/deferral gates, and stops only at
+genuine forks or irreversible/outward actions (shipping/redistributing a third-party binary, a
+license/provenance go/no-go, deletion, publishing). Owner remains the non-author acceptor (Law 9);
+adversarial rounds run via dispatched non-author reviewers. **This overrides the "P7 and OPEN
+deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
+it blindly.
+
+**Exact next action:** continue the P7 product push. P7 replay is proven to RUN end-to-end against a
+real Postgres (new demo `kernel/cmd/replaydemo` — reproduces committed state, detects a
+counterfactual, leaves the source ledger byte-identical). The bounded next step toward a GREEN gate
+is to resolve `DEF-P7-003` (accept or classify the 17th production package
+`kernel/internal/twin/manifest` into the Task 8 set) — now authorized under the standing auth; use
+`/proofbound-review` with dispatched non-author reviewers for the verdict. Then press on
+productizing replay. `DEF-P7-001` (shippable Postgres provenance) is a genuine EXTERNAL blocker, not
+a quick win — see below.
 
 **Immediate blockers / honest gate state:**
 
-- `make check` is **RED**. `make hooks-test` fails at EXACTLY one self-test,
-  `p6-task8-package-universe` (17 production packages vs the frozen 16; the 17th is
-  `kernel/internal/twin/manifest`). Tracked as `DEF-P7-003` (AWAITING_OWNER), owner-gated P7 work;
-  the gate cannot go green until that package is accepted or classified. The new
-  `advisory-expiry.test.sh` and `link-lint.test.sh` both pass and run BEFORE p6-task8 in the loop, so
-  this slice did not move the red point.
-- `kernel-check` lint cannot pass in this environment: `golangci-lint` 2.13.2 is built with Go 1.26.7
-  and panics under the active Go 1.27.3 (`file requires newer Go version go1.27`); the Makefile also
-  calls bare `golangci-lint`, which lives at `~/go/bin` and is not on PATH. `go build` and `go test`
-  pass. Rebuild `golangci-lint` under Go 1.27 and add `~/go/bin` to PATH.
+- `make check`'s only remaining red is `p6-task8-package-universe` (17 production packages vs the
+  frozen 16; the 17th is `kernel/internal/twin/manifest`), tracked as `DEF-P7-003`. Now authorized to
+  resolve under the standing auth.
+- `kernel-check` lint red is **CLEARED** (`0e32636`): `golangci-lint` rebuilt to 2.15.0 under
+  go1.27.3 (lints kernel clean, 0 issues), and `scripts/kernel-check.sh` now resolves the binary via
+  `command -v` with a `$(go env GOPATH)/bin` fallback, so `make check` no longer needs `~/go/bin` on
+  PATH. See [[proofbound-wsl-toolchain-gap]].
+- `DEF-P7-001` is now `BLOCKED` (not merely owner-postponed): the pinned zonky.io embedded-postgres
+  v16.4.0 Maven artifact fails provenance (GPG signature does not verify; no license/notice coverage
+  despite bundling PostgreSQL + several libs). It runs for dev/demo but is NOT safe to redistribute to
+  customers. The real unblock is likely a provenance-verifiable Postgres source, not blessing zonky.
 - `commit-cadence` fails whenever the tree is dirty and HEAD is older than 90m; the two preserved
-  untracked user paths keep the tree dirty between commits, so this gate is red at the start of each
-  session until they are resolved.
+  untracked user paths keep the tree dirty between commits.
 
 ## Branch status
 
-- Branch `main`, tracking `origin/main`. This session: advisory-expiry `7e936f1` (+ closeout
-  `208b24f`), the three commands `1e8d40a` (+ closeout `5275a5c`), the session-command catalog
-  `a1460e1` (+ this notes closeout). All pushed. Each governed commit (`7e936f1`, `a1460e1`) is
+- Branch `main`, tracking `origin/main`. This session: advisory-expiry `7e936f1` (+ `208b24f`), the
+  three commands `1e8d40a` (+ `5275a5c`), the session-command catalog `a1460e1` (+ `1ebe50f`), the
+  golangci-lint/GOPATH toolchain fix `0e32636`, then the P7 push (standing-auth VD, replay demo). All
+  earlier work pushed; the P7-push commit + its notes closeout land this turn. Each governed commit is
   followed by a non-governed commit so `delivery-enforce` HEAD is not a governed delivery candidate.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
@@ -63,6 +73,16 @@ owner authorization.
   `VD-local-only-backup-mjic4a`), meta-tax re-dated to `2026-12-31` — it cannot graduate as-built
   (71% cumulative lifetime ratio, no bootstrap/steady regime), redesign tracked as `DEF-METATAX-001`.
   See `notes/journal/2026-10-31.md`.
+- **Toolchain fix (`0e32636`):** golangci-lint rebuilt to 2.15.0 under go1.27.3 (2.13.2 cannot read
+  Go 1.27 export data); `kernel-check.sh` resolves it via GOPATH/bin fallback. kernel lints clean.
+- **P7 proven to RUN + runnable demo (this turn):** empirically ran the twin isolated-replay suite
+  against a real embedded Postgres 16.4 (green). Built `kernel/cmd/replaydemo` — a prospect-facing
+  demonstration that seeds a ledger, reproduces committed state (`preserved`, `vera.replay.v1`
+  proof), detects a counterfactual (`changed`, distinct snapshot digest), and proves the source
+  ledger byte-identical before/after. Run from `kernel/`: `go run ./cmd/replaydemo`. Found that the
+  only thing still "blocked" in P7 is the clean-clone/offline/provenance-verified route, gated by the
+  real `DEF-P7-001` supply-chain problem — not the capability itself.
+- **Standing authorization recorded** ([[VD-agent-standing-authorization-5ouz7q]]).
 - **Session-command catalog (`a1460e1`, owner-accepted, governed):** new `docs/session-commands.md`
   (why/what/how + links for all five `/proofbound-*` commands); one-line pointers added in README
   Contributing and CLAUDE.md § Session protocol (CLAUDE.md 83/120 lines). Detail stays in each
