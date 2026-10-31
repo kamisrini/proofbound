@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,9 +31,10 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/migration"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
+	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -66,6 +68,7 @@ const (
 	commandGatesCanary
 	commandGatesEnforce
 	commandMigrateHistoricalEvidence
+	commandTwinReplay
 )
 
 func parseCommand(args []string) command {
@@ -108,6 +111,8 @@ func parseCommand(args []string) command {
 		return commandGatesEnforce
 	case len(args) == 2 && args[0] == "migrate" && args[1] == "historical-evidence":
 		return commandMigrateHistoricalEvidence
+	case len(args) >= 2 && args[0] == "twin" && args[1] == "replay":
+		return commandTwinReplay
 	default:
 		return commandInvalid
 	}
@@ -579,6 +584,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 	switch cmd {
 	case commandRebuild:
 		return projector.Rebuild(ctx, ledger)
+	case commandTwinReplay:
+		return twinReplay(ctx, ledger, projector, args, output)
 	case commandSyncGit, commandSyncAll:
 		ids, err := newIDs()
 		if err != nil {
@@ -712,6 +719,111 @@ func enforceGateResults(definitions []gates.Definition, results []gates.Result) 
 		}
 	}
 	return nil
+}
+
+// twinReplay runs twin.ReplayIsolated against the committed projection in a
+// throwaway embedded store and prints the verdict and vera.replay.v1 proof. It
+// never mutates the source ledger: the isolated path is read-only over the
+// committed events, and the temporary store is created and removed internally.
+// With no --candidate it re-derives and proves the committed state (verdict
+// preserved); with --candidate it evaluates one counterfactual event.
+func twinReplay(ctx context.Context, ledger *store.Store, projector *projections.Projector, args []string, output io.Writer) error {
+	through, candidatePath, err := parseTwinReplayFlags(args)
+	if err != nil {
+		return err
+	}
+	if err := applyProjection(ctx, projector, ledger); err != nil {
+		return fmt.Errorf("twin replay: project committed ledger: %w", err)
+	}
+	baseline, err := projector.Snapshot(ctx, ledger)
+	if err != nil {
+		return fmt.Errorf("twin replay: snapshot committed projection: %w", err)
+	}
+	if through < 0 {
+		if through, err = latestLedgerSeq(ctx, ledger); err != nil {
+			return err
+		}
+	}
+	var candidates []twin.Candidate
+	if candidatePath != "" {
+		candidate, err := loadTwinCandidate(candidatePath)
+		if err != nil {
+			return err
+		}
+		candidates = []twin.Candidate{candidate}
+	}
+	result, err := twin.ReplayIsolated(ctx, ledger, twin.Request{ThroughSeq: through, Candidate: candidates}, baseline)
+	if err != nil {
+		return fmt.Errorf("twin replay: %w", err)
+	}
+	_, err = fmt.Fprintf(output,
+		"verdict=%s through_seq=%d source_events=%d candidate_events=%d\nproof schema=%s source_digest=%s candidate_digest=%s baseline_snapshot=%s candidate_snapshot=%s\n",
+		result.Verdict, result.ThroughSeq, result.SourceEvents, result.CandidateEvents,
+		result.Proof.Schema, result.Proof.SourceDigest, result.Proof.CandidateDigest,
+		result.Proof.BaselineSnapshotDigest, result.Proof.CandidateSnapshotDigest)
+	return err
+}
+
+// parseTwinReplayFlags parses the optional --through and --candidate flags that
+// follow `twin replay`. through is -1 when unset (meaning: the latest seq).
+func parseTwinReplayFlags(args []string) (through int64, candidatePath string, err error) {
+	through = -1
+	rest := args[2:]
+	for i := 0; i < len(rest); i++ {
+		switch rest[i] {
+		case "--through":
+			i++
+			if i >= len(rest) {
+				return 0, "", errors.New("twin replay: --through requires a value")
+			}
+			through, err = strconv.ParseInt(rest[i], 10, 64)
+			if err != nil || through < 0 {
+				return 0, "", fmt.Errorf("twin replay: invalid --through %q", rest[i])
+			}
+		case "--candidate":
+			i++
+			if i >= len(rest) {
+				return 0, "", errors.New("twin replay: --candidate requires a value")
+			}
+			candidatePath = rest[i]
+		default:
+			return 0, "", fmt.Errorf("twin replay: unexpected argument %q", rest[i])
+		}
+	}
+	return through, candidatePath, nil
+}
+
+func latestLedgerSeq(ctx context.Context, ledger *store.Store) (int64, error) {
+	var maxSeq int64
+	if err := ledger.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
+		if record.Seq > maxSeq {
+			maxSeq = record.Seq
+		}
+		return nil
+	}); err != nil {
+		return 0, fmt.Errorf("twin replay: read ledger: %w", err)
+	}
+	return maxSeq, nil
+}
+
+// loadTwinCandidate reads a counterfactual event from a JSON file shaped
+// {"seq": <int>, "event": {<core.Event canonical JSON>}}. Unknown fields are
+// rejected; twin.ReplayIsolated validates the event itself.
+func loadTwinCandidate(path string) (twin.Candidate, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return twin.Candidate{}, fmt.Errorf("twin replay: read candidate: %w", err)
+	}
+	var parsed struct {
+		Seq   int64      `json:"seq"`
+		Event core.Event `json:"event"`
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&parsed); err != nil {
+		return twin.Candidate{}, fmt.Errorf("twin replay: parse candidate %s: %w", path, err)
+	}
+	return twin.Candidate{Seq: parsed.Seq, Event: parsed.Event}, nil
 }
 
 func verify(ctx context.Context, root string, ledger *store.Store, projector *projections.Projector, ids *core.IDGenerator) error {
