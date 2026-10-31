@@ -48,9 +48,10 @@ repo). Keep `DEF-P7-001` (shippable Postgres provenance) as the pre-GA task.
 - Branch `main`, tracking `origin/main`. This session, in order: advisory-expiry `7e936f1`/`208b24f`,
   three commands `1e8d40a`/`5275a5c`, catalog `a1460e1`/`1ebe50f`, toolchain fix `0e32636`, P7 push
   (replay demo + standing-auth VD) `100e804`/`145781a`, deferral batch (DEF-METATAX-001 + DEF-P7-001)
-  `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, then the deferrals self-test fix +
-  this notes closeout land this turn. Each governed commit is followed by a non-governed commit so the
-  delivery boundary (below) sees a non-governed HEAD. Push pending for the last few commits.
+  `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, deferrals self-test fix `1d9fbb3`,
+  closeout `768390f`, P6 census/gate-registry reconciliation `9eafdb0`, then this notes closeout. Each
+  governed commit is followed by a non-governed commit so the delivery boundary (below) sees a
+  non-governed HEAD. Push pending for the uncommitted-upstream commits (everything from `100e804`).
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
