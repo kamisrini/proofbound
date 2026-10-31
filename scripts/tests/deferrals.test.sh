@@ -7,8 +7,10 @@ cd "$(git rev-parse --show-toplevel)"
 # to the pipeline's exit. The `out=$(...)` assignment still fails the test under
 # set -e if the producer errors, so producer-exit-status coverage is preserved.
 out=$(scripts/deferrals.sh --check); grep -Fq 'deferrals: PASS' <<<"$out"
-out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-P7-001\tOPEN\tPOSTPONED' <<<"$out"
-out=$(scripts/deferrals.sh --hold-type POSTPONED); grep -Fq 'DEF-P7-001' <<<"$out"
+# DEF-P7-001 is the long-lived OPEN row; it was reclassified POSTPONED -> BLOCKED on 2026-10-31 when
+# the PostgreSQL provenance failure became a concrete external blocker (not a bare owner postponement).
+out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-P7-001\tOPEN\tBLOCKED' <<<"$out"
+out=$(scripts/deferrals.sh --hold-type BLOCKED); grep -Fq 'DEF-P7-001' <<<"$out"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
