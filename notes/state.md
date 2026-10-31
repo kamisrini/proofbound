@@ -6,9 +6,10 @@ As of: 2026-10-31
 
 ## Resume — 2026-10-31
 
-**Exact next action:** two slices landed + pushed this session — advisory-expiry (`7e936f1`) and the
-three backfilled `/proofbound-decide|review|spec` commands (`1e8d40a`), both owner-accepted (Srinivas
-Kamisetty, non-author, Law 9). The session-protocol command set is now complete. Next unblocked
+**Exact next action:** three slices landed + pushed this session — advisory-expiry (`7e936f1`), the
+three backfilled `/proofbound-decide|review|spec` commands (`1e8d40a`), and the session-command
+catalog (`a1460e1`) — all owner-accepted (Srinivas Kamisetty, non-author, Law 9). The
+session-protocol command set is complete and documented. Next unblocked
 options: the golangci-lint/Go 1.27 toolchain fix (clears `kernel-check`, moves the gate toward
 green — touches the local Go install, confirm with owner first), or exercise a new command on real
 work. Do NOT start `DEF-P7-003`, `DEF-METATAX-001`, or any other P7/dormant work without explicit
@@ -33,9 +34,9 @@ owner authorization.
 ## Branch status
 
 - Branch `main`, tracking `origin/main`. This session: advisory-expiry `7e936f1` (+ closeout
-  `208b24f`), then the three commands `1e8d40a` (+ this notes closeout). All pushed. The governed
-  commit (`7e936f1`) is followed by non-governed commits so `delivery-enforce` HEAD is not a
-  governed delivery candidate.
+  `208b24f`), the three commands `1e8d40a` (+ closeout `5275a5c`), the session-command catalog
+  `a1460e1` (+ this notes closeout). All pushed. Each governed commit (`7e936f1`, `a1460e1`) is
+  followed by a non-governed commit so `delivery-enforce` HEAD is not a governed delivery candidate.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
@@ -62,6 +63,10 @@ owner authorization.
   `VD-local-only-backup-mjic4a`), meta-tax re-dated to `2026-12-31` — it cannot graduate as-built
   (71% cumulative lifetime ratio, no bootstrap/steady regime), redesign tracked as `DEF-METATAX-001`.
   See `notes/journal/2026-10-31.md`.
+- **Session-command catalog (`a1460e1`, owner-accepted, governed):** new `docs/session-commands.md`
+  (why/what/how + links for all five `/proofbound-*` commands); one-line pointers added in README
+  Contributing and CLAUDE.md § Session protocol (CLAUDE.md 83/120 lines). Detail stays in each
+  command file (Law 2).
 - **Session-protocol commands backfilled (`1e8d40a`, owner-accepted):** `/proofbound-decide`,
   `/proofbound-review`, `/proofbound-spec` built as `.claude/commands/*.md`, grounded in the real
   template/verdict/SPEC conventions and the review-ceremony/verification-asymmetry/verdicts-are
