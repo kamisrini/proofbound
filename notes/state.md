@@ -15,23 +15,26 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action:** continue the P7 product push. P7 replay is proven to RUN end-to-end against a
-real Postgres (new demo `kernel/cmd/replaydemo` — reproduces committed state, detects a
-counterfactual, leaves the source ledger byte-identical). The bounded next step toward a GREEN gate
-is to resolve `DEF-P7-003` (accept or classify the 17th production package
-`kernel/internal/twin/manifest` into the Task 8 set) — now authorized under the standing auth; use
-`/proofbound-review` with dispatched non-author reviewers for the verdict. Then press on
-productizing replay. `DEF-P7-001` (shippable Postgres provenance) is a genuine EXTERNAL blocker, not
-a quick win — see below.
+**Exact next action:** all three open deferrals are now dispositioned (DEF-METATAX-001 RESOLVED,
+DEF-P7-003 RESOLVED, DEF-P7-001 OPEN/BLOCKED pre-GA by owner choice). `make check` is GREEN when HEAD
+is a non-governed commit (see the delivery-boundary note below) — verify with a fresh `make check`
+after the notes closeout lands. Next product step: productize replay (wire `ReplayIsolated` into the
+`proofbound` CLI as a user-facing command, or build a prospect-facing end-to-end demo on a real
+repo). Keep `DEF-P7-001` (shippable Postgres provenance) as the pre-GA task.
 
 **Immediate blockers / honest gate state:**
 
-- `make check`'s only remaining red is `p6-task8-package-universe` (17 production packages vs the
-  frozen 16; the 17th is `kernel/internal/twin/manifest`), tracked as `DEF-P7-003`. Now authorized to
-  resolve under the standing auth.
-- `kernel-check` lint red is **CLEARED** (`0e32636`): `golangci-lint` rebuilt to 2.15.0 under
-  go1.27.3 (lints kernel clean, 0 issues), and `scripts/kernel-check.sh` now resolves the binary via
-  `command -v` with a `$(go env GOPATH)/bin` fallback, so `make check` no longer needs `~/go/bin` on
+- **`make check` is GREEN at a non-governed HEAD.** The two prior structural reds are both cleared:
+  `kernel-check` lint (toolchain fix `0e32636`) and `p6-task8-package-universe` (17th package accepted,
+  `7cc048f`). The ONLY remaining subtlety is the delivery boundary: `delivery-enforce.test.sh` (run by
+  hooks-test) invokes the real `delivery-enforce.sh`, which fails while HEAD is a GOVERNED commit
+  without an `Intent:` trailer, and passes once a non-governed commit (the closeout) is HEAD. So end
+  every governed batch on a non-governed notes commit.
+- `DEF-P7-001` stays OPEN/BLOCKED (pre-GA): shippable Postgres provenance. Does not block `make check`
+  or product work; it gates a customer-shippable release that embeds PostgreSQL.
+- (historical) `kernel-check` lint red was **CLEARED** (`0e32636`): `golangci-lint` rebuilt to 2.15.0
+  under go1.27.3 (lints kernel clean, 0 issues), and `scripts/kernel-check.sh` now resolves the binary
+  via `command -v` with a `$(go env GOPATH)/bin` fallback, so `make check` no longer needs `~/go/bin` on
   PATH. See [[proofbound-wsl-toolchain-gap]].
 - `DEF-P7-001` is now `BLOCKED` (not merely owner-postponed): the pinned zonky.io embedded-postgres
   v16.4.0 Maven artifact fails provenance (GPG signature does not verify; no license/notice coverage
@@ -42,11 +45,12 @@ a quick win — see below.
 
 ## Branch status
 
-- Branch `main`, tracking `origin/main`. This session: advisory-expiry `7e936f1` (+ `208b24f`), the
-  three commands `1e8d40a` (+ `5275a5c`), the session-command catalog `a1460e1` (+ `1ebe50f`), the
-  golangci-lint/GOPATH toolchain fix `0e32636`, then the P7 push (standing-auth VD, replay demo). All
-  earlier work pushed; the P7-push commit + its notes closeout land this turn. Each governed commit is
-  followed by a non-governed commit so `delivery-enforce` HEAD is not a governed delivery candidate.
+- Branch `main`, tracking `origin/main`. This session, in order: advisory-expiry `7e936f1`/`208b24f`,
+  three commands `1e8d40a`/`5275a5c`, catalog `a1460e1`/`1ebe50f`, toolchain fix `0e32636`, P7 push
+  (replay demo + standing-auth VD) `100e804`/`145781a`, deferral batch (DEF-METATAX-001 + DEF-P7-001)
+  `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, then the deferrals self-test fix +
+  this notes closeout land this turn. Each governed commit is followed by a non-governed commit so the
+  delivery boundary (below) sees a non-governed HEAD. Push pending for the last few commits.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
