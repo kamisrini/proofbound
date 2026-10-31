@@ -15,14 +15,14 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action:** `proofbound twin replay` CLI command landed (`a8343836`) — the first
-product-facing increment. A dispatched non-author reviewer verdict is PENDING (Law 9); record it when
-it returns. `make check` must be re-verified after the reviewer finishes (do NOT run it concurrently
-with the reviewer — both use the cli embedded-postgres test ports 55461/55462; a clash becomes an
-undeclared skip and fails skip-lint). `make check` is GREEN at a non-governed HEAD otherwise. All
-three deferrals remain dispositioned (DEF-METATAX-001/DEF-P7-003 RESOLVED; DEF-P7-001 OPEN/BLOCKED
-pre-GA). Next product steps: richer twin inputs, or wire more of the kernel into the CLI; keep
-`DEF-P7-001` as the pre-GA task.
+**Exact next action:** `proofbound twin replay` CLI command landed (`a8343836`) with a committed
+non-author verdict (`docs/verification/verdicts/p7-twin-replay-cli-round1-20261031.md`,
+ACCEPTABLE-WITH-NOTES); its one correctness finding (F1: baseline ignored `--through`) is FIXED in
+`b9f7b7f` with a locking test. `make check` to be re-verified at this closeout's HEAD (the reviewer
+is done, so no cli-test port clash now). All three deferrals remain dispositioned
+(DEF-METATAX-001/DEF-P7-003 RESOLVED; DEF-P7-001 OPEN/BLOCKED pre-GA). Next product steps: richer twin
+inputs (higher-level what-ifs), or wire more of the kernel into the CLI; keep `DEF-P7-001` as the
+pre-GA task. The twin-replay cli tests use embedded-postgres ports 55461-55463.
 
 **Immediate blockers / honest gate state:**
 
@@ -52,9 +52,10 @@ pre-GA). Next product steps: richer twin inputs, or wire more of the kernel into
   (replay demo + standing-auth VD) `100e804`/`145781a`, deferral batch (DEF-METATAX-001 + DEF-P7-001)
   `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, deferrals self-test fix `1d9fbb3`,
   closeout `768390f`, P6 census/gate-registry reconciliation `9eafdb0` (+ closeout `5f65e01`, pushed),
-  then `proofbound twin replay` CLI feature `a8343836` + this notes closeout. Each governed commit is
-  followed by a non-governed commit so the delivery boundary (below) sees a non-governed HEAD. Push
-  pending for `a8343836` + closeout (after the reviewer verdict + a green `make check`).
+  twin replay CLI feature `a8343836` (+ closeout `b859bfa`), review fix F1 `b9f7b7f`, then the verdict
+  artifact + this notes closeout. Each governed commit is followed by a non-governed commit so the
+  delivery boundary (below) sees a non-governed HEAD. Push pending for everything from `a8343836`
+  (after a green `make check`).
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
