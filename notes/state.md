@@ -2,27 +2,24 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-10-30
+As of: 2026-10-31
 
-## Resume — 2026-10-30
+## Resume — 2026-10-31
 
-**Exact next action:** pick one of the remaining unblocked slices — reconcile `scripts/link-lint.sh`
-with its `docs/gates.md` claims (the script only checks that each `VD-*.md` appears in `INDEX.md`;
-the registry row claims it resolves `VD-` references AND enforces advisory expiry and names it the
-sole expiry mechanism), or build the remaining `/proofbound-decide|review|spec` commands. The
-link-lint slice carries one OWNER decision: the two ADVISORY rows in `docs/gates.md` with expiry
-`2026-10-16` (meta-tax budget, backup cadence) are past due while the build is green — a live Law 4
-violation — and each must be graduated to blocking or deleted. Do NOT start `DEF-P7-003`
-(twin/manifest acceptance) or any other P7 work without explicit owner authorization.
+**Exact next action:** the link-lint / advisory-expiry slice is COMMITTED (`7e936f1`, owner Srinivas
+Kamisetty authorized + accepted per Law 9) and pushed. Next: pick the still-unbuilt
+`/proofbound-decide|review|spec` commands, or another authorized unblocked slice. Do NOT start
+`DEF-P7-003` (twin/manifest acceptance), `DEF-METATAX-001`, or any other P7/dormant work without
+explicit owner authorization.
 
 **Immediate blockers / honest gate state:**
 
-- `make check` is **RED**. `make hooks-test` now fails at EXACTLY one self-test,
+- `make check` is **RED**. `make hooks-test` fails at EXACTLY one self-test,
   `p6-task8-package-universe` (17 production packages vs the frozen 16; the 17th is
   `kernel/internal/twin/manifest`). Tracked as `DEF-P7-003` (AWAITING_OWNER), owner-gated P7 work;
-  the gate cannot go green until that package is accepted or classified. The `deferrals.test.sh`
-  SIGPIPE that previously failed hooks-test BEFORE this point was fixed this session (`f387689`), so
-  p6-task8 is now the true and only hooks-test red point.
+  the gate cannot go green until that package is accepted or classified. The new
+  `advisory-expiry.test.sh` and `link-lint.test.sh` both pass and run BEFORE p6-task8 in the loop, so
+  this slice did not move the red point.
 - `kernel-check` lint cannot pass in this environment: `golangci-lint` 2.13.2 is built with Go 1.26.7
   and panics under the active Go 1.27.3 (`file requires newer Go version go1.27`); the Makefile also
   calls bare `golangci-lint`, which lives at `~/go/bin` and is not on PATH. `go build` and `go test`
@@ -33,8 +30,9 @@ violation — and each must be graduated to blocking or deleted. Do NOT start `D
 
 ## Branch status
 
-- Branch `main`, tracking `origin/main`; pushed through `f387689` (`eeab42c..f387689`); a notes-only
-  closeout commit follows this wrap.
+- Branch `main`, tracking `origin/main`. Governed advisory-expiry slice committed `7e936f1`; this
+  non-governed closeout (deferrals row + notes) becomes HEAD so `delivery-enforce` HEAD is not a
+  governed delivery candidate. Both pushed this session.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
@@ -44,9 +42,23 @@ violation — and each must be graduated to blocking or deleted. Do NOT start `D
   HEAD is not a delivery candidate, not that `f387689` is intent-bound.
 - Preserved unrelated untracked user paths: `docs/plans/P5-intent-provenance-plan.md` and
   `kernel/cmd/p6dbprobe/`. Never staged, deleted, or relabeled.
+- Advisory-expiry slice committed `7e936f1` (governed: `scripts/advisory-expiry.sh`,
+  `scripts/tests/advisory-expiry.test.sh`, `scripts/link-lint.sh`, `docs/gates.md`) + this closeout
+  (`docs/deferrals.tsv` +`DEF-METATAX-001`, `notes/journal/2026-10-31.md`, this note).
 
 ## Completed this session
 
+- **Law 4 advisory-expiry enforcement + link-lint honesty (`7e936f1`, owner-authorized):** found that
+  `scripts/link-lint.sh` enforced none of its `docs/gates.md` claims — it only checked `INDEX.md`
+  membership, so the two `2026-10-16` advisories sat expired 15 days under a green contract (P6 DoD
+  "zero expired advisories" was never mechanized). New `scripts/advisory-expiry.sh` (keys on the Tier
+  column; `ADVISORY_GATES_FILE`/`ADVISORY_TODAY` overrides) now runs via `link-lint.sh` in
+  `make check`, with a calibrated self-test (expired+dateless MUST fail, future+today MUST pass,
+  BLOCKING-row "advisory" mention MUST be ignored, live registry MUST be clean) proven live against
+  the original defect. Owner-decided dispositions: backup advisory deleted (intent lives in
+  `VD-local-only-backup-mjic4a`), meta-tax re-dated to `2026-12-31` — it cannot graduate as-built
+  (71% cumulative lifetime ratio, no bootstrap/steady regime), redesign tracked as `DEF-METATAX-001`.
+  See `notes/journal/2026-10-31.md`.
 - **Gate-integrity repair (`bfeb31f`):** `make hooks-test` fails closed; `scripts/deferrals.sh`
   exit-code leak fixed; `make-contract.test.sh` control added; `docs/gates.md` corrected. (See journal.)
 - **Workflow tooling (`933e579`):** SessionStart orientation hook + `/proofbound-next` + `/proofbound-wrap`.
@@ -62,8 +74,8 @@ violation — and each must be graduated to blocking or deleted. Do NOT start `D
 
 - `DEF-P7-003` (AWAITING_OWNER): accept or classify `kernel/internal/twin/manifest`. The one real
   red-gate cause. Owner-gated.
-- `scripts/link-lint.sh` ↔ `docs/gates.md` mismatch + the two expired advisories (Law 4). The script
-  reconciliation is unblocked; the graduate-or-delete advisory call is the owner's.
+- `DEF-METATAX-001` (DEFERRED): redesign `meta-tax.sh` to a phase-windowed measure so the Law 5
+  budget can graduate or be retired. Dormant until owner authorizes.
 - `/proofbound-decide`, `/proofbound-review`, `/proofbound-spec` remain unbuilt.
 - Optional, non-blocking: `block-generated-edit.sh` leaves `cat`/`git` unguarded (exit 127 →
   fail-open); a one-line extension would make it strictly all-deps fail-closed. Flagged by the F2
@@ -78,7 +90,8 @@ violation — and each must be graduated to blocking or deleted. Do NOT start `D
   plus the environment `kernel-check` lint mismatch and the dirty-tree `commit-cadence` noted above.
 - Every other hook self-test passes, including the three touched this slice (`claude-hooks`,
   `deferrals`, and the hook's behavior).
-- `scripts/deferrals.sh --check`: PASS, 3 rows, 2 open.
+- `scripts/deferrals.sh --check`: PASS, 4 rows, 3 open (added `DEF-METATAX-001`).
+- `scripts/advisory-expiry.sh` against the real registry: PASS (clean); self-test PASS.
 
 ## Institutionalized improvement
 
@@ -89,6 +102,6 @@ violation — and each must be graduated to blocking or deleted. Do NOT start `D
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. Then pick one remaining unblocked slice (link-lint reconciliation, or the
-remaining `/proofbound-*` commands). Keep all P7 and `DEF-P7-003` work stopped until the owner
-authorizes it.
+Run `/proofbound-next`. First resolve the uncommitted link-lint/advisory-expiry slice (non-author
+verdict + change intent, then commit); otherwise pick the remaining `/proofbound-*` commands. Keep
+all P7 and `DEF-P7-003` work stopped until the owner authorizes it.
