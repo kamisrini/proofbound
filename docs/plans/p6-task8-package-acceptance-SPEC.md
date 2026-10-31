@@ -8,9 +8,13 @@ package acceptance bar: calibrated mutation evidence plus a non-author verdict. 
 capability and does not reinterpret older verdicts as current acceptance.
 
 The production package set is every package returned by `go list ./internal/...` that contains at
-least one non-test `.go` file. At the current inventory this is 16 packages. `internal/specfirst`
+least one non-test `.go` file. At the current inventory this is 17 packages. `internal/specfirst`
 is returned by `go list` but contains only `SPEC.md` and `_test.go`; it is explicitly classified as
 `not-in-production-package-set` and receives no mutation requirement.
+
+The 17th package, `internal/twin/manifest`, landed after the original P6 freeze as authorized P7
+non-runtime work and is accepted under this same bar on 2026-10-31 — see the addendum at the end of
+this SPEC.
 
 ## Frozen package evidence
 
@@ -39,7 +43,7 @@ missing package, or missing exact non-author verdict keeps the package row open.
 
 ## Acceptance
 
-Task 8 closes only after the final code-changing commit is frozen and all 16 production rows have
+Task 8 closes only after the final code-changing commit is frozen and all 17 production rows have
 calibrated mutation results, zero undeclared survivors, exact tree-object bindings, and committed
 non-author verdict coverage. Then, and only then, the C3 census rows may cite the packet and the
 final package acceptance sweep may proceed to the Task 9 consolidation round.
@@ -54,3 +58,20 @@ explicit release gate. No author-authored verdict can satisfy the non-author req
 - No self-authored “non-author” verdict and no claim that mutation alone proves semantic correctness.
 - No Task 9 close or P6 deep-complete claim until package acceptance and the final independent round
   are both committed.
+
+## Addendum — 17th production package `internal/twin/manifest` (accepted 2026-10-31)
+
+This package landed after the original Task-8 freeze as authorized P7 non-runtime work and is
+accepted here under the same bar; `DEF-P7-003` tracked the gap and is now resolved.
+
+- Reviewed commit: `87577ce431a9db0bad91e73f807ba8fb57a6280b`; production package tree object
+  `ac36cf84b258abed173fc5d102fe4cda604789a6` (`git rev-parse <commit>:kernel/internal/twin/manifest`;
+  production `.go` byte-identical to the reviewed tree — the acceptance commit adds only tests/docs).
+- Calibrated mutation evidence (`scripts/mutants.sh internal/twin/manifest`): 190 candidates, 185
+  killed, 0 invalid, 5 survived. Calibration controls behaved (neutral=survived, invalid=invalid,
+  lethal=killed). The 5 survivors are all EQUIVALENT and declared in `docs/allowed-survivors.txt`
+  (four input-layer checks redundant with `Bind→Validate`; one defensive nil-guard). Zero undeclared
+  survivors. Coverage gaps found by the sweep were closed in `mutation_kill_test.go`.
+- Committed non-author verdict:
+  [`p7-twin-manifest-acceptance-round1-20261031.md`](../verification/verdicts/p7-twin-manifest-acceptance-round1-20261031.md)
+  — `ACCEPTABLE`, binding the same commit and tree object.
