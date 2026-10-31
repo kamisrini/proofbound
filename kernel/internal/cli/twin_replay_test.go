@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
-	"github.com/kamisrini/proofbound/kernel/internal/projections"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
@@ -63,7 +62,7 @@ func TestTwinReplayIsolatesAndProves(t *testing.T) {
 	before := ledgerSeqs(t, ledger)
 
 	var out bytes.Buffer
-	if err := twinReplay(context.Background(), ledger, projections.New(), []string{"twin", "replay"}, &out); err != nil {
+	if err := twinReplay(context.Background(), ledger, []string{"twin", "replay"}, &out); err != nil {
 		t.Fatalf("twin replay: %v", err)
 	}
 	got := out.String()
@@ -99,7 +98,7 @@ func TestTwinReplayCounterfactualVerdict(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	if err := twinReplay(context.Background(), ledger, projections.New(), []string{"twin", "replay", "--candidate", path}, &out); err != nil {
+	if err := twinReplay(context.Background(), ledger, []string{"twin", "replay", "--candidate", path}, &out); err != nil {
 		t.Fatalf("twin replay --candidate: %v", err)
 	}
 	got := out.String()
@@ -116,6 +115,26 @@ func TestTwinReplayCounterfactualVerdict(t *testing.T) {
 	}
 	if after := ledgerSeqs(t, ledger); !equalInt64(before, after) {
 		t.Fatalf("source ledger changed: before=%v after=%v", before, after)
+	}
+}
+
+// TestTwinReplayThroughBelowLatestIsCoherent locks the fix for the review's
+// finding 1: --through below the latest seq must compare against the projection
+// of the SAME prefix (verdict preserved), not against the full committed
+// projection (which would spuriously report changed with no candidate).
+func TestTwinReplayThroughBelowLatestIsCoherent(t *testing.T) {
+	ledger := openTwinReplayTestStore(t, 55463)
+	seedDeploymentEvents(t, ledger, 3)
+
+	var out bytes.Buffer
+	if err := twinReplay(context.Background(), ledger, []string{"twin", "replay", "--through", "2"}, &out); err != nil {
+		t.Fatalf("twin replay --through 2: %v", err)
+	}
+	got := out.String()
+	for _, want := range []string{"verdict=preserved", "through_seq=2", "candidate_events=0"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output missing %q (prefix replay should be coherent):\n%s", want, got)
+		}
 	}
 }
 

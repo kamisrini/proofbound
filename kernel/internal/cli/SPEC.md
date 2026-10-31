@@ -16,13 +16,14 @@ It also routes `proofbound report intent <id>`, `proofbound report requirement <
 `proofbound intent check --commit <sha>` to the proof-bearing projection API without interpreting
 chain semantics in the CLI.
 
-`proofbound twin replay [--through <seq>] [--candidate <file>]` runs `twin.ReplayIsolated` against
-the committed projection in a throwaway embedded store, never mutating the source ledger. With no
-candidate it re-derives and proves the committed projected state through the latest committed seq
-(verdict `preserved` plus a `vera.replay.v1` proof). `--candidate <file>` injects exactly one
-counterfactual event, supplied as canonical JSON `{"seq": <int>, "event": {<core.Event>}}`, and the
-command reports `preserved` or `changed`. The CLI interprets no replay or proof semantics itself —
-the `twin` SPEC owns them.
+`proofbound twin replay [--through <seq>] [--candidate <file>]` runs `twin.ReplayIsolated` in a
+throwaway embedded store, never mutating the source ledger. The baseline is the isolated projection
+of the committed prefix through the same `--through` seq (default: the latest committed seq), so the
+verdict reflects only the candidate's effect — never the events a lower `--through` drops. With no
+candidate it re-derives and proves that prefix state (verdict `preserved` plus a `vera.replay.v1`
+proof). `--candidate <file>` injects exactly one counterfactual event, supplied as canonical JSON
+`{"seq": <int>, "event": {<core.Event>}}` with no trailing data, and the command reports `preserved`
+or `changed`. The CLI interprets no replay or proof semantics itself — the `twin` SPEC owns them.
 
 ## 2. Interface lock
 
@@ -66,5 +67,5 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-8 | Full sync orders all intent providers before commit ingestion | cli_test.go::TestSyncAllOrdersIntentBeforeGit |
 | CLI-INV-9 | Intent report and check identifiers are passed unchanged to projections | cli_test.go::TestParseIntentReportAndCheckCommands |
 | CLI-INV-10 | Commands outside a repository fail before opening product state | cli_test.go::TestRunStopsWhenRepositoryRootIsMissing |
-| CLI-INV-11 | `twin replay` evaluates ReplayIsolated against the committed projection in an isolated store and never mutates the source ledger | twin_replay_test.go::TestTwinReplayIsolatesAndProves |
+| CLI-INV-11 | `twin replay` evaluates ReplayIsolated in a throwaway store against the same-prefix projection and never mutates the source ledger | twin_replay_test.go::TestTwinReplayIsolatesAndProves |
 | CLI-INV-12 | A `--candidate` file injects exactly one counterfactual event and yields a verdict with a vera.replay.v1 proof whose candidate snapshot reflects the change | twin_replay_test.go::TestTwinReplayCounterfactualVerdict |

@@ -585,7 +585,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 	case commandRebuild:
 		return projector.Rebuild(ctx, ledger)
 	case commandTwinReplay:
-		return twinReplay(ctx, ledger, projector, args, output)
+		return twinReplay(ctx, ledger, args, output)
 	case commandSyncGit, commandSyncAll:
 		ids, err := newIDs()
 		if err != nil {
@@ -727,23 +727,25 @@ func enforceGateResults(definitions []gates.Definition, results []gates.Result) 
 // committed events, and the temporary store is created and removed internally.
 // With no --candidate it re-derives and proves the committed state (verdict
 // preserved); with --candidate it evaluates one counterfactual event.
-func twinReplay(ctx context.Context, ledger *store.Store, projector *projections.Projector, args []string, output io.Writer) error {
+func twinReplay(ctx context.Context, ledger *store.Store, args []string, output io.Writer) error {
 	through, candidatePath, err := parseTwinReplayFlags(args)
 	if err != nil {
 		return err
-	}
-	if err := applyProjection(ctx, projector, ledger); err != nil {
-		return fmt.Errorf("twin replay: project committed ledger: %w", err)
-	}
-	baseline, err := projector.Snapshot(ctx, ledger)
-	if err != nil {
-		return fmt.Errorf("twin replay: snapshot committed projection: %w", err)
 	}
 	if through < 0 {
 		if through, err = latestLedgerSeq(ctx, ledger); err != nil {
 			return err
 		}
 	}
+	// The baseline is the isolated projection of the committed prefix THROUGH the
+	// same seq, so the verdict reflects only the candidate's effect — never the
+	// events dropped by a lower --through. A no-candidate replay then proves the
+	// prefix re-derives deterministically.
+	base, err := twin.ReplayIsolated(ctx, ledger, twin.Request{ThroughSeq: through}, projections.Snapshot{})
+	if err != nil {
+		return fmt.Errorf("twin replay: baseline projection: %w", err)
+	}
+	baseline := base.Candidate
 	var candidates []twin.Candidate
 	if candidatePath != "" {
 		candidate, err := loadTwinCandidate(candidatePath)
@@ -822,6 +824,9 @@ func loadTwinCandidate(path string) (twin.Candidate, error) {
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&parsed); err != nil {
 		return twin.Candidate{}, fmt.Errorf("twin replay: parse candidate %s: %w", path, err)
+	}
+	if decoder.More() {
+		return twin.Candidate{}, fmt.Errorf("twin replay: candidate %s has trailing data after the JSON object", path)
 	}
 	return twin.Candidate{Seq: parsed.Seq, Event: parsed.Event}, nil
 }
