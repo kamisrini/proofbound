@@ -58,7 +58,7 @@ done < <(awk -F '|' '
   }
   in_table { exit }
 ' "$repo/docs/gates.md")
-[[ $gate_count -eq 34 ]] || die "expected 34 gate rows, got $gate_count"
+[[ $gate_count -eq 33 ]] || die "expected 33 gate rows, got $gate_count"
 
 while IFS= read -r path; do
   [[ -e $repo/$path ]] || die "gate registry path does not resolve: $path"

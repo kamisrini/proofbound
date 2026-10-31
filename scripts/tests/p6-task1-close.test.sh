@@ -24,7 +24,8 @@ if P6_TASK1_ROOT="$tmp/repo" bash "$tmp/repo/scripts/p6-task1-close.sh" --check 
 fi
 cp docs/gates.md "$tmp/repo/docs/gates.md"
 
-sed -i 's/2026-10-16/2026-01-01/' "$tmp/repo/docs/gates.md"
+# Expire the sole ADVISORY row (meta-tax, dated 2026-12-31) and confirm it is rejected.
+sed -i 's/2026-12-31/2026-01-01/' "$tmp/repo/docs/gates.md"
 if P6_TASK1_ROOT="$tmp/repo" bash "$tmp/repo/scripts/p6-task1-close.sh" --check >/dev/null 2>&1; then
   echo 'expired advisory was accepted' >&2
   exit 1

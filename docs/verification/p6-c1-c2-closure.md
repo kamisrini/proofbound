@@ -4,7 +4,7 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 1 and `docs/plans/p6-task1-mechanisms-SPEC.md`.
 
-The checker resolved the exact 35-row C1 and 41-row C2 universes. Gate-registry audit: 34 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
+The checker resolved the exact 35-row C1 and 41-row C2 universes. Gate-registry audit: 33 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
 
 | Row | Probe | Exit | Evidence |
 |---|---|---:|---|
