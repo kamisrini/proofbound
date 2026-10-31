@@ -51,6 +51,8 @@ Files + git + grep ARE the record during bootstrap. Derived indexes only (`make 
 
 ## Session protocol
 
+The `/proofbound-*` commands below are catalogued in [docs/session-commands.md](docs/session-commands.md) (why/what/how + links).
+
 - **Start:** the SessionStart hook prints `notes/state.md` + git status. Run `/proofbound-next` to orient and pick the next task.
 - **End:** use the single canonical EOD prompt in [docs/eod-prompt.md](docs/eod-prompt.md). It owns
   inspection, journal/state durability, `make check`, coherent commit/push, and bundle verification.

@@ -157,7 +157,9 @@ behavior, evidence, or workflow problem before proposing a larger change.
 Maintainers and automated build agents can find the internal operating rules in
 [`CLAUDE.md`](CLAUDE.md), the current resume state in [`notes/state.md`](notes/state.md), and the
 long-form product context in [`vision-plain-english.md`](vision-plain-english.md). Those documents
-are intentionally separate from this end-user overview.
+are intentionally separate from this end-user overview. Build agents drive the repository through the
+`/proofbound-*` session commands — see the catalog in
+[`docs/session-commands.md`](docs/session-commands.md).
 
 ## License
 
