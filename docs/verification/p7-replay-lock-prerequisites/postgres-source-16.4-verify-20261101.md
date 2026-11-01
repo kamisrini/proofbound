@@ -48,13 +48,30 @@ sha256sum -c postgresql-16.4.tar.bz2.sha256                                     
 | measured size | 24765786 bytes |
 | MD5 (informational) | `bdcc1e350b473c13d132d190c0c18499` (matched) |
 
+## Reproducible verifier
+
+The hand-run above is now reproducible via `scripts/p7-postgres-source-verify.sh` (fail-closed:
+reads the pinned manifest, requires the published `.sha256` file to equal the manifest pin, the
+tarball bytes to hash to that pin, and the size to match; exits non-zero on any mismatch or missing
+input). Against the real download it printed:
+
+```
+p7-postgres-source-verify: OK role=postgres-source file=postgresql-16.4.tar.bz2 \
+  sha256=971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f size=24765786
+```
+
+Its self-test `scripts/tests/p7-postgres-source-verify.test.sh` (auto-run by `make hooks-test`)
+asserts a neutral control (pristine input accepted) and positive controls that must be rejected:
+tampered byte, wrong pinned size, manifest/checksum divergence, bytes-vs-pin mismatch, and missing
+input.
+
 ## Outcome and what remains
 
 Unit 1's provenance check **passes** under the adopted mechanism: the pristine-upstream
-PostgreSQL 16.4 source tarball is pinned and verifies against its published SHA-256 and size. What
-still remains before any case may leave `UNVERIFIED`:
+PostgreSQL 16.4 source tarball is pinned and verifies against its published SHA-256 and size, via a
+fail-closed verifier with a self-test. What still remains before any case may leave `UNVERIFIED`:
 
-- A non-author verdict accepting this manifest + evidence (Law 9).
+- A non-author verdict accepting this manifest + verifier + evidence (Law 9).
 - Unit 2: build from this verified source (the C toolchain is absent on this box — see the build-host
   decision) and produce a complete component license/notice inventory.
 - Unit 3: prepared-offline runtime fixture binding a real `vera.replay.v1` proof.
