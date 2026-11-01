@@ -1,12 +1,18 @@
 # SPEC — `internal/twin/manifest`
 
-**Status:** P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1 authorized non-runtime preparation slice · 2026-10-27
-**Authority:** [`CI-p7-projector-manifest-declaration-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md)
+**Status:** P7-NONRUNTIME-PROJECTOR-MANIFEST-DECLARATION-1 authorized non-runtime preparation slice · 2026-10-27;
+extended with the `proofbound.p7.case-manifest.v1` evidence index and the
+`proofbound.p7.behavior-lock.v1` `ReplayIsolated` lock contract · 2026-11-01
+**Authority:** [`CI-p7-projector-manifest-declaration-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-projector-manifest-declaration-1a2b3c/0001.md) ·
+[`CI-p7-case-manifest-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-case-manifest-1a2b3c/0001.md) ·
+[`CI-p7-behavior-lock-1a2b3c`](../../../../docs/intent/records/change-intents/CI-p7-behavior-lock-1a2b3c/0001.md)
 
 ## Purpose and boundary
 
 This package validates the documentary `proofbound.p7.projector-manifest.v1` contract and its
-`proofbound.p7.source-toolchain-inventory.v1` evidence inventory. It binds
+`proofbound.p7.source-toolchain-inventory.v1` evidence inventory. It also validates the
+`proofbound.p7.case-manifest.v1` case evidence index and the `proofbound.p7.behavior-lock.v1`
+authored `ReplayIsolated` behavior-lock contract. It binds
 exact source and projector revisions, declared Go/toolchain identity, selected module byte
 identities, and build settings. It validates supplied declarations and verifies bytes returned by
 an injected committed-tree reader; it does not itself access the filesystem, invoke Git, retrieve,
@@ -116,6 +122,107 @@ This declaration is a non-runtime identity record. It does not retrieve, build, 
 or approve a toolchain, executable, PostgreSQL artifact, complete source corpus, or reproducible
 build.
 
+## Case evidence manifest
+
+`proofbound.p7.case-manifest.v1` is the documentary evidence index for one bounded P7
+`ReplayIsolated` case. It binds the contract references, exact case inputs, recorded commands and
+witnesses, per-outcome evidence states, produced artifacts, and the independent-review pointer for
+one evidence revision. It is an index of declarations and content digests; it runs nothing,
+retrieves nothing, and approves no runtime input.
+
+The input is strict RFC 8785 canonical JSON with exactly these top-level fields: `schema`,
+`case_id`, `subject`, `case_status`, `evidence_revision`, `contract_refs`, `inputs`, `commands`,
+`witnesses`, `outcomes`, `artifacts`, and `review`.
+
+- `case_id` is a lowercase stable slug (`[a-z0-9][a-z0-9-]{0,63}`); `subject` is exactly
+  `ReplayIsolated`; `evidence_revision` and `review.author_commit` are lowercase 40-hex Git
+  revisions.
+- `contract_refs` has exactly `lock_addendum`, `fixture_matrix`, and `implementation_scope`, each a
+  `{path, sha256}` reference with a safe relative path and lowercase SHA-256.
+- `inputs` has exactly `lock`, `source`, `candidate`, `setup_sources`, and `projector_manifest`,
+  each a `{path, sha256}` reference.
+- `commands` is an ordered, possibly empty list; each entry has exactly `id`, `argv`, `cwd`,
+  `network_policy`, `environment_digest`, `exit_code`, `stdout`, and `stderr`. `argv` is a non-empty
+  list of non-empty strings; `cwd` is `.` or a safe relative path; `network_policy` is one of
+  `none`, `loopback-only`, or `offline`; `environment_digest` is a lowercase SHA-256;
+  `stdout`/`stderr` are `{path, sha256}` references; command ids are unique safe slugs.
+- `witnesses` is an ordered, possibly empty list of `{kind, path, sha256}` with unique kinds.
+- `artifacts` is an ordered, possibly empty list of `{role, path, size_bytes, sha256}` with unique
+  roles and `size_bytes >= 0`.
+- `review` has exactly `author_commit` and `independent_verdict`; the verdict is `{status}` with a
+  status in `PENDING`, `ACCEPTED`, or `REJECTED`.
+
+`outcomes` has exactly the nine keys `source_binding`, `baseline_provenance`, `candidate_binding`,
+`ledger_preserved`, `snapshot_comparison`, `proof_binding`, `no_fetch`, `cleanup`, and
+`intent_binding`. Each is `{status, evidence}` with a status in `PASS`, `FAIL`, `UNVERIFIED`,
+`UNDECLARED`, or `PENDING`. `PASS` and `FAIL` require a non-empty `evidence` list whose entries each
+name an existing artifact `role`; `UNVERIFIED`, `UNDECLARED`, and `PENDING` require an empty
+`evidence` list. An outcome can therefore never be `PASS` by absence of evidence.
+
+`case_status` is the derived worst-wins fold over the nine outcomes and must equal the declared
+value: `PENDING` if any outcome is `PENDING`; else `FAIL` if any is `FAIL`; else `UNVERIFIED` if any
+is `UNVERIFIED` or `UNDECLARED`; else `PASS`. A case with no produced artifacts therefore cannot be
+`PASS`. `DeriveCaseStatus` returns this fold; `ValidateCaseManifest` rejects a declared status that
+does not match it.
+
+This manifest is a documentary evidence index. It does not run a case, fetch an input, approve the
+pinned PostgreSQL route, resolve `DEF-P7-001`, or establish any runtime `PASS`.
+
+## ReplayIsolated behavior lock
+
+`proofbound.p7.behavior-lock.v1` is the authored, content-addressed behavior-lock contract for the
+bounded subject `ReplayIsolated`
+([`BR-replay-evidence-6e3d2b`](../../../../docs/intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md)
+`O-1`). The lock declares the protected observable behavior so a later regeneration can be judged
+against the lock rather than the implementation that happened to exist. Materializing the lock and
+cross-binding it to supplied, already-committed `vera.replay.v1` proof bytes are non-runtime
+operations: the package validates declarations and caller-supplied bytes and never runs a replay,
+writes the ledger, or fetches an input.
+
+The input is strict RFC 8785 canonical JSON with exactly these top-level fields: `subject`,
+`lock_revision`, `source_prefix`, `candidates`, `baseline`, `candidate_snapshot`, `verdict`,
+`sequence_map`, `replay_proof`, and `intent_binding`.
+
+- `subject` is exactly `ReplayIsolated`.
+- `lock_revision` has exactly `subject`, `number`, and `parent`; `number` is a positive integer and
+  `parent` is either a lowercase 64-hex prior lock digest or the literal `genesis`.
+- `source_prefix` has exactly `through_seq`, `events`, and `source_digest`; `events` is a non-empty
+  list ordered by ascending `seq` of `{event_id, seq}` with unique ids and seqs, each seq `>= 1` and
+  `<= through_seq`; `source_digest` is a lowercase SHA-256.
+- `candidates` is a non-empty list ordered by ascending `seq` of `{event_id, seq, bytes_sha256}`
+  with unique ids and seqs.
+- `baseline` carries the full provenance tuple: exactly `through_seq`, `source_digest`,
+  `projector_revision`, `projector_revision_digest`, and `baseline_snapshot_digest`. Its
+  `through_seq` and `source_digest` must equal `source_prefix`.
+- `candidate_snapshot` has exactly `snapshot_digest`.
+- `verdict` is exactly `preserved` or `changed` (the existing twin verdict vocabulary).
+- `sequence_map` is a list of `{event_id, requested, effective}` covering exactly the candidate ids,
+  ordered by ascending `requested`.
+- `replay_proof` has exactly `schema`, `through_seq`, `source_digest`, `candidate_digest`,
+  `baseline_snapshot_digest`, and `candidate_snapshot_digest`; `schema` is exactly `vera.replay.v1`.
+- `intent_binding` is either the explicit object `{state: "UNDECLARED"}` or the exact P5
+  provider-scoped requirement tuple `{record_kind: "requirement", source: "intent.<provider>",
+  record_id, artifact_sha256, obligation_id}`.
+
+`EvaluateLock` is a pure evaluator over a validated lock, caller-supplied committed proof bytes, and
+an injected `RequirementResolver`. It recomputes the proof digest over the supplied bytes, requires
+the parsed proof `schema=vera.replay.v1`, and requires every `through_seq`, `source_digest`,
+`candidate_digest`, `baseline_snapshot_digest`, and `candidate_snapshot_digest` to equal the
+corresponding lock members, where the candidate digest is the SHA-256 of the newline-joined ordered
+candidate `bytes_sha256` values. For a declared `intent_binding`, the resolver must resolve the exact
+`record_id`, `artifact_sha256`, and `obligation_id`; an `UNDECLARED` binding is never passed to the
+resolver. The overall result is `LOCKED` only when identity, source/candidate, baseline, and proof
+all verify and a declared intent resolves exactly; any missing or mismatched member, a baseline
+provenance tuple that does not verify, a digest-only proof with no retrievable bytes, an unresolved
+declared intent, or an `UNDECLARED` intent yields derived `UNVERIFIED`. A derived `UNVERIFIED` fails
+the lock gate and is never converted to `preserved` or `changed`.
+
+A lock revision digest covers only its own canonical bytes; a later revision is a new artifact and
+cannot reinterpret an earlier proof or verdict. Synthetic candidates and fixtures may exercise the
+contract but are never presented as production observations. This contract is a non-runtime authored
+artifact; it does not run a replay, approve the PostgreSQL route, resolve `DEF-P7-001`, or establish
+runtime acceptance.
+
 ## Interface
 
 ```go
@@ -145,6 +252,21 @@ func DeclareCommittedManifest(ManifestDeclarationInput, CommittedEvidenceReader)
 func ValidateManifestDeclaration(ManifestDeclaration, ManifestDeclarationInput) error
 func ParseManifestDeclaration([]byte, ManifestDeclarationInput) (ManifestDeclaration, error)
 func CanonicalManifestDeclarationBytes(ManifestDeclaration, ManifestDeclarationInput) ([]byte, error)
+const CaseManifestSchema = "proofbound.p7.case-manifest.v1"
+func ParseCaseManifest([]byte) (CaseManifest, error)
+func ValidateCaseManifest(CaseManifest) error
+func CanonicalCaseManifestBytes(CaseManifest) ([]byte, error)
+func CaseManifestDigest([]byte) (string, error)
+func DeriveCaseStatus(CaseManifest) (string, error)
+const BehaviorLockSchema = "proofbound.p7.behavior-lock.v1"
+func ParseBehaviorLock([]byte) (BehaviorLock, error)
+func ValidateBehaviorLock(BehaviorLock) error
+func CanonicalBehaviorLockBytes(BehaviorLock) ([]byte, error)
+func BehaviorLockDigest([]byte) (string, error)
+type RequirementResolver interface {
+    ResolveRequirement(recordID, artifactSHA256, obligationID string) error
+}
+func EvaluateLock(BehaviorLock, []byte, RequirementResolver) (LockEvaluation, error)
 ```
 
 `Bind` accepts caller-supplied bytes only. It sorts source/module identities, computes their
@@ -177,3 +299,15 @@ external-artifact, process, toolchain, executable, or runtime operation.
 | DECL-INV-2 | Toolchain/archive unavailability and incomplete declaration coverage remain explicit `UNVERIFIED` or `PENDING` | manifest_test.go::TestDeclareCommittedManifestBindsBytesAndPreservesIncompleteEvidence |
 | DECL-INV-3 | Declaration serialization is canonical and contradictory declaration evidence fails closed | manifest_test.go::TestManifestDeclarationCanonicalSerializationAndValidation |
 | DECL-INV-4 | Invalid, stale, duplicate, unsafe, or missing committed inputs fail closed | manifest_test.go::TestDeclareCommittedManifestRejectsInvalidAndUnavailableInputs |
+| CASE-INV-1 | Only the exact case-manifest schema, field set, and `ReplayIsolated` subject are accepted | casemanifest_test.go::TestParseCaseManifestRejectsShapeAndCanonicality |
+| CASE-INV-2 | Case id, revisions, paths, and every digest are safe, well-formed, and content-addressed | casemanifest_test.go::TestParseCaseManifestRejectsShapeAndCanonicality |
+| CASE-INV-3 | Contract refs, inputs, and outcomes have exactly their required keys; commands/witnesses/artifacts are unique | casemanifest_test.go::TestCaseManifestRejectsKeyAndUniquenessViolations |
+| CASE-INV-4 | `PASS`/`FAIL` outcomes require evidence naming an existing artifact role; other states require empty evidence | casemanifest_test.go::TestCaseManifestOutcomeEvidenceRules |
+| CASE-INV-5 | `case_status` equals the derived worst-wins fold; absence can never produce `PASS` | casemanifest_test.go::TestDeriveCaseStatusPrecedenceAndNoPassByAbsence |
+| CASE-INV-6 | Equal typed inputs produce equal canonical bytes and digest; non-canonical input fails closed | casemanifest_test.go::TestCaseManifestCanonicalRoundTripAndDigest |
+| LOCK-INV-1 | Only the exact behavior-lock schema, field set, and `ReplayIsolated` subject are accepted | behaviorlock_test.go::TestParseBehaviorLockRejectsShapeAndCanonicality |
+| LOCK-INV-2 | Revision ancestry, ordered unique source events and candidates, and all digests are well-formed | behaviorlock_test.go::TestBehaviorLockRejectsOrderAncestryAndDigestViolations |
+| LOCK-INV-3 | Baseline through_seq/source_digest equal source_prefix; sequence map covers exactly the candidate ids | behaviorlock_test.go::TestBehaviorLockRejectsOrderAncestryAndDigestViolations |
+| LOCK-INV-4 | `replay_proof` carries `vera.replay.v1` and intent is UNDECLARED or an exact requirement tuple | behaviorlock_test.go::TestParseBehaviorLockRejectsShapeAndCanonicality |
+| LOCK-INV-5 | EvaluateLock is LOCKED only when all bindings verify over supplied proof bytes and a declared intent resolves | behaviorlock_test.go::TestEvaluateLockLockedOnlyWhenEveryBindingVerifies |
+| LOCK-INV-6 | Missing/mismatched proof members, unverifiable baseline, digest-only proof, unresolved or UNDECLARED intent yield UNVERIFIED | behaviorlock_test.go::TestEvaluateLockDerivesUnverifiedAndFailsClosed |
