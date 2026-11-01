@@ -15,14 +15,25 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action:** `proofbound twin replay` CLI command landed (`a8343836`) with a committed
-non-author verdict (`docs/verification/verdicts/p7-twin-replay-cli-round1-20261031.md`,
-ACCEPTABLE-WITH-NOTES); its one correctness finding (F1: baseline ignored `--through`) is FIXED in
-`b9f7b7f` with a locking test. `make check` to be re-verified at this closeout's HEAD (the reviewer
-is done, so no cli-test port clash now). All three deferrals remain dispositioned
-(DEF-METATAX-001/DEF-P7-003 RESOLVED; DEF-P7-001 OPEN/BLOCKED pre-GA). Next product steps: richer twin
-inputs (higher-level what-ifs), or wire more of the kernel into the CLI; keep `DEF-P7-001` as the
-pre-GA task. The twin-replay cli tests use embedded-postgres ports 55461-55463.
+**Session wrapped 2026-10-31 at a clean, verified milestone.** `make check` is **VERIFIED GREEN** at
+HEAD `89b08aa` (full run, golangci-lint 0 issues); all work pushed to `origin/main`; off-machine
+backup bundle written to `~/Backups/` (run `PROOFBOUND_BACKUP_DIR=$HOME/Backups make backup` — the
+target has no default dir). Standing authorization (`VD-agent-standing-authorization-5ouz7q`) remains
+in force.
+
+**Exact next action (owner deferred the lane choice — pick one):** (1) a prospect-facing
+`docs/` quickstart/demo of the end-to-end value story (ingest → proof report → `twin replay`),
+non-kernel and most directly sellable; (2) compile the `gate-registry-census-coupling` lesson into a
+`make regen` + freshness pre-check so kernel commits stop restaling the generated artifacts (this tax
+cost ~15 `make check` runs this session); or (3) richer twin what-ifs (higher-level counterfactuals vs
+raw event JSON). Keep `DEF-P7-001` (shippable Postgres provenance) as the pre-GA task. The twin-replay
+cli tests use embedded-postgres ports 55461-55463.
+
+**Shipped this session:** toolchain fix (golangci-lint 2.15.0 + GOPATH fallback); all three deferrals
+dispositioned (DEF-METATAX-001 RESOLVED, DEF-P7-003 RESOLVED/17th package accepted, DEF-P7-001
+OPEN/BLOCKED pre-GA); P6 census reconciled; `proofbound twin replay` CLI (feature `a8343836` + fix
+`b9f7b7f` + non-author verdict). Backfilled `/proofbound-{decide,review,spec}` + the session-command
+catalog. Advisory-expiry enforcement.
 
 **Immediate blockers / honest gate state:**
 
@@ -52,10 +63,10 @@ pre-GA task. The twin-replay cli tests use embedded-postgres ports 55461-55463.
   (replay demo + standing-auth VD) `100e804`/`145781a`, deferral batch (DEF-METATAX-001 + DEF-P7-001)
   `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, deferrals self-test fix `1d9fbb3`,
   closeout `768390f`, P6 census/gate-registry reconciliation `9eafdb0` (+ closeout `5f65e01`, pushed),
-  twin replay CLI feature `a8343836` (+ closeout `b859bfa`), review fix F1 `b9f7b7f`, then the verdict
-  artifact + this notes closeout. Each governed commit is followed by a non-governed commit so the
-  delivery boundary (below) sees a non-governed HEAD. Push pending for everything from `a8343836`
-  (after a green `make check`).
+  twin replay CLI feature `a8343836` (+ closeout `b859bfa`), review fix F1 `b9f7b7f`, verdict +
+  closeout `a391323`, generated-artifact code-commit refreshes `a9f244f`/`89b08aa`, then this wrap
+  note. **All pushed through `89b08aa`; origin/main is level.** Each governed commit is followed by a
+  non-governed commit so the delivery boundary (below) sees a non-governed HEAD.
 - **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
   `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
   part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
