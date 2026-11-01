@@ -41,12 +41,14 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` expected GREEN at this non-governed closeout HEAD** (run it to confirm — it is slow
-  and not run by the SessionStart hook). The governed implementation `6dc9372` carries its `Intent:`
-  trailers; this closeout is non-governed, so `delivery-enforce.test.sh` (via `hooks-test`) sees a
-  non-governed HEAD. Package count stays 17 (new files share the `twin/manifest` dir), invariant
-  gates pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`), and the
-  `@generated` verdict-integrity audit artifact was refreshed with `--write`.
+- **`make check` VERIFIED GREEN** at HEAD `c83c807` (full run; golangci-lint 0 issues; real
+  17-package universe passes). The governed implementation `6dc9372` carries its `Intent:` trailers;
+  the closeout commits are non-governed, so `delivery-enforce.test.sh` (via `hooks-test`) sees a
+  non-governed HEAD. Invariant gates pass (the manifest SPEC uses the table form, which does not feed
+  `invariants.lock`), the `@generated` verdict-integrity audit artifact was refreshed with `--write`,
+  and the kernel commit restaled the route-matrix code-commit pin — refreshed in `c83c807` (the known
+  code-commit-pin tax). **Not pushed to `origin/main` yet** (push is an outward action left to the
+  owner / wrap).
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
   zonky.io embedded-postgres v16.4.0 Maven artifact fails provenance (detached GPG signature does not
   verify — expired encryption-only subkey, mismatched published key) and ships no license/notice
