@@ -47,11 +47,11 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` VERIFIED GREEN** at HEAD `c83c807` (full run; golangci-lint 0 issues; real
-  17-package universe passes); the 2026-11-01 B1 docs batch on top is docs/notes + INDEX.md regen
-  only (no `kernel/*`, so the route-matrix code-commit pin does not restale), re-verified green on
-  the working tree carrying that batch before commit. The governed implementation `6dc9372` carries
-  its `Intent:` trailers;
+- **`make check` VERIFIED GREEN** at HEAD `4941478` (full run; golangci-lint 0 issues). The
+  2026-11-01 B1 docs batch (`edef420` governed: VD + INDEX regen + deferral/brief/plan; `4941478`
+  non-governed notes HEAD) is docs/notes + INDEX.md regen only — no `kernel/*`, so the route-matrix
+  code-commit pin did not restale. This single note tweak on top is notes-only and does not change
+  the gate. The governed implementation `6dc9372` carries its `Intent:` trailers;
   the closeout commits are non-governed, so `delivery-enforce.test.sh` (via `hooks-test`) sees a
   non-governed HEAD. Invariant gates pass (the manifest SPEC uses the table form, which does not feed
   `invariants.lock`), the `@generated` verdict-integrity audit artifact was refreshed with `--write`,
