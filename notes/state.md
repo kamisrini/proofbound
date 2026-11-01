@@ -31,11 +31,11 @@ and brief carry the dated correction. Slice plan:
 200, no redirect, requested URL == effective), measured SHA-256
 `971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f` == published, size 24765786 ==
 listed. Manifest `docs/verification/p7-replay-lock-fixtures/postgres-source-16.4.json`; evidence
-`docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md`. **Still owed
-for unit 1:** a reproducible verifier script (planned path scripts/p7-postgres-source-verify.sh — not
-backticked here; the census treats a backticked `scripts/…` token as a mechanism that must already
-exist) + `scripts/tests/` self-test (positive control tampered→reject, neutral pristine→accept), and
-a non-author verdict (Law 9). **Unit 2 (build + license/notice inventory)** is blocked on the
+`docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md`. The
+fail-closed verifier scripts/p7-postgres-source-verify.sh (not backticked here; the census treats a
+backticked `scripts/…` token as a mechanism that must already exist) + its scripts/tests self-test
+are DONE (self-test green; verifier re-verifies the real download). **Still owed for unit 1:** a
+non-author verdict (Law 9) accepting manifest + verifier + evidence — dispatch pending. **Unit 2 (build + license/notice inventory)** is blocked on the
 build-host decision — this box lacks gcc/bison/flex/PG headers ([[proofbound-p7-b1-build-toolchain-gap]]);
 owner was asked (install deps here via sudo apt — my recommendation — vs build elsewhere) and has not
 yet decided. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
