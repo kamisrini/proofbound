@@ -15,8 +15,8 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — await the non-author re-verify of the `d9590da` hardening, then unblock B1
-unit 2.** Unit 2 is blocked on a build host: the owner authorized `sudo apt` here, but this
+**Exact next action — await the round-2 non-author re-verify of the `10b4204` hardening fix, then
+unblock B1 unit 2.** Unit 2 is blocked on a build host: the owner authorized `sudo apt` here, but this
 non-interactive session cannot supply a sudo password, so the owner must install the build deps in
 an interactive shell (command below) or name another build host.
 B1 unit 1 (source provenance) is COMPLETE and ACCEPTED; its two LOW findings are now applied in
@@ -46,8 +46,14 @@ break attempts, no false-accept). Both LOW, fail-closed findings are now **APPLI
 verifier rejects a symlinked tarball up front (was over-reject-only; now fails closed explicitly,
 with a positive self-test control that only the new `-L` check can reject — Law 3); (2) the unused
 duplicate `download_sha256` was dropped from the manifest (the verifier reads `published_sha256`
-only — Law-2 drift seed removed). Author-green; a **light non-author re-verify of the hardening is
-owed (Law 9)** before it counts as accepted. **Unit 2 (build + license/notice inventory)** is
+only — Law-2 drift seed removed). The first non-author re-verify of `d9590da` returned **NEEDS-CHANGES** and caught a real Law-3
+harness defect: the symlink positive control did NOT isolate the `-L` guard (`stat -c %s` on a
+symlink reports the target-path length, so the size check rejected the fixture on its own → the
+guard could be deleted with the self-test staying green; the "test that could not fail" class). The
+runtime behaviour was correct (no false-accept). Fixed in `10b4204`: the control now makes the
+symlink target-path length equal the content size so only the guard can reject it — proven
+load-bearing (guard stripped from a copy → fixture ACCEPTED). **A round-2 non-author re-verify of
+`10b4204` is owed (Law 9)** before the hardening counts as accepted. **Unit 2 (build + license/notice inventory)** is
 blocked: owner authorized "install deps here via sudo apt", but this non-interactive session's
 `sudo` requires a password it cannot supply (`sudo: a password is required`), so the deps are NOT
 installed — gcc/bison/flex still missing ([[proofbound-p7-b1-build-toolchain-gap]]). Owner must run
