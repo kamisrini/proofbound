@@ -82,9 +82,11 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` VERIFIED GREEN at `7f6ac32`** (full run; golangci-lint 0 issues). The 2026-11-01 B1
-  work is docs/notes/evidence + two governed scripts (`edef420` INDEX regen; `00af5f3` verifier +
-  self-test) — no `kernel/*`, so the route-matrix code-commit pin does not restale; each governed
+- **`make check` VERIFIED GREEN at `6078563`** (full run; golangci-lint 0 issues; this notes pin
+  commit sits one past it, non-governed, and does not touch any gate). The 2026-11-01 B1 work is
+  docs/notes/evidence + four governed scripts commits (`edef420` INDEX regen; `00af5f3` verifier +
+  self-test; `d9590da` symlink-guard hardening; `10b4204` self-test isolation fix) — no `kernel/*`,
+  so the route-matrix code-commit pin does not restale; each governed
   commit is followed by a non-governed one so HEAD stays non-governed. The governed implementation
   `6dc9372` carries its `Intent:` trailers; invariant gates
   pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`); the
@@ -98,7 +100,8 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
   hermetic so the gate is deterministic.
 - **Push:** B1 decision batch pushed to `origin/main` (`0f44df9..7ceb29e`) on owner instruction
   2026-11-01. The B1-unit-1 batch + the `d9590da` hardening after it are committed locally; the
-  owner said "do all 3" (push) 2026-11-01, so this batch is being pushed this session.
+  owner said "do all 3" (push) 2026-11-01; the full batch through this pin commit is pushed to
+  `origin/main` this session.
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
   zonky.io embedded-postgres v16.4.0 Maven artifact fails provenance (detached GPG signature does not
   verify — expired encryption-only subkey, mismatched published key) and ships no license/notice
