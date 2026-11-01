@@ -62,11 +62,13 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
   non-governed). The governed implementation `6dc9372` carries its `Intent:` trailers; invariant gates
   pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`); the
   `@generated` verdict-integrity audit artifact and route-matrix pin were refreshed at `c83c807`.
-- **FLAKE seen 2026-11-01:** one `make check` run failed at `kernel-check` while `twin/manifest`
-  itself PASSED; `make kernel-check` alone then passed and the full re-run was green. Likely a kernel
-  test contending for the embedded-postgres ports 55461-55463 (or a parallel/timing test) under the
-  full run. Not caused by the docs batch. If it recurs, it is a real gate-determinism defect to
-  compile into enforcement (Law 7) — isolate the offending test and make it hermetic.
+- **FLAKE (seen TWICE 2026-11-01):** `make check` failed at `kernel-check` on two separate full runs
+  while `twin/manifest` itself PASSED; `make kernel-check` alone and `go test ./...` standalone both
+  pass every kernel package, and each full re-run was green. Likely embedded-postgres port contention
+  (55461-55463) or parallel/timing sensitivity in `internal/twin`/`internal/cli` under the full-run
+  profile. Not caused by any docs/shell change this session. Registered (Law 7, seen twice) as
+  `DEF-KERNELCHECK-FLAKE-001` (OPEN/DEFERRED) — fix is to isolate the offending test and make it
+  hermetic so the gate is deterministic.
 - **Push:** B1 decision batch pushed to `origin/main` (`0f44df9..7ceb29e`) on owner instruction
   2026-11-01. The B1-unit-1 batch after it is committed locally and **not yet pushed**.
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
