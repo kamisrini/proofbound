@@ -62,10 +62,11 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` VERIFIED GREEN at `9540ffc`** (full run; golangci-lint 0 issues). All 2026-11-01 B1
-  batches are docs/notes only (no `kernel/*`, so the route-matrix code-commit pin does not restale;
-  governed `edef420` carries the INDEX regen, every other commit is non-governed and HEAD stays
-  non-governed). The governed implementation `6dc9372` carries its `Intent:` trailers; invariant gates
+- **`make check` VERIFIED GREEN at `7f6ac32`** (full run; golangci-lint 0 issues). The 2026-11-01 B1
+  work is docs/notes/evidence + two governed scripts (`edef420` INDEX regen; `00af5f3` verifier +
+  self-test) — no `kernel/*`, so the route-matrix code-commit pin does not restale; each governed
+  commit is followed by a non-governed one so HEAD stays non-governed. The governed implementation
+  `6dc9372` carries its `Intent:` trailers; invariant gates
   pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`); the
   `@generated` verdict-integrity audit artifact and route-matrix pin were refreshed at `c83c807`.
 - **FLAKE (seen TWICE 2026-11-01):** `make check` failed at `kernel-check` on two separate full runs
