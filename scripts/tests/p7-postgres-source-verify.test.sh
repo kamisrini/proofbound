@@ -58,13 +58,25 @@ printf '%s  %s\n' "$wrong" "$name" >"$dir/$name.sha256"
 reject 'bytes-vs-pin mismatch was accepted' --manifest "$(mkman "$wrong" "$s")" --input-dir "$dir"
 printf '%s  %s\n' "$h" "$name" >"$dir/$name.sha256"
 
-# Positive control: a symlinked tarball is rejected even when it points at correct-content bytes
-# (ambiguous provenance; only the explicit -L check can reject this, since hash and size would match).
-sdir="$tmp/symlink"
-mkdir -p "$sdir"
-cp "$dir/$name.sha256" "$sdir/$name.sha256"
-ln -s "$dir/$name" "$sdir/$name"
-reject 'symlinked tarball was accepted' --manifest "$man" --input-dir "$sdir"
+# Positive control that ISOLATES the `! -L` guard (Law 3: the test must fail if the guard is
+# removed). A plain symlink to correct bytes is NOT a valid isolation control: `stat -c %s` on a
+# symlink reports the length of its *target path* (not the dereferenced content size), so the size
+# check rejects it on its own and the guard could rot undetected. So we deliberately defeat the size
+# check too: make the target-path length EQUAL the real content size. Then `sha256sum` (which DOES
+# deref) matches the pin AND `stat -c %s` (the target-path length) equals the pinned size, so both
+# other checks pass and ONLY the `! -L` guard can reject it. Verified by stripping the guard from a
+# copy of the verifier: with it gone this fixture is accepted and this control fails.
+gdir="$tmp/guard"
+mkdir -p "$gdir"
+payload='proofbound guard-isolation fixture bytes'   # length computed below, not asserted here
+gsize=${#payload}
+gtarget=$(printf 'a%.0s' $(seq 1 "$gsize"))           # target filename of exactly gsize characters
+printf '%s' "$payload" >"$gdir/$gtarget"
+gh=$(sha256sum "$gdir/$gtarget" | awk '{print $1}')
+ln -s "$gtarget" "$gdir/$name"                        # relative symlink; readlink length == gsize
+printf '%s  %s\n' "$gh" "$name" >"$gdir/$name.sha256"
+reject 'symlink passing both hash and size (guard isolation) was accepted' \
+  --manifest "$(mkman "$gh" "$gsize")" --input-dir "$gdir"
 
 # Positive control: missing tarball.
 rm -f "$dir/$name"
