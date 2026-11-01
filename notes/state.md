@@ -15,12 +15,12 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — await the round-2 non-author re-verify of the `10b4204` hardening fix, then
-unblock B1 unit 2.** Unit 2 is blocked on a build host: the owner authorized `sudo apt` here, but this
-non-interactive session cannot supply a sudo password, so the owner must install the build deps in
-an interactive shell (command below) or name another build host.
-B1 unit 1 (source provenance) is COMPLETE and ACCEPTED; its two LOW findings are now applied in
-`d9590da` (non-author re-verify owed). The owner RESOLVED `DEF-P7-001` on
+**Exact next action — unblock B1 unit 2 (build + license/notice inventory): the owner installs the
+build deps or names a build host.** Unit 2 is blocked on a build host: the owner authorized
+`sudo apt` here, but this non-interactive session cannot supply a sudo password, so the owner must
+run the install in an interactive shell (command below) or name another build host.
+B1 unit 1 (source provenance) is COMPLETE and ACCEPTED, and its two LOW findings have been applied
+(`d9590da`) and the fix non-author-accepted (`10b4204`, round-2 ACCEPTABLE at `95dfb47`). The owner RESOLVED `DEF-P7-001` on
 2026-11-01: **Option B1** — build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
 retired, dev/demo-only; Option C rejected). **Provenance mechanism corrected same day:** discovered
 during unit 1 that postgresql.org ships source tarballs with SHA-256/MD5 checksums only — NO detached
@@ -52,8 +52,14 @@ symlink reports the target-path length, so the size check rejected the fixture o
 guard could be deleted with the self-test staying green; the "test that could not fail" class). The
 runtime behaviour was correct (no false-accept). Fixed in `10b4204`: the control now makes the
 symlink target-path length equal the content size so only the guard can reject it — proven
-load-bearing (guard stripped from a copy → fixture ACCEPTED). **A round-2 non-author re-verify of
-`10b4204` is owed (Law 9)** before the hardening counts as accepted. **Unit 2 (build + license/notice inventory)** is
+load-bearing (guard stripped from a copy → fixture ACCEPTED). The **round-2 non-author re-verify
+returned ACCEPTABLE** at `95dfb47`
+(`docs/verification/verdicts/p7-postgres-source-verify-hardening-round2-20261101.md`; the round-1
+NEEDS_WORK verdict is recorded alongside as `...-hardening-round1-...`): the reviewer independently
+proved the control load-bearing (stripped-guard self-test exits non-zero) and found no false-accept
+across an 11-case battery. One LOW/cosmetic finding (a leftover `download_sha256` in the test's
+throwaway synthetic `mkman` manifest — not a drift seed, never read) is recorded as optional cleanup.
+**The unit-1 hardening is ACCEPTED.** **Unit 2 (build + license/notice inventory)** is
 blocked: owner authorized "install deps here via sudo apt", but this non-interactive session's
 `sudo` requires a password it cannot supply (`sudo: a password is required`), so the deps are NOT
 installed — gcc/bison/flex still missing ([[proofbound-p7-b1-build-toolchain-gap]]). Owner must run
