@@ -56,14 +56,17 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check`**: last VERIFIED GREEN at `7ceb29e` (full run; golangci-lint 0 issues). The
-  2026-11-01 B1 batches are docs/notes only (no `kernel/*`, so the route-matrix code-commit pin does
-  not restale; the governed `edef420` carries INDEX regen, every other commit is non-governed and HEAD
-  stays non-governed). The B1-unit-1 batch on top (manifest + evidence + VD/brief/plan correction +
-  notes) is likewise docs/notes only — re-run `make check` after committing it to re-confirm green.
-  The governed implementation `6dc9372` carries its `Intent:` trailers; invariant gates pass (the
-  manifest SPEC uses the table form, which does not feed `invariants.lock`); the `@generated`
-  verdict-integrity audit artifact and route-matrix pin were refreshed at `c83c807`.
+- **`make check` VERIFIED GREEN at `9540ffc`** (full run; golangci-lint 0 issues). All 2026-11-01 B1
+  batches are docs/notes only (no `kernel/*`, so the route-matrix code-commit pin does not restale;
+  governed `edef420` carries the INDEX regen, every other commit is non-governed and HEAD stays
+  non-governed). The governed implementation `6dc9372` carries its `Intent:` trailers; invariant gates
+  pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`); the
+  `@generated` verdict-integrity audit artifact and route-matrix pin were refreshed at `c83c807`.
+- **FLAKE seen 2026-11-01:** one `make check` run failed at `kernel-check` while `twin/manifest`
+  itself PASSED; `make kernel-check` alone then passed and the full re-run was green. Likely a kernel
+  test contending for the embedded-postgres ports 55461-55463 (or a parallel/timing test) under the
+  full run. Not caused by the docs batch. If it recurs, it is a real gate-determinism defect to
+  compile into enforcement (Law 7) — isolate the offending test and make it hermetic.
 - **Push:** B1 decision batch pushed to `origin/main` (`0f44df9..7ceb29e`) on owner instruction
   2026-11-01. The B1-unit-1 batch after it is committed locally and **not yet pushed**.
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
