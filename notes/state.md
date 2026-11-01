@@ -15,9 +15,9 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — finish B1 unit 1 (verifier script + self-test, then a non-author verdict), then
-the build-host decision for unit 2.** The owner RESOLVED `DEF-P7-001` on 2026-11-01: **Option B1** —
-build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
+**Exact next action — the build-host decision for B1 unit 2 (build + license/notice inventory).**
+B1 unit 1 (source provenance) is COMPLETE and ACCEPTED. The owner RESOLVED `DEF-P7-001` on
+2026-11-01: **Option B1** — build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
 retired, dev/demo-only; Option C rejected). **Provenance mechanism corrected same day:** discovered
 during unit 1 that postgresql.org ships source tarballs with SHA-256/MD5 checksums only — NO detached
 `.asc` signature, no `KEYS` file — so "verify a signature against a published PGDG key" (as first
@@ -34,8 +34,14 @@ listed. Manifest `docs/verification/p7-replay-lock-fixtures/postgres-source-16.4
 `docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md`. The
 fail-closed verifier scripts/p7-postgres-source-verify.sh (not backticked here; the census treats a
 backticked `scripts/…` token as a mechanism that must already exist) + its scripts/tests self-test
-are DONE (self-test green; verifier re-verifies the real download). **Still owed for unit 1:** a
-non-author verdict (Law 9) accepting manifest + verifier + evidence — dispatch pending. **Unit 2 (build + license/notice inventory)** is blocked on the
+are DONE (self-test green, wired into hooks-test; verifier re-verifies the real download).
+**Unit 1 ACCEPTED** by independent non-author verdict
+`docs/verification/verdicts/p7-postgres-source-verify-round1-20261101.md` (status ACCEPTABLE at
+`652bb5f`; reviewer independently re-fetched the upstream checksum and ran the real verifier; ~20
+break attempts, no false-accept). Two LOW, fail-closed findings recorded as optional hardening, not
+blocking: (1) `stat` lacks `-L` so a symlinked tarball would over-reject (never false-accept);
+(2) manifest `download_sha256` duplicates `published_sha256` but is unread (a Law-2 same-file drift
+seed). Apply-if-wanted → needs a light non-author re-verify (Law 9). **Unit 2 (build + license/notice inventory)** is blocked on the
 build-host decision — this box lacks gcc/bison/flex/PG headers ([[proofbound-p7-b1-build-toolchain-gap]]);
 owner was asked (install deps here via sudo apt — my recommendation — vs build elsewhere) and has not
 yet decided. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
