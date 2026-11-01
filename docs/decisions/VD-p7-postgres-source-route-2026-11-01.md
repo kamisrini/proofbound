@@ -41,8 +41,25 @@ build. The frozen `ReplayIsolated` subject, the `vera.replay.v1` proof shape, th
 boundary, and the no-new-provider/feed/event exclusions do not change; the deliberately-skipped
 snapshot provider (Gate 1, [[VD-p7-snapshot-provider-skip-2026-10-01]]) stays skipped absent a
 separate lawful-feed decision.
-**Revisit when:** the official postgresql.org source signing/key policy changes such that the
-tarball can no longer be authenticated against a published PGDG key; or a prebuilt distributor is
-found whose signature chain and license/notice set verify, making B2 cheaper than owning the build;
-or the zonky upstream maintainer publishes a key whose signature over the pinned artifact verifies,
-which would reopen C as a lower-effort alternative.
+**Revisit when:** the official postgresql.org source distribution begins (or ceases) publishing a
+detached signature for source tarballs, changing what authentication is possible; or a prebuilt
+distributor is found whose signature chain and license/notice set verify, making B2 cheaper than
+owning the build; or the zonky upstream maintainer publishes a key whose signature over the pinned
+artifact verifies, which would reopen C as a lower-effort alternative.
+
+**Amended 2026-11-01 (premise correction + mechanism chosen):** the Context above assumed
+"postgresql.org tarballs are signed by a published PGDG key." That premise is **false for the source
+tarballs**: the official v16.4 source folder ships SHA-256 and MD5 checksum files only — no detached
+`.asc` signature and no `KEYS` file in the source tree (PostgreSQL historically published PGP-signed
+*checksums* via the announce list, not a detached signature in the download folder). B1's goal
+(provenance-verifiable source) stands, but its mechanism cannot be "verify a detached signature
+against a published key." Presented the fork to the owner; the owner chose the **least-expensive,
+light-touch mechanism**: pin the **published SHA-256** and verify a pristine-upstream tarball
+**fetched over HTTPS** from the official domain. Honest guarantee: byte integrity against the
+published checksum + official-domain TLS trust — **not** an offline signer-identity signature (the
+checksum and tarball share an origin). This residual is owner-accepted and is materially stronger
+than the retired zonky route (whose detached signature actively failed), while weaker than a true
+signature chain. This is the authenticity half of `DEF-P7-001` for the source route; the licensing
+half (component license/notice inventory) is unchanged and still owed at build time. First
+verification evidence (digest + size match, no redirect):
+[`postgres-source-16.4-verify-20261101`](../verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md).

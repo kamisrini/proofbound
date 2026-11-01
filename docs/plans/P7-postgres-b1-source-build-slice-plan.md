@@ -16,31 +16,39 @@ digest-before-trust; `UNVERIFIED` on any missing/changed input.
 
 ## Why this slice exists
 
-The go/no-go picked B1 because it is the only route whose bytes this project can authenticate today.
+The go/no-go picked B1 because it is the route whose source bytes this project can authenticate.
 The zonky binary failed on two counts — an unverifiable detached signature and no component
-license/notice inventory. Building PostgreSQL from the official signed source tarball addresses both
-at the root: the tarball is signed by a *published* PGDG release key (authenticity), and because we
-control `./configure`, the set of bundled/linked components is known and small enough to inventory
-completely (licensing). The slice's whole job is to turn that into committed, reviewable evidence.
+license/notice inventory. Building PostgreSQL from upstream source addresses the licensing count at
+the root (we control `./configure`, so the bundled/linked component set is known and small enough to
+inventory completely). **Authenticity note (corrected 2026-11-01):** postgresql.org ships source
+tarballs with SHA-256/MD5 checksums only — there is NO detached `.asc` signature and no `KEYS` file
+in the source tree, so "verify a signature against a published PGDG key" is not available. The owner
+adopted the least-expensive, light-touch mechanism: **pin the published SHA-256 and verify a
+pristine-upstream tarball fetched over HTTPS** from the official domain (integrity + official-domain
+TLS trust, not an offline signature). See
+[`VD-p7-postgres-source-route-2026-11-01`](../decisions/VD-p7-postgres-source-route-2026-11-01.md)
+(2026-11-01 amendment). The slice's job is to turn that into committed, reviewable evidence.
 
 ## Scope (what this slice delivers)
 
-1. **Setup-source manifest for the PostgreSQL source** — a pinned record, reviewed before any fetch
-   is trusted, that names: the exact upstream tarball URL (`https://ftp.postgresql.org/pub/source/
-   v<ver>/postgresql-<ver>.tar.bz2`), its detached-signature URL (`…​.tar.bz2.asc`), the expected
-   tarball SHA-256 and byte size, and the full 40-hex fingerprint of the PGDG release signing key
-   the signature must verify against. Target version: **PostgreSQL 16.4** (matches the retired
-   zonky default so the replay's catalog/on-disk expectations are unchanged). This is a new
-   role-typed section of / companion to
-   [`setup-sources.json`](../verification/p7-replay-lock-fixtures/setup-sources.json), reusing its
-   no-redirect, requested==final-URL, digest-and-size rules.
-2. **A verifier script** (`scripts/p7-postgres-source-verify.sh`, governed) that, given the manifest
-   and a locally fetched tarball + `.asc` + key, (a) imports only the pinned-fingerprint key and
-   confirms the fingerprint, (b) runs `gpg --verify` and requires a good signature **by that exact
-   key**, (c) recomputes the tarball SHA-256 and size and requires an exact manifest match, and
-   fails CLOSED (non-zero, no partial trust) on any mismatch, expired/revoked key, or missing input.
-   It has a self-test (Law 3): a positive control (tampered byte → reject) and a neutral control
-   (pristine input → accept) wired into `make hooks-test`-style harness or `scripts/tests/`.
+1. **Setup-source manifest for the PostgreSQL source** — a pinned record that names: the exact
+   upstream tarball URL (`https://ftp.postgresql.org/pub/source/v<ver>/postgresql-<ver>.tar.bz2`),
+   its published-checksum URL (`…​.tar.bz2.sha256`), the expected (published) tarball SHA-256 and
+   byte size, and the no-redirect / requested==effective-URL rule. **No GPG fingerprint field** —
+   source tarballs carry no detached signature (see the why-this-slice note). Target version:
+   **PostgreSQL 16.4** (matches the retired zonky default so the replay's catalog/on-disk
+   expectations are unchanged). Delivered as
+   [`postgres-source-16.4.json`](../verification/p7-replay-lock-fixtures/postgres-source-16.4.json),
+   a sibling to [`setup-sources.json`](../verification/p7-replay-lock-fixtures/setup-sources.json).
+   **DONE 2026-11-01** — verified (digest + size match, no redirect); evidence at
+   [`postgres-source-16.4-verify-20261101`](../verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md).
+2. **A verifier script** (planned path scripts/p7-postgres-source-verify.sh, governed) that, given
+   the manifest and a locally fetched tarball + its `.sha256`, (a) recomputes the tarball SHA-256 and
+   size and requires an exact match to BOTH the published checksum file and the manifest pin, and
+   (b) fails CLOSED (non-zero, no partial trust) on any mismatch or missing input. It carries a
+   self-test: a positive control (tampered byte → reject) and a neutral control (pristine input →
+   accept) under `scripts/tests/`. (The light-touch mechanism needs no `gpg` step; the fetch+verify
+   was run by hand for unit 1's evidence, and this script makes it reproducible for review.)
 3. **A build contract** — the exact `./configure` flags, the component set they pull in, the
    produced `bin/postgres`/`bin/initdb`/`bin/pg_ctl` the fixture needs, and the recorded build
    evidence (configure flags, compiler + libc versions, produced binary SHA-256s, timings). The
@@ -70,11 +78,13 @@ completely (licensing). The slice's whole job is to turn that into committed, re
 
 ## Sequence & gates (each unit spec-first, each result non-author-verified — Law 6 + Law 9)
 
-1. **Manifest + verifier (this is the provenance core).** Write the source manifest and
-   `p7-postgres-source-verify.sh` with its self-test. Execute a network-permitted fetch of the
-   tarball + `.asc` + PGDG key, run the verifier, and record the measured digests/size and the
-   `gpg --verify` result as evidence. **Gate:** good signature by the pinned fingerprint AND exact
-   digest/size match, or stop `UNVERIFIED`. Non-author verdict on the manifest + verifier + evidence.
+1. **Manifest + verify (this is the provenance core).** Write the source manifest; execute a
+   network-permitted fetch of the tarball + its published `.sha256` (no redirects, requested URL ==
+   effective URL); require the measured SHA-256 and size to match BOTH the published checksum and the
+   manifest pin; record the evidence. Add the reproducible verifier script + self-test.
+   **Gate:** exact digest + size match (no detached signature exists to check), or stop `UNVERIFIED`.
+   Non-author verdict on the manifest + verifier + evidence. **Fetch/verify DONE 2026-11-01** (manifest
+   + evidence committed); the verifier script + self-test and the non-author verdict remain.
 2. **Build + inventory.** Configure/build outside the clone against the verified source; record
    build evidence and produced-binary digests; generate the component license/notice inventory.
    **Gate:** reproducible-enough build evidence + complete inventory; non-author verdict.
@@ -86,19 +96,21 @@ completely (licensing). The slice's whole job is to turn that into committed, re
 
 ## Evidence artifacts this slice will commit
 
-- The source manifest (pinned URLs, digests, size, key fingerprint).
-- `scripts/p7-postgres-source-verify.sh` + its self-test + a `scripts/tests/` case.
-- The fetch/verify evidence record (requested==final URLs, measured digests, `gpg --verify` output,
-  key fingerprint confirmation, timestamp).
-- The build evidence record and the component license/notice inventory.
+- The source manifest (pinned URLs, published + measured digests, size). **Done:**
+  `docs/verification/p7-replay-lock-fixtures/postgres-source-16.4.json`.
+- The verifier script (planned scripts/p7-postgres-source-verify.sh) + its self-test + a
+  `scripts/tests/` case. **Pending.**
+- The fetch/verify evidence record (requested==effective URLs, published vs measured digest/size,
+  timestamp). **Done:** `docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md`.
+- The build evidence record and the component license/notice inventory. **Pending (unit 2).**
 - The runtime-fixture evidence (zero-fetch witness, cleanup proof, proof/result binding) and the
-  non-author verdicts for each unit.
+  non-author verdicts for each unit. **Pending (unit 3 + verdicts).**
 
-## Open questions to settle at unit 1
+## Open questions to settle (remaining)
 
-- Exact PGDG signing key fingerprint to pin (confirm the current postgresql.org release key against
-  its published fingerprint before pinning — the pin is only trustworthy if the fingerprint itself
-  is obtained from an authenticated channel).
-- Tarball compression to pin (`.tar.bz2` vs `.tar.gz`) — pick one and pin its digest.
+- **Build host** — the C toolchain is absent on this box (no gcc/bison/flex/PG headers). Resolve:
+  install deps here (sudo apt) or build on a separate setup machine.
 - `./configure` feature minimization — the smallest feature set that still runs the replay, to keep
   the license/notice inventory small and the build deterministic.
+- *(Resolved 2026-11-01: provenance mechanism = published-SHA-256-over-HTTPS, light touch; tarball
+  compression pinned to `.tar.bz2`; no GPG key to pin.)*

@@ -10,12 +10,17 @@ replay runs against. This brief states that decision, the facts, the options, an
 It changes nothing on its own. See [`DEF-P7-001`](../deferrals.tsv) and the
 [prerequisites record](../verification/p7-replay-lock-prerequisites/README.md).
 
-> **DECISION — 2026-11-01:** the owner chose **Option B, sub-route B1** (build PostgreSQL from the
-> official signed source). Recorded as
+> **DECISION — 2026-11-01:** the owner chose **Option B, sub-route B1** (build PostgreSQL from
+> official upstream source). Recorded as
 > [`VD-p7-postgres-source-route-2026-11-01`](../decisions/VD-p7-postgres-source-route-2026-11-01.md).
-> `DEF-P7-001` stays OPEN/BLOCKED until the source build's provenance + license/notice evidence is
-> produced and accepted by a non-author verdict. The rest of this brief is retained as the record of
-> the options considered.
+> **Correction (same day):** this brief's claim that "postgresql.org tarballs are signed by a
+> published PGDG key" is **wrong for the source tarballs** — they ship SHA-256/MD5 checksums only, no
+> detached `.asc` signature. The owner therefore adopted the least-expensive, light-touch mechanism:
+> pin the **published SHA-256** and verify a pristine-upstream tarball **fetched over HTTPS** from the
+> official domain (integrity + official-domain TLS trust, not an offline signature). See the VD's
+> 2026-11-01 amendment. `DEF-P7-001` stays OPEN/BLOCKED until the source provenance (done, pending a
+> non-author verdict) plus the build + license/notice inventory are produced and accepted. The rest
+> of this brief is retained as the record of the options considered.
 
 ## The decision in one line
 

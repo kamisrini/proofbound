@@ -15,24 +15,33 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — execute B1 unit 1 (fetch + verify the signed PostgreSQL source).** The owner
-RESOLVED the `DEF-P7-001` go/no-go on 2026-11-01: **Option B1** — build PostgreSQL from the official
-signed postgresql.org source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]]; zonky retired
-as the shippable path (stays dev/demo-only); Option C rejected. The slice is scoped spec-first in
-[`docs/plans/P7-postgres-b1-source-build-slice-plan.md`](../docs/plans/P7-postgres-b1-source-build-slice-plan.md)
-as three gated, each-non-author-verified units:
-(1) **source manifest + a to-be-added signature/digest verifier script** (planned path
-scripts/p7-postgres-source-verify.sh — not backticked here because the census treats a backticked
-`scripts/…` token as a mechanism that must already exist) with self-test — fetch the PostgreSQL 16.4
-`.tar.bz2` + `.asc` + PGDG key, require a good `gpg --verify` signature by a *pinned fingerprint* AND
-exact SHA-256/size, fail CLOSED; record the fetch/verify evidence. THIS is the next unit to execute. (2) build outside the clone + complete component license/notice inventory.
-(3) prepared-offline runtime fixture that lets `case-manifest`/`behavior-lock` derive a *verified*
-status. `DEF-P7-001` stays **OPEN/BLOCKED** until units 1–3's provenance + license + runtime evidence
-is produced and accepted. Binary-exclusion law unchanged: no binary/db/executable in Git. The
-snapshot provider stays skipped (Gate 1) absent a new lawful-feed decision. The retired `twin replay`
-CLI / demo tests still use embedded-postgres ports 55461-55463 for dev/demo only. Unit 1 open
-questions to settle first: the exact PGDG signing-key fingerprint to pin (obtain from an
-authenticated channel), the tarball compression to pin, and the minimal `./configure` feature set.
+**Exact next action — finish B1 unit 1 (verifier script + self-test, then a non-author verdict), then
+the build-host decision for unit 2.** The owner RESOLVED `DEF-P7-001` on 2026-11-01: **Option B1** —
+build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
+retired, dev/demo-only; Option C rejected). **Provenance mechanism corrected same day:** discovered
+during unit 1 that postgresql.org ships source tarballs with SHA-256/MD5 checksums only — NO detached
+`.asc` signature, no `KEYS` file — so "verify a signature against a published PGDG key" (as first
+recorded) is impossible for source. Owner chose the least-expensive, light-touch mechanism: pin the
+PUBLISHED SHA-256 and verify a pristine-upstream tarball fetched over HTTPS from the official domain
+(integrity + official-domain TLS trust, NOT an offline signature — owner-accepted residual). The VD
+and brief carry the dated correction. Slice plan:
+[`docs/plans/P7-postgres-b1-source-build-slice-plan.md`](../docs/plans/P7-postgres-b1-source-build-slice-plan.md).
+
+**B1 unit 1 fetch/verify is DONE** (2026-11-01): PostgreSQL 16.4 `.tar.bz2` fetched over HTTPS (HTTP
+200, no redirect, requested URL == effective), measured SHA-256
+`971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f` == published, size 24765786 ==
+listed. Manifest `docs/verification/p7-replay-lock-fixtures/postgres-source-16.4.json`; evidence
+`docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-verify-20261101.md`. **Still owed
+for unit 1:** a reproducible verifier script (planned path scripts/p7-postgres-source-verify.sh — not
+backticked here; the census treats a backticked `scripts/…` token as a mechanism that must already
+exist) + `scripts/tests/` self-test (positive control tampered→reject, neutral pristine→accept), and
+a non-author verdict (Law 9). **Unit 2 (build + license/notice inventory)** is blocked on the
+build-host decision — this box lacks gcc/bison/flex/PG headers ([[proofbound-p7-b1-build-toolchain-gap]]);
+owner was asked (install deps here via sudo apt — my recommendation — vs build elsewhere) and has not
+yet decided. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
+which lets case-manifest/behavior-lock derive a *verified* status. `DEF-P7-001` stays **OPEN/BLOCKED**
+until units 1–3 are accepted. Binary-exclusion law unchanged. Snapshot provider stays skipped
+(Gate 1). The retired dev/demo `twin replay` path still uses embedded-postgres ports 55461-55463.
 
 **Shipped this session (2026-11-01):** two non-runtime P7 contracts added to the accepted
 `internal/twin/manifest` package (production count stays 17) and non-author **ACCEPTABLE** —
@@ -47,17 +56,16 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` VERIFIED GREEN** at HEAD `4941478` (full run; golangci-lint 0 issues). The
-  2026-11-01 B1 docs batch (`edef420` governed: VD + INDEX regen + deferral/brief/plan; `4941478`
-  non-governed notes HEAD) is docs/notes + INDEX.md regen only — no `kernel/*`, so the route-matrix
-  code-commit pin did not restale. This single note tweak on top is notes-only and does not change
-  the gate. The governed implementation `6dc9372` carries its `Intent:` trailers;
-  the closeout commits are non-governed, so `delivery-enforce.test.sh` (via `hooks-test`) sees a
-  non-governed HEAD. Invariant gates pass (the manifest SPEC uses the table form, which does not feed
-  `invariants.lock`), the `@generated` verdict-integrity audit artifact was refreshed with `--write`,
-  and the kernel commit restaled the route-matrix code-commit pin — refreshed in `c83c807` (the known
-  code-commit-pin tax). **Not pushed to `origin/main` yet** (push is an outward action left to the
-  owner / wrap).
+- **`make check`**: last VERIFIED GREEN at `7ceb29e` (full run; golangci-lint 0 issues). The
+  2026-11-01 B1 batches are docs/notes only (no `kernel/*`, so the route-matrix code-commit pin does
+  not restale; the governed `edef420` carries INDEX regen, every other commit is non-governed and HEAD
+  stays non-governed). The B1-unit-1 batch on top (manifest + evidence + VD/brief/plan correction +
+  notes) is likewise docs/notes only — re-run `make check` after committing it to re-confirm green.
+  The governed implementation `6dc9372` carries its `Intent:` trailers; invariant gates pass (the
+  manifest SPEC uses the table form, which does not feed `invariants.lock`); the `@generated`
+  verdict-integrity audit artifact and route-matrix pin were refreshed at `c83c807`.
+- **Push:** B1 decision batch pushed to `origin/main` (`0f44df9..7ceb29e`) on owner instruction
+  2026-11-01. The B1-unit-1 batch after it is committed locally and **not yet pushed**.
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
   zonky.io embedded-postgres v16.4.0 Maven artifact fails provenance (detached GPG signature does not
   verify — expired encryption-only subkey, mismatched published key) and ships no license/notice
@@ -72,18 +80,20 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 ## Deferrals (see `docs/deferrals.tsv`)
 
-- `DEF-P7-001` OPEN/BLOCKED — the pre-GA PostgreSQL provenance item above; now has a decision brief.
+- `DEF-P7-001` OPEN/BLOCKED — pre-GA PostgreSQL provenance; owner RESOLVED the route go/no-go (B1,
+  [[VD-p7-postgres-source-route-2026-11-01]]) and unit-1 source provenance is verified. Stays open
+  until the B1 build + license/notice inventory + runtime fixture are produced and accepted.
 - `DEF-P7-002` RESOLVED (Go-module evidence corpus).
 - `DEF-P7-003` RESOLVED (twin/manifest accepted as the 17th package, 2026-10-31).
 - `DEF-METATAX-001` RESOLVED (meta-tax is a diagnostic, not a gate).
 
 ## Branch status
 
-Branch `main`, tracking `origin/main`. This session added governed implementation `6dc9372`
-(case-manifest + behavior-lock contracts, both `Intent:` trailers) followed by this non-governed
-closeout (ROADMAP P7 note, journal, this state note, the verdict, the refreshed verdict-integrity
-audit artifact, and the Postgres brief). Prior session wrapped at `0f44df9`, pushed to `origin/main`.
-**Not yet pushed this session** — push is an outward action left for the owner / the wrap step.
+Branch `main`, tracking `origin/main`. `origin/main` is at `7ceb29e` (the B1 decision batch, pushed
+on owner instruction). Local commits after it — the B1-unit-1 provenance batch (source manifest,
+fetch/verify evidence, VD/brief/plan correction, notes) — are **not yet pushed**. Earlier this
+session: governed implementation `6dc9372` (case-manifest + behavior-lock, both `Intent:` trailers)
+→ non-governed closeout → `edef420` (B1 decision + slice scope) → notes.
 
 ## P7 position
 
