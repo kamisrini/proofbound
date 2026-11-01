@@ -220,4 +220,22 @@ No provider, vendor, feed, schema, or event kind is authorized. The read-only pr
 licensing go/no-go for the pinned replay setup inputs remains deferred by owner direction. It is an
 unresolved prerequisite, not a pass or `NO-GO`; no runtime binary validation is part of this slice.
 
+**P7 non-runtime contract completion 2026-11-01.** The replay-lock line's non-runtime documentary
+contracts are now all implemented and independently accepted. Beyond the prior projector/build
+manifest, source/toolchain inventory, evidence closure, skeleton, and declaration (the 17th package,
+`internal/twin/manifest`), this slice added the `proofbound.p7.case-manifest.v1` `ReplayIsolated`
+case evidence index and the `proofbound.p7.behavior-lock.v1` authored behavior-lock with a pure
+`EvaluateLock` over caller-supplied committed `vera.replay.v1` proof bytes. Both are non-runtime:
+they validate declarations and supplied bytes, run no replay, fetch/build/validate no binary, and
+approve no PostgreSQL route; a lock or case that depends on an uncleared runtime input derives
+`UNVERIFIED`, never `PASS`/`LOCKED` by absence. Added to the accepted package (frozen production
+count stays 17), under change intents `CI-p7-case-manifest-1a2b3c` and `CI-p7-behavior-lock-1a2b3c`
+(both binding `BR-replay-evidence-6e3d2b` O-1); calibrated mutation sweep green with zero new
+survivors; non-author verdict `p7-case-behaviorlock-round1-20261101` ACCEPTABLE. Everything past this
+is runtime/provider work: a *verified* runtime `ReplayIsolated` lock, L12/L17, clean-clone proof, and
+a shippable embedded-DB release all remain gated on the owner's PostgreSQL provenance/licensing
+go/no-go (`DEF-P7-001`), for which a decision brief now exists at
+[P7-postgres-provenance-go-no-go-brief.md](docs/plans/P7-postgres-provenance-go-no-go-brief.md). The
+snapshot provider remains deliberately skipped (Gate 1).
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-10-31
+As of: 2026-11-01
 
-## Resume — 2026-10-31
+## Resume — 2026-11-01
 
 **STANDING AUTHORIZATION IN FORCE** ([[VD-agent-standing-authorization-5ouz7q]], 2026-10-31): the
 owner (Srinivas Kamisetty) authorized a product push. The agent self-authorizes governed commits
@@ -15,147 +15,78 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Session wrapped 2026-10-31 at a clean, verified milestone.** `make check` is **VERIFIED GREEN** at
-HEAD `89b08aa` (full run, golangci-lint 0 issues); all work pushed to `origin/main`; off-machine
-backup bundle written to `~/Backups/` (run `PROOFBOUND_BACKUP_DIR=$HOME/Backups make backup` — the
-target has no default dir). Standing authorization (`VD-agent-standing-authorization-5ouz7q`) remains
-in force.
+**Exact next action — an owner decision, then one of two paths:** P7's non-runtime work is now
+complete up to the runtime gate. The remaining P7 ladder (a *verified* runtime `ReplayIsolated`
+lock, L12/L17, clean-clone proof, a shippable embedded-DB release) is blocked on the owner's
+**PostgreSQL provenance/licensing go/no-go** (`DEF-P7-001`). The decision brief is
+[`docs/plans/P7-postgres-provenance-go-no-go-brief.md`](../docs/plans/P7-postgres-provenance-go-no-go-brief.md):
+option **A** keep dev/demo-only (no further runtime work; close out), **B** move to a
+provenance-verifiable Postgres source (recommended **B1**: build from the official signed source —
+then the agent scopes an authorized setup/build + runtime-fixture slice), or **C** formally accept
+zonky (blocked on the upstream maintainer supplying a verifying key). The agent cannot make this
+call. Until the owner picks, no runtime fixtures, binary validation, L12/L17, PostgreSQL approval,
+or `DEF-P7-001` activation. The snapshot provider stays skipped (Gate 1) absent a new lawful-feed
+decision. The `twin replay` CLI / demo tests use embedded-postgres ports 55461-55463.
 
-**Exact next action (owner deferred the lane choice — pick one):** (1) a prospect-facing
-`docs/` quickstart/demo of the end-to-end value story (ingest → proof report → `twin replay`),
-non-kernel and most directly sellable; (2) compile the `gate-registry-census-coupling` lesson into a
-`make regen` + freshness pre-check so kernel commits stop restaling the generated artifacts (this tax
-cost ~15 `make check` runs this session); or (3) richer twin what-ifs (higher-level counterfactuals vs
-raw event JSON). Keep `DEF-P7-001` (shippable Postgres provenance) as the pre-GA task. The twin-replay
-cli tests use embedded-postgres ports 55461-55463.
-
-**Shipped this session:** toolchain fix (golangci-lint 2.15.0 + GOPATH fallback); all three deferrals
-dispositioned (DEF-METATAX-001 RESOLVED, DEF-P7-003 RESOLVED/17th package accepted, DEF-P7-001
-OPEN/BLOCKED pre-GA); P6 census reconciled; `proofbound twin replay` CLI (feature `a8343836` + fix
-`b9f7b7f` + non-author verdict). Backfilled `/proofbound-{decide,review,spec}` + the session-command
-catalog. Advisory-expiry enforcement.
+**Shipped this session (2026-11-01):** two non-runtime P7 contracts added to the accepted
+`internal/twin/manifest` package (production count stays 17) and non-author **ACCEPTABLE** —
+`proofbound.p7.case-manifest.v1` (`casemanifest.go`, the `ReplayIsolated` case evidence index) and
+`proofbound.p7.behavior-lock.v1` (`behaviorlock.go`, the authored lock + pure `EvaluateLock` over
+committed `vera.replay.v1` proof bytes). SPEC extended (CASE-INV-1..6 / LOCK-INV-1..6). Calibrated
+mutation sweep green (335/330/0/5, all survivors pre-declared, 0 new; calibration controls behaved).
+Implementation `6dc9372` (governed, `Intent: CI-p7-case-manifest-1a2b3c` + `CI-p7-behavior-lock-1a2b3c`,
+both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
+`docs/verification/verdicts/p7-case-behaviorlock-round1-20261101.md`. Owner brief:
+`docs/plans/P7-postgres-provenance-go-no-go-brief.md`. See `notes/journal/2026-11-01.md`.
 
 **Immediate blockers / honest gate state:**
 
-- **`make check` is GREEN at a non-governed HEAD.** The two prior structural reds are both cleared:
-  `kernel-check` lint (toolchain fix `0e32636`) and `p6-task8-package-universe` (17th package accepted,
-  `7cc048f`). The ONLY remaining subtlety is the delivery boundary: `delivery-enforce.test.sh` (run by
-  hooks-test) invokes the real `delivery-enforce.sh`, which fails while HEAD is a GOVERNED commit
-  without an `Intent:` trailer, and passes once a non-governed commit (the closeout) is HEAD. So end
-  every governed batch on a non-governed notes commit.
-- `DEF-P7-001` stays OPEN/BLOCKED (pre-GA): shippable Postgres provenance. Does not block `make check`
-  or product work; it gates a customer-shippable release that embeds PostgreSQL.
-- (historical) `kernel-check` lint red was **CLEARED** (`0e32636`): `golangci-lint` rebuilt to 2.15.0
-  under go1.27.3 (lints kernel clean, 0 issues), and `scripts/kernel-check.sh` now resolves the binary
-  via `command -v` with a `$(go env GOPATH)/bin` fallback, so `make check` no longer needs `~/go/bin` on
-  PATH. See [[proofbound-wsl-toolchain-gap]].
-- `DEF-P7-001` is now `BLOCKED` (not merely owner-postponed): the pinned zonky.io embedded-postgres
-  v16.4.0 Maven artifact fails provenance (GPG signature does not verify; no license/notice coverage
-  despite bundling PostgreSQL + several libs). It runs for dev/demo but is NOT safe to redistribute to
-  customers. The real unblock is likely a provenance-verifiable Postgres source, not blessing zonky.
+- **`make check` expected GREEN at this non-governed closeout HEAD** (run it to confirm — it is slow
+  and not run by the SessionStart hook). The governed implementation `6dc9372` carries its `Intent:`
+  trailers; this closeout is non-governed, so `delivery-enforce.test.sh` (via `hooks-test`) sees a
+  non-governed HEAD. Package count stays 17 (new files share the `twin/manifest` dir), invariant
+  gates pass (the manifest SPEC uses the table form, which does not feed `invariants.lock`), and the
+  `@generated` verdict-integrity audit artifact was refreshed with `--write`.
+- `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
+  zonky.io embedded-postgres v16.4.0 Maven artifact fails provenance (detached GPG signature does not
+  verify — expired encryption-only subkey, mismatched published key) and ships no license/notice
+  coverage despite bundling PostgreSQL + OpenSSL/ICU/libxml2/libxslt/zlib/liblzma/OSSP-UUID. It runs
+  for dev/demo (`kernel/cmd/replaydemo`) but is NOT safe to redistribute. See the go/no-go brief and
+  [`p7-replay-lock-prerequisites/README.md`](../docs/verification/p7-replay-lock-prerequisites/README.md).
 - `commit-cadence` fails whenever the tree is dirty and HEAD is older than 90m; the two preserved
-  untracked user paths keep the tree dirty between commits.
+  untracked user paths (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) keep the
+  tree dirty between commits, so run `make check` promptly after a commit.
+- Kernel toolchain: Go 1.27.3; `golangci-lint` 2.15.0 at `~/go/bin`, resolved by `kernel-check.sh`
+  via a `$(go env GOPATH)/bin` fallback (no PATH edit needed). See [[proofbound-wsl-toolchain-gap]].
+
+## Deferrals (see `docs/deferrals.tsv`)
+
+- `DEF-P7-001` OPEN/BLOCKED — the pre-GA PostgreSQL provenance item above; now has a decision brief.
+- `DEF-P7-002` RESOLVED (Go-module evidence corpus).
+- `DEF-P7-003` RESOLVED (twin/manifest accepted as the 17th package, 2026-10-31).
+- `DEF-METATAX-001` RESOLVED (meta-tax is a diagnostic, not a gate).
 
 ## Branch status
 
-- Branch `main`, tracking `origin/main`. This session, in order: advisory-expiry `7e936f1`/`208b24f`,
-  three commands `1e8d40a`/`5275a5c`, catalog `a1460e1`/`1ebe50f`, toolchain fix `0e32636`, P7 push
-  (replay demo + standing-auth VD) `100e804`/`145781a`, deferral batch (DEF-METATAX-001 + DEF-P7-001)
-  `87577ce`, twin/manifest acceptance (DEF-P7-003) `7cc048f`, deferrals self-test fix `1d9fbb3`,
-  closeout `768390f`, P6 census/gate-registry reconciliation `9eafdb0` (+ closeout `5f65e01`, pushed),
-  twin replay CLI feature `a8343836` (+ closeout `b859bfa`), review fix F1 `b9f7b7f`, verdict +
-  closeout `a391323`, generated-artifact code-commit refreshes `a9f244f`/`89b08aa`, then this wrap
-  note. **All pushed through `89b08aa`; origin/main is level.** Each governed commit is followed by a
-  non-governed commit so the delivery boundary (below) sees a non-governed HEAD.
-- **Delivery-boundary note:** `f387689` touches governed `scripts/*` and was committed plain (no
-  `Intent:` trailer) by owner direction. `intent-delivery-applicability` (via `delivery-enforce`,
-  part of `make check`) checks HEAD only, so `make check` shows a `delivery-enforce` red point
-  WHENEVER a governed commit without an Intent trailer is HEAD. It passes once a non-governed commit
-  (e.g. this closeout) is HEAD. `f387689` is still a plain governed commit formally unbound by a
-  change intent (same status as `bfeb31f`); owner chose bind-later. A green `delivery-enforce` means
-  HEAD is not a delivery candidate, not that `f387689` is intent-bound.
-- Preserved unrelated untracked user paths: `docs/plans/P5-intent-provenance-plan.md` and
-  `kernel/cmd/p6dbprobe/`. Never staged, deleted, or relabeled.
-- Advisory-expiry slice committed `7e936f1` (governed: `scripts/advisory-expiry.sh`,
-  `scripts/tests/advisory-expiry.test.sh`, `scripts/link-lint.sh`, `docs/gates.md`) + this closeout
-  (`docs/deferrals.tsv` +`DEF-METATAX-001`, `notes/journal/2026-10-31.md`, this note).
+Branch `main`, tracking `origin/main`. This session added governed implementation `6dc9372`
+(case-manifest + behavior-lock contracts, both `Intent:` trailers) followed by this non-governed
+closeout (ROADMAP P7 note, journal, this state note, the verdict, the refreshed verdict-integrity
+audit artifact, and the Postgres brief). Prior session wrapped at `0f44df9`, pushed to `origin/main`.
+**Not yet pushed this session** — push is an outward action left for the owner / the wrap step.
 
-## Completed this session
+## P7 position
 
-- **Law 4 advisory-expiry enforcement + link-lint honesty (`7e936f1`, owner-authorized):** found that
-  `scripts/link-lint.sh` enforced none of its `docs/gates.md` claims — it only checked `INDEX.md`
-  membership, so the two `2026-10-16` advisories sat expired 15 days under a green contract (P6 DoD
-  "zero expired advisories" was never mechanized). New `scripts/advisory-expiry.sh` (keys on the Tier
-  column; `ADVISORY_GATES_FILE`/`ADVISORY_TODAY` overrides) now runs via `link-lint.sh` in
-  `make check`, with a calibrated self-test (expired+dateless MUST fail, future+today MUST pass,
-  BLOCKING-row "advisory" mention MUST be ignored, live registry MUST be clean) proven live against
-  the original defect. Owner-decided dispositions: backup advisory deleted (intent lives in
-  `VD-local-only-backup-mjic4a`), meta-tax re-dated to `2026-12-31` — it cannot graduate as-built
-  (71% cumulative lifetime ratio, no bootstrap/steady regime), redesign tracked as `DEF-METATAX-001`.
-  See `notes/journal/2026-10-31.md`.
-- **Toolchain fix (`0e32636`):** golangci-lint rebuilt to 2.15.0 under go1.27.3 (2.13.2 cannot read
-  Go 1.27 export data); `kernel-check.sh` resolves it via GOPATH/bin fallback. kernel lints clean.
-- **P7 proven to RUN + runnable demo (this turn):** empirically ran the twin isolated-replay suite
-  against a real embedded Postgres 16.4 (green). Built `kernel/cmd/replaydemo` — a prospect-facing
-  demonstration that seeds a ledger, reproduces committed state (`preserved`, `vera.replay.v1`
-  proof), detects a counterfactual (`changed`, distinct snapshot digest), and proves the source
-  ledger byte-identical before/after. Run from `kernel/`: `go run ./cmd/replaydemo`. Found that the
-  only thing still "blocked" in P7 is the clean-clone/offline/provenance-verified route, gated by the
-  real `DEF-P7-001` supply-chain problem — not the capability itself.
-- **Standing authorization recorded** ([[VD-agent-standing-authorization-5ouz7q]]).
-- **Session-command catalog (`a1460e1`, owner-accepted, governed):** new `docs/session-commands.md`
-  (why/what/how + links for all five `/proofbound-*` commands); one-line pointers added in README
-  Contributing and CLAUDE.md § Session protocol (CLAUDE.md 83/120 lines). Detail stays in each
-  command file (Law 2).
-- **Session-protocol commands backfilled (`1e8d40a`, owner-accepted):** `/proofbound-decide`,
-  `/proofbound-review`, `/proofbound-spec` built as `.claude/commands/*.md`, grounded in the real
-  template/verdict/SPEC conventions and the review-ceremony/verification-asymmetry/verdicts-are
-  -artifacts decisions. Non-governed. See `notes/journal/2026-10-31.md` (incl. a
-  `hook-false-positive-prose` LESSON on `block-secrets.sh`).
-- **Gate-integrity repair (`bfeb31f`):** `make hooks-test` fails closed; `scripts/deferrals.sh`
-  exit-code leak fixed; `make-contract.test.sh` control added; `docs/gates.md` corrected. (See journal.)
-- **Workflow tooling (`933e579`):** SessionStart orientation hook + `/proofbound-next` + `/proofbound-wrap`.
-- **block-generated-edit scope fix + deferrals SIGPIPE + F2 dep hardening (`f387689`):** the Law 1
-  enforcement hook no longer blocks files that merely mention or emit `@generated` — it now matches
-  the `@generated by` header marker (shebang guard + first-5-lines window), fails closed on missing
-  grep/head (Law 3), and drops the non-prereq `rg`. The self-test was rewritten with calibrated,
-  proven-live controls (incl. a fail-closed control shown to die when the guard is removed).
-  `deferrals.test.sh` SIGPIPE (exit 141) fixed. Both the base change and the F2 delta have
-  independent non-author **ACCEPTABLE** verdicts (Law 9).
-
-## Open, blocked, and unverified work
-
-- `DEF-P7-003` (AWAITING_OWNER): accept or classify `kernel/internal/twin/manifest`. The one real
-  red-gate cause. Owner-gated.
-- `DEF-METATAX-001` (DEFERRED): redesign `meta-tax.sh` to a phase-windowed measure so the Law 5
-  budget can graduate or be retired. Dormant until owner authorizes.
-- Toolchain: rebuild `golangci-lint` under Go 1.27 and add `~/go/bin` to PATH so `kernel-check` lint
-  can run (unblocked local-env fix; touches the Go install — confirm with owner before running).
-- Optional, non-blocking: `block-generated-edit.sh` leaves `cat`/`git` unguarded (exit 127 →
-  fail-open); a one-line extension would make it strictly all-deps fail-closed. Flagged by the F2
-  verdict; not closed because it would reopen a verdict round.
-- Standing P7 stop unchanged: no runtime fixtures, binary validation, L12/L17, behavior-lock
-  acceptance, clean-clone proof, PostgreSQL approval. `DEF-P7-001` dormant and untouched;
-  `DEF-P7-002` resolved.
-
-## Verification health
-
-- `make check`: RED only at `p6-task8-package-universe` within `hooks-test` (verified this session),
-  plus the environment `kernel-check` lint mismatch and the dirty-tree `commit-cadence` noted above.
-- Every other hook self-test passes, including the three touched this slice (`claude-hooks`,
-  `deferrals`, and the hook's behavior).
-- `scripts/deferrals.sh --check`: PASS, 4 rows, 3 open (added `DEF-METATAX-001`).
-- `scripts/advisory-expiry.sh` against the real registry: PASS (clean); self-test PASS.
-
-## Institutionalized improvement
-
-- A control's calibration is only believed after it has been shown to fail. Prove a new self-test
-  control live by reconstructing the un-patched mechanism and confirming the test flips (PASS with
-  the fix, FAIL without). Compiled this session in the block-generated-edit fail-closed control;
-  journal LESSON class=detector-inert-or-scope-blind.
+P1–P6 deep-complete (round-C ACCEPTABLE, zero-open census). P7 is a capability phase with no single
+mechanical DoD. Status: the replay-lock / behavior-lock line's **non-runtime** contracts are now all
+implemented and independently accepted — projector/build manifest + source-toolchain inventory +
+evidence closure + skeleton + declaration (prior sessions), and now the case-manifest and
+ReplayIsolated behavior-lock. Everything beyond is runtime/provider work gated on the owner
+decisions above. The snapshot provider remains deliberately skipped (Gate 1).
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. First resolve the uncommitted link-lint/advisory-expiry slice (non-author
-verdict + change intent, then commit); otherwise pick the remaining `/proofbound-*` commands. Keep
-all P7 and `DEF-P7-003` work stopped until the owner authorizes it.
+Run `/proofbound-next`. The live fork is the owner's Postgres go/no-go (`DEF-P7-001`) per
+`docs/plans/P7-postgres-provenance-go-no-go-brief.md`. On **B**, scope the authorized setup/build +
+runtime-fixture slice (spec-first, non-author verdict). On **A**, P7 non-runtime work is done and the
+agent holds. Do not activate `DEF-P7-001` or start runtime/binary/PostgreSQL work without the owner's
+explicit pick.
