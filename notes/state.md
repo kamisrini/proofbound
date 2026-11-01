@@ -15,8 +15,12 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — the build-host decision for B1 unit 2 (build + license/notice inventory).**
-B1 unit 1 (source provenance) is COMPLETE and ACCEPTED. The owner RESOLVED `DEF-P7-001` on
+**Exact next action — await the non-author re-verify of the `d9590da` hardening, then unblock B1
+unit 2.** Unit 2 is blocked on a build host: the owner authorized `sudo apt` here, but this
+non-interactive session cannot supply a sudo password, so the owner must install the build deps in
+an interactive shell (command below) or name another build host.
+B1 unit 1 (source provenance) is COMPLETE and ACCEPTED; its two LOW findings are now applied in
+`d9590da` (non-author re-verify owed). The owner RESOLVED `DEF-P7-001` on
 2026-11-01: **Option B1** — build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
 retired, dev/demo-only; Option C rejected). **Provenance mechanism corrected same day:** discovered
 during unit 1 that postgresql.org ships source tarballs with SHA-256/MD5 checksums only — NO detached
@@ -38,13 +42,17 @@ are DONE (self-test green, wired into hooks-test; verifier re-verifies the real 
 **Unit 1 ACCEPTED** by independent non-author verdict
 `docs/verification/verdicts/p7-postgres-source-verify-round1-20261101.md` (status ACCEPTABLE at
 `652bb5f`; reviewer independently re-fetched the upstream checksum and ran the real verifier; ~20
-break attempts, no false-accept). Two LOW, fail-closed findings recorded as optional hardening, not
-blocking: (1) `stat` lacks `-L` so a symlinked tarball would over-reject (never false-accept);
-(2) manifest `download_sha256` duplicates `published_sha256` but is unread (a Law-2 same-file drift
-seed). Apply-if-wanted → needs a light non-author re-verify (Law 9). **Unit 2 (build + license/notice inventory)** is blocked on the
-build-host decision — this box lacks gcc/bison/flex/PG headers ([[proofbound-p7-b1-build-toolchain-gap]]);
-owner was asked (install deps here via sudo apt — my recommendation — vs build elsewhere) and has not
-yet decided. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
+break attempts, no false-accept). Both LOW, fail-closed findings are now **APPLIED** in `d9590da` (owner said "do all 3"): (1) the
+verifier rejects a symlinked tarball up front (was over-reject-only; now fails closed explicitly,
+with a positive self-test control that only the new `-L` check can reject — Law 3); (2) the unused
+duplicate `download_sha256` was dropped from the manifest (the verifier reads `published_sha256`
+only — Law-2 drift seed removed). Author-green; a **light non-author re-verify of the hardening is
+owed (Law 9)** before it counts as accepted. **Unit 2 (build + license/notice inventory)** is
+blocked: owner authorized "install deps here via sudo apt", but this non-interactive session's
+`sudo` requires a password it cannot supply (`sudo: a password is required`), so the deps are NOT
+installed — gcc/bison/flex still missing ([[proofbound-p7-b1-build-toolchain-gap]]). Owner must run
+`sudo apt-get install -y build-essential bison flex libreadline-dev zlib1g-dev` in an interactive
+shell (or name a build host) before unit 2 can start. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
 which lets case-manifest/behavior-lock derive a *verified* status. `DEF-P7-001` stays **OPEN/BLOCKED**
 until units 1–3 are accepted. Binary-exclusion law unchanged. Snapshot provider stays skipped
 (Gate 1). The retired dev/demo `twin replay` path still uses embedded-postgres ports 55461-55463.
@@ -77,7 +85,8 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
   `DEF-KERNELCHECK-FLAKE-001` (OPEN/DEFERRED) — fix is to isolate the offending test and make it
   hermetic so the gate is deterministic.
 - **Push:** B1 decision batch pushed to `origin/main` (`0f44df9..7ceb29e`) on owner instruction
-  2026-11-01. The B1-unit-1 batch after it is committed locally and **not yet pushed**.
+  2026-11-01. The B1-unit-1 batch + the `d9590da` hardening after it are committed locally; the
+  owner said "do all 3" (push) 2026-11-01, so this batch is being pushed this session.
 - `DEF-P7-001` stays **OPEN/BLOCKED** (pre-GA): shippable PostgreSQL provenance/licensing. The pinned
   zonky.io embedded-postgres v16.4.0 Maven artifact fails provenance (detached GPG signature does not
   verify — expired encryption-only subkey, mismatched published key) and ships no license/notice
