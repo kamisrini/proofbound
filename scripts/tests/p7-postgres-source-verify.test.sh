@@ -58,6 +58,14 @@ printf '%s  %s\n' "$wrong" "$name" >"$dir/$name.sha256"
 reject 'bytes-vs-pin mismatch was accepted' --manifest "$(mkman "$wrong" "$s")" --input-dir "$dir"
 printf '%s  %s\n' "$h" "$name" >"$dir/$name.sha256"
 
+# Positive control: a symlinked tarball is rejected even when it points at correct-content bytes
+# (ambiguous provenance; only the explicit -L check can reject this, since hash and size would match).
+sdir="$tmp/symlink"
+mkdir -p "$sdir"
+cp "$dir/$name.sha256" "$sdir/$name.sha256"
+ln -s "$dir/$name" "$sdir/$name"
+reject 'symlinked tarball was accepted' --manifest "$man" --input-dir "$sdir"
+
 # Positive control: missing tarball.
 rm -f "$dir/$name"
 reject 'missing tarball was accepted' --manifest "$man" --input-dir "$dir"

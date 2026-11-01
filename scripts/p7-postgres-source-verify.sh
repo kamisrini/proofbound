@@ -43,6 +43,9 @@ tarball_name=${source_url##*/}
 tarball="$input_dir/$tarball_name"
 checksum="$tarball.sha256"
 [[ -f $tarball ]] || die "tarball not found: $tarball"
+# Reject a symlinked tarball: sha256sum follows the link but `stat` would not, so a symlink is
+# ambiguous provenance. Fail CLOSED on it (the real curl-downloaded flow is always a regular file).
+[[ ! -L $tarball ]] || die "tarball must be a regular file, not a symlink: $tarball"
 [[ -f $checksum ]] || die "published checksum file not found: $checksum"
 
 # 1. The published checksum file must pin the same digest as the manifest (no silent divergence).

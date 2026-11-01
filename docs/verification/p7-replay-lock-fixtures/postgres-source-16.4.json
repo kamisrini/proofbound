@@ -8,7 +8,6 @@
       "source_url": "https://ftp.postgresql.org/pub/source/v16.4/postgresql-16.4.tar.bz2",
       "checksum_url": "https://ftp.postgresql.org/pub/source/v16.4/postgresql-16.4.tar.bz2.sha256",
       "published_sha256": "971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f",
-      "download_sha256": "971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f",
       "download_size_bytes": 24765786,
       "redirect_policy": "none; requested URL must equal effective URL (any 3xx fails)",
       "md5_informational": "bdcc1e350b473c13d132d190c0c18499"
