@@ -53,10 +53,17 @@ TLS trust, not an offline signature). See
    produced `bin/postgres`/`bin/initdb`/`bin/pg_ctl` the fixture needs, and the recorded build
    evidence (configure flags, compiler + libc versions, produced binary SHA-256s, timings). The
    built tree is kept **outside the clone** and never committed (binary-exclusion law unchanged).
+   **DONE 2026-11-03** (pending non-author verdict): built with the minimal-permissive config
+   `--without-icu --without-readline` (zlib default-on) from the re-verified source; the server links
+   only zlib + glibc and runs on libc collation. Evidence:
+   [`postgres-source-16.4-build-20261103.md`](../verification/p7-replay-lock-prerequisites/postgres-source-16.4-build-20261103.md).
 4. **A complete component license/notice inventory** for the produced binary: the PostgreSQL license
    itself plus every library the chosen `./configure` actually links (minimized deliberately — e.g.
    decide per-component whether to enable ICU/OpenSSL/libxml for the replay fixture, and inventory
-   exactly what is enabled). Committed as reviewable non-binary evidence.
+   exactly what is enabled). Committed as reviewable non-binary evidence. **DONE 2026-11-03** (pending
+   non-author verdict): grounded in the produced server's actual `ldd` link set — an all-permissive
+   set (PostgreSQL License + zlib license), no copyleft. Inventory:
+   [`postgres-16.4-license-notice-inventory.md`](../verification/p7-replay-lock-prerequisites/postgres-16.4-license-notice-inventory.md).
 5. **Runtime-fixture integration** — the replay entry point consumes a *verified* server tree:
    `initdb` into a fresh temp root on loopback only, run `ReplayIsolated`, bind the
    `vera.replay.v1` proof, and remove the entire root on success and failure. This is the piece that
@@ -88,6 +95,8 @@ TLS trust, not an offline signature). See
 2. **Build + inventory.** Configure/build outside the clone against the verified source; record
    build evidence and produced-binary digests; generate the component license/notice inventory.
    **Gate:** reproducible-enough build evidence + complete inventory; non-author verdict.
+   **Build + inventory DONE 2026-11-03** (minimal-permissive config, source re-verified first, server
+   runs on libc collation, all-permissive link set); the non-author verdict remains.
 3. **Runtime fixture.** Wire the verified tree into the prepared-offline replay, produce the case
    manifest + behavior-lock over a real run, and bind the proof. **Gate:** zero-fetch witness,
    whole-ledger preservation, temp-root cleanup, byte-exact proof/result binding; non-author verdict.
@@ -108,9 +117,11 @@ TLS trust, not an offline signature). See
 
 ## Open questions to settle (remaining)
 
-- **Build host** — the C toolchain is absent on this box (no gcc/bison/flex/PG headers). Resolve:
-  install deps here (sudo apt) or build on a separate setup machine.
-- `./configure` feature minimization — the smallest feature set that still runs the replay, to keep
-  the license/notice inventory small and the build deterministic.
+- *(Resolved 2026-11-03: **build host** — the owner installed `build-essential bison flex
+  libreadline-dev zlib1g-dev` interactively on this WSL box; gcc 11.4.0 toolchain present, unit 2
+  built here.)*
+- *(Resolved 2026-11-03: **`./configure` feature minimization** — owner approved minimal-permissive
+  `--without-icu --without-readline`, zlib default-on. ICU dropped (replay uses libc collation),
+  readline dropped (GPLv3, psql-only). Result: all-permissive inventory. See the build evidence.)*
 - *(Resolved 2026-11-01: provenance mechanism = published-SHA-256-over-HTTPS, light touch; tarball
   compression pinned to `.tar.bz2`; no GPG key to pin.)*
