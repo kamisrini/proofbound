@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-01
+As of: 2026-11-03
 
-## Resume — 2026-11-01
+## Resume — 2026-11-03
 
 **STANDING AUTHORIZATION IN FORCE** ([[VD-agent-standing-authorization-5ouz7q]], 2026-10-31): the
 owner (Srinivas Kamisetty) authorized a product push. The agent self-authorizes governed commits
@@ -15,10 +15,21 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — unblock B1 unit 2 (build + license/notice inventory): the owner installs the
-build deps or names a build host.** Unit 2 is blocked on a build host: the owner authorized
-`sudo apt` here, but this non-interactive session cannot supply a sudo password, so the owner must
-run the install in an interactive shell (command below) or name another build host.
+**Exact next action — dispatch a non-author adversarial verdict on B1 unit 2 (commit `a79d53d`),
+then start unit 3.** B1 unit 2 (build + license/notice inventory) is **author-side COMPLETE** as of
+2026-11-03 and committed at `a79d53d`; it needs a non-author verdict before it counts as ACCEPTED
+(Law 9 — owner is the final acceptor; adversarial rounds via dispatched reviewers). 2026-11-03: the
+owner installed the build toolchain interactively (`build-essential bison flex libreadline-dev
+zlib1g-dev`; gcc 11.4.0) and approved the **minimal-permissive** config `--without-icu
+--without-readline` (zlib default-on). The source was re-verified first (unit-1 verifier OK +
+self-test green), then built outside the clone: configure 43s / make 35s / install 4s; `ldd
+bin/postgres` links only zlib + glibc (NO icu/readline/ssl/xml); functional proof = initdb (libc
+provider) + loopback start + `select version()` = PostgreSQL 16.4 + clean stop + temp-root removal.
+License inventory is **all-permissive** (PostgreSQL License + zlib license), no copyleft, grounded
+in the real link set. Evidence: `docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-build-20261103.md`
++ `...postgres-16.4-license-notice-inventory.md`. **Unit-3 note surfaced during the build:** the
+replay fixture MUST use a short Unix-socket dir — the deep scratchpad path overran PostgreSQL's
+107-byte socket limit (TCP bind on 127.0.0.1 was fine; not a build defect).
 B1 unit 1 (source provenance) is COMPLETE and ACCEPTED, and its two LOW findings have been applied
 (`d9590da`) and the fix non-author-accepted (`10b4204`, round-2 ACCEPTABLE at `95dfb47`). The owner RESOLVED `DEF-P7-001` on
 2026-11-01: **Option B1** — build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
@@ -60,11 +71,9 @@ proved the control load-bearing (stripped-guard self-test exits non-zero) and fo
 across an 11-case battery. One LOW/cosmetic finding (a leftover `download_sha256` in the test's
 throwaway synthetic `mkman` manifest — not a drift seed, never read) is recorded as optional cleanup.
 **The unit-1 hardening is ACCEPTED.** **Unit 2 (build + license/notice inventory)** is
-blocked: owner authorized "install deps here via sudo apt", but this non-interactive session's
-`sudo` requires a password it cannot supply (`sudo: a password is required`), so the deps are NOT
-installed — gcc/bison/flex still missing ([[proofbound-p7-b1-build-toolchain-gap]]). Owner must run
-`sudo apt-get install -y build-essential bison flex libreadline-dev zlib1g-dev` in an interactive
-shell (or name a build host) before unit 2 can start. **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
+**author-side COMPLETE 2026-11-03** at `a79d53d` (build host unblocked — owner installed the
+toolchain interactively; [[proofbound-p7-b1-build-toolchain-gap]] RESOLVED), **pending a non-author
+verdict** (Law 9). **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
 which lets case-manifest/behavior-lock derive a *verified* status. `DEF-P7-001` stays **OPEN/BLOCKED**
 until units 1–3 are accepted. Binary-exclusion law unchanged. Snapshot provider stays skipped
 (Gate 1). The retired dev/demo `twin replay` path still uses embedded-postgres ports 55461-55463.
@@ -82,6 +91,11 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
+- **2026-11-03:** unit-2 work is **docs/evidence only** (`a79d53d`, non-governed — `docs/plans/*`
+  + `docs/verification/*`, not in the governed path set); `make link-lint` green. No `kernel/*`,
+  `scripts/*`, `gates/*`, or Makefile change, so no gate code restales and the last full-run green
+  still stands. Full `make check` not re-run this session (nothing gate-affecting changed; the
+  `DEF-KERNELCHECK-FLAKE-001` flake makes a full run noisy). Re-run `make check` at next wrap.
 - **`make check` VERIFIED GREEN at `6078563`** (full run; golangci-lint 0 issues; this notes pin
   commit sits one past it, non-governed, and does not touch any gate). The 2026-11-01 B1 work is
   docs/notes/evidence + four governed scripts commits (`edef420` INDEX regen; `00af5f3` verifier +
@@ -117,19 +131,19 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 ## Deferrals (see `docs/deferrals.tsv`)
 
 - `DEF-P7-001` OPEN/BLOCKED — pre-GA PostgreSQL provenance; owner RESOLVED the route go/no-go (B1,
-  [[VD-p7-postgres-source-route-2026-11-01]]) and unit-1 source provenance is verified. Stays open
-  until the B1 build + license/notice inventory + runtime fixture are produced and accepted.
+  [[VD-p7-postgres-source-route-2026-11-01]]). Unit-1 source provenance ACCEPTED; unit-2 build +
+  license/notice inventory **produced 2026-11-03 (`a79d53d`), pending a non-author verdict**. Stays
+  open until unit 2 is accepted and the unit-3 runtime fixture is produced and accepted.
 - `DEF-P7-002` RESOLVED (Go-module evidence corpus).
 - `DEF-P7-003` RESOLVED (twin/manifest accepted as the 17th package, 2026-10-31).
 - `DEF-METATAX-001` RESOLVED (meta-tax is a diagnostic, not a gate).
 
 ## Branch status
 
-Branch `main`, tracking `origin/main`. `origin/main` is at `7ceb29e` (the B1 decision batch, pushed
-on owner instruction). Local commits after it — the B1-unit-1 provenance batch (source manifest,
-fetch/verify evidence, VD/brief/plan correction, notes) — are **not yet pushed**. Earlier this
-session: governed implementation `6dc9372` (case-manifest + behavior-lock, both `Intent:` trailers)
-→ non-governed closeout → `edef420` (B1 decision + slice scope) → notes.
+Branch `main`, tracking `origin/main`. `origin/main` is at `3012110` (the 2026-11-01 EOD wrap; the
+B1-unit-1 provenance + hardening batch is pushed). Local is **ahead by 1**: `a79d53d` (2026-11-03
+B1 unit-2 build evidence + license inventory) is committed but **not yet pushed** — left for the
+owner / next wrap (no unprompted push).
 
 ## P7 position
 
@@ -142,8 +156,8 @@ decisions above. The snapshot provider remains deliberately skipped (Gate 1).
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. The live fork is the owner's Postgres go/no-go (`DEF-P7-001`) per
-`docs/plans/P7-postgres-provenance-go-no-go-brief.md`. On **B**, scope the authorized setup/build +
-runtime-fixture slice (spec-first, non-author verdict). On **A**, P7 non-runtime work is done and the
-agent holds. Do not activate `DEF-P7-001` or start runtime/binary/PostgreSQL work without the owner's
-explicit pick.
+Run `/proofbound-next`. B1 unit 2 is author-side complete (`a79d53d`); the immediate next step is a
+**non-author adversarial verdict** on it (build evidence + license inventory), via a dispatched
+reviewer — owner is the final acceptor (Law 9). Once accepted, start **unit 3** (prepared-offline
+runtime fixture binding a real `vera.replay.v1` proof; remember the short-Unix-socket-dir
+constraint). `a79d53d` is unpushed — push at wrap or on owner instruction.
