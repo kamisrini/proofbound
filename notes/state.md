@@ -15,9 +15,19 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — start B1 unit 3 (prepared-offline runtime fixture binding a real
-`vera.replay.v1` proof).** B1 unit 2 (build + license/notice inventory) is **non-author ACCEPTED
-2026-11-03** (round-2 ACCEPTABLE at `a4642fe`). 2026-11-03: the owner installed the build toolchain
+**Exact next action — review/approve the B1 unit-3 spec, then implement it.** A spec-first draft
+(Law 6) now exists: [`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`](../docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md).
+It defines the prepared-offline runtime fixture that runs the from-source server under
+`ReplayIsolated`, witnesses the run (launched-binary / zero-fetch / ledger-preserved / cleanup —
+new TWIN-INV-18..22), and binds the real `vera.replay.v1` proof so `EvaluateLock` → LOCKED and
+`DeriveCaseStatus` → PASS. **Before implementing:** the spec carries open decisions (§8) needing
+owner/non-author sign-off — chiefly (1) whether `fergusstrange/embedded-postgres` v1.31.0 will
+`initdb`+`Start` from our from-source `bin/`+`share/` subset (highest risk, must be proven first),
+(2) symlink dereference in the archive prep, (3) the launched-binary + (4) zero-fetch witness
+mechanisms, and (5) a **change intent (CI-\*)** since the fixture is governed `kernel/*` code. The
+unit also carries the P1 package-acceptance bar (`make mutants` + non-author ACCEPTABLE).
+B1 unit 2 (build + license/notice inventory) is **non-author ACCEPTED 2026-11-03** (round-2
+ACCEPTABLE at `a4642fe`). 2026-11-03: the owner installed the build toolchain
 interactively (`build-essential bison flex libreadline-dev zlib1g-dev`; gcc 11.4.0) and approved the
 **minimal-permissive** config `--without-icu --without-readline` (zlib default-on). Source re-verified
 first (unit-1 verifier OK + self-test green), built outside the clone (configure 43s / make 35s /
@@ -162,11 +172,12 @@ decisions above. The snapshot provider remains deliberately skipped (Gate 1).
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. B1 units 1 and 2 are non-author ACCEPTED. The next step is **unit 3** —
-spec-first per Law 6: a prepared-offline runtime fixture that `initdb`s the minimal-permissive 16.4
-server into a temp root (SHORT Unix-socket dir — 107-byte limit), runs `ReplayIsolated` on loopback,
-binds a real `vera.replay.v1` proof, and removes the root on success/failure, letting
-`proofbound.p7.case-manifest.v1` / `proofbound.p7.behavior-lock.v1` derive a **verified** (not
-`UNVERIFIED`) status. Non-author verdict required (Law 9). Only when unit 3 is accepted can
-`DEF-P7-001` move toward RESOLVED. The 2026-11-03 batch is unpushed — push at wrap or on owner
-instruction. Optional: three LOW cosmetic inventory cleanups (see round-2 verdict).
+Run `/proofbound-next`. B1 units 1 and 2 are non-author ACCEPTED; the **unit-3 spec is drafted**
+(`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`). Next: get the spec reviewed (non-author
++ owner) and settle its §8 open decisions, raise the change intent for the governed kernel work,
+then implement spec-first: prepared-offline archive prep (dereference symlinks; bin/+share/ subset)
+→ prove embedded-postgres runs from it (highest risk) → runtime fixture + TWIN-INV-18..22 → author
+the behavior-lock + case-manifest over the real proof (EvaluateLock LOCKED, case_status PASS) →
+`make mutants` + non-author ACCEPTABLE. Only then can `DEF-P7-001` move toward RESOLVED. The
+2026-11-03 batch is unpushed — push at wrap or on owner instruction. Optional: three LOW cosmetic
+inventory cleanups (see round-2 verdict).
