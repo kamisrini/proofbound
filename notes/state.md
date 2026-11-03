@@ -22,7 +22,11 @@ It defines the prepared-offline runtime fixture that runs the from-source server
 new TWIN-INV-18..22), and binds the real `vera.replay.v1` proof so `EvaluateLock` → LOCKED and
 `DeriveCaseStatus` → PASS. **Before implementing:** the spec's open decisions (§8) still need owner/non-author sign-off:
 (2) symlink dereference in the archive prep, (3) the launched-binary + (4) zero-fetch witness
-mechanisms, and (5) a **change intent (CI-\*)** since the fixture is governed `kernel/*` code.
+mechanisms. The **change intent (5) is DRAFTED** and awaits owner acceptance:
+[`CI-p7-runtime-fixture-1a2b3c`](../docs/intent/records/change-intents/CI-p7-runtime-fixture-1a2b3c/0001.md)
+(`status: proposed`, targets `BR-replay-evidence-6e3d2b` O-1, self-digest valid) — **no governed
+commit lands under it while it is `proposed`;** the owner flips it to `accepted` to authorize the
+governed `kernel/*` work.
 **§8.1 (highest risk) is RESOLVED 2026-11-03:** a throwaway probe proved `fergusstrange/embedded-postgres`
 v1.31.0 runs our from-source 16.4 tree via `BinariesPath` end-to-end (initdb + start on 127.0.0.1 +
 `select version()` = PostgreSQL 16.4 + clean stop), with **no download** (the `bin/pg_ctl` stat
