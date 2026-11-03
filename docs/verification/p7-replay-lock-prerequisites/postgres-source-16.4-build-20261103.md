@@ -95,8 +95,10 @@ libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6
 Grep for the minimized/opt-in libraries confirmed **none** of
 `libicu / libreadline / libedit / libssl / libcrypto / libxml / liblz4 / libzstd` is linked into the
 server. The only non-system shared library is **zlib** (`libz.so.1`); the rest (`libm`, `libc`,
-loader) are the glibc runtime. The license/notice inventory is therefore grounded in fact, not in a
-`./configure` guess — see the companion inventory.
+loader) are the glibc runtime. This grounds the inventory's **dynamic-linkage** set in fact. Note
+that `ldd` covers dynamic linkage only — third-party source vendored into the PostgreSQL tree and
+statically compiled into the binary is enumerated separately by the companion inventory (a per-file
+license-header scan); see the companion inventory's Method section (corrected after round-1 review).
 
 ## Functional proof (the minimal build runs)
 
