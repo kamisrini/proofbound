@@ -20,11 +20,14 @@ it blindly.
 It defines the prepared-offline runtime fixture that runs the from-source server under
 `ReplayIsolated`, witnesses the run (launched-binary / zero-fetch / ledger-preserved / cleanup —
 new TWIN-INV-18..22), and binds the real `vera.replay.v1` proof so `EvaluateLock` → LOCKED and
-`DeriveCaseStatus` → PASS. **Before implementing:** the spec carries open decisions (§8) needing
-owner/non-author sign-off — chiefly (1) whether `fergusstrange/embedded-postgres` v1.31.0 will
-`initdb`+`Start` from our from-source `bin/`+`share/` subset (highest risk, must be proven first),
+`DeriveCaseStatus` → PASS. **Before implementing:** the spec's open decisions (§8) still need owner/non-author sign-off:
 (2) symlink dereference in the archive prep, (3) the launched-binary + (4) zero-fetch witness
-mechanisms, and (5) a **change intent (CI-\*)** since the fixture is governed `kernel/*` code. The
+mechanisms, and (5) a **change intent (CI-\*)** since the fixture is governed `kernel/*` code.
+**§8.1 (highest risk) is RESOLVED 2026-11-03:** a throwaway probe proved `fergusstrange/embedded-postgres`
+v1.31.0 runs our from-source 16.4 tree via `BinariesPath` end-to-end (initdb + start on 127.0.0.1 +
+`select version()` = PostgreSQL 16.4 + clean stop), with **no download** (the `bin/pg_ctl` stat
+short-circuits the fetch) and a short `/tmp` socket. The staged `bin/`+`share/` subset still needs
+confirming, but the core approach is validated — the probe was deleted (never committed). The
 unit also carries the P1 package-acceptance bar (`make mutants` + non-author ACCEPTABLE).
 B1 unit 2 (build + license/notice inventory) is **non-author ACCEPTED 2026-11-03** (round-2
 ACCEPTABLE at `a4642fe`). 2026-11-03: the owner installed the build toolchain

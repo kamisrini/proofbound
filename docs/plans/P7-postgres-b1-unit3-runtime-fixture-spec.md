@@ -146,11 +146,17 @@ The archive `.txz`, the data directory, and any built executable are **excluded*
 
 ## 8. Known risks / open decisions (settle before/within implementation)
 
-1. **embedded-postgres from-source compatibility (highest risk).** `fergusstrange/embedded-postgres`
-   v1.31.0 with `BinariesPath` set was designed around the zonky archive layout. It must be proven
-   that it will `initdb` + `Start` from our from-source `bin/`+`share/` subset. The implementation
-   must demonstrate a green run before any evidence is authored; if the lib needs a layout tweak,
-   that is a finding to resolve, not to paper over.
+1. **embedded-postgres from-source compatibility (highest risk) — RESOLVED 2026-11-03.** Proven by
+   a throwaway probe (not committed): `fergusstrange/embedded-postgres` v1.31.0 with `BinariesPath`
+   pointed at the unit-2 from-source install tree ran end-to-end — `initdb` succeeded, the server
+   started on `127.0.0.1`, `select version()` returned `PostgreSQL 16.4 … gcc 11.4.0`, clean stop.
+   **No download occurred:** `embedded_postgres.go:155` stats `BinariesPath/bin/pg_ctl` and skips the
+   decompress/remote-fetch path when present. The unix socket used the compiled default `/tmp`
+   (`/tmp/.s.PGSQL.<port>`), short — so the 107-byte limit is avoided when `DataPath` is short. The
+   probe pointed at the full install tree; the staged `.txz` subset (`bin/`+`share/`, symlink-free)
+   must still be confirmed, but the server needs only `bin/`+`share/` to `initdb`+start (the `lib/`
+   client symlinks it ignores). `lib/` is needed only if the replay loads a backend module (e.g. a
+   PL); the minimal replay loads none — confirm when packaging the subset.
 2. **Symlink dereference** (§3.2) — the prep must produce a symlink-free archive; proving test that
    staging rejects a symlinked archive already exists.
 3. **Launched-process witness mechanism** (TWIN-INV-18) — options: re-hash the staged `bin/postgres`
