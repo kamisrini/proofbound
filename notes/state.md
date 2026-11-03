@@ -15,21 +15,26 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — dispatch a non-author adversarial verdict on B1 unit 2 (commit `a79d53d`),
-then start unit 3.** B1 unit 2 (build + license/notice inventory) is **author-side COMPLETE** as of
-2026-11-03 and committed at `a79d53d`; it needs a non-author verdict before it counts as ACCEPTED
-(Law 9 — owner is the final acceptor; adversarial rounds via dispatched reviewers). 2026-11-03: the
-owner installed the build toolchain interactively (`build-essential bison flex libreadline-dev
-zlib1g-dev`; gcc 11.4.0) and approved the **minimal-permissive** config `--without-icu
---without-readline` (zlib default-on). The source was re-verified first (unit-1 verifier OK +
-self-test green), then built outside the clone: configure 43s / make 35s / install 4s; `ldd
-bin/postgres` links only zlib + glibc (NO icu/readline/ssl/xml); functional proof = initdb (libc
-provider) + loopback start + `select version()` = PostgreSQL 16.4 + clean stop + temp-root removal.
-License inventory is **all-permissive** (PostgreSQL License + zlib license), no copyleft, grounded
-in the real link set. Evidence: `docs/verification/p7-replay-lock-prerequisites/postgres-source-16.4-build-20261103.md`
-+ `...postgres-16.4-license-notice-inventory.md`. **Unit-3 note surfaced during the build:** the
-replay fixture MUST use a short Unix-socket dir — the deep scratchpad path overran PostgreSQL's
-107-byte socket limit (TCP bind on 127.0.0.1 was fine; not a build defect).
+**Exact next action — start B1 unit 3 (prepared-offline runtime fixture binding a real
+`vera.replay.v1` proof).** B1 unit 2 (build + license/notice inventory) is **non-author ACCEPTED
+2026-11-03** (round-2 ACCEPTABLE at `a4642fe`). 2026-11-03: the owner installed the build toolchain
+interactively (`build-essential bison flex libreadline-dev zlib1g-dev`; gcc 11.4.0) and approved the
+**minimal-permissive** config `--without-icu --without-readline` (zlib default-on). Source re-verified
+first (unit-1 verifier OK + self-test green), built outside the clone (configure 43s / make 35s /
+install 4s); `ldd bin/postgres` links only zlib + glibc; functional proof = initdb (libc) + loopback
+start + `select version()` = PostgreSQL 16.4 + clean stop + temp-root removal. The license inventory
+survived an adversarial non-author review: **round-1 NEEDS_CHANGES** caught a real MED undercount
+(the `ldd`-only method is blind to third-party source **vendored and statically compiled** into the
+binary — Ryu/Boost-1.0, hyperloglog/MIT, Spencer regex, ISC, Gifford SHA-2, etc.), which I fixed by
+rewriting the inventory to cover **two linkage dimensions** (dynamic + static vendored, enumerated
+from a per-file header scan, verbatim notices for the obligation-bearing ones); **round-2
+ACCEPTABLE**. The all-permissive / no-copyleft conclusion held throughout. Three LOW/cosmetic
+findings recorded as optional cleanup (truncated HLL MIT tail; slightly over-inclusive CJK row;
+unlisted public-domain IANA tz). Evidence: `postgres-source-16.4-build-20261103.md` +
+`postgres-16.4-license-notice-inventory.md`; verdicts `…unit2-build-round{1,2}-20261103.md`.
+**Unit-3 constraint (surfaced + independently re-confirmed during the build):** the replay fixture
+MUST use a SHORT Unix-socket dir — the deep scratchpad/prefix path (>107 chars) overran PostgreSQL's
+107-byte socket limit; TCP bind on 127.0.0.1 was fine (not a build defect).
 B1 unit 1 (source provenance) is COMPLETE and ACCEPTED, and its two LOW findings have been applied
 (`d9590da`) and the fix non-author-accepted (`10b4204`, round-2 ACCEPTABLE at `95dfb47`). The owner RESOLVED `DEF-P7-001` on
 2026-11-01: **Option B1** — build PostgreSQL from upstream source. Recorded as [[VD-p7-postgres-source-route-2026-11-01]] (zonky
@@ -70,10 +75,10 @@ NEEDS_WORK verdict is recorded alongside as `...-hardening-round1-...`): the rev
 proved the control load-bearing (stripped-guard self-test exits non-zero) and found no false-accept
 across an 11-case battery. One LOW/cosmetic finding (a leftover `download_sha256` in the test's
 throwaway synthetic `mkman` manifest — not a drift seed, never read) is recorded as optional cleanup.
-**The unit-1 hardening is ACCEPTED.** **Unit 2 (build + license/notice inventory)** is
-**author-side COMPLETE 2026-11-03** at `a79d53d` (build host unblocked — owner installed the
-toolchain interactively; [[proofbound-p7-b1-build-toolchain-gap]] RESOLVED), **pending a non-author
-verdict** (Law 9). **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
+**The unit-1 hardening is ACCEPTED.** **Unit 2 (build + license/notice inventory)** is **non-author
+ACCEPTED 2026-11-03** (build `a79d53d` + inventory undercount fix `a4642fe`; build host unblocked —
+owner installed the toolchain interactively, [[proofbound-p7-b1-build-toolchain-gap]] RESOLVED;
+round-1 NEEDS_CHANGES → fix → round-2 ACCEPTABLE). **Unit 3** = prepared-offline runtime fixture binding a real `vera.replay.v1` proof,
 which lets case-manifest/behavior-lock derive a *verified* status. `DEF-P7-001` stays **OPEN/BLOCKED**
 until units 1–3 are accepted. Binary-exclusion law unchanged. Snapshot provider stays skipped
 (Gate 1). The retired dev/demo `twin replay` path still uses embedded-postgres ports 55461-55463.
@@ -132,18 +137,19 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 - `DEF-P7-001` OPEN/BLOCKED — pre-GA PostgreSQL provenance; owner RESOLVED the route go/no-go (B1,
   [[VD-p7-postgres-source-route-2026-11-01]]). Unit-1 source provenance ACCEPTED; unit-2 build +
-  license/notice inventory **produced 2026-11-03 (`a79d53d`), pending a non-author verdict**. Stays
-  open until unit 2 is accepted and the unit-3 runtime fixture is produced and accepted.
+  license/notice inventory **non-author ACCEPTED 2026-11-03** (round-2 ACCEPTABLE at `a4642fe`).
+  Stays open until the unit-3 runtime fixture is produced and accepted.
 - `DEF-P7-002` RESOLVED (Go-module evidence corpus).
 - `DEF-P7-003` RESOLVED (twin/manifest accepted as the 17th package, 2026-10-31).
 - `DEF-METATAX-001` RESOLVED (meta-tax is a diagnostic, not a gate).
 
 ## Branch status
 
-Branch `main`, tracking `origin/main`. `origin/main` is at `3012110` (the 2026-11-01 EOD wrap; the
-B1-unit-1 provenance + hardening batch is pushed). Local is **ahead by 1**: `a79d53d` (2026-11-03
-B1 unit-2 build evidence + license inventory) is committed but **not yet pushed** — left for the
-owner / next wrap (no unprompted push).
+Branch `main`, tracking `origin/main`. `origin/main` is at `3012110` (the 2026-11-01 EOD wrap).
+Local is **ahead by several unpushed commits** — the 2026-11-03 B1 unit-2 batch: `a79d53d` (build
+evidence + initial inventory), `caf94c8` (state/journal), `a4642fe` (round-1 verdict + inventory
+undercount fix), plus this closeout (round-2 ACCEPTABLE verdict + state/journal). **Not yet pushed**
+— left for the owner / next wrap (no unprompted push).
 
 ## P7 position
 
@@ -156,8 +162,11 @@ decisions above. The snapshot provider remains deliberately skipped (Gate 1).
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. B1 unit 2 is author-side complete (`a79d53d`); the immediate next step is a
-**non-author adversarial verdict** on it (build evidence + license inventory), via a dispatched
-reviewer — owner is the final acceptor (Law 9). Once accepted, start **unit 3** (prepared-offline
-runtime fixture binding a real `vera.replay.v1` proof; remember the short-Unix-socket-dir
-constraint). `a79d53d` is unpushed — push at wrap or on owner instruction.
+Run `/proofbound-next`. B1 units 1 and 2 are non-author ACCEPTED. The next step is **unit 3** —
+spec-first per Law 6: a prepared-offline runtime fixture that `initdb`s the minimal-permissive 16.4
+server into a temp root (SHORT Unix-socket dir — 107-byte limit), runs `ReplayIsolated` on loopback,
+binds a real `vera.replay.v1` proof, and removes the root on success/failure, letting
+`proofbound.p7.case-manifest.v1` / `proofbound.p7.behavior-lock.v1` derive a **verified** (not
+`UNVERIFIED`) status. Non-author verdict required (Law 9). Only when unit 3 is accepted can
+`DEF-P7-001` move toward RESOLVED. The 2026-11-03 batch is unpushed — push at wrap or on owner
+instruction. Optional: three LOW cosmetic inventory cleanups (see round-2 verdict).

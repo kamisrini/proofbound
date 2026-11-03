@@ -95,8 +95,13 @@ TLS trust, not an offline signature). See
 2. **Build + inventory.** Configure/build outside the clone against the verified source; record
    build evidence and produced-binary digests; generate the component license/notice inventory.
    **Gate:** reproducible-enough build evidence + complete inventory; non-author verdict.
-   **Build + inventory DONE 2026-11-03** (minimal-permissive config, source re-verified first, server
-   runs on libc collation, all-permissive link set); the non-author verdict remains.
+   **Unit 2 ACCEPTED 2026-11-03** (minimal-permissive config, source re-verified first, server runs
+   on libc collation, all-permissive two-dimension inventory). Non-author verdict: round-1
+   NEEDS_CHANGES caught an `ldd`-only inventory undercount (missed statically-compiled vendored
+   source); fixed; round-2 **ACCEPTABLE** at `a4642fe`. Verdicts:
+   [`…unit2-build-round1-20261103`](../verification/verdicts/p7-postgres-b1-unit2-build-round1-20261103.md),
+   [`…unit2-build-round2-20261103`](../verification/verdicts/p7-postgres-b1-unit2-build-round2-20261103.md).
+   Three LOW/cosmetic findings recorded as optional cleanup.
 3. **Runtime fixture.** Wire the verified tree into the prepared-offline replay, produce the case
    manifest + behavior-lock over a real run, and bind the proof. **Gate:** zero-fetch witness,
    whole-ledger preservation, temp-root cleanup, byte-exact proof/result binding; non-author verdict.
