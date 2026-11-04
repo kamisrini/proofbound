@@ -15,18 +15,35 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — review/approve the B1 unit-3 spec, then implement it.** A spec-first draft
-(Law 6) now exists: [`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`](../docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md).
-It defines the prepared-offline runtime fixture that runs the from-source server under
-`ReplayIsolated`, witnesses the run (launched-binary / zero-fetch / ledger-preserved / cleanup —
-new TWIN-INV-18..22), and binds the real `vera.replay.v1` proof so `EvaluateLock` → LOCKED and
-`DeriveCaseStatus` → PASS. **Before implementing:** the spec's open decisions (§8) still need owner/non-author sign-off:
-(2) symlink dereference in the archive prep, (3) the launched-binary + (4) zero-fetch witness
-mechanisms. The **change intent (5) is DRAFTED** and awaits owner acceptance:
+**Exact next action — REVISE the unit-3 spec (round 2), then re-verify, THEN implement.** The
+unit-3 spec [`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`](../docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md)
+got a non-author adversarial review on 2026-11-04 that returned **NEEDS_CHANGES** — it is **NOT sound
+to implement as written**. Verdict:
+[`docs/verification/verdicts/p7-b1-unit3-spec-review-round1-20261104.md`](../docs/verification/verdicts/p7-b1-unit3-spec-review-round1-20261104.md)
+(commit `0830153`, self-digest valid, audit regenerated). Two HIGH findings, both confirmed against
+code: **F1** — the `vera.replay.v1` proof (`replay.go:195-199`) binds only source/candidate/snapshot
+digests, NOT the postgres binary/process/no-fetch, so `EvaluateLock → LOCKED` is pure digest
+arithmetic and does **not** witness a real run; TWIN-INV-22 over-claims and the chain
+"LOCKED+PASS ⟹ a real from-source postgres ran" is unsound. **F2** — §8.3's first launched-binary
+mechanism (re-hash staged `bin/postgres`) is the EXISTING code `verified_archive.go:267-273` that
+TWIN-INV-14 already calls insufficient; only PID-exe resolution (`/proc/<pid>/exe`, `(deleted)` check)
+actually witnesses the process, and no negative control (swapped binary must FAIL) is specified.
+**F5** (confirmed): §8.1 "RESOLVED" was proven on the FULL install tree, not the shipped
+`bin/`+`share/` subset. F3–F11 are PLAUSIBLE design/control gaps (F4 zero-fetch "witness" is
+harness-wiring not real isolation; F6 drop-vs-dereference → settle as drop-all; F7 Law-1 status of
+committed derived artifacts; F9/F10/F11 missing negative/positive controls).
+**Spec-revision checklist (round 2):** (a) decide whether DEF-P7-001 closure may rest on LOCKED at
+all, or bind a runtime fact into the gated artifact / explicitly scope the claim down (F1); (b) fix
+TWIN-INV-18 to PID-exe witness + required negative control (F2); (c) §8.4 → real net-namespace
+isolation (`unshare -n`) or honestly down-scope the invariant to a declaration (F4); (d) §8.2 →
+drop all 8 client symlinks, no dereference (F6); (e) resolve Law-1 `@generated`-vs-dead-state for the
+committed evidence (F7); (f) downgrade §8.1 label to "resolved for full tree; subset unproven" (F5).
+Then a **non-author re-verify (round 2)** before any governed kernel work. The owner's §8 decisions
+now carry concrete direction from the review — surface (a)–(d) to the owner alongside the revision.
+The **change intent is DRAFTED** and **STAYS `proposed`** until the revised spec is re-accepted:
 [`CI-p7-runtime-fixture-1a2b3c`](../docs/intent/records/change-intents/CI-p7-runtime-fixture-1a2b3c/0001.md)
-(`status: proposed`, targets `BR-replay-evidence-6e3d2b` O-1, self-digest valid) — **no governed
-commit lands under it while it is `proposed`;** the owner flips it to `accepted` to authorize the
-governed `kernel/*` work.
+(targets `BR-replay-evidence-6e3d2b` O-1) — **no governed `kernel/*` commit lands under it while it
+is `proposed`.**
 **§8.1 (highest risk) is RESOLVED 2026-11-03:** a throwaway probe proved `fergusstrange/embedded-postgres`
 v1.31.0 runs our from-source 16.4 tree via `BinariesPath` end-to-end (initdb + start on 127.0.0.1 +
 `select version()` = PostgreSQL 16.4 + clean stop), with **no download** (the `bin/pg_ctl` stat
@@ -173,14 +190,11 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 ## Branch status
 
-Branch `main`, tracking `origin/main`. `origin/main` is at `3012110` (the 2026-11-01 EOD wrap).
-Local is **ahead by unpushed commits** — the 2026-11-03 B1 unit-2/unit-3 batch (`a79d53d` build
-evidence + initial inventory, `caf94c8` state/journal, `a4642fe` round-1 verdict + inventory
-undercount fix, `aa4baff` unit-2 ACCEPTED round-2, `0e9c93e` unit-3 spec draft, `0ca1ec0` unit-3
-highest-risk resolved, `4cb6343` unit-3 change intent) plus this 2026-11-04 wrap's notes commit
-(journal + state refresh + gate re-verify). **Not yet pushed** — the 2026-11-03 wrap deliberately
-left the batch for the owner; push is an outward action outside the self-authorized scope, so not
-performed unprompted.
+Branch `main`, tracking `origin/main`. **Pushed to `origin/main` on 2026-11-04 by owner
+instruction** ("lets do it"): the full local batch through the unit-3 spec-review verdict — the
+2026-11-03 B1 unit-2/unit-3 batch (`a79d53d`…`4cb6343`), the 2026-11-04 gate-reverify wrap
+(`d468d9c`), and the unit-3 spec-review NEEDS_CHANGES verdict (`0830153`) plus this state refresh.
+Local and `origin/main` are in sync as of this commit.
 
 ## P7 position
 
@@ -193,12 +207,11 @@ decisions above. The snapshot provider remains deliberately skipped (Gate 1).
 
 ## Tomorrow's first action
 
-Run `/proofbound-next`. B1 units 1 and 2 are non-author ACCEPTED; the **unit-3 spec is drafted**
-(`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`). Next: get the spec reviewed (non-author
-+ owner) and settle its §8 open decisions, raise the change intent for the governed kernel work,
-then implement spec-first: prepared-offline archive prep (dereference symlinks; bin/+share/ subset)
-→ prove embedded-postgres runs from it (highest risk) → runtime fixture + TWIN-INV-18..22 → author
-the behavior-lock + case-manifest over the real proof (EvaluateLock LOCKED, case_status PASS) →
-`make mutants` + non-author ACCEPTABLE. Only then can `DEF-P7-001` move toward RESOLVED. The
-2026-11-03 batch is unpushed — push at wrap or on owner instruction. Optional: three LOW cosmetic
-inventory cleanups (see round-2 verdict).
+Run `/proofbound-next`. B1 units 1 and 2 are non-author ACCEPTED. The **unit-3 spec review returned
+NEEDS_CHANGES (round 1, 2026-11-04)** — see the Resume section above for the F1/F2/F5 HIGH/confirmed
+findings and the round-2 spec-revision checklist. Next: **revise the unit-3 spec** per that checklist
+(F1 the structural LOCKED-independence gap first), get a **non-author re-verify (round 2)**, and only
+then raise/accept the change intent and implement spec-first. The `CI-p7-runtime-fixture-1a2b3c`
+intent STAYS `proposed` until the revised spec is re-accepted — no governed `kernel/*` work lands
+before then. The 2026-11-03 B1 batch + the 2026-11-04 verdict are pushed to `origin/main`. Optional:
+three LOW cosmetic license-inventory cleanups (see unit-2 round-2 verdict).
