@@ -18,6 +18,7 @@
 - [VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject](VD-p7-behavior-lock-subject-2026-10-06.md) — ACCEPTED FOR PLANNING — fresh non-author review round 3 on 2026-10-13; implementation separately gated (2026-10-06)
 - [VD-p7-external-replay-prerequisites-2026-10-15: public binary setup outside Git](VD-p7-external-replay-prerequisites-2026-10-15.md) — ACCEPTED FOR DOCUMENTARY PLANNING — fresh non-author review round 2; (2026-10-15)
 - [VD-p7-go-module-source-archive-payload-scope-2026-10-23: VD-p7-go-module-source-archive-payload-scope-2026-10-23](VD-p7-go-module-source-archive-payload-scope-2026-10-23.md) — OWNER-APPROVED SCOPE DECISION; independent final corpus review remains required. (2026-10-23)
+- [VD-p7-nofetch-witness-2026-11-04: no-fetch witness is network-namespace isolation with a labeled declaration fallback](VD-p7-nofetch-witness-2026-11-04.md) — Accepted (2026-11-04)
 - [VD-p7-nonruntime-manifest-2026-10-26: bound non-runtime manifest preparation](VD-p7-nonruntime-manifest-2026-10-26.md) — Accepted (2026-10-26)
 - [VD-p7-postgres-source-route-2026-11-01: build PostgreSQL from signed source for P7 replay](VD-p7-postgres-source-route-2026-11-01.md) — Accepted (2026-11-01)
 - [VD-p7-readiness-manifest-2026-10-17: case/evidence manifest shape](VD-p7-readiness-manifest-2026-10-17.md) — ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19; (2026-10-17)
