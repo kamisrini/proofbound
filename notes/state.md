@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-03
+As of: 2026-11-04
 
-## Resume — 2026-11-03
+## Resume — 2026-11-04
 
 **STANDING AUTHORIZATION IN FORCE** ([[VD-agent-standing-authorization-5ouz7q]], 2026-10-31): the
 owner (Srinivas Kamisetty) authorized a product push. The agent self-authorizes governed commits
@@ -113,11 +113,22 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 **Immediate blockers / honest gate state:**
 
+- **2026-11-04 (gate re-verified green on current head `4cb6343`):** the 2026-11-03 "re-run
+  `make check` at next wrap" item is now DONE. Bare `make check` fails only at `commit-cadence`
+  (`dirty worktree outlived 90m commit window`) — the documented structural false-positive from the
+  two permanent untracked files + an old HEAD, not a content defect; because `make` aborts there it
+  never reaches `kernel-check`, so the kernel half was verified directly: **`make kernel-check`
+  PASS** (golangci-lint 0 issues, all packages; `DEF-KERNELCHECK-FLAKE-001` did NOT fire),
+  `p6-artifact-integrity --check` PASS, `deferrals --check` PASS, and every non-kernel gate green
+  individually (incl. `state-freshness`, `index-check`). `gen-index.sh` produced no diff — the
+  committed `docs/decisions/INDEX.md` is current (the `index stale` line during `make check` is the
+  index-check hook's own negative self-test). This wrap's notes commit resets HEAD age, so the next
+  bare `make check` on a freshly-committed tree clears cadence too (until the 90m window lapses
+  again against the untracked files).
 - **2026-11-03:** unit-2 work is **docs/evidence only** (`a79d53d`, non-governed — `docs/plans/*`
   + `docs/verification/*`, not in the governed path set); `make link-lint` green. No `kernel/*`,
   `scripts/*`, `gates/*`, or Makefile change, so no gate code restales and the last full-run green
-  still stands. Full `make check` not re-run this session (nothing gate-affecting changed; the
-  `DEF-KERNELCHECK-FLAKE-001` flake makes a full run noisy). Re-run `make check` at next wrap.
+  still stands.
 - **`make check` VERIFIED GREEN at `6078563`** (full run; golangci-lint 0 issues; this notes pin
   commit sits one past it, non-governed, and does not touch any gate). The 2026-11-01 B1 work is
   docs/notes/evidence + four governed scripts commits (`edef420` INDEX regen; `00af5f3` verifier +
@@ -163,10 +174,13 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 ## Branch status
 
 Branch `main`, tracking `origin/main`. `origin/main` is at `3012110` (the 2026-11-01 EOD wrap).
-Local is **ahead by several unpushed commits** — the 2026-11-03 B1 unit-2 batch: `a79d53d` (build
-evidence + initial inventory), `caf94c8` (state/journal), `a4642fe` (round-1 verdict + inventory
-undercount fix), plus this closeout (round-2 ACCEPTABLE verdict + state/journal). **Not yet pushed**
-— left for the owner / next wrap (no unprompted push).
+Local is **ahead by unpushed commits** — the 2026-11-03 B1 unit-2/unit-3 batch (`a79d53d` build
+evidence + initial inventory, `caf94c8` state/journal, `a4642fe` round-1 verdict + inventory
+undercount fix, `aa4baff` unit-2 ACCEPTED round-2, `0e9c93e` unit-3 spec draft, `0ca1ec0` unit-3
+highest-risk resolved, `4cb6343` unit-3 change intent) plus this 2026-11-04 wrap's notes commit
+(journal + state refresh + gate re-verify). **Not yet pushed** — the 2026-11-03 wrap deliberately
+left the batch for the owner; push is an outward action outside the self-authorized scope, so not
+performed unprompted.
 
 ## P7 position
 
