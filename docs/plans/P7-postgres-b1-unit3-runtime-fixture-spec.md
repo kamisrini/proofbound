@@ -1,16 +1,21 @@
-# P7 B1 unit 3 — prepared-offline runtime fixture spec (DRAFT round 4)
+# P7 B1 unit 3 — prepared-offline runtime fixture spec (DRAFT round 5)
 
-**Status:** DRAFT round 4 — spec-first per Law 6; scoping and contract only. No implementation, no
+**Status:** DRAFT round 5 — spec-first per Law 6; scoping and contract only. No implementation, no
 runtime `PASS`, and no `DEF-P7-001` movement is authorized by this document. Review history:
 **round 1** NEEDS_CHANGES (closure rested on `LOCKED`, pure digest arithmetic); **round 2**
 NEEDS_CHANGES (N1: the fix moved closure onto `case_status=PASS`, also a pure fold — forgeable by
-declaration; N2 Law-1 precedent; N3 `proof_binding` key); **round 3** resolved N1/N2/N3 but found
-**N4** (the §5.1 swapped-binary control trips at the step-2 archive-hash gate before launch, so it
-never exercises the TWIN-INV-18 `/proc/<pid>/exe` witness it is meant to calibrate). This round-4
-revision adds the **layered, launch-layer negative control** that calibrates TWIN-INV-18 (N4). It
-needs a **round-4 non-author re-verify** (and, because it touches `kernel/*`, an owner-approved
-change intent) before implementation.
-**Date:** 2026-11-04 (revises the round-3 draft)
+declaration; N2 Law-1 precedent; N3 `proof_binding` key); **round 3** resolved N1/N2/N3, found **N4**
+(the swapped-binary control tripped the step-2 archive gate before launch); **round 4** resolved the
+N4 attribution but found **N5** (the launch-layer swap is not implementable from the black-box
+fixture without a new, unscoped governed kernel seam), plus N6/N7 (no per-layer failure signal; no
+observable that `/proc` ran). This round-5 revision (a) calibrates the TWIN-INV-18 witness by a
+**direct unit test of the witness function** — no production swap seam needed — and names+scopes any
+optional end-to-end seam as governed kernel code (N5); (b) requires a **distinct, assertable failure
+identifier** for the `/proc` witness (N6); (c) requires the fixture to **surface that the `/proc`
+witness was computed and matched** (N7); and (d) folds in the owner's settled §8.4
+([[VD-p7-nofetch-witness-2026-11-04]]). It needs a **round-5 non-author re-verify** (and, because it
+touches `kernel/*`, an owner-approved change intent) before implementation.
+**Date:** 2026-11-04 (revises the round-4 draft)
 **Implements:** [`VD-p7-postgres-source-route-2026-11-01`](../decisions/VD-p7-postgres-source-route-2026-11-01.md)
 (B1), unit 3 of the [slice plan](P7-postgres-b1-source-build-slice-plan.md).
 **Builds on (accepted):** units 1–2 — the SHA-256-verified 16.4 source
@@ -23,7 +28,16 @@ round-2 ACCEPTABLE), and the already-accepted verified-archive staging seam
 
 ## 0. What the revisions changed (summary)
 
-**Round 4 (this revision), after round-3 N4:** the §5.1 controls are now **layered** so the
+**Round 5 (this revision), after round-4 N5/N6/N7:** the TWIN-INV-18 witness's discriminating power
+is now calibrated by a **direct unit test of the witness function** against a live process running a
+*different* executable (no production swap seam required); any end-to-end launch-layer swap control is
+named as an **optional, explicitly-scoped governed kernel test-seam**, not an implicit requirement
+(N5). The `/proc` witness must emit a **distinct, assertable failure identifier** separate from the
+staging re-hash (N6), and the fixture must **surface the `/proc`-resolved digest** so a passing run
+demonstrably ran the witness rather than inheriting PASS from the archive hash (N7). §8.4 is settled
+(§8 item 4 / [[VD-p7-nofetch-witness-2026-11-04]]). The round-2/3/4 changes below still stand.
+
+**Round 4, after round-3 N4:** the §5.1 controls are now **layered** so the
 launched-binary-swap control calibrates the TWIN-INV-18 `/proc/<pid>/exe` witness specifically — it
 stages and verifies the real archive (so the step-2 archive-hash gate passes), then swaps the
 *launched* executable, so **only** the `/proc` check can reject it; the tampered-archive control is
@@ -241,7 +255,7 @@ contract and is out of scope for this unit — it would be its own `CI-*` + acce
 
 | New invariant | Statement | Required mechanism & control | case-manifest outcome |
 |---|---|---|---|
-| **TWIN-INV-18 — Launched-process witness** | the **running** postmaster's executable image equals the declared `PostgresBinarySHA256` | resolve the postmaster PID (`postmaster.pid` in the data dir), read `/proc/<pid>/exe`, **reject** if it carries the `(deleted)` marker, hash the target, require equality. The on-disk re-hash and `version()` string are **not** sufficient and are not used as the witness. **Negative control (required):** launching a *different/byte-swapped* binary MUST make this witness FAIL (and the case fold to FAIL). | `proof_binding` / provenance |
+| **TWIN-INV-18 — Launched-process witness** | the **running** postmaster's executable image equals the declared `PostgresBinarySHA256` | a testable `witnessLaunchedProcess(pid, expectedSHA256)`: resolve the postmaster PID (`postmaster.pid`), read `/proc/<pid>/exe`, **reject** the `(deleted)` marker, hash the target, return a **distinct typed error** (≠ the staging re-hash error, N6) on mismatch; record `{method:"proc-exe", resolved_pid, resolved_sha256}` (N7). The on-disk re-hash and `version()` string are **not** the witness. **Negative control (required):** a direct unit test against a live process running a *different* binary MUST return the distinct mismatch error (§5.1). | `proof_binding` / provenance |
 | **TWIN-INV-19 — No-fetch isolation** | the run performs no network fetch for binaries | **Primary witness:** the launch runs under a **network namespace with no egress** (`unshare -rn` / equivalent) so any fetch fails hard; `BinariesPath` is the verified local dir. **Declaration (labeled as such, not a witness):** the embedded-postgres remote-fetch strategy is never constructed. Where the platform cannot provide a namespace, the invariant is satisfied by the declaration **only if** the spec/evidence states plainly it is a configuration assertion, not an observation. | `no_fetch` |
 | **TWIN-INV-20 — Whole-ledger preservation witness** | the source store's event set is byte-identical before and after the isolated run | before/after digest of the source store, recorded as a witness. **Positive control (required):** an injected operation that *does* mutate the source store MUST make the witness FAIL — proving it detects mutation, not merely restates TWIN-INV-1/-8. | `ledger_preserved` |
 | **TWIN-INV-21 — Cleanup witness** | the owned temporary root (staged binaries dir + data dir) is removed on success and every failure path | the witness **stats the path and asserts absence** (not merely "RemoveAll was called"). **Positive control (required):** a path whose removal is suppressed MUST make the witness FAIL. | `cleanup` |
@@ -273,19 +287,30 @@ it never reached):
   committed manifest) → rejected at **step 2** (archive-hash gate), *before launch*. This control
   calibrates the **step-2 archive gate**, **not** TWIN-INV-18 — it must be labeled as such and must
   **not** be relied on to show the launched-process witness has teeth.
-- **launched-binary swap — the TWIN-INV-18 control (required, N4).** Stage and verify the **real**
-  archive so step 2 and the staging checks pass on the correct bytes, then **swap the executable the
-  postmaster actually runs for a *different, byte-divergent* postgres build at the launch layer**
-  (e.g. replace `binariesDir/bin/postgres` after staging verification but before `pg_ctl start`, or
-  redirect the launcher), keeping the committed archive/manifest internally consistent. Only
-  TWIN-INV-18's `/proc/<pid>/exe` comparison against the pinned `PostgresBinarySHA256` can now reject
-  it → the fixture authors `proof_binding = FAIL` → `case_status = FAIL`, never PASS. **Positive
-  companion:** the swapped build must be one that *would otherwise run and pass every other check*
-  (so the ONLY thing that fails is the `/proc` digest), and the unmodified run must reach and **pass**
-  the `/proc` check — proving the witness is load-bearing, not skipped. A fixture that merely
-  re-checks the on-disk/archive hash and never reads `/proc/<pid>/exe` MUST fail this control.
+- **direct witness-function calibration — the required TWIN-INV-18 control (N4/N5).** The witness is
+  implemented as a **testable function**, `witnessLaunchedProcess(pid, expectedSHA256) (resolvedSHA256, error)`,
+  that reads `/proc/<pid>/exe`, rejects the `(deleted)` marker, hashes the target, and returns a
+  **distinct typed error** (e.g. `ErrLaunchedProcessDigestMismatch`, assertable and separate from the
+  staging re-hash's `twin: launched postgres executable digest mismatch` at `verified_archive.go:271`
+  — N6) when `resolvedSHA256 != expectedSHA256`. Its discriminating power is calibrated by a **direct
+  unit test** that points the witness at a **live process running a different, byte-divergent
+  executable** (any convenient second binary — it need not go through the full replay path) and
+  asserts it returns that distinct error; the positive case points it at a process running the pinned
+  binary and asserts `resolvedSHA256 == PostgresBinarySHA256` with no error. This calibrates the
+  witness **without** a production swap seam, so it does not depend on an injection point the
+  black-box replay API does not expose (round-4 N5). **Optional end-to-end hardening (explicitly
+  scoped, NOT required for acceptance):** if full-path calibration is also wanted, a **test-only
+  post-stage/pre-launch seam** may be added to `ReplayIsolatedWithVerifiedPostgres` (a hook receiving
+  `binariesDir`, used only to swap the on-disk binary after staging verification). That seam is
+  **governed `kernel/*` code** and would carry its own SPEC invariant + change intent + acceptance
+  (§8 item 5) — it is named here so it is scoped deliberately, never discovered mid-implementation.
 - **real declared binary** → the fixture verifies all witnesses (including the `/proc` check) →
-  authors all outcomes PASS → `case_status = PASS`.
+  authors all outcomes PASS → `case_status = PASS`. **Observable (N7):** the committed launched-process
+  witness record carries `{method: "proc-exe", resolved_pid, resolved_sha256}`, and the fixture emits
+  `proof_binding = PASS` only after `resolved_sha256 == PostgresBinarySHA256`. The §9.3a non-author
+  inspects `resolved_sha256` to confirm the `/proc` witness actually executed and matched — not that
+  PASS was inherited from the archive hash. A fixture that never reads `/proc/<pid>/exe` cannot
+  populate `resolved_sha256` and so cannot produce a valid PASS witness record.
 
 Because `intent_binding` uses an injected `RequirementResolver`, the proving tests MUST NOT let a
 permissive stub mask a missing runtime witness: the real-run witnesses (TWIN-INV-18/19/20/21) are the
@@ -367,26 +392,30 @@ That would be its own governed `scripts/*` change + acceptance.)*
    is symlink-free before hashing. A proving test that staging rejects a symlinked archive already
    exists.
 3. **Launched-process witness mechanism — SETTLED: `/proc/<pid>/exe` resolution** (TWIN-INV-18, F2)
-   of the postmaster PID (from `postmaster.pid`), with the `(deleted)` marker rejected and a required
-   **launch-layer** negative control that swaps the launched binary *after* the step-2 archive gate
-   passes, so only the `/proc` check can reject it (§5.1, N4). The on-disk re-hash and `version()`
-   string are rejected as non-witnessing. **Owner note:** this is the mechanism the review recommends;
-   confirm the platform exposes `/proc/<pid>/exe` (Linux/WSL: yes).
-4. **No-fetch witness mechanism — PROPOSED: network-namespace isolation** (TWIN-INV-19, F4), with the
-   fetch-strategy-not-constructed assertion kept only as a labeled declaration. **Owner decision
-   needed:** whether to require namespace isolation (strongest; needs user-namespace / `unshare -rn`
-   support in the run environment) or accept the labeled configuration declaration where a namespace
-   is unavailable. This is the one genuinely-open §8 mechanism decision for the owner.
-5. **Governed paths / change intent.** New code in `kernel/*` is governed (SPEC.md is exempt). This
-   unit needs an owner-approved change intent (a `CI-*` record) before the governed commit, plus the
-   package-acceptance bar: `make mutants` green (survivors declared) AND a non-author ACCEPTABLE
-   verdict (ROADMAP P1 bar, Law 9). The drafted `CI-p7-runtime-fixture-1a2b3c` **stays `proposed`**
-   until this spec is re-accepted.
+   of the postmaster PID (from `postmaster.pid`), with the `(deleted)` marker rejected, a **distinct
+   typed mismatch error** (N6), and a recorded `{method:"proc-exe", resolved_pid, resolved_sha256}`
+   observable (N7). The witness is a testable function calibrated by a **direct unit test** against a
+   live process running a different binary (no production swap seam needed, N5); the on-disk re-hash
+   and `version()` string are rejected as non-witnessing. An optional end-to-end swap control would
+   need an explicitly-scoped governed test-seam (§5.1, item 5). **Owner note:** confirm the platform
+   exposes `/proc/<pid>/exe` (Linux/WSL: yes).
+4. **No-fetch witness mechanism — SETTLED 2026-11-04 by the owner** ([[VD-p7-nofetch-witness-2026-11-04]],
+   TWIN-INV-19, F4): a **no-egress network namespace** (`unshare -rn` / equivalent) is the **primary
+   witness** where the platform supports it; where it does not, the fixture falls back to the
+   **labeled configuration declaration** (fetch strategy not constructed + `BinariesPath` local),
+   recorded honestly as a declaration, not an observation. Each run records which of the two it used.
+   Namespace-only (no fallback) and declaration-only were rejected (see the VD).
+5. **Governed paths / change intent.** New code in `kernel/*` is governed (SPEC.md is exempt),
+   including any optional end-to-end swap test-seam (§5.1). This unit needs an owner-approved change
+   intent (a `CI-*` record) before the governed commit, plus the package-acceptance bar:
+   `make mutants` green (survivors declared) AND a non-author ACCEPTABLE verdict (ROADMAP P1 bar,
+   Law 9). The drafted `CI-p7-runtime-fixture-1a2b3c` **stays `proposed`** until this spec is
+   re-accepted.
 
 ## 9. Sequence & gates
 
-1. **Spec re-review (round 4)** — non-author re-verify of THIS revision + owner sign-off on the §8.4
-   no-fetch mechanism decision; keep the change intent `proposed` until accepted.
+1. **Spec re-review (round 5)** — non-author re-verify of THIS revision; keep the change intent
+   `proposed` until accepted. (§8.4 no-fetch is now owner-settled — [[VD-p7-nofetch-witness-2026-11-04]].)
 2. **Subset prep + compatibility proof** — produce the symlink-free `bin/`+`share/` subset archive and
    **prove embedded-postgres runs from the SUBSET** (closes the F5 gap, not just the full tree).
    Commit the prepared-archive manifest.
@@ -396,15 +425,17 @@ That would be its own governed `scripts/*` change + acceptance.)*
    real proof, recording the fixture-verified witnesses. **Gate:** the fixture verifies every witness
    at run time and emits `EvaluateLock == LOCKED` (determinism) AND `DeriveCaseStatus == PASS` (the
    fold over the outcomes the fixture authored from those verifications — the fixture is the gate, not
-   `DeriveCaseStatus`); the §5.1 negative control proves the fixture's PASS collapses to UNVERIFIED
-   (absent) / FAIL (swapped); `proof_binding` gated on the launched-process witness (N3);
-   ephemeral-port + short-socket isolation holds; calibrated `make mutants` green.
-3a. **Acceptance precondition (F10 + N4):** the non-author accepting this unit MUST run the fixture
-   **with the archive present** and witness `LOCKED + PASS` **live** (a green `t.Skip` is not
-   acceptance), and MUST independently run the §5.1 controls — in particular the **launched-binary
-   swap control**, confirming it fails **only** at the TWIN-INV-18 `/proc/<pid>/exe` check (not at the
-   step-2 archive gate) and that the unmodified run reaches and passes that check. An acceptance that
-   exercises only the tampered-archive control has not calibrated the witness `proof_binding` depends
-   on.
+   `DeriveCaseStatus`); the §5.1 controls prove the fixture's PASS collapses to UNVERIFIED (absent) /
+   FAIL (witness mismatch); `proof_binding` gated on the launched-process witness (N3); the
+   TWIN-INV-18 witness-function unit test discriminates a different binary (N5); ephemeral-port +
+   short-socket isolation holds; calibrated `make mutants` green.
+3a. **Acceptance precondition (F10 + N4/N5/N7):** the non-author accepting this unit MUST run the
+   fixture **with the archive present** and witness `LOCKED + PASS` **live** (a green `t.Skip` is not
+   acceptance); MUST run the **TWIN-INV-18 witness-function unit test** (§5.1) and confirm it returns
+   the distinct mismatch error on a different binary and passes on the pinned one; and MUST inspect
+   the committed witness record's `resolved_sha256` to confirm the `/proc` witness actually executed
+   and equals `PostgresBinarySHA256` (N7). An acceptance that exercises only the tampered-archive
+   control, or that never checks `resolved_sha256`, has not calibrated the witness `proof_binding`
+   depends on.
 4. Only when unit 3 is accepted under 3a does the `ReplayIsolated` case leave `UNVERIFIED`, and only
    then can `DEF-P7-001` move toward RESOLVED.
