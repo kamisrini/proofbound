@@ -1,11 +1,16 @@
-# P7 B1 unit 3 — prepared-offline runtime fixture spec (DRAFT round 2)
+# P7 B1 unit 3 — prepared-offline runtime fixture spec (DRAFT round 3)
 
-**Status:** DRAFT round 2 — spec-first per Law 6; scoping and contract only. No implementation, no
-runtime `PASS`, and no `DEF-P7-001` movement is authorized by this document. **Round-1 non-author
-review returned NEEDS_CHANGES** (`docs/verification/verdicts/p7-b1-unit3-spec-review-round1-20261104.md`,
-HEAD `d468d9c`); this revision addresses findings F1–F11. It needs a **round-2 non-author re-verify**
-(and, because it touches `kernel/*`, an owner-approved change intent) before implementation.
-**Date:** 2026-11-04 (revises the 2026-11-03 draft)
+**Status:** DRAFT round 3 — spec-first per Law 6; scoping and contract only. No implementation, no
+runtime `PASS`, and no `DEF-P7-001` movement is authorized by this document. **Round-1 review
+returned NEEDS_CHANGES** (`…-round1-20261104.md`, HEAD `d468d9c`), addressed in round 2; **round-2
+re-verify returned NEEDS_CHANGES** (`…-round2-20261104.md`, HEAD `b64a46e`) with one HIGH finding
+(N1: the committed case-manifest does not self-verify witnesses — `DeriveCaseStatus` is a pure fold),
+plus N2 (Law-1 precedent wrong) and N3 (`proof_binding` key shared). This round-3 revision relocates
+the witness-verification claim out of the committed artifact and onto the fixture + live run + control
+(N1), corrects the Law-1 justification (N2), and gates `proof_binding` on the launched-process witness
+(N3). It needs a **round-3 non-author re-verify** (and, because it touches `kernel/*`, an
+owner-approved change intent) before implementation.
+**Date:** 2026-11-04 (revises the round-2 draft)
 **Implements:** [`VD-p7-postgres-source-route-2026-11-01`](../decisions/VD-p7-postgres-source-route-2026-11-01.md)
 (B1), unit 3 of the [slice plan](P7-postgres-b1-source-build-slice-plan.md).
 **Builds on (accepted):** units 1–2 — the SHA-256-verified 16.4 source
@@ -16,7 +21,18 @@ round-2 ACCEPTABLE), and the already-accepted verified-archive staging seam
 (`internal/twin` TWIN-INV-12..17; companion-archive-controls verdict).
 **Deferral:** [`DEF-P7-001`](../deferrals.tsv) (stays OPEN/BLOCKED until unit 3 is accepted).
 
-## 0. What round 1 changed (summary of the revision)
+## 0. What the revisions changed (summary)
+
+**Round 3 (this revision), after round-2 N1/N2/N3:** the witness-verification claim is relocated out
+of the committed case-manifest (which `DeriveCaseStatus` folds without re-hashing) and onto the
+**fixture proving-test + §9.3a live non-author run + §5.1 negative control** — the committed
+`case_status = PASS` is now stated as a *record* of a verified run, not a self-proving gate, and
+`DEF-P7-001` closure rests on that acceptance process (§1, §1.1, §5, §6). The §6.1 Law-1 justification
+is corrected: these artifacts get no automated integrity gate (the integrity script covers only
+`verdicts/`), stated as a deliberate residual (N2). `proof_binding = PASS` is explicitly gated on the
+launched-process witness, not determinism alone (N3). The round-2 changes below still stand.
+
+**Round 2, after round-1 F1–F11:**
 
 The round-1 review found that the draft's central claim was unsound: it rested `DEF-P7-001` closure
 on `EvaluateLock → LOCKED`, but `LOCKED` is computed purely from event/snapshot **digests**
@@ -47,30 +63,61 @@ on `EvaluateLock → LOCKED`, but `LOCKED` is computed purely from event/snapsho
 Units 1–2 established that the PostgreSQL source is authentic and the produced binary's licensing is
 clean. Unit 3 is the only unit that produces a **runtime** fact: it runs a real, from-source,
 minimal-permissive PostgreSQL under `ReplayIsolated`, **witnesses the launched process**, and records
-that evidence so that:
+that evidence. Two artifacts result, carrying two **different** claims:
 
-- `proofbound.p7.case-manifest.v1` `DeriveCaseStatus` folds to **PASS** — and PASS is reachable
-  **only** when the bound runtime witnesses (launched-process, no-fetch, ledger-preserved, cleanup)
-  are present and verify. This is the fact `DEF-P7-001` closure rests on.
 - `proofbound.p7.behavior-lock.v1` `EvaluateLock` derives **LOCKED** over the committed
   `vera.replay.v1` proof bytes. **LOCKED is a determinism claim only** (the replay reproduces the
   committed proof digests); it is **not** evidence that a real postgres ran, and `DEF-P7-001` closure
-  does **not** rest on it. LOCKED and PASS are reported together but carry different claims.
+  does **not** rest on it.
+- `proofbound.p7.case-manifest.v1` `DeriveCaseStatus` folds to **PASS** when every outcome is
+  authored PASS. **The committed manifest is a *declaration*, not self-verifying** (round-2 N1):
+  `DeriveCaseStatus` is a pure worst-wins fold over author-declared `outcome.Status` and
+  `ValidateCaseManifest` only checks evidence-list well-formedness — neither re-hashes a witness nor
+  launches anything (`casemanifest.go:197-222`, `398-425`). So PASS in the committed artifact alone
+  does **not** prove a real run; taken in isolation it is forgeable by declaration.
 
-Only when a non-author **runs the fixture live (archive present) and accepts that `case_status = PASS`
-with verifying witnesses** can `DEF-P7-001` move toward RESOLVED.
+### What actually establishes the runtime fact (N1 — the claim's real home)
 
-### 1.1 The soundness chain (explicit, after F1)
+The runtime fact is established **not by the committed artifacts but by the acceptance process that
+produces and checks them** — exactly as every other evidence artifact in this repo (build-evidence,
+verify-evidence, verdicts) draws its trust from the non-author who ran the verification, not from the
+file validating itself. Concretely, three things, none of which is the manifest's own validation:
 
-> `case_status = PASS` ⟹ every runtime outcome is PASS ⟹ the launched-process witness
-> (`/proc/<pid>/exe` digest == `PostgresBinarySHA256`) verified, the no-fetch isolation held, the
-> source ledger was byte-preserved, and the owned temp root was removed — i.e. **a real from-source
-> `postgres` executable ran this replay**.
+1. **The fixture proving-test (§4, §5).** The fixture compares `/proc/<pid>/exe` of the live
+   postmaster to `PostgresBinarySHA256` **at run time** and **refuses to emit `proof_binding = PASS`**
+   (and so refuses to author a PASS manifest) unless that and the other live witnesses verify. The
+   manifest is an *output* of a run that already verified the witnesses; it is not trusted to
+   re-verify them.
+2. **The §9.3a live non-author run.** The accepting non-author runs the fixture **with the archive
+   present** and watches `LOCKED + PASS` emerge live — a green `t.Skip` is not acceptance.
+3. **The §5.1 negative control.** A swapped/absent binary must make the fixture refuse PASS (→
+   `UNVERIFIED`/`FAIL`), proving the PASS is *caused by* the real run and cannot be reached without it.
 
-This chain must be demonstrated by a **negative control** (§5.1, F11): with the declared binary
-absent the case is `UNVERIFIED`; with a *swapped/wrong* binary the launched-process witness FAILS and
-the case folds to `FAIL` — never `PASS`. If a proving test cannot make `PASS` collapse when the real
-run is removed, the acceptance proves nothing (Law 9 corollary).
+`DEF-P7-001` closure therefore rests on **(the fixture + the §9.3a live run + the §5.1 negative
+control)**, which together make the committed `case_status = PASS` a faithful record of a witnessed
+real run — never on the committed manifest or `DeriveCaseStatus` re-verifying anything, and never on
+`LOCKED`.
+
+### 1.1 The soundness chain (explicit, after F1/N1)
+
+The chain is anchored on the **fixture**, not on the committed artifact:
+
+> **the fixture emitted `proof_binding = PASS`** ⟹ at run time the live postmaster's
+> `/proc/<pid>/exe` digest == `PostgresBinarySHA256`, the no-fetch isolation held, the source ledger
+> was byte-preserved, and the owned temp root was removed — i.e. **a real from-source `postgres`
+> executable ran this replay** — because the fixture *refuses to emit that PASS otherwise*.
+
+The committed `case_status = PASS` is then a faithful *record* of that fixture run; it is not itself
+the proof (N1: `DeriveCaseStatus` re-verifies nothing). Two independent checks make the record
+trustworthy to a non-author:
+- the **§9.3a live run**: the accepting non-author re-runs the fixture with the archive present and
+  sees `LOCKED + PASS` emerge live (a `t.Skip` is not acceptance); and
+- the **§5.1 negative control** (F11): with the declared binary absent the fixture skips (case
+  `UNVERIFIED`); with a *swapped/wrong* binary the launched-process witness FAILS and the fixture
+  yields `proof_binding = FAIL` → `case_status = FAIL` — never `PASS`.
+
+If the proving test cannot make the fixture refuse `PASS` when the real run is removed or tampered,
+the acceptance proves nothing (Law 9 corollary).
 
 ## 2. The exact gap unit 3 closes
 
@@ -161,9 +208,10 @@ that:
    temporary embedded store on loopback, projects, compares snapshots, and returns a `Result` with a
    real `vera.replay.v1` `Proof`.
 5. Produces the witnesses in §5 and the evidence artifacts in §6.
-6. Authors the behavior-lock + case-manifest, asserts `EvaluateLock == LOCKED` (determinism) **and**
-   `DeriveCaseStatus == PASS` with all runtime witnesses verifying, and commits the non-binary
-   evidence at one evidence revision.
+6. **Verifies every runtime witness itself (in the fixture)** and authors each outcome PASS only if
+   its witness verified; then asserts `EvaluateLock == LOCKED` (determinism) and
+   `DeriveCaseStatus == PASS` (the fold over the outcomes the fixture just authored), and commits the
+   non-binary evidence at one evidence revision. The fixture — not `DeriveCaseStatus` — is the gate.
 
 **Isolation & determinism (F10, short-socket from unit 2):** the fixture must not worsen
 `DEF-KERNELCHECK-FLAKE-001` (embedded-postgres **port contention** on fixed ports 55461-55463). It
@@ -175,9 +223,14 @@ proving-test case.
 
 ## 5. Runtime witnesses (new invariants to add to `internal/twin` SPEC)
 
-Each maps to a `case-manifest` outcome that must become `PASS` **with a bound, re-verifiable witness
-record** — not a self-declared state. `DeriveCaseStatus` verifies each witness digest before folding
-the outcome to PASS.
+Each maps to a `case-manifest` outcome. **The fixture (not `DeriveCaseStatus`) is what verifies the
+witnesses** (round-2 N1): it computes each witness at run time and authors an outcome as PASS **only**
+if its witness verified; otherwise it authors FAIL / refuses to produce a PASS manifest. The committed
+manifest then carries the witness records `{kind, path, sha256}` as the *evidence of* that fixture
+verification — `DeriveCaseStatus` folds the author-declared statuses and does not re-hash them, so the
+witness records are a durable record, not a self-executing gate. (Adding a committed-artifact gate
+that cross-checks each witness `sha256` against its source would change the frozen `DeriveCaseStatus`
+contract and is out of scope for this unit — it would be its own `CI-*` + acceptance; see §7.)
 
 | New invariant | Statement | Required mechanism & control | case-manifest outcome |
 |---|---|---|---|
@@ -187,6 +240,14 @@ the outcome to PASS.
 | **TWIN-INV-21 — Cleanup witness** | the owned temporary root (staged binaries dir + data dir) is removed on success and every failure path | the witness **stats the path and asserts absence** (not merely "RemoveAll was called"). **Positive control (required):** a path whose removal is suppressed MUST make the witness FAIL. | `cleanup` |
 | **TWIN-INV-22 — Real-proof binding (determinism)** | the committed `vera.replay.v1` proof bytes reproduce under re-evaluation, making `EvaluateLock == LOCKED` | re-evaluate the lock over the committed proof bytes → LOCKED. **This is a determinism claim, NOT a runtime witness** (F1): LOCKED is a pure function of digests and does not establish that a real postgres ran — that fact is carried by TWIN-INV-18/19 and the case `PASS`. | (determinism check behind `proof_binding`, not a standalone runtime claim) |
 
+**`proof_binding` gates on the launched-process witness, not determinism alone (round-2 N3).** The
+nine case-outcome keys are frozen (CASE-INV-3), so both TWIN-INV-18 (launched-process provenance) and
+TWIN-INV-22 (determinism re-eval) map to the single `proof_binding` key. The fixture MUST author
+`proof_binding = PASS` **only when the launched-process witness (TWIN-INV-18) verifies**; the
+determinism check (TWIN-INV-22 / `EvaluateLock == LOCKED`) is necessary but **not sufficient** for
+`proof_binding = PASS`. A run that reproduces the proof digests (LOCKED) but whose
+`/proc/<pid>/exe` does not equal `PostgresBinarySHA256` yields `proof_binding = FAIL`.
+
 The remaining case outcomes (`source_binding`, `baseline_provenance`, `candidate_binding`,
 `snapshot_comparison`, `intent_binding`) are produced by binding the committed source/candidate
 fixtures, baseline provenance tuple, snapshot digests, and the P5 requirement
@@ -195,12 +256,13 @@ behavior-lock already validates, now carried into the case manifest with real ev
 
 ### 5.1 The overall negative control (F11)
 
-A dedicated proving test demonstrates that `DeriveCaseStatus → PASS` **depends on the real run**:
+A dedicated proving test demonstrates that **the fixture's emitted `PASS` depends on the real run**:
 - **binary absent** → fixture `t.Skip` → committed case stays `UNVERIFIED` (CASE-INV-5, no PASS by
   absence);
-- **binary swapped / bytes altered** → TWIN-INV-18 launched-process witness FAILS →
-  `proof_binding` outcome FAIL → worst-wins fold → `case_status = FAIL`, never PASS;
-- **real declared binary** → all witnesses verify → `case_status = PASS`.
+- **binary swapped / bytes altered** → the fixture's TWIN-INV-18 launched-process witness FAILS → the
+  fixture authors `proof_binding = FAIL` → worst-wins fold → `case_status = FAIL`, never PASS;
+- **real declared binary** → the fixture verifies all witnesses → authors all outcomes PASS →
+  `case_status = PASS`.
 
 Because `intent_binding` uses an injected `RequirementResolver`, the proving tests MUST NOT let a
 permissive stub mask a missing runtime witness: the real-run witnesses (TWIN-INV-18/19/20/21) are the
@@ -221,7 +283,8 @@ not claim the runtime fact is established by any mechanism weaker than process-i
 - The authored `proofbound.p7.behavior-lock.v1` (LOCKED over those proof bytes — determinism) and the
   `proofbound.p7.case-manifest.v1` (`case_status=PASS`, nine outcomes with **bound** evidence).
 - Witness records (launched-process, no-fetch, ledger-preserved, cleanup) as `{kind, path, sha256}`,
-  each digest bound into the case manifest and re-verified by `DeriveCaseStatus`.
+  each bound into the case manifest as the **record of** the fixture's run-time verification (the
+  fixture computed and checked them; `DeriveCaseStatus` does not re-hash them — round-2 N1).
 - Command logs (`initdb`/start/stop) with the no-fetch isolation method recorded (namespace vs.
   declaration — F4), exit codes, stdout/stderr digests.
 - The runtime-fixture evidence record + the non-author verdict.
@@ -232,14 +295,24 @@ The archive `.txz`, the data directory, and any built executable are **excluded*
 
 These artifacts are produced by a run that requires the **offline archive**, which is deliberately
 absent from `make check` (the fixture `t.Skip`s without it). They are therefore **one-time captured
-evidence, not regenerable derived state**, and are treated exactly as the existing schema-bearing
-evidence artifacts are — verdicts, build-evidence, verify-evidence — which are **documentary**,
-carry **no `@generated` marker**, and are validated **structurally** (self-digest + path resolution
-via `scripts/p6-artifact-integrity.sh`), not by regeneration. This is an **explicit, reasoned
-exemption** from Law 1's regenerate-in-`make check` requirement, on the same basis those artifacts
-already enjoy: their generating input is intentionally out of CI. They are not hand-editable
-narrative either — they are machine-produced records validated by self-digest. The spec records this
-exemption so the choice is deliberate, not silent.
+evidence, not regenerable derived state**, and carry **no `@generated` marker** — an **explicit,
+reasoned exemption** from Law 1's regenerate-in-`make check` requirement, because the generating input
+is intentionally out of CI. This is the same basis on which the existing **build-evidence and
+verify-evidence** records under `docs/verification/p7-replay-lock-prerequisites/` are already
+unmarked: they draw their trust from the non-author who ran and accepted the verification, not from a
+regeneration.
+
+**Honest correction (round-2 N2):** unlike the round-2 draft's claim, these artifacts are **not**
+covered by `scripts/p6-artifact-integrity.sh` — that script walks only `docs/verification/verdicts/`
+(`-maxdepth 1`), so build-evidence, verify-evidence, and the §6 artifacts here (prepared-archive
+manifest JSON, proof bytes, lock/case-manifest JSON, witness records, command logs) get **no
+automated integrity gate**; only the non-author verdict itself (which lands in `verdicts/`) is
+self-digest-validated. This residual is stated plainly so it is a deliberate choice, not a silent
+exemption of load-bearing artifacts: their integrity rests on the §9.3a live non-author run plus the
+evidence revision recorded in the verdict, exactly as the accepted units 1–2 evidence already does.
+*(Optional future hardening, out of scope here: extend `p6-artifact-integrity.sh` — or a sibling —
+to self-digest-validate schema-bearing artifacts under `docs/verification/p7-replay-lock-prerequisites/`.
+That would be its own governed `scripts/*` change + acceptance.)*
 
 ## 7. Non-goals
 
@@ -284,11 +357,11 @@ exemption so the choice is deliberate, not silent.
    unit needs an owner-approved change intent (a `CI-*` record) before the governed commit, plus the
    package-acceptance bar: `make mutants` green (survivors declared) AND a non-author ACCEPTABLE
    verdict (ROADMAP P1 bar, Law 9). The drafted `CI-p7-runtime-fixture-1a2b3c` **stays `proposed`**
-   until this spec is re-accepted at round 2.
+   until this spec is re-accepted.
 
 ## 9. Sequence & gates
 
-1. **Spec re-review (round 2)** — non-author re-verify of THIS revision + owner sign-off on the §8.4
+1. **Spec re-review (round 3)** — non-author re-verify of THIS revision + owner sign-off on the §8.4
    no-fetch mechanism decision; keep the change intent `proposed` until accepted.
 2. **Subset prep + compatibility proof** — produce the symlink-free `bin/`+`share/` subset archive and
    **prove embedded-postgres runs from the SUBSET** (closes the F5 gap, not just the full tree).
@@ -296,10 +369,12 @@ exemption so the choice is deliberate, not silent.
 3. **Fixture + witnesses** — implement the runtime fixture and TWIN-INV-18..22 (launched-**process**
    witness via `/proc/<pid>/exe`; no-fetch isolation; ledger-preserved + cleanup with their positive
    controls); extend the twin SPEC honestly (§5.2); author the behavior-lock + case-manifest over the
-   real proof with **bound** witnesses. **Gate:** `EvaluateLock == LOCKED` (determinism) AND
-   `DeriveCaseStatus == PASS` with every witness verifying; the §5.1 negative control proves PASS
-   collapses to UNVERIFIED (absent) / FAIL (swapped); ephemeral-port + short-socket isolation holds;
-   calibrated `make mutants` green.
+   real proof, recording the fixture-verified witnesses. **Gate:** the fixture verifies every witness
+   at run time and emits `EvaluateLock == LOCKED` (determinism) AND `DeriveCaseStatus == PASS` (the
+   fold over the outcomes the fixture authored from those verifications — the fixture is the gate, not
+   `DeriveCaseStatus`); the §5.1 negative control proves the fixture's PASS collapses to UNVERIFIED
+   (absent) / FAIL (swapped); `proof_binding` gated on the launched-process witness (N3);
+   ephemeral-port + short-socket isolation holds; calibrated `make mutants` green.
 3a. **Acceptance precondition (F10):** the non-author accepting this unit MUST run the fixture **with
    the archive present** and witness `LOCKED + PASS` **live** (a green `t.Skip` is not acceptance),
    and MUST independently run the §5.1 negative control.
