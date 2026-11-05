@@ -265,4 +265,10 @@ dynamic-dependency provenance out of scope, the no-fetch declaration, SHA-256+TL
 and a deferred full-package mutation sweep). L12/L17, a clean-clone proof, and a shippable embedded-DB
 *release* remain separate downstream work; the snapshot provider stays deliberately skipped (Gate 1).
 
+**Path to product completion.** With P7 B1 complete, the forward plan for the remaining build-order
+steps (#2b witnessed regeneration → #3 Twin prediction ledger → #4 Governor → #5 Trust Engine /
+portable warranties, and the 2029 self-hosting milestone) is sequenced in
+[product-completion-plan-2026-11-05.md](docs/plans/product-completion-plan-2026-11-05.md), with each
+item's gate and the release/hardening gaps. The recommended next step is #2b, spec-first.
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
