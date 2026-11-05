@@ -50,21 +50,53 @@ that file (its digests pin this prefix-specific build).
   `bin/postgres`, real `vera.replay.v1` proof produced. SPEC: TWIN-INV-18 added, TWIN-INV-14 note
   corrected, `invariants.lock` regenerated; all invariant/numbering lints pass.
 
-**Exact next action — §9.3 remaining increments (governed `kernel/*`, intent accepted):** (3)
-TWIN-INV-20 whole-ledger-preservation witness (before/after source-store digest) + positive control
-(an injected mutation must FAIL it); (4) TWIN-INV-21 cleanup witness (stat the owned temp root for
-ABSENCE, not "RemoveAll called") + positive control — needs the owned root surfaced from
-`replayIsolated`; (5) TWIN-INV-19 no-fetch — per [[VD-p7-nofetch-witness-2026-11-04]], namespace
-primary where wired else the **labeled declaration fallback**, recording which was used (wiring netns
-around embedded-postgres' child is the open engineering judgment — current fetch-free setup provides
-the honest declaration); (6) TWIN-INV-22 determinism — author a `proofbound.p7.behavior-lock.v1` over
-the real proof so `EvaluateLock == LOCKED`; (7) author `proofbound.p7.case-manifest.v1` with the nine
-outcomes bound to real evidence so `DeriveCaseStatus == PASS` (the FIXTURE is the gate — it authors
-PASS only from verified witnesses), with `proof_binding` gated on TWIN-INV-18 (not determinism
-alone — N3); (8) commit the §6 non-binary evidence (proof bytes, lock, case-manifest, witness/command
-records); (9) calibrated `make mutants` (survivors declared) + the non-author review packet. **Law 9:
-the owner (or a dispatched non-author) owns the §9.3a live run + package verdict — the agent cannot
-self-accept.** The archive for §9.3a is `~/proofbound-p7-build/postgres-16.4-subset.txz`.
+**§9.3 increment 3 DONE (`9bda47f`) — TWIN-INV-19/20/21, all VERIFIED end-to-end against the real
+archive.** TWIN-INV-20 whole-ledger preservation (before/after source digest; mutation control flips
+it); TWIN-INV-21 cleanup absence (`replayIsolated` now surfaces `Result.ownedRoot`; witness stats it
+for ABSENCE; suppressed-removal control leaves it present); TWIN-INV-19 no-fetch as the **labeled
+declaration** per [[VD-p7-nofetch-witness-2026-11-04]] (staged `bin/pg_ctl` short-circuits the fetch;
+no remote strategy constructed; recorded as a configuration assertion, NOT a namespace observation —
+netns primary not wired). SPEC TWIN-INV-19/20/21 added, `invariants.lock` regenerated, skips
+registered, all lints + `make kernel-check` green.
+
+**So four runtime witnesses (18/19/20/21) are implemented and end-to-end verified against a real
+from-source postgres.** The novel/risky core of unit 3 is done.
+
+**Exact next action — §9.3 increments 6–9 (the behavior-lock/case-manifest authoring — large, delicate
+reuse of the accepted `internal/twin/manifest` pattern; this is where the six spec rounds found
+over-claims, so author it spec-first with adversarial self-review):**
+- **(6) TWIN-INV-22 — author `proofbound.p7.behavior-lock.v1` over the real proof → `EvaluateLock ==
+  LOCKED`.** Confirmed field rules (see `behaviorlock.go`): `ReplayProof` must satisfy
+  `validateReplayProofConsistency` — `source_digest`/`baseline_snapshot_digest`/
+  `candidate_snapshot_digest`/`through_seq` taken from the REAL `twin.Result.Proof`; `candidate_digest`
+  = manifest-scheme `candidateDigest(Candidates)` (sha256 of newline-joined candidate `bytes_sha256`),
+  which is NOT the twin candidate digest — the lock is its own artifact (matches the accepted 2026-11-01
+  contract; TWIN-INV-22 is determinism, NOT a runtime witness). Needs a real source prefix
+  (`through_seq ≥ 1`), `baseline.projector_revision` = a 40-hex git rev (`gitRevisionRE`) +
+  `projector_revision_digest` 64-hex, and a DECLARED `intent_binding` tuple carrying the REAL
+  `artifact_sha256` of `BR-replay-evidence-6e3d2b`. Committed proof bytes = `marshal(lock.ReplayProof)`
+  (snake_case tags — NOT the twin.Proof JSON). **Resolver:** no concrete `RequirementResolver` exists
+  outside tests — the deterministic CI re-validation test must supply one that genuinely resolves
+  `BR-replay-evidence-6e3d2b` O-1 (read the committed intent record, check its artifact_sha256),
+  otherwise `evaluateIntent` → UNVERIFIED and never LOCKED.
+- **(7) author `proofbound.p7.case-manifest.v1` → `DeriveCaseStatus == PASS`.** Nine outcome keys
+  (`source_binding, baseline_provenance, candidate_binding, ledger_preserved, snapshot_comparison,
+  proof_binding, no_fetch, cleanup, intent_binding`); every `CaseRef` (ContractRefs, Inputs) +
+  Artifact is content-addressed to a committed file; Commands carry `network_policy` ∈
+  {none,loopback-only,offline}; the FIXTURE authors each outcome PASS only from a verified witness
+  (`proof_binding` gated on TWIN-INV-18, not determinism — N3).
+- **(8)** commit the §6 non-binary evidence (proof bytes, lock JSON, case-manifest JSON,
+  witness/command records). Design idea: emit from the fixture (archive present) to a committed
+  evidence dir, plus a SEPARATE deterministic test (no archive, runs in `make check`) that re-parses
+  the committed lock/case-manifest and asserts `LOCKED`+`PASS` (TWIN-INV-22 determinism).
+- **(9)** calibrated `make mutants` (every survivor pre-declared; state calibration controls) + the
+  independent non-author review packet.
+
+**Law 9: the owner (or a dispatched non-author) owns the §9.3a live acceptance run + the package
+verdict — the agent cannot self-accept.** The archive for §9.3a is
+`~/proofbound-p7-build/postgres-16.4-subset.txz` (its digests pin that prefix; set
+`PROOFBOUND_P7_PG_ARCHIVE` to it). Run the fixture suite with that env var to witness `LOCKED`+`PASS`
+live; the §9.3a checks are in spec §9 item 3a.
 
 **Review-loop outcome (durable):** R1 — closure rested on `EvaluateLock → LOCKED` (pure digest
 arithmetic, `replay.go:195-199`), not a real-run witness. R2 — the fix relocated the over-claim onto
