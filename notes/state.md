@@ -33,19 +33,38 @@ backend modules); pgxs + client-only top-level libs excluded. Committed prepared
 `~/proofbound-p7-build/`). The §9.3a acceptance run MUST set `PROOFBOUND_P7_PG_ARCHIVE` to exactly
 that file (its digests pin this prefix-specific build).
 
-**Exact next action — implement §9.3 (governed `kernel/*`, intent now accepted).** Spec
-[`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`](../docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md)
-§9.3. Recommended increment order: (1) `witnessLaunchedProcess(pid, expectedSHA256)` + distinct typed
-error `ErrLaunchedProcessDigestMismatch` + its **direct calibration unit test** (N5/N8 soundness core —
-verifiable now, no archive needed); (2) wire it as the **sole producer** of `resolved_sha256` on the
-`ReplayIsolatedWithVerifiedPostgres` path (add a `store.(*Store).DataDir()` accessor to read
-`postmaster.pid`; surface a `LaunchWitness` on `twin.Result`); (3) the runtime fixture +
-TWIN-INV-18..22 + §5.1 controls; (4) author behavior-lock + case-manifest over the REAL proof; (5)
-calibrated `make mutants` + non-author review packet. TWIN-INV-19 no-fetch: per
-[[VD-p7-nofetch-witness-2026-11-04]], namespace primary where wired else the labeled declaration
-fallback — record which was used; wiring netns around embedded-postgres' child is the open
-engineering judgment. Law 9: the owner (or a dispatched non-author) still owns the §9.3a live run +
-the package verdict — the agent cannot self-accept.
+**§9.3 increments 1–2 DONE (the soundness core, end-to-end VERIFIED).**
+- **Increment 1 (`7c2b6c7`):** `witnessLaunchedProcess(pid, expectedSHA256)` — single sole-producer
+  of the launched-process digest; resolves `/proc/<pid>/exe`, rejects `(deleted)`, hashes the running
+  image via the kernel magic symlink, returns the **distinct** sentinel
+  `errLaunchedProcessDigestMismatch` (separate from the staging re-hash — N6). **Direct calibration
+  unit test (N5)** against a live process: positive resolves, byte-divergent expected → distinct
+  error; plus deleted-image + fail-closed controls. Lint clean.
+- **Increment 2 (`44fa028`):** wired as the **sole producer** on `ReplayIsolatedWithVerifiedPostgres`
+  (postmaster PID found under the replay-owned temp root via `findPostmasterPID` — no coupling to
+  store's data-dir convention, Law 2; surfaced on `Result.launch`; replay FAILS on mismatch). Runtime
+  fixture `runtime_fixture_test.go` (spec §4): reads `PROOFBOUND_P7_PG_ARCHIVE` (t.Skip when unset —
+  UNVERIFIED, no PASS by absence), builds `VerifiedPostgresInput` from the committed manifest,
+  launches a real from-source postgres for BOTH source + candidate stores (fetch-free). **VERIFIED
+  end-to-end locally:** real postgres launched, `/proc` witness resolved `ba2447e5…` == declared
+  `bin/postgres`, real `vera.replay.v1` proof produced. SPEC: TWIN-INV-18 added, TWIN-INV-14 note
+  corrected, `invariants.lock` regenerated; all invariant/numbering lints pass.
+
+**Exact next action — §9.3 remaining increments (governed `kernel/*`, intent accepted):** (3)
+TWIN-INV-20 whole-ledger-preservation witness (before/after source-store digest) + positive control
+(an injected mutation must FAIL it); (4) TWIN-INV-21 cleanup witness (stat the owned temp root for
+ABSENCE, not "RemoveAll called") + positive control — needs the owned root surfaced from
+`replayIsolated`; (5) TWIN-INV-19 no-fetch — per [[VD-p7-nofetch-witness-2026-11-04]], namespace
+primary where wired else the **labeled declaration fallback**, recording which was used (wiring netns
+around embedded-postgres' child is the open engineering judgment — current fetch-free setup provides
+the honest declaration); (6) TWIN-INV-22 determinism — author a `proofbound.p7.behavior-lock.v1` over
+the real proof so `EvaluateLock == LOCKED`; (7) author `proofbound.p7.case-manifest.v1` with the nine
+outcomes bound to real evidence so `DeriveCaseStatus == PASS` (the FIXTURE is the gate — it authors
+PASS only from verified witnesses), with `proof_binding` gated on TWIN-INV-18 (not determinism
+alone — N3); (8) commit the §6 non-binary evidence (proof bytes, lock, case-manifest, witness/command
+records); (9) calibrated `make mutants` (survivors declared) + the non-author review packet. **Law 9:
+the owner (or a dispatched non-author) owns the §9.3a live run + package verdict — the agent cannot
+self-accept.** The archive for §9.3a is `~/proofbound-p7-build/postgres-16.4-subset.txz`.
 
 **Review-loop outcome (durable):** R1 — closure rested on `EvaluateLock → LOCKED` (pure digest
 arithmetic, `replay.go:195-199`), not a real-run witness. R2 — the fix relocated the over-claim onto
