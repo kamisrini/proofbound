@@ -235,3 +235,4 @@ kernel/internal/twin/SPEC.md	TWIN-INV-18	Launched-process witness.
 kernel/internal/twin/SPEC.md	TWIN-INV-19	No-fetch provisioning.
 kernel/internal/twin/SPEC.md	TWIN-INV-20	Whole-ledger preservation.
 kernel/internal/twin/SPEC.md	TWIN-INV-21	Cleanup absence.
+kernel/internal/twin/SPEC.md	TWIN-INV-22	Real-proof determinism.

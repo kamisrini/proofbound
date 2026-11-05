@@ -113,6 +113,14 @@ are the in-progress increments of that unit.
 20. **TWIN-INV-21 — Cleanup absence.** The owned temporary root is removed on success and every
     failure path, witnessed by statting the path for ABSENCE (not by trusting `RemoveAll` was
     called). A positive control suppresses removal and proves the absence check is load-bearing.
+21. **TWIN-INV-22 — Real-proof determinism.** A `proofbound.p7.behavior-lock.v1` authored over the
+    real replay (its source/baseline/candidate-snapshot digests and through_seq taken from the real
+    `vera.replay.v1` proof) re-evaluates to `LOCKED` over the committed proof bytes, with the
+    declared `intent_binding` resolved against the committed `BR-replay-evidence-6e3d2b` requirement
+    record. This is a **determinism** claim, NOT a runtime witness: `LOCKED` is a pure function of
+    digests and the resolved requirement and does not by itself establish that a real postgres ran —
+    that fact is carried by TWIN-INV-18. A negative control (an unresolvable requirement) must drop
+    the evaluation below `LOCKED`, proving the intent gate has teeth.
 
 ## Non-goals
 
