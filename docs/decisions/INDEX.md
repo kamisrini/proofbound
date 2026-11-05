@@ -16,6 +16,7 @@
 - [VD-p6-historical-evidence-portability-2026-09-13: strict migration-only historical evidence](VD-p6-historical-evidence-portability-2026-09-13.md) — Accepted (2026-09-13)
 - [VD-p6-private-storage-compat-2026-09-12: freeze migrated private storage identity, retire external aliases](VD-p6-private-storage-compat-2026-09-12.md) — Accepted (2026-09-12)
 - [VD-p7-behavior-lock-subject-2026-10-06: proposed bounded replay lock subject](VD-p7-behavior-lock-subject-2026-10-06.md) — ACCEPTED FOR PLANNING — fresh non-author review round 3 on 2026-10-13; implementation separately gated (2026-10-06)
+- [VD-p7-def001-resolve-2026-11-05: resolve DEF-P7-001 — the B1 shippable-PostgreSQL provenance + licensing + runtime-evidence bar is met](VD-p7-def001-resolve-2026-11-05.md) — Accepted (2026-11-05)
 - [VD-p7-external-replay-prerequisites-2026-10-15: public binary setup outside Git](VD-p7-external-replay-prerequisites-2026-10-15.md) — ACCEPTED FOR DOCUMENTARY PLANNING — fresh non-author review round 2; (2026-10-15)
 - [VD-p7-go-module-source-archive-payload-scope-2026-10-23: VD-p7-go-module-source-archive-payload-scope-2026-10-23](VD-p7-go-module-source-archive-payload-scope-2026-10-23.md) — OWNER-APPROVED SCOPE DECISION; independent final corpus review remains required. (2026-10-23)
 - [VD-p7-nofetch-witness-2026-11-04: no-fetch witness is network-namespace isolation with a labeled declaration fallback](VD-p7-nofetch-witness-2026-11-04.md) — Accepted (2026-11-04)
