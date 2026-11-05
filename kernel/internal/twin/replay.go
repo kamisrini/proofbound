@@ -53,6 +53,10 @@ type Result struct {
 	// ReplayIsolatedWithVerifiedPostgres path. Its resolvedSHA256 is produced solely by
 	// witnessLaunchedProcess (unit-3 spec §5.1 N8) — never a literal.
 	launch launchWitness
+	// ownedRoot is the temporary root this replay created and is responsible for removing
+	// (TWIN-INV-17). It is surfaced so the TWIN-INV-21 cleanup witness can stat it for ABSENCE
+	// after the run (not merely trust that RemoveAll was called).
+	ownedRoot string
 }
 
 // launchWitness is the TWIN-INV-18 observation record. method is always "proc-exe".
@@ -221,6 +225,7 @@ func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 	}
 	out := makeResult(req, records, baseline, candidate, verdict)
 	out.launch = witness
+	out.ownedRoot = root
 	return out, nil
 }
 

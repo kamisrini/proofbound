@@ -115,3 +115,118 @@ func TestRuntimeFixtureWitnessesRealLaunchedPostgres(t *testing.T) {
 	t.Logf("REAL postgres launched; /proc witness resolved %s (pid %d); proof %s",
 		result.launch.resolvedSHA256, result.launch.resolvedPID, result.Proof.Schema)
 }
+
+func appendDeployment(t *testing.T, s *store.Store, id int) {
+	t.Helper()
+	sy, err := s.BeginSync(context.Background(), "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := sy.Append(context.Background(), githubDeploymentEvent(id)); err != nil {
+		t.Fatal(err)
+	}
+	if err := sy.Finish(context.Background(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func sourceLedgerDigest(t *testing.T, s *store.Store) string {
+	t.Helper()
+	var recs []store.Record
+	if err := s.ReadEvents(context.Background(), store.Filter{}, func(r store.Record) error {
+		recs = append(recs, r)
+		return nil
+	}); err != nil {
+		t.Fatalf("read source events: %v", err)
+	}
+	return digestRecords(recs)
+}
+
+// TestRuntimeFixtureLedgerPreservationWitness is TWIN-INV-20: the source store's event set is
+// byte-identical before and after the isolated replay. The positive control proves the witness
+// detects a real mutation (it does not merely restate the read-only invariant).
+func TestRuntimeFixtureLedgerPreservationWitness(t *testing.T) {
+	input := loadVerifiedPostgresInput(t)
+	src := openVerifiedSourceStore(t, input)
+	appendDeployment(t, src, 5)
+
+	before := sourceLedgerDigest(t, src)
+	req := Request{ThroughSeq: 5, Candidate: []Candidate{{Seq: 30, Event: githubDeploymentEvent(30)}}}
+	if _, err := ReplayIsolatedWithVerifiedPostgres(context.Background(), src, req, emptySnapshot(), input); err != nil {
+		t.Fatalf("replay: %v", err)
+	}
+	after := sourceLedgerDigest(t, src)
+	if before != after {
+		t.Fatalf("TWIN-INV-20 violated: source ledger changed across isolated replay: %s -> %s", before, after)
+	}
+
+	// Positive control: an actual mutation MUST change the digest.
+	appendDeployment(t, src, 6)
+	if sourceLedgerDigest(t, src) == before {
+		t.Fatal("ledger-preservation control inert: digest unchanged after a real source mutation")
+	}
+}
+
+// TestRuntimeFixtureCleanupWitness is TWIN-INV-21: the owned temporary root is removed on success.
+// The witness stats the path for ABSENCE (not "RemoveAll was called"); the positive control
+// suppresses removal and proves the absence check is load-bearing (the root then remains).
+func TestRuntimeFixtureCleanupWitness(t *testing.T) {
+	input := loadVerifiedPostgresInput(t)
+	src := openVerifiedSourceStore(t, input)
+
+	req := Request{ThroughSeq: 0, Candidate: []Candidate{{Seq: 30, Event: githubDeploymentEvent(30)}}}
+	result, err := ReplayIsolatedWithVerifiedPostgres(context.Background(), src, req, emptySnapshot(), input)
+	if err != nil {
+		t.Fatalf("replay: %v", err)
+	}
+	if result.ownedRoot == "" {
+		t.Fatal("owned root not surfaced")
+	}
+	if _, statErr := os.Stat(result.ownedRoot); !os.IsNotExist(statErr) {
+		t.Fatalf("TWIN-INV-21: owned root still present after success: stat err=%v", statErr)
+	}
+
+	// Positive control: suppress removal; the owned root MUST then remain, proving the absence
+	// check can fail.
+	saved := removeTempTwinRoot
+	removeTempTwinRoot = func(string) error { return nil }
+	defer func() { removeTempTwinRoot = saved }()
+	leaked, err := ReplayIsolatedWithVerifiedPostgres(context.Background(), src,
+		Request{ThroughSeq: 0, Candidate: []Candidate{{Seq: 31, Event: githubDeploymentEvent(31)}}},
+		emptySnapshot(), input)
+	if err != nil {
+		t.Fatalf("control replay: %v", err)
+	}
+	if _, statErr := os.Stat(leaked.ownedRoot); statErr != nil {
+		t.Fatalf("cleanup control inert: owned root absent despite suppressed removal: %v", statErr)
+	}
+	_ = os.RemoveAll(leaked.ownedRoot) // leave no residue from the intentional leak
+}
+
+// TestRuntimeFixtureNoFetchDeclaration is TWIN-INV-19 in its LABELED DECLARATION mode (per
+// VD-p7-nofetch-witness-2026-11-04: a no-egress network namespace is the primary witness where it
+// is wired; this build uses the declaration fallback, recorded honestly as a configuration
+// assertion, not a namespace observation). The declaration: provisioning uses only the
+// caller-supplied archive bytes via BinariesDir; the staged tree contains bin/pg_ctl so
+// embedded-postgres short-circuits its remote fetch, and store.Open constructs no remote fetch
+// strategy — so no egress is attempted for binaries. This test asserts the fetch-short-circuit
+// condition and that the store opens offline from exactly those bytes.
+func TestRuntimeFixtureNoFetchDeclaration(t *testing.T) {
+	input := loadVerifiedPostgresInput(t)
+	binDir, err := stageVerifiedPostgres(context.Background(), t.TempDir(), input)
+	if err != nil {
+		t.Fatalf("stage: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(binDir, "bin", "pg_ctl")); err != nil {
+		t.Fatalf("no-fetch declaration: staged bin/pg_ctl absent (a missing pg_ctl is what triggers a fetch): %v", err)
+	}
+	port, err := temporaryPort()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := store.Open(context.Background(), store.Config{Root: t.TempDir(), Port: port, BinariesDir: binDir})
+	if err != nil {
+		t.Fatalf("offline open from staged bytes: %v", err)
+	}
+	_ = s.Close()
+}

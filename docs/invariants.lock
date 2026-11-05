@@ -232,3 +232,6 @@ kernel/internal/twin/SPEC.md	TWIN-INV-15	Offline provisioning.
 kernel/internal/twin/SPEC.md	TWIN-INV-16	Binary-directory correctness.
 kernel/internal/twin/SPEC.md	TWIN-INV-17	Cleanup closure.
 kernel/internal/twin/SPEC.md	TWIN-INV-18	Launched-process witness.
+kernel/internal/twin/SPEC.md	TWIN-INV-19	No-fetch provisioning.
+kernel/internal/twin/SPEC.md	TWIN-INV-20	Whole-ledger preservation.
+kernel/internal/twin/SPEC.md	TWIN-INV-21	Cleanup absence.

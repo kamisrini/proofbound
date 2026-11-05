@@ -100,6 +100,19 @@ are the in-progress increments of that unit.
     result for `proof_binding` evidence — never a literal. Its discriminating power is calibrated by a
     direct unit test against a live process running a byte-divergent executable (unit-3 spec §5/§5.1).
     *(TWIN-INV-5 is a retired tombstone; numbers are never reused.)*
+18. **TWIN-INV-19 — No-fetch provisioning.** The replay provisions PostgreSQL only from the
+    caller-supplied archive bytes via `BinariesDir`; no remote fetch strategy is constructed and the
+    staged `bin/pg_ctl` short-circuits embedded-postgres' download. A no-egress network namespace is
+    the primary witness where it is wired; absent that, this is satisfied by a **labeled
+    configuration declaration** (recorded as a declaration, not a namespace observation), per
+    [`VD-p7-nofetch-witness-2026-11-04`](../../../docs/decisions/VD-p7-nofetch-witness-2026-11-04.md).
+19. **TWIN-INV-20 — Whole-ledger preservation.** The source store's event set is byte-identical
+    before and after an isolated replay (a before/after digest witness). A positive control proves
+    an injected mutation changes the digest, so the witness detects mutation rather than restating
+    TWIN-INV-1.
+20. **TWIN-INV-21 — Cleanup absence.** The owned temporary root is removed on success and every
+    failure path, witnessed by statting the path for ABSENCE (not by trusting `RemoveAll` was
+    called). A positive control suppresses removal and proves the absence check is load-bearing.
 
 ## Non-goals
 
