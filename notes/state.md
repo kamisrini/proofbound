@@ -100,15 +100,21 @@ has **BOTH** a non-author ACCEPTABLE package verdict (`1fe8146`) AND non-author 
 Full-package mutation sweep deferred (embedded-postgres per mutant, prohibitively slow; focused
 `launch_witness.go` 4/4 + live witness-function controls stand).
 
-**Exact next action — remaining items are OWNER decisions (agent does not self-authorize these):**
-1. **`DEF-P7-001` resolution + redistribution go/no-go** — the change intent EXCLUDES DEF-P7-001
-   activation/resolution from unit-3 scope ("resolving DEF-P7-001 and any redistribution go/no-go
-   remain a separate owner decision"). Unit 3 delivered the runtime evidence; the owner makes the
-   go/no-go. Do NOT flip `DEF-P7-001` without that owner decision.
-2. **Push** the batch to `origin/main` (now ~29 commits ahead; outward action — owner instruction).
-3. Optional LOW cleanup (needs a re-verify): verdict round-1 F1 (make-check cross-check of the
-   launch-witness internal consistency) + F2 (more intent-resolver negative-control branches); unit-2
-   round-2 three cosmetic license-inventory nits.
+**P7 B1 is COMPLETE. `DEF-P7-001` is RESOLVED (owner go/no-go 2026-11-05,
+[[VD-p7-def001-resolve-2026-11-05]], committed `daf9fe4`).** The batch through unit-3 acceptance was
+pushed to `origin/main` (`0397bcc..af0467b`, 2026-11-05); the DEF-P7-001 resolution commits sit after
+that (push them too). The three B1 units are all non-author accepted; the only remaining OPEN
+deferral is the unrelated [[DEF-KERNELCHECK-FLAKE-001]] (embedded-postgres port-contention flake).
+RESOLVED closed the provenance/licensing-EVIDENCE deferral — it did NOT change the binary-exclusion
+law and is NOT a release authorization; actual redistribution is still a separate operational step.
+
+**Exact next action:** push the DEF-P7-001 resolution commits to `origin/main`, then run
+`/proofbound-next` to pick the next P7 capability work (B1 is done; P7 is a capability phase with no
+single mechanical DoD). Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
+committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
+each needing a re-verify since they change the reviewed commit; and the unit-2 round-2 three cosmetic
+license-inventory nits. The full-package mutation sweep over `replay.go`/`verified_archive.go` stays
+deferred (embedded-postgres per mutant; focused `launch_witness.go` 4/4 + live controls stand).
 
 ~~Superseded: the §9.3a live run is no longer "the gate left" — it is done. Historical command below.~~
 Run on a host with the prepared archive at
@@ -312,16 +318,19 @@ both bound to `BR-replay-evidence-6e3d2b` O-1). Verdict:
 
 ## Deferrals (see `docs/deferrals.tsv`)
 
-- `DEF-P7-001` OPEN/BLOCKED — pre-GA PostgreSQL provenance; owner RESOLVED the route go/no-go (B1,
-  [[VD-p7-postgres-source-route-2026-11-01]]). Unit-1 source provenance ACCEPTED; unit-2 build +
-  license/notice inventory **non-author ACCEPTED 2026-11-03**; unit-3 runtime-fixture **SPEC accepted
-  2026-11-04** (round-6 non-author verdict) with §8.4 owner-settled ([[VD-p7-nofetch-witness-2026-11-04]]).
-  Stays open until the unit-3 fixture is **implemented and the package accepted** (governed impl +
-  `make mutants` + non-author verdict + §9.3a live run) — spec acceptance alone does not close it.
-  Implementation is gated on the owner flipping `CI-p7-runtime-fixture-1a2b3c` to `accepted`.
+- `DEF-P7-001` **RESOLVED 2026-11-05** ([[VD-p7-def001-resolve-2026-11-05]]) — pre-GA shippable
+  PostgreSQL provenance/licensing. B1 route ([[VD-p7-postgres-source-route-2026-11-01]]) delivered:
+  unit-1 source provenance ACCEPTED, unit-2 build + two-dimension license/notice inventory non-author
+  ACCEPTED (2026-11-03), unit-3 runtime fixture non-author ACCEPTABLE package verdict + non-author
+  §9.3a LIVE run (2026-11-05). RESOLVED closes the provenance/licensing-evidence deferral only; the
+  binary-exclusion law is unchanged and it is not a release authorization. Residuals carried in the
+  VD (prefix-embedded digests; dynamic-dep provenance out of scope; no-fetch declaration; SHA-256+TLS
+  source provenance; deferred full-package mutation sweep).
 - `DEF-P7-002` RESOLVED (Go-module evidence corpus).
 - `DEF-P7-003` RESOLVED (twin/manifest accepted as the 17th package, 2026-10-31).
 - `DEF-METATAX-001` RESOLVED (meta-tax is a diagnostic, not a gate).
+- `DEF-KERNELCHECK-FLAKE-001` OPEN/DEFERRED — embedded-postgres port-contention flake in the full
+  `make check` run; unrelated to B1; the only remaining open deferral.
 
 ## Branch status
 
