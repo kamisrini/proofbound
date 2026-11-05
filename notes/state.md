@@ -77,9 +77,21 @@ from-source postgres.** The novel/risky core of unit 3 is done.
 
 **Everything is gate-green (`make kernel-check` + lints), 14 commits (`d04246d`..`64933c9`), UNPUSHED.**
 
-**Exact next action — HANDOFF (Law 9 — the agent CANNOT self-accept its own kernel work):** dispatch
-an independent non-author reviewer against `docs/verification/p7-b1-unit3-review-packet-20261105.md`,
-and the **owner runs the §9.3a live acceptance** on a host with the prepared archive at
+**Non-author verdict round-1 ACCEPTABLE (`1fe8146`, reviewed `15df687`).** An independent dispatched
+non-author reviewer (Law 9) adversarially reviewed the implementation and returned **ACCEPTABLE, no
+blocking findings** — verdict `docs/verification/verdicts/p7-b1-unit3-impl-review-round1-20261105.md`
+(`vera.verdict.v1`, integrity gate green). Confirmed with evidence: N8 sole-producer, N3 gating, the
+§5.1 controls load-bearing (empirical one-byte tamper → `TestCommittedCaseManifestIsPass` fails), the
+resolver genuinely resolves (not a stub), TWIN-INV-19 honestly labeled, Build Laws honored. Two
+**LOW/advisory** findings, non-blocking, recorded for optional cleanup: **F1** — the make-check gate
+does not cross-check the committed launch-witness's internal consistency (by design per spec §1/§1.1,
+records-not-self-proving); **F2** — the deterministic intent-gate negative control covers only the
+missing-record branch. Applying F1/F2 would change the reviewed commit and need a re-verify, so leave
+them unless the owner asks.
+
+**Exact next action — the ONLY gate left is the owner's §9.3a LIVE run (Law 9; the agent cannot run
+it — the prepared archive is binary-excluded/absent from CI).** Run on a host with the prepared
+archive at
 `~/proofbound-p7-build/postgres-16.4-subset.txz` (`PROOFBOUND_P7_PG_ARCHIVE`): `cd kernel &&
 PROOFBOUND_P7_PG_ARCHIVE=… go test ./internal/twin -run 'TestRuntimeFixture|TestEmitReal' -v` +
 `go test ./internal/twin -run TestWitnessLaunchedProcess -v`, witnessing LOCKED+PASS live and
