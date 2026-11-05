@@ -108,9 +108,14 @@ deferral is the unrelated [[DEF-KERNELCHECK-FLAKE-001]] (embedded-postgres port-
 RESOLVED closed the provenance/licensing-EVIDENCE deferral — it did NOT change the binary-exclusion
 law and is NOT a release authorization; actual redistribution is still a separate operational step.
 
-**Exact next action:** push the DEF-P7-001 resolution commits to `origin/main`, then run
-`/proofbound-next` to pick the next P7 capability work (B1 is done; P7 is a capability phase with no
-single mechanical DoD). Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
+**Exact next action:** the forward plan from here to the vision's completion bar is written in
+[`docs/plans/product-completion-plan-2026-11-05.md`](../docs/plans/product-completion-plan-2026-11-05.md)
+(indexed from ROADMAP P7+). Everything is pushed to `origin/main` through `4d0e716`. **Recommended
+next capability: build-order #2b — witnessed regeneration, spec-first** (Law 6: write the
+regeneration + detector-power `SPEC.md`, then an owner-approved change intent before `kernel/*`
+code); its detector-power gate wants the deferred full-package `internal/twin` mutation sweep as its
+first evidence input. #2b is **needs-owner-authorization** (new capability direction) — confirm
+before starting governed code. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
 each needing a re-verify since they change the reviewed commit; and the unit-2 round-2 three cosmetic
 license-inventory nits. The full-package mutation sweep over `replay.go`/`verified_archive.go` stays
