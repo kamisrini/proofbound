@@ -62,9 +62,32 @@ registered, all lints + `make kernel-check` green.
 **So four runtime witnesses (18/19/20/21) are implemented and end-to-end verified against a real
 from-source postgres.** The novel/risky core of unit 3 is done.
 
-**Exact next action — §9.3 increments 6–9 (the behavior-lock/case-manifest authoring — large, delicate
-reuse of the accepted `internal/twin/manifest` pattern; this is where the six spec rounds found
-over-claims, so author it spec-first with adversarial self-review):**
+**§9.3 increments 6–9 DONE — unit-3 IMPLEMENTATION COMPLETE and self-verified (2026-11-05).**
+- **(6) TWIN-INV-22 (`9f1a0f9`):** behavior-lock authored over the real proof → `EvaluateLock ==
+  LOCKED`; committed `p7-b1-unit3-behavior-lock.json` + `…-replay-proof.json`; deterministic
+  `TestCommittedBehaviorLockIsLocked` (runs in `make check`, no archive) + a negative control proving
+  the intent-resolver gate has teeth.
+- **(7) case-manifest (`9d07b5f`):** nine-outcome `p7-b1-unit3-case-manifest.json` over the real run →
+  `DeriveCaseStatus == PASS`; four witness records committed; `TestCommittedCaseManifestIsPass`
+  re-parses + RE-HASHES every referenced file against its committed digest.
+- **(8) §6 evidence:** committed across (6)/(7) (proof, lock, case-manifest, 4 witness records).
+- **(9) calibrated mutation sweep + packet (`64933c9`):** focused `launch_witness.go` sweep — 4/4
+  killed, harness controls behaved (lethal killed, neutral survived); non-author review packet
+  `docs/verification/p7-b1-unit3-review-packet-20261105.md`.
+
+**Everything is gate-green (`make kernel-check` + lints), 14 commits (`d04246d`..`64933c9`), UNPUSHED.**
+
+**Exact next action — HANDOFF (Law 9 — the agent CANNOT self-accept its own kernel work):** dispatch
+an independent non-author reviewer against `docs/verification/p7-b1-unit3-review-packet-20261105.md`,
+and the **owner runs the §9.3a live acceptance** on a host with the prepared archive at
+`~/proofbound-p7-build/postgres-16.4-subset.txz` (`PROOFBOUND_P7_PG_ARCHIVE`): `cd kernel &&
+PROOFBOUND_P7_PG_ARCHIVE=… go test ./internal/twin -run 'TestRuntimeFixture|TestEmitReal' -v` +
+`go test ./internal/twin -run TestWitnessLaunchedProcess -v`, witnessing LOCKED+PASS live and
+confirming by code inspection that `resolved_sha256` comes from the single `witnessLaunchedProcess`
+call (N8). **Only on the non-author ACCEPTABLE verdict + the §9.3a run does `DEF-P7-001` move toward
+RESOLVED.** Also pending: push the batch (outward action, owner instruction).
+
+--- superseded authoring plan (kept for reference; now implemented) ---
 - **(6) TWIN-INV-22 — author `proofbound.p7.behavior-lock.v1` over the real proof → `EvaluateLock ==
   LOCKED`.** Confirmed field rules (see `behaviorlock.go`): `ReplayProof` must satisfy
   `validateReplayProofConsistency` — `source_digest`/`baseline_snapshot_digest`/
