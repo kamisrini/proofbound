@@ -108,14 +108,20 @@ deferral is the unrelated [[DEF-KERNELCHECK-FLAKE-001]] (embedded-postgres port-
 RESOLVED closed the provenance/licensing-EVIDENCE deferral — it did NOT change the binary-exclusion
 law and is NOT a release authorization; actual redistribution is still a separate operational step.
 
-**Exact next action:** the forward plan from here to the vision's completion bar is written in
-[`docs/plans/product-completion-plan-2026-11-05.md`](../docs/plans/product-completion-plan-2026-11-05.md)
-(indexed from ROADMAP P7+). Everything is pushed to `origin/main` through `4d0e716`. **Recommended
-next capability: build-order #2b — witnessed regeneration, spec-first** (Law 6: write the
-regeneration + detector-power `SPEC.md`, then an owner-approved change intent before `kernel/*`
-code); its detector-power gate wants the deferred full-package `internal/twin` mutation sweep as its
-first evidence input. #2b is **needs-owner-authorization** (new capability direction) — confirm
-before starting governed code. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
+**#2b (witnessed regeneration) STARTED — owner authorized 2026-11-05 ("lets finish #2b next").** The
+forward plan is [`docs/plans/product-completion-plan-2026-11-05.md`](../docs/plans/product-completion-plan-2026-11-05.md)
+(indexed from ROADMAP P7+). First piece, spec-first: **detector-power metric + regeneration-trust
+gate** — design spec draft 1 `docs/plans/P7-2b-detector-power-spec-draft1.md` (`d110465`, docs-only,
+non-governed). Metric = `killed/(candidates−invalid)` so survivors (incl. declared-equivalent) lower
+the score (an equivalent survivor is un-pinned latitude a regenerated impl could satisfy-and-reopen);
+a lock is regeneration-trusted only at `detector_power ≥ owner-set THRESHOLD`. The regeneration LOOP
+is deferred to a follow-on spec. **Non-author adversarial spec review IN FLIGHT** (dispatched reviewer
+attacking the metric's soundness — esp. the equivalent-survivor-in-denominator choice). **Exact next
+action:** await/adjudicate that verdict; then OWNER settles §6 open decisions (the THRESHOLD value,
+shell-gate vs `kernel/internal/detectorpower` package, whether "declared equivalent" stays a free
+pass for 2b) and approves a change intent before any governed `scripts/*`/`gates/*`/`kernel/*` code.
+The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
+mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
 each needing a re-verify since they change the reviewed commit; and the unit-2 round-2 three cosmetic
 license-inventory nits. The full-package mutation sweep over `replay.go`/`verified_archive.go` stays
