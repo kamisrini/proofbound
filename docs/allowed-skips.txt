@@ -46,3 +46,4 @@ TestRuntimeFixtureLedgerPreservationWitness  # unit-3 runtime fixture requires P
 TestRuntimeFixtureCleanupWitness  # unit-3 runtime fixture requires PROOFBOUND_P7_PG_ARCHIVE (binary-exclusion); UNVERIFIED without it by design (spec §4)
 TestRuntimeFixtureNoFetchDeclaration  # unit-3 runtime fixture requires PROOFBOUND_P7_PG_ARCHIVE (binary-exclusion); UNVERIFIED without it by design (spec §4)
 TestEmitRealBehaviorLock  # unit-3 lock-emit path requires PROOFBOUND_P7_EMIT_DIR + PROOFBOUND_P7_PG_ARCHIVE (binary-exclusion); not exercised in make check
+TestEmitRealCaseManifest  # unit-3 case-manifest emit path requires PROOFBOUND_P7_EMIT_DIR + PROOFBOUND_P7_PG_ARCHIVE (binary-exclusion); not exercised in make check
