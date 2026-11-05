@@ -89,9 +89,29 @@ records-not-self-proving); **F2** — the deterministic intent-gate negative con
 missing-record branch. Applying F1/F2 would change the reviewed commit and need a re-verify, so leave
 them unless the owner asks.
 
-**Exact next action — the ONLY gate left is the owner's §9.3a LIVE run (Law 9; the agent cannot run
-it — the prepared archive is binary-excluded/absent from CI).** Run on a host with the prepared
-archive at
+**§9.3a LIVE run DONE by the non-author (`58d8f52`) — unit-3 is now FULLY non-author accepted.** A
+dispatched independent non-author ran the fixture with the archive present and witnessed LIVE
+(nothing skipped): real from-source postgres launched; `/proc` witness resolved `ba2447e5…fcd5` ==
+declared; LOCKED + PASS from the real run; §5.1 controls behaved; ledger/cleanup positive controls
+fired. 5/6 live-emitted artifacts BYTE-IDENTICAL to the committed records (launch-witness differs
+only in the per-run `resolved_pid`), so the committed LOCKED/PASS records reproduce from an
+independent live run. Evidence `docs/verification/p7-b1-unit3-9.3a-live-run-20261105.md`. So unit 3
+has **BOTH** a non-author ACCEPTABLE package verdict (`1fe8146`) AND non-author live-run evidence.
+Full-package mutation sweep deferred (embedded-postgres per mutant, prohibitively slow; focused
+`launch_witness.go` 4/4 + live witness-function controls stand).
+
+**Exact next action — remaining items are OWNER decisions (agent does not self-authorize these):**
+1. **`DEF-P7-001` resolution + redistribution go/no-go** — the change intent EXCLUDES DEF-P7-001
+   activation/resolution from unit-3 scope ("resolving DEF-P7-001 and any redistribution go/no-go
+   remain a separate owner decision"). Unit 3 delivered the runtime evidence; the owner makes the
+   go/no-go. Do NOT flip `DEF-P7-001` without that owner decision.
+2. **Push** the batch to `origin/main` (now ~29 commits ahead; outward action — owner instruction).
+3. Optional LOW cleanup (needs a re-verify): verdict round-1 F1 (make-check cross-check of the
+   launch-witness internal consistency) + F2 (more intent-resolver negative-control branches); unit-2
+   round-2 three cosmetic license-inventory nits.
+
+~~Superseded: the §9.3a live run is no longer "the gate left" — it is done. Historical command below.~~
+Run on a host with the prepared archive at
 `~/proofbound-p7-build/postgres-16.4-subset.txz` (`PROOFBOUND_P7_PG_ARCHIVE`): `cd kernel &&
 PROOFBOUND_P7_PG_ARCHIVE=… go test ./internal/twin -run 'TestRuntimeFixture|TestEmitReal' -v` +
 `go test ./internal/twin -run TestWitnessLaunchedProcess -v`, witnessing LOCKED+PASS live and
