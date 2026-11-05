@@ -56,11 +56,13 @@ The adopted P7 companion consumes exact caller-supplied `.txz` bytes and a compl
 inventory. It hashes the bytes, safely extracts only regular files into a fresh replay root,
 requires executable `bin/pg_ctl` and `bin/postgres`, verifies the staged `bin/postgres` digest
 before store open, and passes the staged directory as `store.Config.BinariesDir`. It accepts no
-URL, path-only input, ambient cache, or network fallback. The current implementation seam does
-not observe the daemonized process's launched executable; launched-process observation and binding
-to the declared digest are future runtime requirements. The implementation seam is independently
-accepted within its recorded scope; real PostgreSQL runtime fixtures and no-fetch witnesses remain
-pending.
+URL, path-only input, ambient cache, or network fallback. While the real postmaster is live it now
+observes the launched executable image at `/proc/<pid>/exe` and binds it to the declared digest
+(TWIN-INV-18, the single sole-producer witness on the `ReplayIsolatedWithVerifiedPostgres` path),
+closing the launched-process gap the staging re-hash could not. The remaining P7 B1 unit-3 runtime
+witnesses — no-fetch isolation, whole-ledger preservation, cleanup absence, and real-proof
+determinism (TWIN-INV-19..22) — and the case-manifest/behavior-lock authoring over the real proof
+are the in-progress increments of that unit.
 
 ## Invariants
 
@@ -81,14 +83,23 @@ pending.
     equal the reviewed inventory; unsafe paths, links, and unsupported file types fail closed.
 13. **TWIN-INV-14 — Executable binding.** The adopted preflight/staging seam requires executable
     `bin/pg_ctl` and `bin/postgres`, and the staged `bin/postgres` bytes equal the declared digest.
-    A future runtime witness must additionally show that the launched `postgres` bytes equal the
-    declared digest; the current seam does not establish that runtime fact.
+    This is a staging (pre-launch) check only; the runtime fact that the *launched* `postgres` bytes
+    equal the declared digest is established by TWIN-INV-18, not by this on-disk re-hash.
 14. **TWIN-INV-15 — Offline provisioning.** The companion has no URL, download, or ambient-cache
     fallback route.
 15. **TWIN-INV-16 — Binary-directory correctness.** Verified binaries are supplied through
     `BinariesDir`, never `RuntimeDir`.
 16. **TWIN-INV-17 — Cleanup closure.** The owned temporary root is removed on success and every
     failure path.
+17. **TWIN-INV-18 — Launched-process witness.** On the `ReplayIsolatedWithVerifiedPostgres` path,
+    while the real postmaster is live, the running executable image resolved from `/proc/<pid>/exe`
+    (postmaster PID located under the replay-owned temporary root; the `(deleted)` marker rejected)
+    is hashed and must equal the declared `PostgresBinarySHA256`, or the replay fails with a distinct
+    launched-process mismatch error (separate from the TWIN-INV-14 staging re-hash error). The single
+    `witnessLaunchedProcess` function is the sole producer of the resolved digest surfaced on the
+    result for `proof_binding` evidence — never a literal. Its discriminating power is calibrated by a
+    direct unit test against a live process running a byte-divergent executable (unit-3 spec §5/§5.1).
+    *(TWIN-INV-5 is a retired tombstone; numbers are never reused.)*
 
 ## Non-goals
 

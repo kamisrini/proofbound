@@ -41,3 +41,4 @@ TestEnsurePrivateDirCreatesPrivateDirectory  # native Windows does not expose PO
 TestLock_PathReplacementIsLoss  # Windows refuses replacing a file while its byte range is locked
 TestLock_RecordCloseAndReplacementRoutes  # Windows refuses replacing a file while its byte range is locked
 TestStore_UsableRejectsALostLock  # Windows refuses replacing a file while its byte range is locked
+TestRuntimeFixtureWitnessesRealLaunchedPostgres  # unit-3 runtime fixture requires the prepared offline archive (PROOFBOUND_P7_PG_ARCHIVE; binary-exclusion law) — UNVERIFIED without it by design (spec §4, no PASS by absence)

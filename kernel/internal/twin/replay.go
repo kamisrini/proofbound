@@ -2,6 +2,7 @@
 package twin
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
@@ -9,9 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"hash"
+	"io/fs"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/projections"
@@ -44,6 +49,17 @@ type Result struct {
 	Verdict         Verdict
 	SequenceMap     []SequenceBinding
 	Proof           Proof
+	// launch carries the TWIN-INV-18 launched-process observation, populated only on the
+	// ReplayIsolatedWithVerifiedPostgres path. Its resolvedSHA256 is produced solely by
+	// witnessLaunchedProcess (unit-3 spec §5.1 N8) — never a literal.
+	launch launchWitness
+}
+
+// launchWitness is the TWIN-INV-18 observation record. method is always "proc-exe".
+type launchWitness struct {
+	method         string
+	resolvedPID    int
+	resolvedSHA256 string
 }
 
 type Proof struct {
@@ -106,12 +122,18 @@ func replayRecords(ctx context.Context, req Request, records []store.Record, bas
 // The source store is read-only from this path and the temporary store is
 // removed on every return path.
 func ReplayIsolated(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot) (result Result, err error) {
-	return replayIsolated(ctx, s, req, baseline, nil)
+	return replayIsolated(ctx, s, req, baseline, nil, "")
 }
 
 // ReplayIsolatedWithVerifiedPostgres runs the real projector against a temporary
 // embedded store provisioned from exact caller-supplied PostgreSQL archive bytes.
 // It never accepts a path, URL, ambient cache, or network fallback.
+//
+// While the real postmaster is live it also computes the TWIN-INV-18 launched-process witness:
+// the running executable image at /proc/<pid>/exe must equal input.PostgresBinarySHA256, or the
+// replay fails with errLaunchedProcessDigestMismatch. The resolved digest is surfaced on
+// Result.launch for the proof_binding evidence and is produced solely by witnessLaunchedProcess
+// (unit-3 spec §5.1 N8).
 func ReplayIsolatedWithVerifiedPostgres(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, input VerifiedPostgresInput) (result Result, err error) {
 	if err := validateVerifiedPostgresInput(input); err != nil {
 		return Result{}, err
@@ -121,10 +143,10 @@ func ReplayIsolatedWithVerifiedPostgres(ctx context.Context, s *store.Store, req
 			return "", fmt.Errorf("twin: stage verified postgres archive: %w", err)
 		}
 		return stageVerifiedPostgres(ctx, root, input)
-	})
+	}, input.PostgresBinarySHA256)
 }
 
-func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, prepare func(string) (string, error)) (result Result, err error) {
+func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline projections.Snapshot, prepare func(string) (string, error), expectPostgresSHA256 string) (result Result, err error) {
 	if s == nil || req.ThroughSeq < 0 {
 		return Result{}, fmt.Errorf("twin: invalid replay request")
 	}
@@ -161,6 +183,19 @@ func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 	if err != nil {
 		return Result{}, fmt.Errorf("twin: open temporary store: %w", err)
 	}
+	var witness launchWitness
+	if expectPostgresSHA256 != "" {
+		// TWIN-INV-18: with the real postmaster live, witness its launched executable image.
+		pid, pidErr := findPostmasterPID(root)
+		if pidErr != nil {
+			return Result{}, fmt.Errorf("twin: locate launched postmaster: %w", pidErr)
+		}
+		resolved, wErr := witnessLaunchedProcess(pid, expectPostgresSHA256)
+		if wErr != nil {
+			return Result{}, fmt.Errorf("twin: launched process witness: %w", wErr)
+		}
+		witness = launchWitness{method: "proc-exe", resolvedPID: pid, resolvedSHA256: resolved}
+	}
 	stream := make([]store.Record, 0, len(records)+len(req.Candidate))
 	stream = append(stream, records...)
 	for _, c := range req.Candidate {
@@ -184,7 +219,50 @@ func replayIsolated(ctx context.Context, s *store.Store, req Request, baseline p
 		}
 		verdict = VerdictChanged
 	}
-	return makeResult(req, records, baseline, candidate, verdict), nil
+	out := makeResult(req, records, baseline, candidate, verdict)
+	out.launch = witness
+	return out, nil
+}
+
+// findPostmasterPID locates the single postmaster.pid under the replay-owned temporary root and
+// returns the postmaster PID from its first line. The temporary root is created and owned by this
+// package (makeTempTwinRoot), so exactly one embedded cluster lives under it. This avoids coupling
+// twin to the store package's data-directory defaulting convention (Law 2: that datum's home is
+// package store).
+func findPostmasterPID(root string) (int, error) {
+	var pidFile string
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && d.Name() == "postmaster.pid" {
+			pidFile = p
+			return fs.SkipAll
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("walk temporary root: %w", err)
+	}
+	if pidFile == "" {
+		return 0, errors.New("postmaster.pid not found under temporary root")
+	}
+	data, err := os.ReadFile(pidFile)
+	if err != nil {
+		return 0, fmt.Errorf("read %s: %w", pidFile, err)
+	}
+	line := data
+	if i := bytes.IndexByte(data, '\n'); i >= 0 {
+		line = data[:i]
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(line)))
+	if err != nil {
+		return 0, fmt.Errorf("parse pid from %s: %w", pidFile, err)
+	}
+	if pid <= 0 {
+		return 0, fmt.Errorf("non-positive pid %d in %s", pid, pidFile)
+	}
+	return pid, nil
 }
 
 func makeResult(req Request, records []store.Record, baseline, candidate projections.Snapshot, verdict Verdict) Result {

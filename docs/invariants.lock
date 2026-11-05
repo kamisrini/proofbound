@@ -231,3 +231,4 @@ kernel/internal/twin/SPEC.md	TWIN-INV-14	Executable binding.
 kernel/internal/twin/SPEC.md	TWIN-INV-15	Offline provisioning.
 kernel/internal/twin/SPEC.md	TWIN-INV-16	Binary-directory correctness.
 kernel/internal/twin/SPEC.md	TWIN-INV-17	Cleanup closure.
+kernel/internal/twin/SPEC.md	TWIN-INV-18	Launched-process witness.
