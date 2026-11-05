@@ -1,7 +1,11 @@
 # P7 B1 unit 3 — prepared-offline runtime fixture spec (DRAFT round 6)
 
-**Status:** DRAFT round 6 — spec-first per Law 6; scoping and contract only. No implementation, no
-runtime `PASS`, and no `DEF-P7-001` movement is authorized by this document. Review history:
+**Status:** ACCEPTED (round 6, non-author verdict
+`docs/verification/verdicts/p7-b1-unit3-spec-review-round6-20261104.md`, ACCEPTABLE at `9393af4`;
+two LOW cosmetic wording nits applied after) — spec-first per Law 6; scoping and contract only. **The
+spec is accepted; implementation is NOT yet authorized:** the change intent
+`CI-p7-runtime-fixture-1a2b3c` stays `proposed` until the **owner** flips it to `accepted`, and no
+runtime `PASS` or `DEF-P7-001` movement is authorized by this document. Review history:
 **round 1** NEEDS_CHANGES (closure rested on `LOCKED`, pure digest arithmetic); **round 2**
 NEEDS_CHANGES (N1: the fix moved closure onto `case_status=PASS`, also a pure fold — forgeable by
 declaration; N2 Law-1 precedent; N3 `proof_binding` key); **round 3** resolved N1/N2/N3, found **N4**
@@ -35,7 +39,7 @@ round-2 ACCEPTABLE), and the already-accepted verified-archive staging seam
 `/proc` cannot populate `resolved_sha256`") is **withdrawn** — the value is non-discriminating on the
 positive path. In its place the spec requires a **single `witnessLaunchedProcess` implementation**
 that is the **sole producer** of `resolved_sha256`, called on the fixture's `proof_binding` path (the
-same call site the §5.1 unit test calibrates), and §9.3a now requires the non-author to confirm **by
+same sole-producer function the §5.1 unit test calibrates), and §9.3a now requires the non-author to confirm **by
 code inspection** that the production `resolved_sha256` comes from that `/proc`-reading call, not a
 literal (N8). §0's historical Round-4 line is marked superseded (N9). The round-2…5 changes below
 still stand.
@@ -268,7 +272,7 @@ contract and is out of scope for this unit — it would be its own `CI-*` + acce
 
 | New invariant | Statement | Required mechanism & control | case-manifest outcome |
 |---|---|---|---|
-| **TWIN-INV-18 — Launched-process witness** | the **running** postmaster's executable image equals the declared `PostgresBinarySHA256` | a testable `witnessLaunchedProcess(pid, expectedSHA256)`: resolve the postmaster PID (`postmaster.pid`), read `/proc/<pid>/exe`, **reject** the `(deleted)` marker, hash the target, return a **distinct typed error** (≠ the staging re-hash error, N6) on mismatch; record `{method:"proc-exe", resolved_pid, resolved_sha256}` (N7). This function is the **sole producer** of `resolved_sha256` and is the same call site the fixture's `proof_binding` path uses (N8) — no literal. The on-disk re-hash and `version()` string are **not** the witness. **Negative control (required):** a direct unit test against a live process running a *different* binary MUST return the distinct mismatch error (§5.1). | `proof_binding` / provenance |
+| **TWIN-INV-18 — Launched-process witness** | the **running** postmaster's executable image equals the declared `PostgresBinarySHA256` | a testable `witnessLaunchedProcess(pid, expectedSHA256)`: resolve the postmaster PID (`postmaster.pid`), read `/proc/<pid>/exe`, **reject** the `(deleted)` marker, hash the target, return a **distinct typed error** (≠ the staging re-hash error, N6) on mismatch; record `{method:"proc-exe", resolved_pid, resolved_sha256}` (N7). This function is the **single implementation** and **sole producer** of `resolved_sha256`, called from the fixture's `proof_binding` path (N8) — no literal. The on-disk re-hash and `version()` string are **not** the witness. **Negative control (required):** a direct unit test against a live process running a *different* binary MUST return the distinct mismatch error (§5.1). | `proof_binding` / provenance |
 | **TWIN-INV-19 — No-fetch isolation** | the run performs no network fetch for binaries | **Primary witness:** the launch runs under a **network namespace with no egress** (`unshare -rn` / equivalent) so any fetch fails hard; `BinariesPath` is the verified local dir. **Declaration (labeled as such, not a witness):** the embedded-postgres remote-fetch strategy is never constructed. Where the platform cannot provide a namespace, the invariant is satisfied by the declaration **only if** the spec/evidence states plainly it is a configuration assertion, not an observation. | `no_fetch` |
 | **TWIN-INV-20 — Whole-ledger preservation witness** | the source store's event set is byte-identical before and after the isolated run | before/after digest of the source store, recorded as a witness. **Positive control (required):** an injected operation that *does* mutate the source store MUST make the witness FAIL — proving it detects mutation, not merely restates TWIN-INV-1/-8. | `ledger_preserved` |
 | **TWIN-INV-21 — Cleanup witness** | the owned temporary root (staged binaries dir + data dir) is removed on success and every failure path | the witness **stats the path and asserts absence** (not merely "RemoveAll was called"). **Positive control (required):** a path whose removal is suppressed MUST make the witness FAIL. | `cleanup` |
@@ -330,10 +334,12 @@ would yield), so inspecting the value cannot by itself prove the `/proc` read ha
 `resolved_sha256`" was a false over-claim and is **withdrawn**. What the spec requires instead:
 `witnessLaunchedProcess` is the **single implementation** and the **sole producer** of
 `resolved_sha256`, and the fixture's production `proof_binding` emission **MUST obtain
-`resolved_sha256` by calling that one function** — the same call site the §5.1 unit test calibrates
-(no second path, no literal). A fixture that assigns `resolved_sha256 = PostgresBinarySHA256`
-directly violates the contract. This closes the N8 declaration-forgery gap by construction *and* is
-re-checked at acceptance: **§9.3a requires the non-author to confirm by code inspection** that the
+`resolved_sha256` by calling that one function** — the same sole-producer function the §5.1 unit
+test calibrates (no second path, no literal). A fixture that assigns
+`resolved_sha256 = PostgresBinarySHA256` directly violates the contract. This reduces the N8
+declaration-forgery path to a **contract violation caught by code inspection / Law-9 review** (not
+structurally impossible in source), re-checked at acceptance: **§9.3a requires the non-author to
+confirm by code inspection** that the
 committed `resolved_sha256` is produced by the calibrated `witnessLaunchedProcess` call on the
 `proof_binding` path, not a literal — which the Law-9 governed-kernel review of the fixture source
 performs anyway. (The value is a record, not a self-proving gate; the guarantee is the single bound,
