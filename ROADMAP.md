@@ -238,4 +238,31 @@ go/no-go (`DEF-P7-001`), for which a decision brief now exists at
 [P7-postgres-provenance-go-no-go-brief.md](docs/plans/P7-postgres-provenance-go-no-go-brief.md). The
 snapshot provider remains deliberately skipped (Gate 1).
 
+**P7 B1 runtime acceptance — `DEF-P7-001` RESOLVED 2026-11-05.** The runtime half the 2026-11-01
+paragraph deferred is now delivered and independently accepted, superseding the "runtime fixtures and
+runtime acceptance remain pending" / "launched-process observation remains future runtime evidence"
+statements above. The B1 route (build PostgreSQL from official source,
+[VD-p7-postgres-source-route-2026-11-01](docs/decisions/VD-p7-postgres-source-route-2026-11-01.md))
+completed three accepted units: unit-1 SHA-256/official-domain-TLS source provenance; unit-2
+minimal-permissive all-permissive build + two-dimension (dynamic + statically-vendored)
+license/notice inventory; and unit-3, a prepared-offline runtime fixture that runs a real from-source
+PostgreSQL 16.4 under `ReplayIsolated`. Unit 3 added runtime invariants TWIN-INV-18..22 — a
+launched-process `/proc/<pid>/exe` witness binding the *running* image to the declared `bin/postgres`
+digest (closing the TWIN-INV-14 deferral), no-fetch (labeled declaration per
+[VD-p7-nofetch-witness-2026-11-04](docs/decisions/VD-p7-nofetch-witness-2026-11-04.md)),
+whole-ledger-preservation, cleanup-absence, and real-proof determinism — and authored a real `LOCKED`
+`behavior-lock` + `PASS` `case-manifest` over a genuine `vera.replay.v1` proof. It carries a non-author
+ACCEPTABLE package verdict
+([p7-b1-unit3-impl-review-round1-20261105](docs/verification/verdicts/p7-b1-unit3-impl-review-round1-20261105.md))
+AND a non-author §9.3a **live** acceptance run
+([p7-b1-unit3-9.3a-live-run-20261105](docs/verification/p7-b1-unit3-9.3a-live-run-20261105.md)); the
+focused `launch_witness.go` mutation sweep killed 4/4 with calibration controls behaving. The owner
+then resolved `DEF-P7-001`
+([VD-p7-def001-resolve-2026-11-05](docs/decisions/VD-p7-def001-resolve-2026-11-05.md)). RESOLVED
+closes the provenance/licensing-**evidence** deferral only: the binary-exclusion law is unchanged and
+it is **not** a release authorization; residuals are carried in the VD (prefix-embedded digests,
+dynamic-dependency provenance out of scope, the no-fetch declaration, SHA-256+TLS source provenance,
+and a deferred full-package mutation sweep). L12/L17, a clean-clone proof, and a shippable embedded-DB
+*release* remain separate downstream work; the snapshot provider stays deliberately skipped (Gate 1).
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).
