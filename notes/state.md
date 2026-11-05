@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-04
+As of: 2026-11-05
 
-## Resume — 2026-11-04
+## Resume — 2026-11-05
 
 **STANDING AUTHORIZATION IN FORCE** ([[VD-agent-standing-authorization-5ouz7q]], 2026-10-31): the
 owner (Srinivas Kamisetty) authorized a product push. The agent self-authorizes governed commits
@@ -15,15 +15,37 @@ adversarial rounds run via dispatched non-author reviewers. **This overrides the
 deferrals are dormant until owner authorizes" stop for the duration of the push** — do not re-apply
 it blindly.
 
-**Exact next action — OWNER ACTION REQUIRED: flip `CI-p7-runtime-fixture-1a2b3c` from `proposed` to
-`accepted`, then implement the unit-3 fixture spec-first per §9.** The unit-3 spec
+**2026-11-05 — OWNER ACCEPTED the change intent; unit-3 implementation is UNDERWAY.** The owner
+("lets go", 2026-11-05) accepted `CI-p7-runtime-fixture-1a2b3c` as the non-author acceptor (Law 9);
+the record was flipped `proposed`→`accepted` with its self-digest recomputed and committed
+(`d04246d`, non-governed). **§9.2 is DONE and F5 is CLOSED** (`457cef5`): built PostgreSQL 16.4
+minimal-permissive from the unit-1 SHA-256-verified source and proved embedded-postgres v1.31.0 runs
+from the symlink-free SUBSET (initdb + loopback start + `select version()`=16.4 + clean stop, no
+download). **Empirical §8.1 finding:** the spec's "expected `lib/` empty" is overturned — initdb
+post-bootstrap loads `$libdir/dict_snowball`, so the subset includes `lib/postgresql/*.so` (server
+backend modules); pgxs + client-only top-level libs excluded. Committed prepared-archive manifest
+`docs/verification/p7-replay-lock-fixtures/postgres-16.4-subset-archive.json` (archive_sha256
+`fa1ade9b…`, size 4145552, bin/postgres `ba2447e5…`, 681-entry inventory) + evidence
+`docs/verification/p7-replay-lock-prerequisites/postgres-16.4-subset-compat-20261105.md`.
+
+**ARCHIVE LOCATION (needed for the §9.3a live run; NOT committed — binary-exclusion):** the prepared
+`.txz` is at `~/proofbound-p7-build/postgres-16.4-subset.txz` on this WSL box (full build tree under
+`~/proofbound-p7-build/`). The §9.3a acceptance run MUST set `PROOFBOUND_P7_PG_ARCHIVE` to exactly
+that file (its digests pin this prefix-specific build).
+
+**Exact next action — implement §9.3 (governed `kernel/*`, intent now accepted).** Spec
 [`docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md`](../docs/plans/P7-postgres-b1-unit3-runtime-fixture-spec.md)
-is **ACCEPTED** (round-6 non-author verdict `p7-b1-unit3-spec-review-round6-20261104.md`, ACCEPTABLE at
-`9393af4`). It passed a six-round adversarial review loop on 2026-11-04 (each round a dispatched
-non-author reviewer, adjudicated by this session as a non-author of the spec; all verdicts under
-`docs/verification/verdicts/p7-b1-unit3-spec-review-round{1..6}-20261104.md`). The agent **cannot
-self-accept the change intent** that authorizes its own governed `kernel/*` work (Law 9), so the CI
-stays `proposed` until the **owner** flips it — this is the one genuine fork blocking implementation.
+§9.3. Recommended increment order: (1) `witnessLaunchedProcess(pid, expectedSHA256)` + distinct typed
+error `ErrLaunchedProcessDigestMismatch` + its **direct calibration unit test** (N5/N8 soundness core —
+verifiable now, no archive needed); (2) wire it as the **sole producer** of `resolved_sha256` on the
+`ReplayIsolatedWithVerifiedPostgres` path (add a `store.(*Store).DataDir()` accessor to read
+`postmaster.pid`; surface a `LaunchWitness` on `twin.Result`); (3) the runtime fixture +
+TWIN-INV-18..22 + §5.1 controls; (4) author behavior-lock + case-manifest over the REAL proof; (5)
+calibrated `make mutants` + non-author review packet. TWIN-INV-19 no-fetch: per
+[[VD-p7-nofetch-witness-2026-11-04]], namespace primary where wired else the labeled declaration
+fallback — record which was used; wiring netns around embedded-postgres' child is the open
+engineering judgment. Law 9: the owner (or a dispatched non-author) still owns the §9.3a live run +
+the package verdict — the agent cannot self-accept.
 
 **Review-loop outcome (durable):** R1 — closure rested on `EvaluateLock → LOCKED` (pure digest
 arithmetic, `replay.go:195-199`), not a real-run witness. R2 — the fix relocated the over-claim onto
