@@ -30,8 +30,19 @@ active, CI-p7-detector-power-1a2b3c accepted), and the owner's §6 decisions are
   before it counts as accepted (Law 9).
 
 **Immediate blockers / notes:**
-- None blocking the above — the capability is authorized. The follow-on **regeneration loop**
-  (BR O-2) stays deferred to its own spec (`DEF-P7-REGENLOOP-001`).
+- **GOVERNANCE DEBT to reconcile (next action, owner):** the gate-maintenance commit `6b04f0a`
+  changed a governed path (`scripts/tests/deferrals.test.sh`, a self-test correction consequent to
+  the owner-authorized DEF-P7-001 resolution) with **no `Intent:` trailer**; `daf9fe4` (an @generated
+  decisions-index regen) likewise. `delivery-enforce` gates only HEAD, so `make check` is green with
+  the session ending on this non-governed notes commit — but these are governed-without-intent and
+  need an owner-sanctioned intent-linkage or explicit acceptance. (B1 kernel commits were correctly
+  trailered; the gap is only the gate-maintenance commits.) Root cause / LESSON: ran only
+  `make kernel-check`, never the full `make check` (`hooks-test`/`delivery-enforce`), all session.
+- `make check` is **green at this wrap** only with HEAD = a non-governed notes commit (delivery-enforce
+  is HEAD-only). Any next governed commit MUST carry an `Intent:` trailer and be followed promptly by
+  `make check` (not just `kernel-check`).
+- None blocking the detector-power implementation itself — the capability is authorized. The follow-on
+  **regeneration loop** (BR O-2) stays deferred to its own spec (`DEF-P7-REGENLOOP-001`).
 - `scripts/tests/p6-census-current.test.sh` **IS a `make check` gate** (via `hooks-test`): it rejects
   any `kernel/internal/*` / `scripts/*` path token in tracked docs that names a mechanism which does
   not exist. The rejected detector-power-package path token was therefore removed from all tracked
