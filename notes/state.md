@@ -115,11 +115,16 @@ gate** — design spec draft 1 `docs/plans/P7-2b-detector-power-spec-draft1.md` 
 non-governed). Metric = `killed/(candidates−invalid)` so survivors (incl. declared-equivalent) lower
 the score (an equivalent survivor is un-pinned latitude a regenerated impl could satisfy-and-reopen);
 a lock is regeneration-trusted only at `detector_power ≥ owner-set THRESHOLD`. The regeneration LOOP
-is deferred to a follow-on spec. **Non-author adversarial spec review IN FLIGHT** (dispatched reviewer
-attacking the metric's soundness — esp. the equivalent-survivor-in-denominator choice). **Exact next
-action:** await/adjudicate that verdict; then OWNER settles §6 open decisions (the THRESHOLD value,
-shell-gate vs `kernel/internal/detectorpower` package, whether "declared equivalent" stays a free
-pass for 2b) and approves a change intent before any governed `scripts/*`/`gates/*`/`kernel/*` code.
+is deferred to a follow-on spec. **Round-1 non-author review NEEDS_CHANGES** (`282229d`,
+`verdicts/p7-2b-detector-power-spec-review-round1-20261105.md`): F1 (HIGH) — draft-1's
+all-survivors-in-denominator was a category error that rewarded deleting defense-in-depth; + F2-F8.
+**Draft 2 (`986d6d7`) addresses all of them:** survivors classified E/R/U, `detector_power =
+killed/(killed+U)` counts only unproven latitude (perfect lock can reach 1.0); DP-6 freshness bind;
+necessary-not-sufficient; C/K/V/S re-derived from committed raw sweep stdout; loop assumptions named;
+invariants DP-1..7. **Round-2 non-author re-verify IN FLIGHT.** **Exact next action:**
+await/adjudicate round-2; iterate if NEEDS_CHANGES; on ACCEPTABLE the OWNER settles §6 (per-tier
+THRESHOLD; shell-gate vs `kernel/internal/detectorpower` package) and approves a change intent before
+any governed `scripts/*`/`gates/*`/`kernel/*` code.
 The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
 mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
