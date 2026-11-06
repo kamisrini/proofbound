@@ -158,6 +158,16 @@ the acceptor. Only then: implement spec-first (shell gate + self-test; add E/R/U
 register; run the deferred full `internal/twin` sweep + classify to seed execution-bound records;
 advisory `docs/gates.md` row; fold CL-1..4) → `make mutants` + non-author package verdict → the
 follow-on regeneration-loop spec.
+
+**2026-11-05 — intent chain DRAFTED (`d8fd031`), all `proposed`, awaiting owner acceptance.**
+BD-witnessed-regeneration-9c4e21 → BR-regeneration-trust-5f8a03 (O-1 detector-power gate = CI target;
+O-2 regeneration loop = follow-on) → CI-p7-detector-power-1a2b3c (shell-gate scope + the §6
+decisions). Self-digests reproduce; chain non-dangling. **Exact next action — OWNER ACCEPTANCE** (the
+agent flips statuses as scribe, owner is acceptor, Law 9): BD `proposed`→`accepted`, BR
+`proposed`→`active`, CI `proposed`→`accepted` (recompute each self-digest + the downstream digest
+refs after each flip, same scheme as the records connector). Then implement the shell gate spec-first
+under the accepted CI. Census (not a make-check gate) flags the rejected `kernel/internal/detectorpower`
+token that survives only in the committed round-3 verdict's history.
 The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
 mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
