@@ -140,15 +140,24 @@ three-round loop (round1 NEEDS_CHANGES → round2 NEEDS_CHANGES → round3 ACCEP
 findings, and the four non-blocking clarifications (CL-1 attested=independent non-author re-run; CL-2
 lock_inputs pins the operator-set; CL-3 R needs a subsumption argument; CL-4 each budgeted class-U
 argues its regeneration-safety) are applied. **SPEC acceptance only** — no gate code/record/sweep is
-accepted. **Exact next action — OWNER DECISIONS gate implementation** (the agent cannot self-authorize
-governed code or self-accept its own change intent, Law 9): §6.1 per-tier `U_BUDGET` (recommend:
-measure first with a provisional `U=0` gate, then tune from the real classified sweeps) + the CL-4
-per-U safety bar; §6.2 shell-gate (recommend — mirrors `meta-tax.sh` + the gate estate) vs a
-`kernel/internal/detectorpower` Go package. Once settled, draft `CI-p7-detector-power` change intent
-for **owner acceptance**, then implement spec-first (kernel SPEC+lock or shell gate + self-test; add
-E/R/U+`pins` fields to the register; run the deferred full `internal/twin` sweep + classify to seed
-execution-bound records; advisory `docs/gates.md` row; fold CL-1..4) → `make mutants` + non-author
-package verdict → only then the follow-on regeneration-loop spec.
+accepted. **OWNER §6 DECISIONS CAPTURED (2026-11-05):** §6.2 = **shell gate** (`scripts/detector-power.sh` +
+`docs/gates.md` row, mirroring `meta-tax.sh`), NOT a kernel package; §6.1 = **measure-first with a
+provisional `U=0` gate**, then the owner tunes per-tier `U_BUDGET` from the real classified sweeps
+(with the CL-4 per-U safety argument for any non-zero budget).
+
+**Exact next action — INTENT-PROVENANCE GATE (owner-level governance; agent cannot self-create a
+business decision or self-accept a change intent, Law 9 + P5).** The governed implementation
+(`scripts/*`, `docs/gates.md`, `docs/allowed-survivors.txt`) needs a change intent bound to a
+requirement — but **#2b regeneration has NO business decision or requirement in the intent fabric**
+(the only BD/BR lines are `BD/BR-proofbound-p5` and `BD/BR-replay-evidence`; detector-power is a
+*different* obligation — regeneration trust, not replay reproducibility, so binding its CI to
+`BR-replay-evidence` O-1 would be false provenance). So implementation is gated on a **BD → BR → CI
+chain for #2b** that the owner authors/accepts. Offer standing: the agent can DRAFT the chain (BD +
+BR with obligations + `CI-p7-detector-power`, all `proposed`) for owner acceptance; the owner remains
+the acceptor. Only then: implement spec-first (shell gate + self-test; add E/R/U+`pins` to the
+register; run the deferred full `internal/twin` sweep + classify to seed execution-bound records;
+advisory `docs/gates.md` row; fold CL-1..4) → `make mutants` + non-author package verdict → the
+follow-on regeneration-loop spec.
 The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
 mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
