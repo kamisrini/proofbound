@@ -121,10 +121,19 @@ all-survivors-in-denominator was a category error that rewarded deleting defense
 **Draft 2 (`986d6d7`) addresses all of them:** survivors classified E/R/U, `detector_power =
 killed/(killed+U)` counts only unproven latitude (perfect lock can reach 1.0); DP-6 freshness bind;
 necessary-not-sufficient; C/K/V/S re-derived from committed raw sweep stdout; loop assumptions named;
-invariants DP-1..7. **Round-2 non-author re-verify IN FLIGHT.** **Exact next action:**
-await/adjudicate round-2; iterate if NEEDS_CHANGES; on ACCEPTABLE the OWNER settles §6 (per-tier
-THRESHOLD; shell-gate vs `kernel/internal/detectorpower` package) and approves a change intent before
-any governed `scripts/*`/`gates/*`/`kernel/*` code.
+invariants DP-1..7. **Round-2 NEEDS_CHANGES** (`07270f5`, "narrow, near-acceptance"; all round-1
+findings confirmed resolved, E/R/U core accepted): N1 (gate on the ratio is wrong — size-dependent,
+paddable, and operator-unreachable blind spots → U=0 → 1.0; gate on ABSOLUTE U instead), N2
+(freshness scope must include `_test.go` + register + SPEC rows), N3 (bind the raw sweep to a real
+execution, not a fabricable JSON), N4 (R names its pinning line; exact bijection). **Draft 3
+(`73108b9`) addresses all four:** trust gate keys on absolute class-U vs a per-tier `U_BUDGET`
+(highest tier U=0), ratio demoted to diagnostic; DP-6 `lock_inputs_sha256` covers tests+register+SPEC
+rows; DP-8 execution-binding (reproducible or named-attested + Law-4 expiry); DP-1..8. **Round-3
+non-author re-verify IN FLIGHT** (reviewer expected round 3 to accept). **Exact next action:**
+await/adjudicate round-3; on ACCEPTABLE the OWNER settles §6 (per-tier `U_BUDGET`; shell-gate vs
+`kernel/internal/detectorpower` package) and approves a change intent before any governed code. The
+#2b-spec commits (through `73108b9`) + the review verdicts are LOCAL (unpushed) — push on owner
+instruction.
 The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
 mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
