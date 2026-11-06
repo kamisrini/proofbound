@@ -1,12 +1,14 @@
 # P7 #2b — detector-power metric + regeneration-trust gate — design spec (DRAFT 3)
 
-**Status:** DRAFT 3 — revises draft 2 after the round-2 non-author verdict
-([`verdicts/p7-2b-detector-power-spec-review-round2-20261105.md`](../verification/verdicts/p7-2b-detector-power-spec-review-round2-20261105.md),
-NEEDS_CHANGES "narrow, near-acceptance" at `986d6d7`; all eight round-1 findings confirmed resolved,
-E/R/U core accepted). Design spec only (Law 6 spec-before-code): no `kernel/*`, `scripts/*`,
-`gates/*` code, no change intent accepted. First piece of vision build-order **#2b** (witnessed
-regeneration); the regeneration **loop** is deferred to a follow-on spec (§7). Implementation is
-gated on this spec's non-author acceptance + an owner-approved change intent.
+**Status:** **ACCEPTED** (round-3 non-author verdict
+[`verdicts/p7-2b-detector-power-spec-review-round3-20261105.md`](../verification/verdicts/p7-2b-detector-power-spec-review-round3-20261105.md),
+ACCEPTABLE at `73108b9`; three-round adversarial loop). Four non-blocking round-3 clarifications
+(CL-1..CL-4) are applied below (B1 round-6 pattern — no round 4). **SPEC acceptance only:** no gate
+code, record, sweep, or `trusted` flag is accepted — those stay behind the governed implementation,
+`make mutants` + a non-author package verdict, and an **owner-approved change intent**, with the §6
+owner decisions settled first. Design spec (Law 6 spec-before-code): no `kernel/*`, `scripts/*`,
+`gates/*` code yet. First piece of vision build-order **#2b** (witnessed regeneration); the
+regeneration **loop** is deferred to a follow-on spec (§7).
 **Date:** 2026-11-05
 **Authorities:** [vision-2028.md](../../vision-2028.md) §9 item 2b (+ line ~156: the ladder can be
 climbed while detector power → 0); completion plan
@@ -14,6 +16,20 @@ climbed while detector power → 0); completion plan
 `tools/mutants` / `scripts/mutants.sh`, `docs/allowed-survivors.txt`, `docs/gates.md`.
 
 ## 0. Revision history (findings addressed)
+
+**Clarifications applied after round-3 ACCEPTABLE (CL-1..CL-4, non-blocking):**
+- **CL-1 (MED)** — DP-8 `attested`: the "named re-runner" must be a **non-author of the sweep/record
+  performing an INDEPENDENT re-run**, not a sign-off (else attested collapses toward self-attestation
+  for exactly the slow packages that use it). Law 9 compels this repo-wide; stated explicitly (§4,
+  DP-8).
+- **CL-2 (LOW)** — `lock_inputs_sha256` also pins the **`tools/mutants` operator-set version/digest**
+  (and notes the Go toolchain), so an operator-basis change invalidates stale attested evidence (§4).
+- **CL-3 (LOW)** — an **R** classification requires a **subsumption** argument, not merely a tested
+  pinning line: the named line's test must *subsume* the mutated behavior, or a tested-but-not-
+  subsuming line could launder a U into R (§2, DP-3).
+- **CL-4 (LOW)** — each **budgeted class-U** justification must argue **why that un-pinned behavior is
+  safe for a regenerated implementation to vary** (a non-zero `U_BUDGET` authorizes regeneration
+  against a known satisfy-and-reopen surface); guidance for the §6.1 owner decision (§3, §6).
 
 **Draft 3, after round-2 N1–N4:**
 - **N1 (MED) — gate on the ABSOLUTE count of unproven-latitude survivors, not the ratio.** The ratio
@@ -57,8 +73,9 @@ the survivors, which are **three kinds the raw sweep cannot tell apart** — so 
 
 1. **equivalent (E)** — semantically identical; **un-killable by any test**; zero exploitable latitude.
 2. **redundantly-pinned (R)** — the behavior **is** pinned by a second tested line (defense-in-depth);
-   the R justification MUST name that specific test/line whose mutant dies (N4). Not latitude, and
-   penalizing it would reward deleting defense-in-depth.
+   the R justification MUST name that specific test/line whose mutant dies **and argue that it
+   *subsumes* the mutated behavior** (CL-3: a merely-tested-but-non-subsuming line could launder a U
+   into R). Not latitude, and penalizing it would reward deleting defense-in-depth.
 3. **unproven latitude (U)** — a genuine **un-pinned degree of freedom** no test and no second line
    constrains. The only kind a regenerated impl can satisfy-and-reopen.
 
@@ -82,7 +99,10 @@ a **necessary precondition, not a sufficient guarantee**: finite mutation operat
 
 `U_BUDGET(tier)` is an **owner decision** (§6), per-tier, first values explicitly **provisional and
 conservative** — not empirically validatable until the loop exists to correlate trusted locks
-against regenerated-impl escapes. The `detector_power` ratio is reported alongside as diagnostic only.
+against regenerated-impl escapes. A **non-zero** budget authorizes regeneration against a *known
+un-pinned (satisfy-and-reopen) surface*, so each budgeted class-U survivor's justification MUST argue
+**why that behavior is safe for a regenerated implementation to vary** (CL-4). The `detector_power`
+ratio is reported alongside as diagnostic only.
 
 ## 4. Interface (proposed — binds in the kernel SPEC at implementation)
 
@@ -98,13 +118,16 @@ A measurement over **committed, calibrated, execution-bound sweep evidence**, no
   execution_binding:{mode:"reproducible"|"attested", re_runner?}, survivors:[{id, class:"E"|"R"|"U",
   justification, pins?}], unproven_latitude_count, detector_power_diagnostic, u_budget_tier, trusted}`.
   `lock_inputs_sha256` covers **non-test source + `_test.go` + this package's `allowed-survivors.txt`
-  entries + its SPEC invariant/lock rows** (N2).
+  entries + its SPEC invariant/lock rows + the `tools/mutants` operator-set version/digest** (N2,
+  CL-2; the Go toolchain version is noted alongside) so an operator-basis change also invalidates
+  stale evidence.
 - `scripts/detector-power.sh <pkg>` — re-hashes the raw sweep; re-derives C/K/V/S + calibration from
   it; recomputes `U` and the diagnostic from the declared classes; recomputes `lock_inputs_sha256`
   from the current inputs and **rejects a stale record** (N2); enforces the survivor↔record bijection
   against the sweep and `allowed-survivors.txt`; verifies the **execution binding** (mode
-  `reproducible`: re-run matches `raw_sweep_sha256`; mode `attested`: a named non-author re-runner is
-  recorded and the Law-4 advisory row is unexpired); fails closed on any mismatch, missing
+  `reproducible`: re-run matches `raw_sweep_sha256`; mode `attested`: a named **non-author of the
+  sweep/record who performed an INDEPENDENT re-run** (not a sign-off — CL-1) is recorded and the
+  Law-4 advisory row is unexpired); fails closed on any mismatch, missing
   calibration, unclassified survivor, or `trusted:true` above budget.
 - A `docs/gates.md` row (advisory first, Law 4: owner + ISO expiry).
 
@@ -117,17 +140,19 @@ re-derivation are unit-tested either way.
 |---|---|---|
 | DP-1 | The gate keys on the **absolute class-U count** `U`; `detector_power = K/(K+U)` is a reported diagnostic only and never drives trust; `K+U=0` ⇒ rejected | `detectorpower_test.go::TestGateKeysOnAbsoluteU` |
 | DP-2 | A survivor in the sweep absent from the record (unclassified) fails closed — never a score, never trusted | `detectorpower_test.go::TestUnclassifiedSurvivorFailsClosed` |
-| DP-3 | Exact bijection sweep-survivors ↔ record-classified survivors (extra record entry also fails closed); each R names a pinning test/line, each E an equivalence argument, bound to `allowed-survivors.txt` | `detectorpower_test.go::TestSurvivorRecordBijection` |
+| DP-3 | Exact bijection sweep-survivors ↔ record-classified survivors (extra record entry also fails closed); each R names a pinning test/line **and a subsumption argument** (CL-3), each E an equivalence argument, bound to `allowed-survivors.txt` | `detectorpower_test.go::TestSurvivorRecordBijection` |
 | DP-4 | `trusted` is true iff `U ≤ U_BUDGET(tier)` with every class-U survivor justified; above budget is never trusted | `detectorpower_test.go::TestTrustGateRespectsUBudget` |
 | DP-5 | C/K/V/S + calibration are **re-derived from the committed raw sweep stdout**, whose digest the record pins; a record disagreeing with its raw sweep fails closed | `detectorpower_test.go::TestReDerivesFromRawSweep` |
 | DP-6 | A record whose pinned `lock_inputs_sha256` (non-test source + `_test.go` + register entries + SPEC invariant rows) ≠ the current inputs is **stale** and rejected | `detectorpower_test.go::TestStaleRecordRejected` |
 | DP-7 | Calibration (lethal=killed, neutral=survived, invalid=invalid) must appear in the raw sweep or the record is rejected | `detectorpower_test.go::TestRejectsUncalibratedSweep` |
-| DP-8 | The raw sweep is **execution-bound**: mode `reproducible` ⇒ a refresh re-runs the sweep at `lock_inputs_sha256` and reproduces `raw_sweep_sha256`; mode `attested` ⇒ a named non-author re-runner is recorded and the Law-4 advisory limitation row is unexpired. A sweep bound to neither fails closed | `detectorpower_test.go::TestRawSweepExecutionBound` |
+| DP-8 | The raw sweep is **execution-bound**: mode `reproducible` ⇒ a refresh re-runs the sweep at `lock_inputs_sha256` and reproduces `raw_sweep_sha256`; mode `attested` ⇒ a named non-author of the sweep/record who performed an independent re-run (CL-1) is recorded and the Law-4 advisory limitation row is unexpired. A sweep bound to neither fails closed | `detectorpower_test.go::TestRawSweepExecutionBound` |
 
 (Permanent ids assigned at the kernel-SPEC + lock append under the change intent — not in this draft.)
 
 ## 6. Open decisions (owner / review)
 1. **`U_BUDGET` per tier** — owner decision; first values explicitly provisional/conservative (§3).
+   For any **non-zero** budget, the owner also owns the CL-4 bar: each tolerated class-U survivor must
+   carry an argument for why that un-pinned behavior is safe for a regenerated implementation to vary.
 2. **Shell-gate vs `kernel/internal/detectorpower` Go package** (§4).
 
 ## 7. Non-goals (this piece) + dependencies the loop spec MUST discharge
