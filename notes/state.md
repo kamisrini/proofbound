@@ -132,8 +132,23 @@ rows; DP-8 execution-binding (reproducible or named-attested + Law-4 expiry); DP
 non-author re-verify IN FLIGHT** (reviewer expected round 3 to accept). **Exact next action:**
 await/adjudicate round-3; on ACCEPTABLE the OWNER settles §6 (per-tier `U_BUDGET`; shell-gate vs
 `kernel/internal/detectorpower` package) and approves a change intent before any governed code. The
-#2b-spec commits (through `73108b9`) + the review verdicts are LOCAL (unpushed) — push on owner
-instruction.
+#2b-spec commits + the review verdicts are LOCAL (unpushed) — push on owner instruction.
+
+**2026-11-05 UPDATE — detector-power SPEC is ACCEPTED (`3994115`).** Round-3 non-author verdict
+ACCEPTABLE at `73108b9` (`verdicts/p7-2b-detector-power-spec-review-round3-20261105.md`); the
+three-round loop (round1 NEEDS_CHANGES → round2 NEEDS_CHANGES → round3 ACCEPTABLE) resolved all
+findings, and the four non-blocking clarifications (CL-1 attested=independent non-author re-run; CL-2
+lock_inputs pins the operator-set; CL-3 R needs a subsumption argument; CL-4 each budgeted class-U
+argues its regeneration-safety) are applied. **SPEC acceptance only** — no gate code/record/sweep is
+accepted. **Exact next action — OWNER DECISIONS gate implementation** (the agent cannot self-authorize
+governed code or self-accept its own change intent, Law 9): §6.1 per-tier `U_BUDGET` (recommend:
+measure first with a provisional `U=0` gate, then tune from the real classified sweeps) + the CL-4
+per-U safety bar; §6.2 shell-gate (recommend — mirrors `meta-tax.sh` + the gate estate) vs a
+`kernel/internal/detectorpower` Go package. Once settled, draft `CI-p7-detector-power` change intent
+for **owner acceptance**, then implement spec-first (kernel SPEC+lock or shell gate + self-test; add
+E/R/U+`pins` fields to the register; run the deferred full `internal/twin` sweep + classify to seed
+execution-bound records; advisory `docs/gates.md` row; fold CL-1..4) → `make mutants` + non-author
+package verdict → only then the follow-on regeneration-loop spec.
 The detector-power gate's first evidence input wants the deferred full-package `internal/twin`
 mutation sweep. Optional, non-blocking: verdict round-1 F1 (make-check cross-check of the
 committed launch-witness internal consistency) + F2 (more intent-resolver negative-control branches),
