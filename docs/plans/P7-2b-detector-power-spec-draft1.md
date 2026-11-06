@@ -104,7 +104,7 @@ un-pinned (satisfy-and-reopen) surface*, so each budgeted class-U survivor's jus
 **why that behavior is safe for a regenerated implementation to vary** (CL-4). The `detector_power`
 ratio is reported alongside as diagnostic only.
 
-## 4. Interface (proposed — binds in the kernel SPEC at implementation)
+## 4. Interface (proposed — realized by the shell gate at implementation, per the §6 decision)
 
 A measurement over **committed, calibrated, execution-bound sweep evidence**, not a live re-sweep per
 `make check` (embedded-postgres packages run a server per mutant). Proposed shapes:
@@ -131,10 +131,11 @@ A measurement over **committed, calibrated, execution-bound sweep evidence**, no
   calibration, unclassified survivor, or `trusted:true` above budget.
 - A `docs/gates.md` row (advisory first, Law 4: owner + ISO expiry).
 
-Shell-gate vs a small `kernel/internal/detectorpower` Go package is a §6 open decision; the fold +
-re-derivation are unit-tested either way.
+Per the owner's §6 decision (2026-11-05) this is a **shell gate** (a `scripts/` command + its
+`scripts/tests/` self-test), not a Go package; the fold + re-derivation are proven by the self-test's
+load-bearing controls.
 
-## 5. Invariants (proposed contract — become INV-<N> + `invariants.lock` on acceptance)
+## 5. Invariants (proposed contract — realized as the shell gate's load-bearing self-test controls, per the §6 decision)
 
 | # | Invariant | Proving test (shape) |
 |---|---|---|
@@ -147,13 +148,19 @@ re-derivation are unit-tested either way.
 | DP-7 | Calibration (lethal=killed, neutral=survived, invalid=invalid) must appear in the raw sweep or the record is rejected | `detectorpower_test.go::TestRejectsUncalibratedSweep` |
 | DP-8 | The raw sweep is **execution-bound**: mode `reproducible` ⇒ a refresh re-runs the sweep at `lock_inputs_sha256` and reproduces `raw_sweep_sha256`; mode `attested` ⇒ a named non-author of the sweep/record who performed an independent re-run (CL-1) is recorded and the Law-4 advisory limitation row is unexpired. A sweep bound to neither fails closed | `detectorpower_test.go::TestRawSweepExecutionBound` |
 
-(Permanent ids assigned at the kernel-SPEC + lock append under the change intent — not in this draft.)
+(Per the §6 decision these are realized as the shell gate's self-test controls, not kernel-SPEC INV
+ids / `invariants.lock` rows — each must be a load-bearing control the self-test proves can fail.)
 
-## 6. Open decisions (owner / review)
-1. **`U_BUDGET` per tier** — owner decision; first values explicitly provisional/conservative (§3).
-   For any **non-zero** budget, the owner also owns the CL-4 bar: each tolerated class-U survivor must
-   carry an argument for why that un-pinned behavior is safe for a regenerated implementation to vary.
-2. **Shell-gate vs `kernel/internal/detectorpower` Go package** (§4).
+## 6. Decisions — SETTLED by the owner 2026-11-05
+1. **`U_BUDGET`:** **measure-first with a provisional `U = 0` gate**; per-tier budgets are tuned later
+   from the real classified sweeps, and any **non-zero** budget carries the CL-4 bar (each tolerated
+   class-U survivor argues why that un-pinned behavior is safe for a regenerated implementation to
+   vary).
+2. **Implementation form:** a **shell gate** (a `scripts/` command + its `scripts/tests/` self-test
+   and a `docs/gates.md` advisory row), **not** a Go package.
+
+These are carried into the change intent [`CI-p7-detector-power-1a2b3c`](../intent/records/change-intents/CI-p7-detector-power-1a2b3c/0001.md)
+(proposed, awaiting owner acceptance).
 
 ## 7. Non-goals (this piece) + dependencies the loop spec MUST discharge
 - **No regeneration loop.** This piece only *measures* lock strength. The follow-on loop spec MUST
@@ -170,9 +177,9 @@ re-derivation are unit-tested either way.
 1. **Draft 3 → non-author re-review** (round 3; N1–N4 are the deltas — the absolute-U gate, the
    freshness scope, the execution binding, and the bijection/R-pinning).
 2. Owner settles §6 (per-tier `U_BUDGET`, shell-vs-package); owner-approved change intent for the
-   governed `scripts/*`/`gates/*` (+ `kernel/*` if a package) work.
-3. Implement spec-first (kernel SPEC.md + `invariants.lock` append under the intent, or the shell gate
-   + self-test); add the E/R/U class + `pins` fields to the survivor register; run the deferred
+   governed `scripts/*`/`gates/*` work.
+3. Implement spec-first (the shell gate + its fail-closed self-test proving each §5 control
+   load-bearing); add the E/R/U class + `pins` fields to the survivor register; run the deferred
    full-package `internal/twin` sweep and classify its survivors to seed the first execution-bound
    records; register the advisory `docs/gates.md` row.
 4. Package acceptance: calibrated `make mutants` of new code + non-author verdict.
