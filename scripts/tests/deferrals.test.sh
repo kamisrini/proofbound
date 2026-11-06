@@ -7,10 +7,11 @@ cd "$(git rev-parse --show-toplevel)"
 # to the pipeline's exit. The `out=$(...)` assignment still fails the test under
 # set -e if the producer errors, so producer-exit-status coverage is preserved.
 out=$(scripts/deferrals.sh --check); grep -Fq 'deferrals: PASS' <<<"$out"
-# DEF-P7-001 is the long-lived OPEN row; it was reclassified POSTPONED -> BLOCKED on 2026-10-31 when
-# the PostgreSQL provenance failure became a concrete external blocker (not a bare owner postponement).
-out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-P7-001\tOPEN\tBLOCKED' <<<"$out"
-out=$(scripts/deferrals.sh --hold-type BLOCKED); grep -Fq 'DEF-P7-001' <<<"$out"
+# DEF-P7-001 was RESOLVED 2026-11-05 (owner go/no-go, VD-p7-def001-resolve-2026-11-05), so it is no
+# longer an OPEN/BLOCKED row. The live OPEN rows are DEF-KERNELCHECK-FLAKE-001 (DEFERRED) and
+# DEF-P7-REGENLOOP-001 (PENDING_PREREQUISITE); assert the lister/filter against a current OPEN row.
+out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-KERNELCHECK-FLAKE-001\tOPEN\tDEFERRED' <<<"$out"
+out=$(scripts/deferrals.sh --hold-type DEFERRED); grep -Fq 'DEF-KERNELCHECK-FLAKE-001' <<<"$out"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

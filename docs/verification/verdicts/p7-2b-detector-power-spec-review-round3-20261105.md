@@ -37,7 +37,7 @@ findings:
     summary: NON-BLOCKING — a non-zero U_BUDGET authorizes regeneration against a lock with known genuine un-pinned latitude (a known satisfy-and-reopen surface); require each budgeted class-U justification to argue why that specific behavior is safe for a regenerated impl to vary (not correctness/security-load-bearing). Guidance for the §6.1 owner decision
     verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-2b-detector-power-spec-review-round3-20261105.md
-artifact_sha: af0e59f2b5250ace646f06bcbf0ea0cf0abadab3c2d6ca7d00924d396f350630
+artifact_sha: 70741d3b8749ed9b443edbf1324c82b17d9a05026afe77ccc743b4e196d07afb
 ---
 
 # P7 #2b detector-power metric + regeneration-trust gate (spec draft 3) — non-author re-review, round 3 — ACCEPTABLE
@@ -178,7 +178,7 @@ This acceptance is of the **spec**. Before anything is `trusted` in practice:
 1. **Owner decisions (§6), still open by design:**
    - **`U_BUDGET` per tier** — first values explicitly provisional and conservative (§3); and per CL-4,
      a required per-U safety argument for any non-zero budget.
-   - **Shell-gate vs a `kernel/internal/detectorpower` Go package** (§4).
+   - **Shell-gate vs a detector-power Go package** (§4).
 2. **Owner-approved change intent** for the governed `scripts/*` / `gates/*` (and `kernel/*` if a
    package) work (§8.2).
 3. **Implementation, spec-first (§8.3):** kernel SPEC.md with permanent INV ids + `invariants.lock`

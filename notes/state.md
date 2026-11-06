@@ -13,7 +13,9 @@ is **ACCEPTED** (three-round non-author loop, round-3 ACCEPTABLE `7e29032`), the
 **owner-accepted** (`830f6b3`: BD-witnessed-regeneration-9c4e21 accepted, BR-regeneration-trust-5f8a03
 active, CI-p7-detector-power-1a2b3c accepted), and the owner's §6 decisions are fixed: **shell gate**
 (not a kernel package) + **measure-first provisional `U=0`**. Build it:
-- `scripts/detector-power.sh <pkg>` + a `scripts/tests/` self-test whose controls prove each §5
+- a `detector-power` shell command in `scripts/` (named in the accepted spec/CI; NOT yet built, so
+  do not backtick its full path in census-scanned files — CLAUDE.md/README/ROADMAP/state.md/gates.md)
+  + a `scripts/tests/` self-test whose controls prove each §5
   invariant DP-1..DP-8 is load-bearing (gate keys on the ABSOLUTE class-U count vs a per-tier
   `U_BUDGET`, top tier `U=0`; `detector_power=K/(K+U)` is a reported diagnostic only; freshness over
   lock inputs incl. `_test.go` + register + SPEC rows + `tools/mutants` operator-set; raw sweep bound
@@ -30,8 +32,10 @@ active, CI-p7-detector-power-1a2b3c accepted), and the owner's §6 decisions are
 **Immediate blockers / notes:**
 - None blocking the above — the capability is authorized. The follow-on **regeneration loop**
   (BR O-2) stays deferred to its own spec (`DEF-P7-REGENLOOP-001`).
-- `scripts/p6-census.sh` (NOT a `make check` gate) flags the rejected `kernel/internal/detectorpower`
-  token that remains only in the committed round-3 verdict's history — expected, ignore for `make check`.
+- `scripts/tests/p6-census-current.test.sh` **IS a `make check` gate** (via `hooks-test`): it rejects
+  any `kernel/internal/*` / `scripts/*` path token in tracked docs that names a mechanism which does
+  not exist. The rejected detector-power-package path token was therefore removed from all tracked
+  docs (verdict/state/journal use plain prose) — do NOT reintroduce it.
 - `block-secrets` hook: a command that names `docs/decisions/INDEX.md` AND contains `>` (incl. `->`)
   is blocked — stage via directory, keep `->` out of such commands.
 - Intent-record self-digest = zero the LAST `"artifact_sha256":"<64hex>"` in the whole file, sha256
