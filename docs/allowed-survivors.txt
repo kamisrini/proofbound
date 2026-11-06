@@ -10,6 +10,15 @@
 #   - NO SEMANTIC CONTENT: a literal that carries no meaning to any caller.
 # "We will get to it" is not a reason — that is the defect this harness exists to stop shipping.
 #
+# DETECTOR-POWER CLASS ANNOTATION (P7 #2b, CI-p7-detector-power-1a2b3c). A survivor that is covered by
+# a per-package detector-power record (docs/verification/detector-power/<pkg>.json) carries a finer
+# E/R/U class in-line as `{dp:class=E|R|U}`, which scripts/detector-power.sh CROSS-CHECKS against the
+# record (a mismatch fails closed — Law 2 drift guard). The old coarse "EQUIVALENT" label conflated
+# two of these: E (semantically identical, un-killable by any test) and R (REDUNDANTLY-PINNED — a
+# second TESTED line also rejects, so the mutant survives here but the behavior is pinned there). The
+# pinning test/line and the subsumption argument for an R live ONCE, in the record's `pins`+
+# `justification` (Law 2: linked from here by the key + the class=R marker, never copied).
+#
 # The KEY INCLUDES THE ORDINAL (#n) because file+line+op+desc collide — one line with two `||`
 # operators produces two identical descriptions. An allowlist that cannot tell two sites apart
 # licenses the wrong one.
@@ -56,14 +65,19 @@ internal/connector/git/gitcmd/gitcmd.go:396#136	cond-false	if condition -> false
 internal/connector/git/gitcmd/gitcmd.go:75#29	cond-false	if condition -> false (branch never taken)  # NEARLY unreachable, and this one is a JUDGEMENT rather than a proof. Skipping refuseIfShallow's error check means a failing `rev-parse --is-shallow-repository` is read as "not shallow", so the repo is ACCEPTED without a shallow check. Both probes are rev-parse on the same repository, so the second cannot normally fail while the first succeeds — EXCEPT on git older than 2.15, which does not know the flag. On such a git the shallow refusal would silently not apply. Not tested because the fixture needs an ancient git binary; recorded as a real, bounded risk rather than dismissed. If a minimum-git-version check is ever added this becomes provably unreachable and the entry should be re-stated as such.
 
 # ---------------------------------------------------------------------------------------------
-# internal/twin/manifest — swept 2026-10-31 at production tree ac36cf84 (190 candidates: 185 killed,
-# 0 invalid, 5 survived). Calibration: neutral=survived, invalid=invalid, lethal=killed. All five
-# survivors are EQUIVALENT. Four are input-layer checks in validateManifestDeclarationInput that
-# DeclareCommittedManifest ALSO runs via Bind->Validate on the built manifest (declaration.go:66 then
-# :89), so no input can change the accept/reject outcome by mutating the earlier copy. The fifth is a
-# defensive nil-guard whose removal is masked by the downstream required-field loop.
-internal/twin/manifest/declaration.go:189#30	if-stmt	validateRevision("declaration evidence_revision", ...)  # EQUIVALENT: redundant with Bind->Validate validateRevision("evidence_revision") (manifest.go:209); an invalid evidence_revision is rejected there too
-internal/twin/manifest/declaration.go:192#31	if-stmt	validateRevision("declaration projector_revision", ...)  # EQUIVALENT: redundant with Bind->Validate validateRevision("projector_revision") (manifest.go:212)
-internal/twin/manifest/declaration.go:216#41	if-cond	module.Module=="" || module.Version==""  # EQUIVALENT: redundant with Bind->Validate validateModuleValues (manifest.go:305), which rejects the same empty module/version
-internal/twin/manifest/declaration.go:234#37	if-stmt	validateToolchainValue(input.Toolchain)  # EQUIVALENT: redundant with Bind->Validate validateToolchainValue (manifest.go:273)
-internal/twin/manifest/manifest.go:382#59	if-cond	json.Unmarshal(...); err != nil || object == nil  # EQUIVALENT: a JSON null object (err==nil, nil map) is still rejected by the required-field loop at manifest.go:388-389, so dropping the nil guard does not change accept/reject
+# internal/twin/manifest — re-swept 2026-11-06 at 7cdbb8d (335 candidates: 330 killed, 0 invalid,
+# 5 survived; the 2026-10-31 ac36cf84 sweep saw 190/185/0/5 — the delta is well-tested files added to
+# the package since, all killed; declaration.go/manifest.go are unchanged, so the 5 survivor keys and
+# ordinals are identical). Calibration: neutral=survived, invalid=invalid, lethal=killed. The
+# execution-bound evidence + per-survivor classification now live in the detector-power record
+# docs/verification/detector-power/internal-twin-manifest.json (Law 2 home); refresh with
+# `scripts/detector-power.sh internal/twin/manifest --refresh`. All five are REDUNDANTLY-PINNED (R),
+# reclassified from the coarse pre-taxonomy "EQUIVALENT": four are input-layer checks in
+# validateManifestDeclarationInput that DeclareCommittedManifest ALSO runs via Bind->Validate on the
+# built manifest, and the fifth is a defensive nil-guard masked by the downstream required-field loop
+# — in every case the subsuming line's own mutant is KILLED in the same sweep (see the record's pins).
+internal/twin/manifest/declaration.go:189#30	if-stmt	validateRevision("declaration evidence_revision", ...)  # REDUNDANTLY-PINNED (R): redundant with Bind->Validate validateRevision("evidence_revision") (manifest.go:209); an invalid evidence_revision is rejected there too {dp:class=R}
+internal/twin/manifest/declaration.go:192#31	if-stmt	validateRevision("declaration projector_revision", ...)  # REDUNDANTLY-PINNED (R): redundant with Bind->Validate validateRevision("projector_revision") (manifest.go:212) {dp:class=R}
+internal/twin/manifest/declaration.go:216#41	if-cond	module.Module=="" || module.Version==""  # REDUNDANTLY-PINNED (R): redundant with Bind->Validate validateModuleValues (manifest.go:305), which rejects the same empty module/version {dp:class=R}
+internal/twin/manifest/declaration.go:234#37	if-stmt	validateToolchainValue(input.Toolchain)  # REDUNDANTLY-PINNED (R): redundant with Bind->Validate validateToolchainValue (manifest.go:273) {dp:class=R}
+internal/twin/manifest/manifest.go:382#59	if-cond	json.Unmarshal(...); err != nil || object == nil  # REDUNDANTLY-PINNED (R): a JSON null object (err==nil, nil map) is still rejected by the required-field loop at manifest.go:388-389, so dropping the nil guard does not change accept/reject {dp:class=R}
