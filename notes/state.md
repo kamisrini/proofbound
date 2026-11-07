@@ -43,10 +43,11 @@ independent verifier runs `/proofbound-review` against the Build Laws + the ACCE
   blocked — stage via directory, keep `->` out of such commands.
 
 ## Branch status
-`main`, tracking `origin/main`. This session's detector-power work is committed; push at the owner's
-closeout. Two permanent untracked paths remain (`docs/plans/P5-intent-provenance-plan.md`,
-`kernel/cmd/p6dbprobe/`) — they keep the tree dirty between commits, so run `make check` promptly after
-a commit (commit-cadence else trips).
+`main`, tracking `origin/main`. This session's detector-power work is committed at **`3f446eb`**
+(`Intent: CI-p7-detector-power-1a2b3c`); **bare `make check` GREEN at that HEAD** (hooks-test +
+kernel-check, 0 issues). NOT pushed — push is the owner's closeout step. Two permanent untracked paths
+remain (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) — they keep the tree dirty
+between commits, so run `make check` promptly after a commit (commit-cadence else trips).
 
 ## Completed (2026-11-06)
 - **P7 #2b detector-power gate (O-1) BUILT + self-verified**: `scripts/detector-power.sh` +
