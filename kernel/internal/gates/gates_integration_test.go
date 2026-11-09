@@ -25,7 +25,7 @@ import (
 func gateIntegrationStore(t *testing.T) *store.Store {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: url})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: url, Port: freeTestPort(t)})
 	if err != nil {
 		t.Fatal(err)
 	}

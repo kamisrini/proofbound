@@ -743,7 +743,7 @@ func testStore(t *testing.T) *store.Store {
 		}
 		url = isolatedTestDatabaseURL(t, url)
 	}
-	cfg := store.Config{Root: t.TempDir(), DatabaseURL: url}
+	cfg := store.Config{Root: t.TempDir(), DatabaseURL: url, Port: freeTestPort(t)}
 	s, err := store.Open(context.Background(), cfg)
 	if err != nil {
 		t.Fatal(err)

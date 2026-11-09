@@ -142,7 +142,7 @@ func TestValidateExpectedRejectsPayloadHashAndCanonicalityMutations(t *testing.T
 }
 
 func TestImportRefusesNonEmptyLedger(t *testing.T) {
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), AllowHistoricalEvidenceImport: true})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), Port: freeTestPort(t), AllowHistoricalEvidenceImport: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestImportRefusesNonEmptyLedger(t *testing.T) {
 }
 
 func TestImportExactArchive(t *testing.T) {
-	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), AllowHistoricalEvidenceImport: true})
+	s, err := store.Open(context.Background(), store.Config{Root: filepath.Join(t.TempDir(), ".proofbound"), DatabaseURL: os.Getenv("DATABASE_URL"), Port: freeTestPort(t), AllowHistoricalEvidenceImport: true})
 	if err != nil {
 		t.Fatal(err)
 	}

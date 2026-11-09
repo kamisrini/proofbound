@@ -25,7 +25,7 @@ func TestStoreAppendDuplicateRevisionAndRead(t *testing.T) {
 		t.Fatal("DATABASE_URL is required for integration tests")
 	}
 	resetIntegrationDatabase(t, url)
-	s, err := Open(context.Background(), Config{Root: t.TempDir(), DatabaseURL: url})
+	s, err := Open(context.Background(), Config{Root: t.TempDir(), DatabaseURL: url, Port: freeTestPort(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
