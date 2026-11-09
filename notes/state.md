@@ -12,15 +12,16 @@ As of: 2026-11-09
 - **① F1 (detector-power seed citations) — DONE + non-author re-confirmed.** Fix `25d13ad`; verdict
   schema corrected `9ee6c04`; **non-author re-confirmation ACCEPTABLE**
   (`verdicts/p7-2b-detector-power-f1-fix-reconfirm-round1-20261109.md`). F1 fully closed.
-- **② state — DONE** (this file). **③ regen-loop spec — DRAFT 2 authored; round-2 non-author re-review
-  dispatched.** Draft 1 reviewed NEEDS_WORK (8 findings,
-  `verdicts/p7-2b-regeneration-loop-spec-review-round1-20261109.md`). Draft 2
-  (`docs/plans/P7-2b-regeneration-loop-spec-draft1.md`, §0 revision history) addresses all 8: F1
-  resolved by **scoping the first slice to `U=0` tiers** (RL-6 airtight there) + future-guard RL-12
-  (class-U falsification propagation); F2 step-2 reworded (produce fresh execution-bound evidence,
-  name the per-cycle attested-sweep cost); new RL-9 counterexample lethality, RL-10 lock-level role
-  separation, RL-11 lock-digest identity; RL-5 D-b strengthened to a non-author attestation; §3.1
-  record homes (Law 2); F8 genesis-advisory default stated. **Next: non-author round-2 verdict.**
+- **② state — DONE** (this file). **③ regen-loop spec — DRAFT 2 ACCEPTED (round-2 non-author verdict
+  ACCEPTABLE); CL-1..CL-3 applied. DONE pending owner §5 + implementation.** Round-1 NEEDS_WORK (8
+  findings) → draft 2 addressed all 8 (F1 resolved by scoping the first slice to `U=0` tiers; RL-9/10/11
+  added; D-b strengthened; RL-12 future-guard). Round-2 verdict ACCEPTABLE
+  (`verdicts/p7-2b-regeneration-loop-spec-review-round2-20261109.md`) with 3 non-blocking
+  clarifications now APPLIED as CL-1..CL-3: CL-1 defines the Law-9 actor-identity basis (owner decision
+  §5.7; until then a declared RL-8 limitation); CL-2 moves RL-12 out of the active contract into §4.1
+  with NO self-test (avoids a vacuous control, Law 3); CL-3 keys the D-a record per (subject,
+  regenerator) deployment vs D-b per revision (Law 2). **Next on ③: owner settles §5, then a NEW
+  change intent + spec-first implementation + non-author package verdict.**
 - **⑤ kernel flake fix — DONE; non-author ACCEPTED (round-2); `DEF-KERNELCHECK-FLAKE-001` fixed + accepted, stays OPEN pending owner final close.**
   The ephemeral-port test change (`057bc07`) is correct/in-scope, but it
   shipped a stale `@generated` route matrix (Law 1): `057bc07` touched `kernel/internal/projections`
@@ -61,20 +62,20 @@ push of `8700760` restores green). Two permanent untracked paths remain
 ## Completed (2026-11-09)
 - Detector-power gate (O-1) non-author verdict `ACCEPTABLE` + F1 (schema-corrected); F1 fixed AND
   non-author re-confirmed → F1 closed.
-- Regen-loop spec: draft 1 authored + non-author reviewed (NEEDS_WORK); draft 2 authored addressing
-  all 8 findings; round-2 re-review dispatched.
+- Regen-loop spec: draft 1 (NEEDS_WORK) → draft 2 addressing all 8 findings → **round-2 ACCEPTED**
+  (ACCEPTABLE) + CL-1..CL-3 applied. Spec design done; implementation gated on owner §5.
 - ⑤ flake fixed (`057bc07`) under the gate-integrity intent chain (`98cdeea`); route-matrix Law-1 slip
   fixed (`8700760`); `make check` green. Three verdicts committed (`0d36784`).
 
 ## Open / deferred (see `docs/deferrals.tsv`)
 - `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + non-author accepted (round-1+2); awaiting owner final close.
-- `DEF-P7-REGENLOOP-001` OPEN — spec draft 2 authored (addresses round-1's 8 findings); round-2
-  non-author re-review dispatched.
+- `DEF-P7-REGENLOOP-001` OPEN — spec DRAFT 2 ACCEPTED (round-2, + CL-1..CL-3); awaiting owner §5
+  decisions, then a new change intent + spec-first implementation + non-author package verdict.
 - `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
 ## Unverified / residual (Law 9 — each needs a NON-author lens)
-- Regen-loop spec draft 2 round-2 non-author re-review (dispatched).
+- Regen-loop spec implementation (after owner §5) → non-author package verdict (future).
 - `delivery-enforce` pre-existing verdict-schema cleanup (separate, repo-wide).
 
 ## Key facts
@@ -87,6 +88,6 @@ push of `8700760` restores green). Two permanent untracked paths remain
 - Detector-power refresh: `scripts/detector-power.sh <pkg> --refresh` reproduces `raw_sweep_sha256`.
 
 ## Next session's first action
-Run `/proofbound-next`. Open: (b) regen-loop spec draft 2 round-2 non-author re-review (dispatched);
+Run `/proofbound-next`. Open: (b) regen-loop spec — owner settles §5 (incl. §5.7 actor-identity), then new change intent + implementation;
 (c) ④ twin-root sweep (unblocked, heavy); (d) `delivery-enforce` verdict-schema cleanup. Push remains
 the owner's closeout step.

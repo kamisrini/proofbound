@@ -1,10 +1,13 @@
 # P7 #2b — regeneration-as-repair loop (BR O-2) — design spec (DRAFT 2)
 
-**Status:** **DRAFT 2 — FOR NON-AUTHOR RE-REVIEW. Not accepted; authorizes no code.** This is the
-follow-on design spec the detector-power spec (§7) and `DEF-P7-REGENLOOP-001` defer to. Law 6
-(spec-before-code): no `kernel/*`, `scripts/*`, `gates/*` work is authorized by this document, and
-no new provider, event kind, wire identity, or writable truth. Implementation requires this spec
-accepted by a non-author, a NEW owner-approved change intent, and a non-author package verdict.
+**Status:** **DRAFT 2 — ACCEPTED** (round-2 non-author verdict
+`verdicts/p7-2b-regeneration-loop-spec-review-round2-20261109.md`, ACCEPTABLE). Three non-blocking
+round-2 clarifications **CL-1..CL-3** (= review findings N1–N3) are applied below; design-spec
+acceptance only — **authorizes no code.** This is the follow-on design spec the detector-power spec
+(§7) and `DEF-P7-REGENLOOP-001` defer to. Law 6 (spec-before-code): no `kernel/*`, `scripts/*`,
+`gates/*` work is authorized by this document, and no new provider, event kind, wire identity, or
+writable truth. Implementation requires owner §5 settlement, a NEW owner-approved change intent, and a
+non-author package verdict.
 **Date:** 2026-11-09
 **Authorities:**
 - `vision-2028.md` §item **2b** (regeneration-as-repair: "discard the implementation and re-derive it
@@ -20,6 +23,20 @@ accepted by a non-author, a NEW owner-approved change intent, and a non-author p
   exit criteria, lock identity = SHA-256 of canonical bytes).
 
 ## 0. Revision history
+
+**Clarifications applied after round-2 ACCEPTABLE (CL-1..CL-3 = review findings N1–N3, non-blocking):**
+- **CL-1 (MED, N1)** — the Law-9 **actor-identity basis** for RL-5/RL-7/RL-10 is undefined, so in a
+  single-operator/agent context the three roles can silently collapse. RL-10 now requires each role to
+  be a **named, recorded identity** (O-1 CL-1 precedent: the named non-author re-runner in verdict
+  files); the identity basis is an owner decision (§5.7); until defined, the collapse risk is carried
+  as a declared Law-4 limitation (RL-8), the same honest treatment as the D-b seam.
+- **CL-2 (MED, N2)** — **RL-12 is moved out of the active proving-test contract** into §4.1 (future,
+  non-zero budgets) with **no self-test compiled in the `U=0` slice** — listing it beside the
+  load-bearing invariants would invite a vacuously-passing control (Law 3: a control must prove it can
+  fail; the foundational Law-9 lesson).
+- **CL-3 (LOW, N3)** — §3.1 now keys the **D-a representativeness record per (subject, regenerator)
+  deployment** (it does not change across lock revisions), while the **D-b isolation attestation stays
+  per lock-revision/candidate** — so neither duplicates a datum across cycles (Law 2).
 
 **Draft 2 — addresses the round-1 non-author review
 (`verdicts/p7-2b-regeneration-loop-spec-review-round1-20261109.md`, NEEDS_WORK, 8 findings):**
@@ -139,11 +156,15 @@ does not carry.
   (RL-8), never claimed airtight. The operator-unreachable blind spot (no survivor at all) is the same
   O-1 "necessary not sufficient" caveat and is likewise carried, not eliminated.
 
-### 3.1 One home per record (Law 2)
-The D-a representativeness record and the D-b isolation attestation are load-bearing data with a
-single durable home: `docs/verification/regeneration/<lock-revision-digest>/representativeness.md` and
-`.../isolation-attestation.md`, linked from the lock record by digest — never copied into the lock
-or stored twice.
+### 3.1 One home per record (Law 2) — keyed by what the datum actually depends on (CL-3)
+Each record has a single durable home keyed by its true scope, never copied:
+- **D-a representativeness** is a per-**(subject, regenerator)** deployment property — it does not
+  change across lock revisions of the same subject+regenerator — so it lives once at
+  `docs/verification/regeneration/<subject>--<regenerator-id>/representativeness.md` and is referenced
+  (not copied) by every revision's cycle.
+- **D-b isolation attestation** is per lock-revision/candidate, so it lives at
+  `docs/verification/regeneration/<lock-revision-digest>/isolation-attestation.md`.
+Both are linked from the lock record; RL-4 (D-a) and RL-5 (D-b) read them from these homes.
 
 ### 3.2 The gate: `U = 0` in this slice
 `L@r+1` is **regeneration-trusted** in this slice only when O-1 reports `U = 0` at the top tier for
@@ -164,9 +185,22 @@ falsify — out of scope here (§6), and future-guarded by RL-12.
 | RL-7 | Every acceptance is a Law-9 artifact: a non-author verdict of the candidate@`L@r+1` | `TestAcceptanceRequiresNonAuthorVerdict` |
 | RL-8 | The residual limitations (operator blind spots; the "lock IS the tests" D-b seam) are **declared** as standing Law-4 advisories, never implied closed by a budget-clear | `TestResidualLimitationsDeclared` |
 | RL-9 | **Counterexample lethality:** `X`'s pinned line must be demonstrated to FAIL on the pre-repair implementation before admission; a non-lethal `X` fails closed | `TestCounterexampleIsLethalPreRepair` |
-| RL-10 | **Role separation (Law 9 at the lock level):** the `L@r+1` author, the regenerator, and the final verdict reviewer are three distinct actors; any coincidence fails closed | `TestLockAuthorRegeneratorVerdictDistinct` |
+| RL-10 | **Role separation (Law 9 at the lock level):** the `L@r+1` author, the regenerator, and the final verdict reviewer are three distinct **named, recorded identities** (CL-1; O-1 CL-1 precedent — the named non-author re-runner in verdict files); a coincidence or an unnamed role fails closed. Identity basis is owner decision §5.7; until defined, distinctness is attested, not mechanically guaranteed (declared Law-4 limitation, RL-8) | `TestLockAuthorRegeneratorVerdictDistinct` |
 | RL-11 | **Lock-digest identity:** the `L@r+1` canonical SHA-256 folded (step 1), measured (step 2), and evaluated against (step 4) are byte-identical; a revision swap between measure and evaluate fails closed | `TestSameLockDigestThroughCycle` |
-| RL-12 | **Class-U falsification propagation (future non-zero budgets):** a counterexample that falsifies one class-U "safe-to-vary" justification revokes every sibling budgeted-U justification on that lock; each must be re-argued before `L@r+1` is regeneration-trusted | `TestClassUFalsificationRevokesSiblings` |
+
+Each RL-1..RL-11 control must be proven able to fail by a load-bearing self-test (Law 3), as with
+O-1's DP controls. **RL-10 (and RL-5/RL-7) depend on a defined actor-identity basis (CL-1/§5.7); until
+that basis exists their distinctness is attested, not mechanically enforced, and the gap is a declared
+Law-4 limitation (RL-8) — not an airtight control.**
+
+### 4.1 Future invariant (non-zero budgets — NOT in this slice; no self-test compiled)
+RL-12 guards a capability that is a non-goal here (§6), so it carries **no proving test in the `U=0`
+slice** — a self-test would be vacuous (no budgeted-U surface to act on) and thus un-failable (CL-2,
+Law 3). It is specified now only so a future non-zero-budget extension cannot reopen F1:
+
+| # | Future invariant (non-zero budgets only) |
+|---|---|
+| RL-12 | **Class-U falsification propagation:** a counterexample that falsifies one class-U "safe-to-vary" justification revokes every sibling budgeted-U justification on that lock; each must be re-argued before `L@r+1` is regeneration-trusted. (Proving test deferred to the extension that introduces a non-zero budget.) |
 
 ## 5. Decisions required from the owner (OPEN)
 1. **Regenerator boundary.** What performs re-derivation (a model-driven generator, a bounded
@@ -183,6 +217,10 @@ falsify — out of scope here (§6), and future-guarded by RL-12.
    fails on the pre-repair impl (a failing replay proof? a reproduced property violation?).
 6. **Per-cycle cost acceptance.** Confirm that for slow subjects each repair cycle carries a DP-8
    attested out-of-band sweep with an independent re-runner (§2 step 2), and who provides it.
+7. **Actor-identity basis (CL-1).** What identity the RL-10 roles (lock author, regenerator, verdict
+   reviewer) are recorded against — human, agent session, or signing identity — and how distinctness
+   is attested (O-1 CL-1 precedent: a named identity in the verdict/attestation files). Until settled,
+   RL-10/RL-5/RL-7 distinctness is a declared Law-4 limitation (RL-8), not an airtight control.
 
 ## 6. Non-goals (this piece)
 - **No non-zero-`U_BUDGET` loop.** This slice gates on `U = 0`; regeneration against a budgeted
