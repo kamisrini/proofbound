@@ -2,7 +2,7 @@
   "schema": "proofbound.detector-power.v1",
   "package": "internal/twin/manifest",
   "swept_at_commit": "7cdbb8da6943024d217c0c52a0edfb373135f563",
-  "lock_inputs_sha256": "6aaa4b28699cdbc5d481a9016f4fa7cf13d598b727d52e45bb66b93f806df5cc",
+  "lock_inputs_sha256": "3ceeb79bbc76ea8b1a6a5c94312f84d5c19da3b10b1da0f322fd17741bcb5419",
   "raw_sweep_path": "docs/verification/detector-power/internal-twin-manifest.sweep.txt",
   "raw_sweep_sha256": "4968444f4219feb1183b3dc0771b62b70ac3c9e4f7c4ac11f267bc1149013f69",
   "execution_binding": {
@@ -29,24 +29,24 @@
       "id": "internal/twin/manifest/declaration.go:216#41",
       "class": "R",
       "pins": "mutation_kill_test.go::TestValidateRejectsEachUnsafeSubBranch (cases \"module empty name\", \"module empty version\")",
-      "justification": "REDUNDANTLY-PINNED. Declaration-layer guard module.Module==\"\" || module.Version==\"\", subsumed by Bind->Validate validateModuleValues at manifest.go:221 -> :299/:305, which rejects the same empty module/version. The subsuming operands' mutants are KILLED in this sweep (not survivors), and TestValidateRejectsEachUnsafeSubBranch kills each via the Validate path independent of the declaration layer, subsuming the mutated behavior."
+      "justification": "REDUNDANTLY-PINNED. Declaration-layer guard module.Module==\"\" || module.Version==\"\", subsumed by Bind->Validate validateModuleValues, whose empty-name/empty-version rejection is at manifest.go:305 — that line's mutants are KILLED in this sweep (not survivors), as is its guard at manifest.go:221. (manifest.go:299 carries no mutation operator in this sweep and is NOT cited as kill evidence.) TestValidateRejectsEachUnsafeSubBranch kills each via the Validate path independent of the declaration layer, subsuming the mutated behavior."
     },
     {
       "id": "internal/twin/manifest/declaration.go:234#37",
       "class": "R",
       "pins": "mutation_kill_test.go::TestValidateRejectsEachUnsafeSubBranch (cases \"toolchain goos invalid\", \"toolchain goarch invalid\")",
-      "justification": "REDUNDANTLY-PINNED. Declaration-layer validateToolchainValue(input.Toolchain), subsumed by Bind->Validate validateToolchainValue at manifest.go:218 -> :273. The subsuming line's mutants are KILLED in this sweep (not survivors), and TestValidateRejectsEachUnsafeSubBranch rejects an invalid toolchain through the Validate path with no declaration-layer check, subsuming the mutated behavior."
+      "justification": "REDUNDANTLY-PINNED. Declaration-layer validateToolchainValue(input.Toolchain), subsumed by the SAME function validateToolchainValue called in the Bind->Validate path at manifest.go:218, whose mutant is KILLED in this sweep (not a survivor). (The function body at manifest.go:273 carries no mutation operator in this sweep and is NOT cited as kill evidence.) TestValidateRejectsEachUnsafeSubBranch rejects an invalid toolchain through the Validate path with no declaration-layer check, subsuming the mutated behavior."
     },
     {
       "id": "internal/twin/manifest/manifest.go:382#59",
       "class": "R",
       "pins": "manifest_test.go::TestParseRejectsShapeAndCanonicality (case \"null field\")",
-      "justification": "REDUNDANTLY-PINNED. The nil-guard `err != nil || object == nil` in exactObject. A JSON null object (err==nil, nil map) is still rejected by the required-field loop at manifest.go:386-396, which returns a missing-field error, so dropping the nil guard does not change accept/reject. The required-field loop's mutants are KILLED in this sweep (not survivors), and TestParseRejectsShapeAndCanonicality (\"null field\") exercises that loop, subsuming the mutated behavior."
+      "justification": "REDUNDANTLY-PINNED. The nil-guard `err != nil || object == nil` in exactObject. A JSON null object (err==nil, nil map) is still rejected by the required-field loop at manifest.go:386-390, which returns a missing-field error on the nil map, so dropping the nil guard cannot change accept/reject. This subsumption is STRUCTURAL/argued, not mutation-witnessed: the required-field loop carries no mutation operator in this sweep, so no competing killed mutant is cited here. TestParseRejectsShapeAndCanonicality (\"null field\") exercises that loop and rejects the null object, pinning the behavior that the nil-guard mutant would otherwise reopen."
     }
   ],
   "unproven_latitude_count": 0,
   "detector_power_diagnostic": "330/330",
   "u_budget_tier": "top",
   "trusted": true,
-  "notes": "First execution-bound detector-power seed (CI-p7-detector-power-1a2b3c). All 5 survivors reclassified from the pre-taxonomy 'EQUIVALENT' label in docs/allowed-survivors.txt to R (redundantly-pinned): each is a declaration-layer input check subsumed by a tested Bind->Validate line whose own mutant is killed in this same sweep. U=0 at tier top (provisional U_BUDGET=0, owner decision 2026-11-05). execution_binding.mode=reproducible: refresh with `scripts/detector-power.sh internal/twin/manifest --refresh`."
+  "notes": "First execution-bound detector-power seed (CI-p7-detector-power-1a2b3c). All 5 survivors reclassified from the pre-taxonomy 'EQUIVALENT' label in docs/allowed-survivors.txt to R (redundantly-pinned): each is a declaration-layer/nil-guard check subsumed by a tested Bind->Validate path. Four (189#30, 192#31, 216#41, 234#37) are subsumed by a line whose own mutant is KILLED in this same sweep (manifest.go:209, :212, :305, :218 respectively); the fifth (382#59) is subsumed by the required-field loop, which carries no mutation operator in this sweep, so that one is argued structurally rather than mutation-witnessed. F1 (verdict p7-2b-detector-power-impl-review-round1-20261109) corrected three justifications that had cited lines carrying no mutant (:299, :273, the loop) as kill evidence. U=0 at tier top (provisional U_BUDGET=0, owner decision 2026-11-05). execution_binding.mode=reproducible: refresh with `scripts/detector-power.sh internal/twin/manifest --refresh`."
 }
