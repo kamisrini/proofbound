@@ -29,15 +29,26 @@ and exact next action per item:
 - **⑤ kernel-check flake (`DEF-KERNELCHECK-FLAKE-001`) — ROOT-CAUSED; do BEFORE ④.** Embedded-postgres
   **fixed-port 55432 contention**: `kernel/internal/store/store.go:177` `embeddedPort(0)` returns a
   FIXED `55432` (an intentional product contract — stable local CLI DB port — asserted by
-  `kernel/internal/store/surface_test.go:75`); `internal/migration` tests that use the default port
-  collide under back-to-back server startup (`TestImportRefusesNonEmptyLedger`: "process already
-  listening on port 55432"). Confirmed a flake — the package PASSES on isolated retry. **Fix is a
-  GOVERNED kernel change** (`kernel/*`, incl. `_test.go`) → needs an owner-approved change intent + a
-  non-author verdict, AND an owner decision on approach (recommended: give the embedded-postgres
-  *tests* a free ephemeral port instead of the default 0→55432, leaving the product's fixed-port
-  contract and `surface_test` intact; alternatives: serialize startups on a cross-process lock, or
-  change the default). **Sequence ⑤ before ④:** the twin-root sweep spins up many embedded-postgres
-  instances, so the fixed-port flake would make that heavy sweep unreliable.
+  `kernel/internal/store/surface_test.go:75`). **Approach CHOSEN by owner 2026-11-09: free ephemeral
+  port for the embedded-postgres TESTS** (leave the product fixed-port contract + `surface_test`
+  intact). **Full offender set** (open embedded postgres on default 55432 when `DATABASE_URL` empty,
+  run in parallel by `go test ./...` → mutual contention): `internal/migration` (migration_test.go
+  :145,:177), `internal/projections` (projection_test.go `testStore` :746), `internal/store`
+  (integration_test.go :28), `internal/gates` (gates_integration_test.go :28). Helper pattern:
+  `temporaryPort()` in `twin/replay.go` (listen `127.0.0.1:0`, read port, close) — unexported, so each
+  offending test package needs its own tiny copy (or export a shared one).
+  **BLOCKER — governance, owner decision needed:** the fix is a GOVERNED `kernel/*` change, and a clean
+  governed commit needs an `Intent:` trailer resolving to a change-intent record; BUT the validator
+  REJECTS empty targets (`connector/intent/intent_test.go:139`) — every CI must target a REQUIREMENT
+  OBLIGATION, and a test-infra flake fix has none. This is the SAME governed-maintenance-without-intent
+  class as `6b04f0a` (reconciled 2026-11-06, `governance/2026-11-06-governed-without-intent-reconciliation.md`);
+  the owner flagged range-level intent-trailer enforcement as a SEPARATE open design question
+  (delivery-enforce is HEAD-only by design). Owner must choose the path before ⑤ lands cleanly:
+  (a) designate/author a gate-hygiene requirement obligation for CI to target; (b) establish a
+  lightweight maintenance-intent convention; (c) land HEAD-only + a reconciliation linkage record (the
+  established-but-debt precedent). Then: implement, deterministic `make check`, non-author verdict.
+  **Sequence ⑤ before ④:** the twin-root sweep spins up many embedded-postgres instances, so the
+  fixed-port flake would make that heavy sweep unreliable.
 - **④ twin-root detector-power sweep (`DEF-P7-DP-TWINROOT-001`) — AUTHORIZED, heavy; AFTER ⑤.**
   Full-package `internal/twin` (root, embedded-postgres) mutation sweep → a reproducible-or-attested
   execution-bound record + classified survivors + a non-author verdict. Heavy compute; reliability
