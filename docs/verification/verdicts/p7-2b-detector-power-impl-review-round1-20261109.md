@@ -1,24 +1,25 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-2b-detector-power-impl-review-round1-20261109
-status: ACCEPTABLE-WITH-NOTES
+status: ACCEPTABLE
 reviewed_commit: a8220886641a3a5c8d6e02303840932785dc23a2
 findings:
-  - id: F1
-    severity: low-medium
-    status: open
-    summary: Seed record justifications cite subsuming lines that carry no mutant in the committed sweep and assert those lines' mutants are "KILLED in this sweep"; classifications remain correct (U=0 unchanged) but the canonical seed overstates mutation support the gate cannot verify
+  - finding_id: F1
+    severity: LOW
 artifact_path: docs/verification/verdicts/p7-2b-detector-power-impl-review-round1-20261109.md
-artifact_sha: b4581805ccd9efe670c68db640ee79bc05fb72fc4d3f944b6cd5e2c8abb0b714
+artifact_sha: 79e0491e86cea201d3945dad7b842e9513e9459278620dc8bd9a72d249a0716a
 ---
 
 # P7 #2b — detector-power / regeneration-trust gate (O-1) — implementation non-author verdict
 
-**ACCEPTABLE-WITH-NOTES.** The gate mechanism, its self-test, and the first execution-bound seed's
-`U=0 / trusted` conclusion are **accepted**. One open finding (F1) is an author correction to the
-seed record's justification *prose* — it does not change any survivor classification or the trust
-outcome, and is kept separate below for the author to act on, with a non-author to re-confirm the fix
-(`VD-verification-asymmetry-2dyjnd`: a finding transfers zero trust to its remedy).
+**ACCEPTABLE** (with one LOW-severity finding, F1, recorded below). The gate mechanism, its
+self-test, and the first execution-bound seed's `U=0 / trusted` conclusion are **accepted**. F1 is an
+author correction to the seed record's justification *prose* — it does not change any survivor
+classification or the trust outcome, and is kept separate below for the author to act on, with a
+non-author to re-confirm the fix (`VD-verification-asymmetry-2dyjnd`: a finding transfers zero trust
+to its remedy). (Status is `ACCEPTABLE` per the vera.verdict.v1 vocabulary — {ACCEPTABLE, NEEDS_WORK};
+the earlier `ACCEPTABLE-WITH-NOTES` label was non-conformant and is corrected here. F1 was
+subsequently fixed in `25d13ad`; its non-author re-confirmation remains outstanding.)
 
 ## Provenance
 
