@@ -6,90 +6,81 @@ As of: 2026-11-09
 
 ## Resume — 2026-11-09
 
-**Owner authorized (2026-11-09) proceeding on all five `/proofbound-next` items; all five advanced.**
-Status:
+**All five `/proofbound-next` items advanced; three non-author reviews (Law 9) completed and committed
+(`0d36784`).** `make check` is GREEN at HEAD. Status:
 
-- **① F1 (detector-power seed citations) — DONE + verdict schema corrected.** Citations fixed
-  (`25d13ad`). The round-1 verdict was ALSO corrected to conform to `vera.verdict.v1` (`9ee6c04`):
-  the reviews connector accepts status only `{ACCEPTABLE, NEEDS_WORK}` and finding fields only
-  `{finding_id, severity∈HIGH|MED|LOW, defect_commit}`; the verdict had used `ACCEPTABLE-WITH-NOTES`
-  + `id/status/summary` and was rejected by `sync`. Now status `ACCEPTABLE`, findings `[finding_id:
-  F1, severity: LOW]`, self-digest re-pinned, `p6-artifact-integrity --check` green. **Outstanding
-  (Law 9):** non-author re-confirmation of the F1 fix (I authored finding + fix).
-- **② state refresh — DONE** (this file).
-- **③ regeneration-loop SPEC (`DEF-P7-REGENLOOP-001`, BR O-2) — DRAFT 1 DONE** (`afbeb20`,
-  `docs/plans/P7-2b-regeneration-loop-spec-draft1.md`). **Outstanding:** non-author review (I authored
-  it); then owner §5 decisions; then implementation under a new change intent.
-- **⑤ kernel-check flake (`DEF-KERNELCHECK-FLAKE-001`) — IMPLEMENTED; make check GREEN + deterministic.**
-  Root cause: embedded-postgres fixed-port 55432 contention. Fix (`057bc07`, `Intent:
-  CI-flake-ephemeral-port-7d5f10`): a `freeTestPort(t)` helper (listen `:0`, mirrors
-  `twin.temporaryPort`) in the four offender packages — `internal/migration` (make-check path),
-  `internal/projections` / `internal/store` / `internal/gates` (`//go:build integration`) — passing
-  `Port: freeTestPort(t)` at each embedded-store call site. Product fixed-port contract +
-  `store/surface_test.go` untouched. Verified: migration `-count=3` clean, `go vet` clean (default +
-  `-tags integration`), **full `make check` green (0 issues), no 55432 contention**. **Outstanding
-  (Law 9):** non-author package verdict of the kernel change before it counts as accepted.
-  **Governance (owner chose recommendation (a) 2026-11-09):** authored the intent chain (`98cdeea`) —
-  `BD-self-hosted-gate-integrity-9a7c31` (accepted) → `BR-gate-integrity-4b2e08` (proposed; O-1 = the
-  gate is a deterministic witness) → `CI-flake-ephemeral-port-7d5f10` (accepted). This gives governed
-  maintenance a real intent home, closing the governed-without-intent gap for future infra fixes.
-- **④ twin-root detector-power sweep (`DEF-P7-DP-TWINROOT-001`) — now UNBLOCKED (⑤ done), AUTHORIZED,
-  heavy.** Full-package `internal/twin` (root, embedded-postgres) mutation sweep → a
-  reproducible-or-attested execution-bound record + classified survivors + a non-author verdict.
+- **① F1 (detector-power seed citations) — DONE + non-author re-confirmed.** Fix `25d13ad`; verdict
+  schema corrected `9ee6c04`; **non-author re-confirmation ACCEPTABLE**
+  (`verdicts/p7-2b-detector-power-f1-fix-reconfirm-round1-20261109.md`). F1 fully closed.
+- **② state — DONE** (this file). **③ regen-loop spec — DRAFT 1 reviewed: NEEDS_WORK.**
+  `verdicts/p7-2b-regeneration-loop-spec-review-round1-20261109.md`, 8 findings (F1 HIGH: RL-6 does
+  not block satisfy-and-reopen on a NON-ZERO budget, and a counterexample falsifying one class-U
+  "safe-to-vary" argument doesn't force re-validation of siblings; MEDs on step-2 mechanism/cost,
+  counterexample lethality, D-b false-attestation, lock-level Law-9 separation; LOWs). **Next: author
+  DRAFT 2** addressing all 8, then a non-author re-review.
+- **⑤ kernel flake fix — reviewed NEEDS_WORK → BLOCKING finding FIXED; gate GREEN; round-2
+  re-verification dispatched.** The ephemeral-port test change (`057bc07`) is correct/in-scope, but it
+  shipped a stale `@generated` route matrix (Law 1): `057bc07` touched `kernel/internal/projections`
+  and `.../gates`, which advances the derived "Code commit" pin in
+  `docs/verification/p6-event-route-matrix.md` (derived via `git log -1 -- projections cli twin
+  gates`), but it was not regenerated → `make check` RED at that HEAD. My pre-commit `make check`
+  passed only on the working tree (`git log` can't see uncommitted changes). FIXED `8700760`
+  (`scripts/p6-route-matrix.sh --write`, one-line pin refresh). Verdict committed
+  (`verdicts/p7-flake-ephemeral-port-kernel-round1-20261109.md`, NEEDS_WORK); a non-author round-2
+  re-verification of the now-green gate is dispatched (then resolve `DEF-KERNELCHECK-FLAKE-001`).
+- **④ twin-root sweep (`DEF-P7-DP-TWINROOT-001`) — unblocked, AUTHORIZED, heavy; still queued.**
 
-**⚠ NEW DISCOVERY — `delivery-enforce` / `proofbound sync` is RED on PRE-EXISTING verdicts.** `make
-check` does NOT run `delivery-enforce` (not in the `check` target), so the local gate is green, but
-`make delivery-enforce` runs `sync all`, and the reviews connector rejects many committed verdicts:
-status `ACCEPTABLE-WITH-NOTES` (×2) and `NEEDS_CHANGES` (×9) are not in `{ACCEPTABLE, NEEDS_WORK}`,
-and several carry `summary`/`verdict`/`id` finding fields the connector forbids. My own verdict is now
-conformant; the rest is a SEPARATE cleanup (not ⑤, not the intent work). Until it is done,
-`delivery-enforce` cannot fully validate the ⑤ intent binding end-to-end (it aborts at the first
-non-conforming verdict). The ⑤ intent records themselves are well-formed (they parsed; `sync` failed
-only at the reviews connector).
+**LESSON (Law 7 candidate): committing a change under `kernel/internal/{projections,cli,twin,gates}`
+re-stales `docs/verification/p6-event-route-matrix.md`** (its code-commit pin is derived via
+`git log`, which can't see uncommitted work), so a PRE-commit `make check` passes and the POST-commit
+gate is red. Always run `scripts/p6-route-matrix.sh --write` after committing such paths (precedent
+refreshes `c83c807` / `a9f244f` / this `8700760`). Seen ≥3×; the pre-commit blind spot is structural —
+a candidate for a staged-aware check or pre-commit hook.
 
-**Immediate blockers / notes (still live):**
-- Governed `kernel/*` commits carry an `Intent:` trailer; governance is enforced by
-  `delivery-enforce` (NOT `make check`). `make check` = `hooks-test commit-cadence state-freshness …
-  kernel-check` (Makefile line 3); `delivery-enforce` (sync + gates enforce) is a separate target.
-- `kernel-check` runs `go test ./... -count=1 -v` (NO `-tags integration`, no `-short`): only
-  `internal/migration` opens embedded postgres under `make check`; the other three ⑤ packages are
-  integration-tagged (delivery/CI + the ④ sweep).
-- Adding a `docs/gates.md` row forces a matching C2 census row + `p6-task1-close.sh` bump + regen of
-  `p6-census.md` + `p6-c1-c2-closure.md`.
-- `block-secrets` hook: a command naming `docs/decisions/INDEX.md` AND containing `>` is blocked.
+**Still live / discoveries:**
+- **`delivery-enforce` / `sync` is RED on PRE-EXISTING non-conforming verdicts** (status
+  `ACCEPTABLE-WITH-NOTES`/`NEEDS_CHANGES`, `summary`/`verdict`/`id` finding fields). `make check` does
+  NOT run `delivery-enforce`, so the local gate is unaffected. My own verdicts now conform (status ∈
+  {ACCEPTABLE, NEEDS_WORK}, finding fields finding_id/severity). Repo-wide verdict cleanup is a
+  SEPARATE task. See [[proofbound-make-check-vs-delivery-enforce]].
+- Governance: recommendation (a) executed — gate-integrity `BD`/`BR` + `CI-flake-ephemeral-port-7d5f10`
+  (`98cdeea`) give governed maintenance an intent home.
 
 ## Branch status
-`main`, tracking `origin/main`. Pushed through `eda55c4`. Unpushed: `9ee6c04` (verdict schema),
-`98cdeea` (intent chain), `057bc07` (⑤ kernel fix), and this state commit — push is the owner's
-closeout step. Two permanent untracked paths remain (`docs/plans/P5-intent-provenance-plan.md`,
-`kernel/cmd/p6dbprobe/`).
+`main` → `origin/main`. Pushed through (to be pushed this session: `8700760`, `0d36784`, this state
+commit — the earlier push of `4276179` left origin momentarily RED via the route-matrix slip; the
+push of `8700760` restores green). Two permanent untracked paths remain
+(`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`).
 
 ## Completed (2026-11-09)
-- Non-author verdict of the detector-power gate (O-1): `ACCEPTABLE` + finding F1 (`b8dc948`, schema
-  corrected `9ee6c04`); reviewer independently reproduced the sweep via `--refresh`.
-- F1 fix (`25d13ad`). Regen-loop spec draft 1 (`afbeb20`).
-- ⑤ flake root-caused, intent chain authored (`98cdeea`), and FIXED (`057bc07`); `make check` green.
-- Recommendation (a) executed: gate-integrity BD/BR give governed maintenance an intent home.
+- Detector-power gate (O-1) non-author verdict `ACCEPTABLE` + F1 (schema-corrected); F1 fixed AND
+  non-author re-confirmed → F1 closed.
+- Regen-loop spec draft 1 authored + non-author reviewed (NEEDS_WORK, draft 2 pending).
+- ⑤ flake fixed (`057bc07`) under the gate-integrity intent chain (`98cdeea`); route-matrix Law-1 slip
+  fixed (`8700760`); `make check` green. Three verdicts committed (`0d36784`).
 
 ## Open / deferred (see `docs/deferrals.tsv`)
-- `DEF-KERNELCHECK-FLAKE-001` OPEN — IMPLEMENTED (`057bc07`), make check green; stays open pending the
-  non-author kernel verdict (Law 9), then resolve.
-- `DEF-P7-REGENLOOP-001` OPEN — spec draft 1 done; pending non-author spec review + owner §5.
-- `DEF-P7-DP-TWINROOT-001` OPEN — now unblocked; heavy (④).
+- `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + gate green; resolve after the ⑤ round-2 non-author verdict.
+- `DEF-P7-REGENLOOP-001` OPEN — spec draft 1 reviewed NEEDS_WORK; draft 2 + re-review pending.
+- `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
 ## Unverified / residual (Law 9 — each needs a NON-author lens)
-- F1 fix re-confirmation; regen-loop spec draft review; ⑤ kernel-fix package verdict.
-- `delivery-enforce` verdict-schema cleanup (pre-existing, repo-wide) — separate task.
+- ⑤ round-2 re-verification of the now-green gate (dispatched).
+- Regen-loop spec draft 2 (after authoring) → non-author re-review.
+- `delivery-enforce` pre-existing verdict-schema cleanup (separate, repo-wide).
 
 ## Key facts
-- Toolchain: Go 1.27.3; `golangci-lint` 2.15.0 at `$(go env GOPATH)/bin`; gcc present.
-- Intent-record self-digest: zero the record's OWN (last) `"artifact_sha256"` in the whole file,
-  sha256 the file; cross-refs cascade BD→BR→CI. Verdict self-digest: zero the `artifact_sha:` line.
-- Detector-power refresh: `scripts/detector-power.sh <pkg> --refresh` re-runs the sweep and asserts it
-  reproduces `raw_sweep_sha256`; `mutants.sh` exits 1 when survivors exist (gate accepts exit <=1).
+- `make check` = Makefile `check:` target; does NOT run `delivery-enforce` (sync + gates enforce).
+  `kernel-check` = `go test ./... -count=1 -v` (no `-tags integration`).
+- Verdict schema (`vera.verdict.v1`, reviews connector): status ∈ {ACCEPTABLE, NEEDS_WORK}; finding
+  fields finding_id/severity(HIGH|MED|LOW)/defect_commit only. Self-digest: zero the `artifact_sha:`
+  line, hash; validate `scripts/p6-artifact-integrity.sh --check`. Intent-record digests: see
+  [[proofbound-intent-record-digests]].
+- Detector-power refresh: `scripts/detector-power.sh <pkg> --refresh` reproduces `raw_sweep_sha256`.
 
 ## Next session's first action
-Run `/proofbound-next`. Open, all Law-9-pending or owner-steered: (a) dispatch NON-author lenses for
-the F1 fix, the regen-loop spec, and the ⑤ kernel fix; (b) ④ twin-root sweep (now unblocked); (c) the
-`delivery-enforce` pre-existing verdict-schema cleanup. Push remains the owner's closeout step.
+Run `/proofbound-next`. Open: (a) ⑤ round-2 re-verification (dispatched) → then resolve
+`DEF-KERNELCHECK-FLAKE-001`; (b) author regen-loop spec DRAFT 2 (8 findings) → non-author re-review;
+(c) ④ twin-root sweep (unblocked, heavy); (d) `delivery-enforce` verdict-schema cleanup. Push remains
+the owner's closeout step.
