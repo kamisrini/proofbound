@@ -18,16 +18,19 @@ As of: 2026-11-09
   "safe-to-vary" argument doesn't force re-validation of siblings; MEDs on step-2 mechanism/cost,
   counterexample lethality, D-b false-attestation, lock-level Law-9 separation; LOWs). **Next: author
   DRAFT 2** addressing all 8, then a non-author re-review.
-- **⑤ kernel flake fix — reviewed NEEDS_WORK → BLOCKING finding FIXED; gate GREEN; round-2
-  re-verification dispatched.** The ephemeral-port test change (`057bc07`) is correct/in-scope, but it
+- **⑤ kernel flake fix — DONE; non-author ACCEPTED (round-2); `DEF-KERNELCHECK-FLAKE-001` fixed + accepted, stays OPEN pending owner final close.**
+  The ephemeral-port test change (`057bc07`) is correct/in-scope, but it
   shipped a stale `@generated` route matrix (Law 1): `057bc07` touched `kernel/internal/projections`
   and `.../gates`, which advances the derived "Code commit" pin in
   `docs/verification/p6-event-route-matrix.md` (derived via `git log -1 -- projections cli twin
   gates`), but it was not regenerated → `make check` RED at that HEAD. My pre-commit `make check`
   passed only on the working tree (`git log` can't see uncommitted changes). FIXED `8700760`
-  (`scripts/p6-route-matrix.sh --write`, one-line pin refresh). Verdict committed
-  (`verdicts/p7-flake-ephemeral-port-kernel-round1-20261109.md`, NEEDS_WORK); a non-author round-2
-  re-verification of the now-green gate is dispatched (then resolve `DEF-KERNELCHECK-FLAKE-001`).
+  (`scripts/p6-route-matrix.sh --write`, one-line pin refresh). Verdicts: round-1 NEEDS_WORK,
+  **round-2 ACCEPTABLE** at `caffe71` (`verdicts/p7-flake-ephemeral-port-kernel-round{1,2}-20261109.md`).
+  Deferral stays OPEN pending the owner's final close (Law 9: owner is the acceptor); non-author
+  accepted. NOTE: `scripts/tests/deferrals.test.sh` hard-codes `DEF-KERNELCHECK-FLAKE-001 OPEN
+  DEFERRED` as its `--open`-filter fixture, so the owner's close must also repoint that fixture to
+  another OPEN row (governed edit) — a brittle-test coupling worth fixing when it is closed.
 - **④ twin-root sweep (`DEF-P7-DP-TWINROOT-001`) — unblocked, AUTHORIZED, heavy; still queued.**
 
 **LESSON (Law 7 candidate): committing a change under `kernel/internal/{projections,cli,twin,gates}`
@@ -60,13 +63,12 @@ push of `8700760` restores green). Two permanent untracked paths remain
   fixed (`8700760`); `make check` green. Three verdicts committed (`0d36784`).
 
 ## Open / deferred (see `docs/deferrals.tsv`)
-- `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + gate green; resolve after the ⑤ round-2 non-author verdict.
+- `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + non-author accepted (round-1+2); awaiting owner final close.
 - `DEF-P7-REGENLOOP-001` OPEN — spec draft 1 reviewed NEEDS_WORK; draft 2 + re-review pending.
 - `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
 ## Unverified / residual (Law 9 — each needs a NON-author lens)
-- ⑤ round-2 re-verification of the now-green gate (dispatched).
 - Regen-loop spec draft 2 (after authoring) → non-author re-review.
 - `delivery-enforce` pre-existing verdict-schema cleanup (separate, repo-wide).
 
@@ -80,7 +82,6 @@ push of `8700760` restores green). Two permanent untracked paths remain
 - Detector-power refresh: `scripts/detector-power.sh <pkg> --refresh` reproduces `raw_sweep_sha256`.
 
 ## Next session's first action
-Run `/proofbound-next`. Open: (a) ⑤ round-2 re-verification (dispatched) → then resolve
-`DEF-KERNELCHECK-FLAKE-001`; (b) author regen-loop spec DRAFT 2 (8 findings) → non-author re-review;
+Run `/proofbound-next`. Open: (b) author regen-loop spec DRAFT 2 (8 findings) → non-author re-review;
 (c) ④ twin-root sweep (unblocked, heavy); (d) `delivery-enforce` verdict-schema cleanup. Push remains
 the owner's closeout step.
