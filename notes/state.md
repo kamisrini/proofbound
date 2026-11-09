@@ -18,25 +18,30 @@ and exact next action per item:
   re-confirmation of this prose fix — I authored both the finding and the fix, so it does not count
   as accepted until a non-author re-verifies. The fix is citation-accuracy only (no reclassification).
 - **② state refresh — DONE** (this file).
-- **③ regeneration-loop SPEC (`DEF-P7-REGENLOOP-001`, BR O-2) — AUTHORIZED, next action.** Both
-  resume conditions are met (detector-power gate non-author accepted + owner authorization). Exact
-  next action: author `docs/plans/P7-2b-regeneration-loop-spec-draft1.md` (a design spec in the
-  detector-power-spec mold, NOT kernel code — Law 6), building on the accepted behavior-lock planning
-  (`P7-behavior-locks-regeneration-plan-draft1.md`) and discharging the detector-power spec §7
-  dependencies: (a) the mutation-operator failure distribution must plausibly represent the
-  regenerator's failure modes; (b) the loop must not overfit/train against the measured tests. Then
-  non-author review rounds, then implementation under a NEW owner-approved change intent.
-- **④ twin-root detector-power sweep (`DEF-P7-DP-TWINROOT-001`) — AUTHORIZED, heavy.** Full-package
-  `internal/twin` (root, embedded-postgres) mutation sweep → a reproducible-or-attested execution-bound
-  record + classified survivors + a non-author verdict. Heavy compute; subject to ⑤'s flake.
-- **⑤ kernel-check flake (`DEF-KERNELCHECK-FLAKE-001`) — AUTHORIZED; ROOT-CAUSED 2026-11-09.** The
-  flake is embedded-postgres **fixed-port 55432 contention**: `kernel/internal/store/store.go:177`
-  `embeddedPort(0)` returns a FIXED `55432` (asserted by `kernel/internal/store/surface_test.go:75`);
-  `internal/migration` tests that use the default port collide under back-to-back server startup
-  (`TestImportRefusesNonEmptyLedger`: "process already listening on port 55432"). Confirmed a flake —
-  the package PASSES on isolated retry. Fix is a GOVERNED kernel change (`kernel/*`) → needs its own
-  change intent + non-author verdict; the deferral's intended remedy is to isolate/serialize the
-  offending test or give it a free ephemeral port without breaking the `surface_test` port contract.
+- **③ regeneration-loop SPEC (`DEF-P7-REGENLOOP-001`, BR O-2) — DRAFT 1 AUTHORED.**
+  `docs/plans/P7-2b-regeneration-loop-spec-draft1.md` committed `afbeb20` (design-only, Law 6). It
+  defines the repair cycle (admit counterexample as a NEW lock revision → re-measure detector power
+  on the new lock, NO inheritance → re-derive in isolation → verify against the lock → accept iff
+  budget-clear ∧ full-lock-pass ∧ isolation-attested), RL-1..RL-8, and makes the two detector-power
+  §7 circularity dependencies first-class (D-a operator representativeness, D-b no-overfitting). §5
+  owner decisions left OPEN. **Next action: a NON-AUTHOR review of this draft** (I authored it — Law 9),
+  then owner settles §5, then implementation under a NEW change intent.
+- **⑤ kernel-check flake (`DEF-KERNELCHECK-FLAKE-001`) — ROOT-CAUSED; do BEFORE ④.** Embedded-postgres
+  **fixed-port 55432 contention**: `kernel/internal/store/store.go:177` `embeddedPort(0)` returns a
+  FIXED `55432` (an intentional product contract — stable local CLI DB port — asserted by
+  `kernel/internal/store/surface_test.go:75`); `internal/migration` tests that use the default port
+  collide under back-to-back server startup (`TestImportRefusesNonEmptyLedger`: "process already
+  listening on port 55432"). Confirmed a flake — the package PASSES on isolated retry. **Fix is a
+  GOVERNED kernel change** (`kernel/*`, incl. `_test.go`) → needs an owner-approved change intent + a
+  non-author verdict, AND an owner decision on approach (recommended: give the embedded-postgres
+  *tests* a free ephemeral port instead of the default 0→55432, leaving the product's fixed-port
+  contract and `surface_test` intact; alternatives: serialize startups on a cross-process lock, or
+  change the default). **Sequence ⑤ before ④:** the twin-root sweep spins up many embedded-postgres
+  instances, so the fixed-port flake would make that heavy sweep unreliable.
+- **④ twin-root detector-power sweep (`DEF-P7-DP-TWINROOT-001`) — AUTHORIZED, heavy; AFTER ⑤.**
+  Full-package `internal/twin` (root, embedded-postgres) mutation sweep → a reproducible-or-attested
+  execution-bound record + classified survivors + a non-author verdict. Heavy compute; reliability
+  depends on ⑤.
 
 **Gate state (2026-11-09):** full `make check` at `25d13ad` passed `hooks-test` (incl.
 `detector-power.test`) + `delivery-enforce` (F1's `Intent` trailer accepted) + link/freshness; it
@@ -93,6 +98,8 @@ paths remain (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`
   the gate accepts exit <=1 and rejects a real tool error (exit 2).
 
 ## Next session's first action
-Run `/proofbound-next`, then author `docs/plans/P7-2b-regeneration-loop-spec-draft1.md` (③) unless the
-owner resequences toward ④ (twin-root sweep) or ⑤ (flake kernel fix). F1's non-author re-confirmation
-remains outstanding and can be dispatched to a non-author lens at any time.
+Run `/proofbound-next`. Open threads from 2026-11-09, all owner-authorized: (a) NON-AUTHOR review of
+the regen-loop spec draft (③, `afbeb20`); (b) ⑤ flake fix — owner picks the approach (recommended:
+free ephemeral port for the embedded-postgres tests), then scribe a change intent + implement +
+non-author verdict; (c) ④ twin-root sweep AFTER ⑤. Also outstanding: F1's non-author re-confirmation
+(Law 9), dispatchable to a non-author lens at any time.
