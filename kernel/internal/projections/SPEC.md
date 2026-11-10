@@ -48,7 +48,11 @@ connector does not ingest deployment status. Freshness is the oldest `freshness_
 
 All tables use natural keys and retain `event_id` and `seq` as proof links. No serial or wall-clock
 mutation columns are permitted. `files_touched`, `cited_decisions`, and `tool_versions` remain
-canonical JSON columns.
+canonical JSON columns. A `cited_decisions` entry is a decision-record ID in either `/proofbound-decide`
+suffix convention — a random `[a-z0-9]{6}` token (standing decision) or a `YYYY-MM-DD` date (phase
+decision, e.g. `VD-p5-intent-provenance-2026-09-10`); any other shape is malformed and fails closed
+per P-INV-7. (Admitting the date form is `CI-fix-vd-citation-9958b1`; it previously failed closed on
+this repo's own real commits.)
 
 P5 adds `business_decisions_view`, `requirements_view`, `requirement_obligations_view`,
 `change_intents_view`, `intent_targets_view`, `commit_intents_view`, `obligation_verdicts_view`, and

@@ -29,7 +29,11 @@ var (
 	hexPattern         = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	gitPattern         = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
 	emailPattern       = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
-	decisionPattern    = regexp.MustCompile(`^VD-[a-z0-9]+(?:-[a-z0-9]+)*-[a-z0-9]{6}$`)
+	// A decision citation ends in either suffix convention the /proofbound-decide skill mints: a
+	// random 6-char token ([a-z0-9]{6}) for a standing decision, or a YYYY-MM-DD date for a phase
+	// decision (e.g. VD-p5-intent-provenance-2026-09-10). The date form was previously rejected,
+	// which failed-closed the projection apply on this repo's own real commits (17/31 decisions).
+	decisionPattern    = regexp.MustCompile(`^VD-[a-z0-9]+(?:-[a-z0-9]+)*-(?:[a-z0-9]{6}|[0-9]{4}-[0-9]{2}-[0-9]{2})$`)
 	makeCommandPattern = regexp.MustCompile(`^make [A-Za-z][A-Za-z0-9_-]*$`)
 )
 
