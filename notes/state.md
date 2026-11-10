@@ -7,15 +7,21 @@ As of: 2026-11-10
 ## Resume — 2026-11-10
 
 **Exact next action:** nothing is mid-flight — everything is committed and `make check` is GREEN.
-This session drew the **Release 1 / Release 2 line** and closed the kernel-check flake. Run
-`/proofbound-next` to pick the next AUTHORIZED task. The open R1 wrap-up items (see
-[`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)) are, in order: **R1-2** clean-clone proof (fresh
-clone builds + `make check` green on a clean machine — the literal "usable by someone else" bar);
-**R1-3** `DEF-ROUTE-MATRIX-PRECOMMIT` (staged-aware derived-pin freshness); **R1-4**
-`DEF-DELIVERY-ENFORCE-VERDICTS` (repo-wide verdict-schema cleanup — recommended-in but owner-optional).
-Owner-steered continuations also remain: `DEF-P7-REGENLOOP-001` full loop (step 3/4, reopens the §5.1
-regenerator-boundary decision) and `DEF-P7-DP-TWINROOT-001` twin-root sweep.
+Active push: **make Release 1 (the Trust Record) usable on a real project** (owner, 2026-11-10),
+under standing authorization [[proofbound-decision-commits-need-intent]] /
+`VD-agent-standing-authorization-5ouz7q`. **Proven live this session:** the binary builds (CGO off,
+no gcc/Java/docker), `proofbound sync git` ingests this repo (596 commits, idempotent), and after a
+blocker fix `proofbound report week` renders the weekly proof view (85 commits, exit 0). Next
+Release-1-usability steps, in priority order: **(1)** probe the rest of the live surface for more
+real-data blockers (`verify`, `report github`, `intent check`, `gates enforce`) — self-hosting is the
+acceptance test (`BD-self-hosting-correctness-11bcf2`); **(2)** refresh the stale `README.md` (it
+still says "not product-ready / P6-complete / P7-planning, as of 2026-09-22" — the literal front door)
++ write a real end-user quickstart (set `DATABASE_URL` OR embedded dev-mode; `sync` → `report`);
+**(3)** R1-2 clean-clone proof; **(4)** R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`; **(5)** R1-4
+`DEF-DELIVERY-ENFORCE-VERDICTS` (owner-optional). See [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md).
 **Immediate blockers:** none. `make check` green; push this session's commits as the closeout step.
+**Pending non-author verdict (Law 9):** `internal/projections` on the `CI-fix-vd-citation-9958b1`
+revision (+ calibrated mutation sweep) before that fix counts as accepted.
 
 **One open governance follow-up:** `BR-release-line-governance-7ff96f` is `proposed` — it goes
 `active` only after a non-author requirement review (`scripts/p6-task5-review.sh`). Normal lifecycle
@@ -24,6 +30,18 @@ regenerator-boundary decision) and `DEF-P7-DP-TWINROOT-001` twin-root sweep.
 
 ## This session (2026-11-10, continued)
 
+- **Release 1 proven to RUN on real data + first real-data blocker FIXED.** Built the `proofbound`
+  binary (pure Go, CGO off — the toolchain gap only blocks the embedded-PG-from-source/B1 path, not
+  the Flight Recorder). Live-ran against this repo (embedded PG fallback when `DATABASE_URL` unset):
+  `sync git` = listed 596 / appended 19 / existing 577 (idempotency proven). `report week` first
+  CRASHED (`invalid cited_decisions`): the commit projection's `decisionPattern` only accepted the
+  6-char VD suffix, rejecting all 17/31 date-suffixed `VD-*` decisions, failing the projection apply
+  closed. **FIXED** (`CI-fix-vd-citation-9958b1` under `BD-self-hosting-correctness-11bcf2` →
+  `BR-self-hosting-correctness-4607a3` O-1): broadened `decisionPattern` to accept the `YYYY-MM-DD`
+  form + a NON-integration-tagged regression test (`citation_test.go`, so it runs in `make check` —
+  the old commit-validation tests were integration-tagged and skipped by the gate) + SPEC §3 note.
+  Re-ran live: `report week` exits 0, renders 85 commits with proof. Commit + route-matrix refresh
+  follow-up. `make check` green. **Needs a non-author `internal/projections` verdict (Law 9).**
 - **Release line drawn (owner decision).** `VD-release-line-kwdh4v`: **Release 1 = "the Trust Record"**
   (P1 Flight Recorder + P2 gates-as-data + P3 GitHub connector + P5 intent provenance + P7 B1 behavior
   locks/runtime replay — records + verifies, run against a user-supplied Postgres); **Release 2** = the
