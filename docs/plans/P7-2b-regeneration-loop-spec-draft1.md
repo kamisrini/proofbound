@@ -202,25 +202,35 @@ Law 3). It is specified now only so a future non-zero-budget extension cannot re
 |---|---|
 | RL-12 | **Class-U falsification propagation:** a counterexample that falsifies one class-U "safe-to-vary" justification revokes every sibling budgeted-U justification on that lock; each must be re-argued before `L@r+1` is regeneration-trusted. (Proving test deferred to the extension that introduces a non-zero budget.) |
 
-## 5. Decisions required from the owner (OPEN)
-1. **Regenerator boundary.** What performs re-derivation (a model-driven generator, a bounded
-   transform, a human-in-the-loop), and what its D-b isolation attestation must contain and who
-   (non-author) checks it.
-2. **Representativeness bar (D-a).** The initial standard and who owns the nightly calibration;
-   confirm the genesis bounded-advisory default (F8).
-3. **First-slice scope.** Confirm the `U=0`-only slice and the subject (the `ReplayIsolated` behavior
-   lock on the repo-native ledger feed), and whether draft-2 implements the full loop or only the
-   **gate** (steps 1–2 + 5 authorize/deny) with re-derivation left manual.
-4. **Halting policy.** On an under-powered `L@r+1` (step 2 fail), confirm the remedy is authored
-   lock-strengthening and the loop records the halt as evidence (no silent retry).
-5. **Counterexample-lethality standard (RL-9).** What constitutes an acceptable demonstration that `X`
-   fails on the pre-repair impl (a failing replay proof? a reproduced property violation?).
-6. **Per-cycle cost acceptance.** Confirm that for slow subjects each repair cycle carries a DP-8
-   attested out-of-band sweep with an independent re-runner (§2 step 2), and who provides it.
-7. **Actor-identity basis (CL-1).** What identity the RL-10 roles (lock author, regenerator, verdict
-   reviewer) are recorded against — human, agent session, or signing identity — and how distinctness
-   is attested (O-1 CL-1 precedent: a named identity in the verdict/attestation files). Until settled,
-   RL-10/RL-5/RL-7 distinctness is a declared Law-4 limitation (RL-8), not an airtight control.
+## 5. Decisions — SETTLED by the owner 2026-11-09
+Owner authorization 2026-11-09 ("I want it now", accepting the gate-only-first-slice + defaults
+recommendation). Carried into the change intent
+[`CI-regen-loop-gate-1a2b3c`](../intent/records/change-intents/CI-regen-loop-gate-1a2b3c/0001.md)
+(targets `BR-regeneration-trust-5f8a03` O-2).
+3. **First-slice scope — GATE-ONLY.** Implement **only the gate** (steps 1–2 + 5: admit a lethal
+   counterexample as `L@r+1`, verify `L@r+1`'s detector-power evidence clears `U=0`, and AUTHORIZE or
+   DENY regeneration) with re-derivation (step 3) and candidate verification (step 4) left **manual /
+   out of gate**. Subject: the `ReplayIsolated` behavior lock (`manifest.BehaviorLock`) on the
+   repo-native ledger feed, `U=0` tier.
+1. **Regenerator boundary — DEFERRED** (moot in the gate-only slice: re-derivation is out of gate;
+   §5.1 is reopened only when the full loop / step 3 is scoped).
+2. **Representativeness bar (D-a) — genesis bounded-advisory default accepted** (F8); the evidence arm
+   opens as the loop accumulates observed regenerator failures; calibration owner deferred with step 3.
+4. **Halting policy — accepted:** on an under-powered `L@r+1` the gate DENIES and records the halt as
+   evidence; the remedy is authored lock-strengthening (O-1 §7); no silent retry.
+5. **Counterexample-lethality (RL-9) — a reproduced violation:** `X` is lethal iff it is demonstrated
+   to make the pre-repair implementation fail — in this subject, a `vera.replay.v1` evaluation that
+   yields the prohibited outcome (or a reproduced property violation), recorded in the admission
+   evidence.
+6. **Per-cycle cost — accepted:** for slow subjects (`internal/twin`) each cycle's `L@r+1` detector-
+   power evidence is DP-8 **attested** (out-of-band sweep + named non-author re-runner + unexpired
+   Law-4 advisory). The named re-runner is supplied per cycle at use time (recorded in the record).
+7. **Actor-identity basis (CL-1) — named recorded identities.** The RL-10 roles (lock author,
+   regenerator, verdict reviewer) are each a **named identity recorded in the gate's inputs /
+   attestation files** (O-1 CL-1 precedent). In the gate-only slice the regenerator role is the manual
+   re-deriver named in the admission evidence; distinctness among the named identities is enforced by
+   the gate, and the single-operator collapse risk is a declared Law-4 limitation (RL-8) until a
+   cryptographic signing identity is adopted.
 
 ## 6. Non-goals (this piece)
 - **No non-zero-`U_BUDGET` loop.** This slice gates on `U = 0`; regeneration against a budgeted

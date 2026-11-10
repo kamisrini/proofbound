@@ -69,8 +69,12 @@ push of `8700760` restores green). Two permanent untracked paths remain
 
 ## Open / deferred (see `docs/deferrals.tsv`)
 - `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + non-author accepted (round-1+2); awaiting owner final close.
-- `DEF-P7-REGENLOOP-001` OPEN — spec DRAFT 2 ACCEPTED (round-2, + CL-1..CL-3); awaiting owner §5
-  decisions, then a new change intent + spec-first implementation + non-author package verdict.
+- `DEF-P7-REGENLOOP-001` OPEN — spec ACCEPTED; §5 SETTLED (owner 2026-11-09: gate-only first slice +
+  defaults); change intent `CI-regen-loop-gate-1a2b3c` (accepted, targets BR O-2) scribed.
+  **IMPLEMENTATION IN PROGRESS: the gate-only shell gate + self-test** (RL-1/2/4/5/8/9/10/11; reuses
+  `scripts/detector-power.sh` for RL-2; AUTHORIZE/DENY, fail-closed). Still needs: build the gate +
+  load-bearing self-test, a `docs/gates.md` advisory row + census coupling, `make check` green, and a
+  non-author package verdict (Law 9). Regenerator (step 3) + full loop remain out of scope.
 - `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
