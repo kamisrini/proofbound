@@ -2,24 +2,24 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-09
+As of: 2026-11-10
 
-## Resume — 2026-11-09
+## Resume — 2026-11-10
 
-**Exact next action:** nothing is mid-flight — all of today's work is committed, pushed, and `make
-check` is GREEN at HEAD (`e6e9e2d`). Run `/proofbound-next` to pick the next AUTHORIZED task. The
-natural continuations, all owner-steered (every item below is a `status=OPEN` deferral — dormant until
-the owner names it): **(a)** the regen-gate `docs/gates.md` advisory registration (the one CI-scope
-follow-up; 5-file census cascade, recipe in the `DEF-P7-REGENLOOP-001` row + below) then owner final
-acceptance of the gate; **(b)** owner's final close of `DEF-KERNELCHECK-FLAKE-001` (also repoint the
-`deferrals.test.sh` fixture); **(c)** `DEF-P7-DP-TWINROOT-001` twin-root sweep; **(d)**
-`DEF-DELIVERY-ENFORCE-VERDICTS` repo-wide verdict-schema cleanup; **(e)** the regen-loop full loop
-(step 3/4), which reopens the §5.1 regenerator-boundary decision.
+**Exact next action:** nothing is mid-flight — everything is committed, pushed, and `make check` is
+GREEN at HEAD (`e6df2a9`). Run `/proofbound-next` to pick the next AUTHORIZED task. The **O-2
+regeneration-gate (gate-only slice) is now FULLY CI-COMPLETE**: built + non-author accepted +
+`docs/gates.md`-registered (`e6df2a9`, 2026-11-10). Remaining continuations, all owner-steered (each
+is a `status=OPEN` deferral — dormant until the owner names it): **(a)** owner's **final acceptance**
+of the regen-gate (then advance `DEF-P7-REGENLOOP-001`) and/or the **full loop** step 3/4 (reopens the
+§5.1 regenerator-boundary decision); **(b)** owner's final close of `DEF-KERNELCHECK-FLAKE-001` (also
+repoint the `deferrals.test.sh` fixture); **(c)** `DEF-P7-DP-TWINROOT-001` twin-root sweep; **(d)**
+`DEF-DELIVERY-ENFORCE-VERDICTS` repo-wide verdict-schema cleanup.
 **Immediate blockers:** none. `make check` green; origin up to date.
 
-**Background (today, 2026-11-09):** all five `/proofbound-next` items advanced; six non-author
-verdicts landed; the O-2 regeneration-gate (gate-only slice) was implemented and non-author accepted.
-Status detail:
+**Background (2026-11-09 + 2026-11-10):** 2026-11-09 advanced all five `/proofbound-next` items (six
+non-author verdicts; O-2 gate-only slice implemented + accepted); 2026-11-10 registered the gate as a
+`gates.md` advisory (CI scope complete). Status detail:
 
 - **① F1 (detector-power seed citations) — DONE + non-author re-confirmed.** Fix `25d13ad`; verdict
   schema corrected `9ee6c04`; **non-author re-confirmation ACCEPTABLE**
@@ -86,15 +86,12 @@ push of `8700760` restores green). Two permanent untracked paths remain
   ACCEPTED (round-1):** `scripts/regen-gate.sh` + `scripts/tests/regen-gate.test.sh` (RL-1/2/4/5/8/9/10/11,
   AUTHORIZE/DENY, fail-closed; reuses `scripts/detector-power.sh` for RL-2), committed `635afd3`,
   hardened `a785420` (round-1 verdict findings: RL-11 D-b-leg control, RL-2 split, JSON pre-validation).
-  Verdict `verdicts/p7-2b-regen-gate-impl-round1-20261109.md` ACCEPTABLE. `make check` green.
-  **ONE CI-scope follow-up remains: the `docs/gates.md` advisory row + census coupling** (RL-8 standing
-  advisory). Recipe (a 5-file cascade; careful — `p6-census.md` carries a commit-pin like the route
-  matrix): (1) add a `gates.md` row [Check|Tier(ADVISORY …)|Enforced by|Self-test|Expiry (ISO + `Owner:`)]
-  naming `scripts/regen-gate.sh`; (2) add `C2-043` to `docs/plans/p6-census-rows.tsv`
-  (`gate-row:<exact Check cell>`, `path:scripts/regen-gate.sh`, files `scripts/regen-gate.sh,scripts/tests/regen-gate.test.sh`);
-  (3) bump `scripts/p6-task1-close.sh` `-eq 42`→43 and `seq 1 42`→43; (4) `scripts/p6-census.sh --write`
-  + `scripts/p6-task1-close.sh --write`; (5) `make check`. Regenerator (step 3) + full loop remain
-  out of scope (future CI). Owner is the final acceptor.
+  Verdict `verdicts/p7-2b-regen-gate-impl-round1-20261109.md` ACCEPTABLE. **gates.md advisory
+  registration DONE 2026-11-10 (`e6df2a9`):** `docs/gates.md` ADVISORY row (Owner + 2026-12-31 expiry)
+  + `C2-043` census coupling + `p6-task1-close.sh` estate bumps (C2 42→43, gate rows 34→35) + regenerated
+  `p6-census.md`/`p6-c1-c2-closure.md`. `make check` green. **Gate-only slice is now FULLY CI-COMPLETE.**
+  REMAINING: owner's **final acceptance** of the gate, and the **full loop** (step 3 regenerator /
+  step 4 candidate verification), which reopens the §5.1 regenerator-boundary decision (future CI).
 - `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
