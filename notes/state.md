@@ -69,12 +69,20 @@ push of `8700760` restores green). Two permanent untracked paths remain
 
 ## Open / deferred (see `docs/deferrals.tsv`)
 - `DEF-KERNELCHECK-FLAKE-001` OPEN — fixed + non-author accepted (round-1+2); awaiting owner final close.
-- `DEF-P7-REGENLOOP-001` OPEN — spec ACCEPTED; §5 SETTLED (owner 2026-11-09: gate-only first slice +
-  defaults); change intent `CI-regen-loop-gate-1a2b3c` (accepted, targets BR O-2) scribed.
-  **IMPLEMENTATION IN PROGRESS: the gate-only shell gate + self-test** (RL-1/2/4/5/8/9/10/11; reuses
-  `scripts/detector-power.sh` for RL-2; AUTHORIZE/DENY, fail-closed). Still needs: build the gate +
-  load-bearing self-test, a `docs/gates.md` advisory row + census coupling, `make check` green, and a
-  non-author package verdict (Law 9). Regenerator (step 3) + full loop remain out of scope.
+- `DEF-P7-REGENLOOP-001` OPEN — spec ACCEPTED; §5 owner-accepted (gate-only + defaults); CI
+  `CI-regen-loop-gate-1a2b3c` accepted (targets BR O-2). **Gate-only slice IMPLEMENTED + non-author
+  ACCEPTED (round-1):** `scripts/regen-gate.sh` + `scripts/tests/regen-gate.test.sh` (RL-1/2/4/5/8/9/10/11,
+  AUTHORIZE/DENY, fail-closed; reuses `scripts/detector-power.sh` for RL-2), committed `635afd3`,
+  hardened `a785420` (round-1 verdict findings: RL-11 D-b-leg control, RL-2 split, JSON pre-validation).
+  Verdict `verdicts/p7-2b-regen-gate-impl-round1-20261109.md` ACCEPTABLE. `make check` green.
+  **ONE CI-scope follow-up remains: the `docs/gates.md` advisory row + census coupling** (RL-8 standing
+  advisory). Recipe (a 5-file cascade; careful — `p6-census.md` carries a commit-pin like the route
+  matrix): (1) add a `gates.md` row [Check|Tier(ADVISORY …)|Enforced by|Self-test|Expiry (ISO + `Owner:`)]
+  naming `scripts/regen-gate.sh`; (2) add `C2-043` to `docs/plans/p6-census-rows.tsv`
+  (`gate-row:<exact Check cell>`, `path:scripts/regen-gate.sh`, files `scripts/regen-gate.sh,scripts/tests/regen-gate.test.sh`);
+  (3) bump `scripts/p6-task1-close.sh` `-eq 42`→43 and `seq 1 42`→43; (4) `scripts/p6-census.sh --write`
+  + `scripts/p6-task1-close.sh --write`; (5) `make check`. Regenerator (step 3) + full loop remain
+  out of scope (future CI). Owner is the final acceptor.
 - `DEF-P7-DP-TWINROOT-001` OPEN — unblocked; heavy (④).
 - `DEF-P7-001`/`-002`/`-003`/`DEF-METATAX-001` RESOLVED.
 
@@ -92,6 +100,8 @@ push of `8700760` restores green). Two permanent untracked paths remain
 - Detector-power refresh: `scripts/detector-power.sh <pkg> --refresh` reproduces `raw_sweep_sha256`.
 
 ## Next session's first action
-Run `/proofbound-next`. Open: (b) regen-loop spec — owner settles §5 (incl. §5.7 actor-identity), then new change intent + implementation;
+Run `/proofbound-next`. Open: (b) regen-gate — the `docs/gates.md` advisory registration cascade
+(recipe in the DEF-P7-REGENLOOP-001 row above), then owner final acceptance; the full loop (step 3/4)
+is a future CI;
 (c) ④ twin-root sweep (unblocked, heavy); (d) `delivery-enforce` verdict-schema cleanup. Push remains
 the owner's closeout step.
