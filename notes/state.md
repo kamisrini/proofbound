@@ -6,8 +6,20 @@ As of: 2026-11-09
 
 ## Resume — 2026-11-09
 
-**All five `/proofbound-next` items advanced; three non-author reviews (Law 9) completed and committed
-(`0d36784`).** `make check` is GREEN at HEAD. Status:
+**Exact next action:** nothing is mid-flight — all of today's work is committed, pushed, and `make
+check` is GREEN at HEAD (`e6e9e2d`). Run `/proofbound-next` to pick the next AUTHORIZED task. The
+natural continuations, all owner-steered (every item below is a `status=OPEN` deferral — dormant until
+the owner names it): **(a)** the regen-gate `docs/gates.md` advisory registration (the one CI-scope
+follow-up; 5-file census cascade, recipe in the `DEF-P7-REGENLOOP-001` row + below) then owner final
+acceptance of the gate; **(b)** owner's final close of `DEF-KERNELCHECK-FLAKE-001` (also repoint the
+`deferrals.test.sh` fixture); **(c)** `DEF-P7-DP-TWINROOT-001` twin-root sweep; **(d)**
+`DEF-DELIVERY-ENFORCE-VERDICTS` repo-wide verdict-schema cleanup; **(e)** the regen-loop full loop
+(step 3/4), which reopens the §5.1 regenerator-boundary decision.
+**Immediate blockers:** none. `make check` green; origin up to date.
+
+**Background (today, 2026-11-09):** all five `/proofbound-next` items advanced; six non-author
+verdicts landed; the O-2 regeneration-gate (gate-only slice) was implemented and non-author accepted.
+Status detail:
 
 - **① F1 (detector-power seed citations) — DONE + non-author re-confirmed.** Fix `25d13ad`; verdict
   schema corrected `9ee6c04`; **non-author re-confirmation ACCEPTABLE**
