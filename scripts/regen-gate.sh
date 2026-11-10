@@ -49,6 +49,8 @@ done
 jq -e . "$lr" >/dev/null 2>&1 || die_deny "L@r is not valid JSON"
 jq -e . "$lr1" >/dev/null 2>&1 || die_deny "L@r+1 is not valid JSON"
 jq -e . "$admission" >/dev/null 2>&1 || die_deny "admission is not valid JSON"
+jq -e . "$dp_record" >/dev/null 2>&1 || die_deny "detector-power record is not valid JSON"
+jq -e . "$db" >/dev/null 2>&1 || die_deny "D-b attestation is not valid JSON"
 
 # --- lock digests (BehaviorLockDigest = sha256 of the canonical lock bytes; the committed file IS canonical) ---
 lr_digest=$(sha256sum "$lr" | awk '{print $1}')

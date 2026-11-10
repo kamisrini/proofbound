@@ -58,6 +58,7 @@ reject "RL-1:" "L@r+1.parent not BehaviorLockDigest(L@r)"  --lr1 "$tmp/badparent
 # ---- RL-11: digest identity across evidence -------------------------------------------------------
 reject "RL-11:" "admission names a different L@r+1 digest"  --admission "$(mutate "$tmp/admission.json" '.lock_revision_digest="feedface"')"
 reject "RL-11:" "detector-power record names a different L@r+1 digest"  --dp-record "$(mutate "$tmp/dp.json" '.lock_revision_digest="feedface"')"
+reject "RL-11:" "D-b attestation names a different L@r+1 digest"  --db "$(mutate "$tmp/db.json" '.lock_revision_digest="feedface"')"
 
 # ---- RL-9: counterexample lethality ---------------------------------------------------------------
 reject "RL-9:" "no reproduced violation (X not shown lethal)"  --admission "$(mutate "$tmp/admission.json" 'del(.counterexample.reproduced_violation)')"
@@ -77,7 +78,9 @@ reject "RL-5:" "D-b checked_by == regenerator (self-attestation)"  --db "$(mutat
 reject "RL-8:" "declared limitations absent"  --db "$(mutate "$tmp/db.json" 'del(.declared_limitations)')"
 
 # ---- RL-2: L@r+1 detector power + no inheritance --------------------------------------------------
-reject "RL-2:" "L@r+1 not U=0"  --dp-cmd "printf 'K=9 U=1 trusted=false\\n'"
+# Split so the U=0 grep and the trusted=true grep are each isolated (neither masks the other).
+reject "RL-2:" "L@r+1 U!=0 though trusted claimed"  --dp-cmd "printf 'K=9 U=1 trusted=true\\n'"
+reject "RL-2:" "L@r+1 not trusted though U=0 claimed"  --dp-cmd "printf 'K=330 U=0 trusted=false\\n'"
 reject "RL-2:" "detector-power verification failed (non-zero exit)"  --dp-cmd "false"
 reject "RL-2:" "inherits L@r's swept commit (no re-measurement)"  --dp-record "$(mutate "$tmp/dp.json" '.swept_at_commit="0000000000000000000000000000000000000001"')"
 
