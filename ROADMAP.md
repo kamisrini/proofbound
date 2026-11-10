@@ -271,4 +271,11 @@ portable warranties, and the 2029 self-hosting milestone) is sequenced in
 [product-completion-plan-2026-11-05.md](docs/plans/product-completion-plan-2026-11-05.md), with each
 item's gate and the release/hardening gaps. The recommended next step is #2b, spec-first.
 
+**Release line (2026-11-10, VD-release-line-kwdh4v).** The owner drew a two-release line over the
+phase record: **Release 1 = "the Trust Record"** (P1–P3 + P5 + P7 B1 — records + verifies, run against
+a user-supplied Postgres), with a fixed usability wrap-up set; **Release 2** = the revenue organs (#2b
+full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB redistribution. The
+maintained scope split and R1 wrap-up checklist are in
+[RELEASE-PLAN.md](docs/plans/RELEASE-PLAN.md).
+
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

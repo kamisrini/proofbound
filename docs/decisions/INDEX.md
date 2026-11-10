@@ -25,6 +25,7 @@
 - [VD-p7-readiness-manifest-2026-10-17: case/evidence manifest shape](VD-p7-readiness-manifest-2026-10-17.md) — ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19; (2026-10-17)
 - [VD-p7-replay-lock-companion-api-boundary-2026-10-23: VD-p7-replay-lock-companion-api-boundary-2026-10-23](VD-p7-replay-lock-companion-api-boundary-2026-10-23.md) — OWNER-ACCEPTED DOCUMENTARY RECOMMENDATION; not an accepted live API decision. (undated)
 - [VD-p7-snapshot-provider-skip-2026-10-01: retain the conditional snapshot-provider skip](VD-p7-snapshot-provider-skip-2026-10-01.md) — Accepted (2026-10-01)
+- [VD-release-line-kwdh4v: Release 1 is the Trust Record; the revenue organs are Release 2](VD-release-line-kwdh4v.md) — Accepted (2026-11-10)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
 - [VD-review-ceremony-tiers-v2b6kp: review ceremony is tiered by package class, and the parallel round comes EARLY](VD-review-ceremony-tiers-v2b6kp.md) — Accepted (2026-08-10)
 - [VD-stack-go-fid9mi: Go all the way — kernel, CLI, connectors](VD-stack-go-fid9mi.md) — Accepted (2026-08-07)
