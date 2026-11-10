@@ -4,7 +4,7 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 1 and `docs/plans/p6-task1-mechanisms-SPEC.md`.
 
-The checker resolved the exact 35-row C1 and 42-row C2 universes. Gate-registry audit: 34 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
+The checker resolved the exact 35-row C1 and 42-row C2 universes. Gate-registry audit: 35 rows, each with a valid tier, enforcing mechanism, nonempty self-test, and, for every advisory, an unexpired ISO date and owner. Strict identity inventory: zero live external aliases.
 
 | Row | Probe | Exit | Evidence |
 |---|---|---:|---|
@@ -85,5 +85,6 @@ The checker resolved the exact 35-row C1 and 42-row C2 universes. Gate-registry 
 | C2-040 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C2-041 | `tracked gate path named exactly in registry` | 0 | docs/verification/p6-c1-c2-closure.md |
 | C2-042 | `path:scripts/detector-power.sh` | 0 | scripts/detector-power.sh,scripts/tests/detector-power.test.sh |
+| C2-043 | `path:scripts/regen-gate.sh` | 0 | scripts/regen-gate.sh,scripts/tests/regen-gate.test.sh |
 
 Acceptance commands: `scripts/p6-task1-close.sh --check`, `scripts/p6-census.sh --check`, and bare `make check`.

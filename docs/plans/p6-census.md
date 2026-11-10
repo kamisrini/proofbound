@@ -2,8 +2,8 @@
 # P6 debt census
 
 Generation input commit: `13503c7c96bad63ce1b95405ee8a83f09ccdab5a`.
-Counts: total=329 open=0 closed=329 unclassified=0.
-Categories: C1=35 C2=42 C3=18 C4=12 C5=52 C6=149 C7=16 C8=5.
+Counts: total=330 open=0 closed=330 unclassified=0.
+Categories: C1=35 C2=43 C3=18 C4=12 C5=52 C6=149 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -84,6 +84,7 @@ Categories: C1=35 C2=42 C3=18 C4=12 C5=52 C6=149 C7=16 C8=5.
 | C2-040 | C2 | undocumented-gate:gates/intent-verdict-integrity.yaml | A tracked gate definition is not named by exact path in docs/gates.md. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C2-041 | C2 | undocumented-gate:gates/make-check-success.yaml | A tracked gate definition is not named by exact path in docs/gates.md. | artifact:docs/verification/p6-c1-c2-closure.md | closed | close-in-P6 | — | docs/verification/p6-c1-c2-closure.md |
 | C2-042 | C2 | gate-row:Detector power / regeneration-trust (class-U count over committed sweep evidence) | P7 #2b advisory gate row (CI-p7-detector-power-1a2b3c); the shell gate and its self-test exist and the gates.md row carries owner + ISO expiry (Law 4). | path:scripts/detector-power.sh | closed | close-in-P6 | — | scripts/detector-power.sh,scripts/tests/detector-power.test.sh |
+| C2-043 | C2 | gate-row:Regeneration-as-repair gate (AUTHORIZE/DENY over committed L@r+1 evidence) | P7 #2b O-2 gate-only advisory gate row (CI-regen-loop-gate-1a2b3c); the shell gate and its self-test exist and the gates.md row carries owner + ISO expiry (Law 4). | path:scripts/regen-gate.sh | closed | close-in-P6 | — | scripts/regen-gate.sh,scripts/tests/regen-gate.test.sh |
 | C3-001 | C3 | package:internal/cli | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/cli | closed | close-in-P6 | — | docs/verification/p6-task8-package-results-e4c8e77.tsv,docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md |
 | C3-002 | C3 | package:internal/connector/checks | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/connector/checks | closed | close-in-P6 | — | docs/verification/p6-task8-package-results-e4c8e77.tsv,docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md |
 | C3-003 | C3 | package:internal/connector/git | Current production package needs final-commit tree binding, calibrated mutation evidence, and non-author acceptance. | acceptance:internal/connector/git | closed | close-in-P6 | — | docs/verification/p6-task8-package-results-e4c8e77.tsv,docs/verification/verdicts/p6-task8-current-round1-e4c8e77.md |

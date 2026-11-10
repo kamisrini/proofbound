@@ -19,9 +19,9 @@ target() { awk -F: -v name="$1" '$1 == name { found=1 } END { exit !found }' "$r
 mapfile -t c1 < <(awk -F '\t' '$2 == "C1" { print $1 }' "$rows")
 mapfile -t c2 < <(awk -F '\t' '$2 == "C2" { print $1 }' "$rows")
 [[ ${#c1[@]} -eq 35 ]] || die "expected 35 C1 rows, got ${#c1[@]}"
-[[ ${#c2[@]} -eq 42 ]] || die "expected 42 C2 rows, got ${#c2[@]}"
+[[ ${#c2[@]} -eq 43 ]] || die "expected 43 C2 rows, got ${#c2[@]}"
 for n in $(seq 1 35); do printf -v id 'C1-%03d' "$n"; [[ " ${c1[*]} " == *" $id "* ]] || die "missing $id"; done
-for n in $(seq 1 42); do printf -v id 'C2-%03d' "$n"; [[ " ${c2[*]} " == *" $id "* ]] || die "missing $id"; done
+for n in $(seq 1 43); do printf -v id 'C2-%03d' "$n"; [[ " ${c2[*]} " == *" $id "* ]] || die "missing $id"; done
 
 has "$repo/README.md" 'Current project status: P6 complete; P7 planning only.'
 for name in check-witnessed verify gates-canary gates-enforce invariants-lock identity-inventory mutants; do
@@ -58,7 +58,7 @@ done < <(awk -F '|' '
   }
   in_table { exit }
 ' "$repo/docs/gates.md")
-[[ $gate_count -eq 34 ]] || die "expected 34 gate rows, got $gate_count"
+[[ $gate_count -eq 35 ]] || die "expected 35 gate rows, got $gate_count"
 
 while IFS= read -r path; do
   [[ -e $repo/$path ]] || die "gate registry path does not resolve: $path"
