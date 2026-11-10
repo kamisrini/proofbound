@@ -7,11 +7,14 @@ cd "$(git rev-parse --show-toplevel)"
 # to the pipeline's exit. The `out=$(...)` assignment still fails the test under
 # set -e if the producer errors, so producer-exit-status coverage is preserved.
 out=$(scripts/deferrals.sh --check); grep -Fq 'deferrals: PASS' <<<"$out"
-# DEF-P7-001 was RESOLVED 2026-11-05 (owner go/no-go, VD-p7-def001-resolve-2026-11-05), so it is no
-# longer an OPEN/BLOCKED row. The live OPEN rows are DEF-KERNELCHECK-FLAKE-001 (DEFERRED) and
-# DEF-P7-REGENLOOP-001 (PENDING_PREREQUISITE); assert the lister/filter against a current OPEN row.
-out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-KERNELCHECK-FLAKE-001\tOPEN\tDEFERRED' <<<"$out"
-out=$(scripts/deferrals.sh --hold-type DEFERRED); grep -Fq 'DEF-KERNELCHECK-FLAKE-001' <<<"$out"
+# DEF-KERNELCHECK-FLAKE-001 was RESOLVED 2026-11-10 (owner final close, Intent
+# CI-flake-ephemeral-port-7d5f10), so the fixture was repointed off it to another current OPEN row.
+# DEF-P7-DP-TWINROOT-001 (DEFERRED) is a heavy, long-queued OPEN row chosen to minimise future fixture
+# churn; assert the lister/filter against it. (This hard-coded coupling is the brittle-test class
+# tracked by DEF-ROUTE-MATRIX-PRECOMMIT's peer note — when it next needs repointing, prefer a
+# row-agnostic assertion.)
+out=$(scripts/deferrals.sh --open); grep -Fq $'DEF-P7-DP-TWINROOT-001\tOPEN\tDEFERRED' <<<"$out"
+out=$(scripts/deferrals.sh --hold-type DEFERRED); grep -Fq 'DEF-P7-DP-TWINROOT-001' <<<"$out"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
