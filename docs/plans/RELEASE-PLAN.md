@@ -24,9 +24,9 @@ R1*. Update it as R1 wrap-up items close.
 | # | Item | Effort | Status | In R1? |
 |---|---|---|---|---|
 | R1-1 | `DEF-KERNELCHECK-FLAKE-001` — flaky embedded-postgres test | ~0 (done) | **FIXED + non-author accepted (r1+r2); awaiting owner final close.** Closing also repoints the `deferrals.test.sh` `--open` fixture. | ✅ required |
-| R1-2 | Clean-clone proof — fresh clone builds + `make check` green on a clean machine | medium | not started | ✅ required |
+| R1-2 | Clean-clone proof — fresh clone builds + `make check` green on a clean machine | medium | **PROVEN 2026-11-12** ([`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)): cold-cache build + `make check` green; live surface (migrate→sync→report/rebuild) green; two findings — (A) bootstrap order undocumented, (B) `verify` red on fresh clone via R1-4. | ✅ required |
 | R1-3 | `DEF-ROUTE-MATRIX-PRECOMMIT` — staged-aware derived-pin freshness (pre-commit blindspot) | small | not started | ✅ required |
-| R1-4 | `DEF-DELIVERY-ENFORCE-VERDICTS` — bring ~11 pre-existing verdicts to `vera.verdict.v1` so `make delivery-enforce` is green end-to-end | medium (repo-wide, mechanical) | not started | ⚠ recommended, owner-optional |
+| R1-4 | `DEF-DELIVERY-ENFORCE-VERDICTS` — bring ~11 pre-existing verdicts to `vera.verdict.v1` so `make delivery-enforce` is green end-to-end | medium (repo-wide, mechanical) | not started | ⚠ recommended, owner-optional — **but R1-2 found `proofbound verify` is RED on a fresh clone because of this (a headline product verb, not just a gate); owner to reconsider whether this is required for R1.** |
 
 **R1 is shippable when:** R1-1..R1-3 are closed, R1-2 proven, the owner accepts R1 as shipped, and
 (if chosen) R1-4 is green. `make check` is already green at HEAD; `make delivery-enforce` is NOT a
