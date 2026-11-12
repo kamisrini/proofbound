@@ -1,43 +1,27 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-2b-detector-power-spec-review-round1-20261105
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: d11046559a3dfe25119b5bdc78d7e7a7a5743a98
 findings:
   - finding_id: p7-2b-detector-power-spec-review-round1-F1
     severity: HIGH
-    summary: §2/§5 DP-1 survivor-in-denominator is a category error as stated — it conflates irreducibly-equivalent and redundantly-pinned survivors (neither is exploitable latitude) with genuine blind spots; the flagship manifest example (4 of 5 survivors are redundant-with-Bind→Validate, i.e. doubly-pinned) is penalized though fully pinned, and the metric rewards deleting defense-in-depth
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F2
     severity: HIGH
-    summary: §6.3 "open decision" contradicts invariant DP-1 — the core soundness question (does declared-equivalence still count against power) is presented as deferrable but is already frozen by DP-1/§2, and frozen to the answer F1 shows is wrong; an invariant cannot be a contract while its basis is an open option
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F3
     severity: HIGH
-    summary: §4/§7/DP-2 bind no freshness — "trusted" reads committed evidence with swept_at_commit but nothing binds that commit to the current package source, so a package can stay trusted on a sweep taken before a trust-relevant change; the undeclared-survivor fail-closed (DP-2) is only as live as a possibly-stale record (same staleness class as Law 10 / allowed-survivors line drift)
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F4
     severity: MED
-    summary: §3 over-claims sufficiency — "trust the lock to catch a wrong candidate" treats high detector power as sufficient; over a finite mutation-operator basis it is necessary-not-sufficient (vision line 156 concedes the ladder can be climbed while detector power → 0). Satisfy-and-reopen reappears through operator blind spots the metric cannot see
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F5
     severity: MED
-    summary: DP-5 calibration check is weak — the sweep's calibration line is a fixed boilerplate string printed unconditionally after a passing scratch-tree calibrate(); requiring its "presence" in a hand-authored JSON record verifies only that a constant was copied, not that THIS sweep's numbers came from a calibrated run. Bind the record to committed raw sweep stdout and re-derive C/K/V/S from it
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F6
     severity: MED
-    summary: §7 "no regeneration loop" non-goal is not clean — the metric's validity as a regeneration-trust gate silently assumes the mutation-operator failure distribution represents the regenerator's failure modes, and that the loop does not generate against the very tests measured (overfitting); both are unspecified loop details the gate depends on
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F7
     severity: LOW
-    summary: §2 formula undefined when C−V = 0 (all candidates invalid) — division by zero unspecified; define as rejected / never trusted
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round1-F8
     severity: LOW
-    summary: §3/§6.1 a single cross-package THRESHOLD assumes operator-sampling difficulty is comparable across heterogeneous packages (it is not), and the threshold cannot be empirically validated until the loop exists to correlate detector power against observed regeneration safety; the first value should be an explicitly provisional, conservative placeholder pending loop evidence
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-2b-detector-power-spec-review-round1-20261105.md
-artifact_sha: 2c062f185df81be24f855029f5da7b7bf637ffae52dbdd44eb92ffa2d2079a6d
+artifact_sha: b22df2bb544ae1a094abd87bc661c88559daa9c2b2378a869d47749290961f6c
 ---
 
 # P7 #2b detector-power metric + regeneration-trust gate (spec draft 1) — non-author review, round 1 — NEEDS_CHANGES
@@ -234,3 +218,48 @@ an owner-approved change intent authorize implementation.
 
 (Note: I am a non-author reviewer. This NEEDS_CHANGES verdict is a rejection with findings; per Law 9
 the author may revise and a non-author adjudicates the revision. I made no edit to the spec.)
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-2b-detector-power-spec-review-round1-F1
+    severity: HIGH
+    summary: §2/§5 DP-1 survivor-in-denominator is a category error as stated — it conflates irreducibly-equivalent and redundantly-pinned survivors (neither is exploitable latitude) with genuine blind spots; the flagship manifest example (4 of 5 survivors are redundant-with-Bind→Validate, i.e. doubly-pinned) is penalized though fully pinned, and the metric rewards deleting defense-in-depth
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F2
+    severity: HIGH
+    summary: §6.3 "open decision" contradicts invariant DP-1 — the core soundness question (does declared-equivalence still count against power) is presented as deferrable but is already frozen by DP-1/§2, and frozen to the answer F1 shows is wrong; an invariant cannot be a contract while its basis is an open option
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F3
+    severity: HIGH
+    summary: §4/§7/DP-2 bind no freshness — "trusted" reads committed evidence with swept_at_commit but nothing binds that commit to the current package source, so a package can stay trusted on a sweep taken before a trust-relevant change; the undeclared-survivor fail-closed (DP-2) is only as live as a possibly-stale record (same staleness class as Law 10 / allowed-survivors line drift)
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F4
+    severity: MED
+    summary: §3 over-claims sufficiency — "trust the lock to catch a wrong candidate" treats high detector power as sufficient; over a finite mutation-operator basis it is necessary-not-sufficient (vision line 156 concedes the ladder can be climbed while detector power → 0). Satisfy-and-reopen reappears through operator blind spots the metric cannot see
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F5
+    severity: MED
+    summary: DP-5 calibration check is weak — the sweep's calibration line is a fixed boilerplate string printed unconditionally after a passing scratch-tree calibrate(); requiring its "presence" in a hand-authored JSON record verifies only that a constant was copied, not that THIS sweep's numbers came from a calibrated run. Bind the record to committed raw sweep stdout and re-derive C/K/V/S from it
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F6
+    severity: MED
+    summary: §7 "no regeneration loop" non-goal is not clean — the metric's validity as a regeneration-trust gate silently assumes the mutation-operator failure distribution represents the regenerator's failure modes, and that the loop does not generate against the very tests measured (overfitting); both are unspecified loop details the gate depends on
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F7
+    severity: LOW
+    summary: §2 formula undefined when C−V = 0 (all candidates invalid) — division by zero unspecified; define as rejected / never trusted
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F8
+    severity: LOW
+    summary: §3/§6.1 a single cross-package THRESHOLD assumes operator-sampling difficulty is comparable across heterogeneous packages (it is not), and the threshold cannot be empirically validated until the loop exists to correlate detector power against observed regeneration safety; the first value should be an explicitly provisional, conservative placeholder pending loop evidence
+    verdict: CONFIRMED
+```

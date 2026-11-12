@@ -6,14 +6,10 @@ reviewed_commit: 15df68773d7908b08024e086eb6756e304a094f2
 findings:
   - finding_id: p7-b1-unit3-impl-review-round1-F1
     severity: LOW
-    summary: the deterministic make-check gate (TestCommittedCaseManifestIsPass) re-hashes evidence files and folds authored statuses but never cross-checks the committed launch-witness's internal consistency (resolved_sha256 == expected_sha256 == archive manifest postgres_binary_sha256, verified==true) — a cheap, in-scope hardening; BY DESIGN per spec §1/§1.1/§5 (committed artifacts are records, not self-proving), so advisory, not a defect
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-impl-review-round1-F2
     severity: LOW
-    summary: the deterministic intent-gate negative control (TestCommittedBehaviorLockIsLocked) exercises only the missing-record fail-closed branch of committedRequirementResolver (empty TempDir); the self-digest-mismatch, inactive-obligation, and requirement_id-mismatch branches are not covered by a dedicated deterministic negative control, though all execute on the LOCKED positive path — spec required only "an unresolvable requirement must drop below LOCKED", which is satisfied
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-impl-review-round1-20261105.md
-artifact_sha: 50dd2f0ee95d25558749eb283ff84990a3cb784d82772e5b17512c2ca05c6cab
+artifact_sha: a1c3882575efcd951500a020d32cd20e242fbb6fca62b59b3d3ba6bd5721def9
 ---
 
 # P7 B1 unit-3 runtime-fixture — implementation review (round 1) — non-author verdict — ACCEPTABLE
@@ -181,3 +177,24 @@ registrations, Law 2, kernel-check) hold. The two findings are LOW/advisory and 
 acceptance; neither introduces a new unsound claim. Package acceptance and `DEF-P7-001` movement
 remain gated on the owner's §9.3a live run, which this non-author review does not and cannot
 substitute for.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-impl-review-round1-F1
+    severity: LOW
+    summary: the deterministic make-check gate (TestCommittedCaseManifestIsPass) re-hashes evidence files and folds authored statuses but never cross-checks the committed launch-witness's internal consistency (resolved_sha256 == expected_sha256 == archive manifest postgres_binary_sha256, verified==true) — a cheap, in-scope hardening; BY DESIGN per spec §1/§1.1/§5 (committed artifacts are records, not self-proving), so advisory, not a defect
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-impl-review-round1-F2
+    severity: LOW
+    summary: the deterministic intent-gate negative control (TestCommittedBehaviorLockIsLocked) exercises only the missing-record fail-closed branch of committedRequirementResolver (empty TempDir); the self-digest-mismatch, inactive-obligation, and requirement_id-mismatch branches are not covered by a dedicated deterministic negative control, though all execute on the LOCKED positive path — spec required only "an unresolvable requirement must drop below LOCKED", which is satisfied
+    verdict: CONFIRMED
+```

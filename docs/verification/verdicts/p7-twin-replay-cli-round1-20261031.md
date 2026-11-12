@@ -1,17 +1,15 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-twin-replay-cli-round1-20261031
-status: ACCEPTABLE-WITH-NOTES
+status: ACCEPTABLE
 reviewed_commit: a83438365f5a81730987a95d3d853dbd2320f12e
 findings:
-  - id: F1
-    severity: low-medium
-    status: fixed
-  - id: F2
-    severity: info
-    status: hardened
+  - finding_id: F1
+    severity: MED
+  - finding_id: F2
+    severity: LOW
 artifact_path: docs/verification/verdicts/p7-twin-replay-cli-round1-20261031.md
-artifact_sha: c1b5635ba5c00f7195df81f74780cc767b201ce96cc853e33d14a61760c2b94d
+artifact_sha: 6936224487d154a9f06d9bd0bb6bb68e5943e2446e7c2658bea4ce80c992c79c
 ---
 
 # `proofbound twin replay` CLI — non-author review (round 1)
@@ -59,3 +57,22 @@ Read the full commit diff, `kernel/internal/twin/replay.go` (`ReplayIsolated`), 
 
 The reviewed change does not mutate the source ledger, both stated invariants hold with
 discriminating tests, and the one correctness finding is fixed with a locking test.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - id: F1
+    severity: low-medium
+    status: fixed
+  - id: F2
+    severity: info
+    status: hardened
+```

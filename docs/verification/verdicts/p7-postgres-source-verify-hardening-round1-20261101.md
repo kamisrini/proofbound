@@ -4,12 +4,10 @@ verdict_id: p7-postgres-source-verify-hardening-round1-20261101
 status: NEEDS_WORK
 reviewed_commit: 0a1ab68d3be9b9f84f5ee69b8ddc27c50a2182d8
 findings:
-  - id: 1
+  - finding_id: 1
     severity: MED
-    law: 3
-    summary: symlink positive control does not isolate the `! -L` guard (test stays green with the guard removed); not a false-accept
 artifact_path: docs/verification/verdicts/p7-postgres-source-verify-hardening-round1-20261101.md
-artifact_sha: ae74cf23bb9a614824593c9c4066cf03e2c5be3e4ed9249eaa97ff3c9ed1ddbf
+artifact_sha: 184fd0ced204c126729b22152b5c9199a1b3d8687d4392737f230e3076330e73
 ---
 
 # P7 B1 unit-1 hardening (round 1) — non-author verdict
@@ -72,3 +70,20 @@ can reject it; proven load-bearing by stripping the guard from a copy (fixture t
 misleading "hash and size would match" claim in `d9590da` is corrected in the `10b4204` message and
 the test comment. Finding 2 is informational (no false-accept). The round-2 re-verify of `10b4204`
 is `p7-postgres-source-verify-hardening-round2-20261101`.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - id: 1
+    severity: MED
+    law: 3
+    summary: symlink positive control does not isolate the `! -L` guard (test stays green with the guard removed); not a false-accept
+```

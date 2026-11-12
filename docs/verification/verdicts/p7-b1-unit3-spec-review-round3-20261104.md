@@ -1,27 +1,19 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-b1-unit3-spec-review-round3-20261104
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: db2a9a13407fbeeb12c703bf6da46fd170cc2040
 findings:
   - finding_id: p7-b1-unit3-spec-review-round3-N4
     severity: MED
-    summary: the §5.1 "swapped binary" negative control trips at the step-2 archive-hash gate before launch, so it never exercises the TWIN-INV-18 /proc/<pid>/exe witness that N3 made load-bearing for proof_binding=PASS — the strongest new witness is uncalibrated
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round3-N1
     severity: HIGH
-    summary: round-2 N1 RESOLVED — witness verification relocated onto the fixture consistently; no residual self-verify claim
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round3-N2
     severity: MED
-    summary: round-2 N2 RESOLVED — false integrity-script precedent removed; no-automated-gate residual disclosed deliberately
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round3-N3
     severity: LOW
-    summary: round-2 N3 RESOLVED — proof_binding=PASS gated on launched-process witness, determinism necessary-not-sufficient
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round3-20261104.md
-artifact_sha: 53c9d137d784ac6baf45163d7368284d5a10b9c7377288d2e4f686de2c30b48b
+artifact_sha: e1116b88522f54e7440ff3adb24546f05e735922eed625ec72caa6dc3788f550
 ---
 
 # P7 B1 unit-3 runtime-fixture spec (round 3) — non-author re-verify
@@ -100,3 +92,32 @@ OVERALL RECOMMENDATION: The three round-2 findings (N1/N2/N3) are honestly and c
   non-author re-verifies before `CI-p7-runtime-fixture-1a2b3c` leaves `proposed`.
 - **§8.4 (no-fetch mechanism) remains the one open owner decision** and is not a blocker to the N4
   correction.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round3-N4
+    severity: MED
+    summary: the §5.1 "swapped binary" negative control trips at the step-2 archive-hash gate before launch, so it never exercises the TWIN-INV-18 /proc/<pid>/exe witness that N3 made load-bearing for proof_binding=PASS — the strongest new witness is uncalibrated
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round3-N1
+    severity: HIGH
+    summary: round-2 N1 RESOLVED — witness verification relocated onto the fixture consistently; no residual self-verify claim
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round3-N2
+    severity: MED
+    summary: round-2 N2 RESOLVED — false integrity-script precedent removed; no-automated-gate residual disclosed deliberately
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round3-N3
+    severity: LOW
+    summary: round-2 N3 RESOLVED — proof_binding=PASS gated on launched-process witness, determinism necessary-not-sufficient
+    verdict: CONFIRMED
+```

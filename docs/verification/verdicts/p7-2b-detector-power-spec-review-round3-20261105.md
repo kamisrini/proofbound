@@ -6,38 +6,22 @@ reviewed_commit: 73108b90e6e2769ad2ac5c33dcd7e294a5e7ccca
 findings:
   - finding_id: p7-2b-detector-power-spec-review-round2-N1
     severity: MED
-    summary: Ratio holes (size-dependence, padding, operator-blind-spot) — RESOLVED. The trust gate now keys on the absolute class-U count against a per-tier U_BUDGET (top tier U=0); the ratio is demoted to a reported diagnostic; the operator-unreachable gap is correctly disclosed as necessary-not-sufficient rather than hidden
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round2-N2
     severity: MED
-    summary: Freshness digest scope — RESOLVED. DP-6 lock_inputs_sha256 covers non-test source + _test.go + the package register entries + the SPEC invariant rows; a test-only weakening or a class relabel now triggers stale-reject
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round2-N3
     severity: MED
-    summary: Raw-sweep execution binding — RESOLVED. DP-8 reproducible mode (re-run matches raw_sweep_sha256) is a full closure; attested mode is an honest named + Law-4-expiring + fail-closed advisory, not a silent reopening. One non-blocking clarification (CL-1) on attested re-runner independence
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round2-N4
     severity: LOW
-    summary: R/E justification + bijection — RESOLVED. §2/DP-3 require each R to name its pinning test/line and each E its equivalence argument; DP-2+DP-3 enforce an exact sweep↔record survivor bijection (unclassified survivor and extra record entry both fail closed)
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round3-CL1
     severity: MED
-    summary: NON-BLOCKING clarification — DP-8 attested mode says "named non-author re-runner"; state that this means a non-author OF THE SWEEP/RECORD performing an independent re-run (not a sign-off), else attested collapses toward self-attestation for exactly the slow packages that use it. Law 9 already forbids self-grading repo-wide, so this is a wording tightening, not a new mechanism
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round3-CL2
     severity: LOW
-    summary: NON-BLOCKING — lock_inputs_sha256 covers the lock but not the measurement tool; the sweep result also depends on the tools/mutants operator set (and Go toolchain). Pin the tools/mutants version/digest in the record so an operator-basis change invalidates stale evidence in attested mode (reproducible mode catches it on re-run)
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round3-CL3
     severity: LOW
-    summary: NON-BLOCKING — DP-3's "R names a pinning test/line whose mutant dies" is necessary but not sufficient; the reviewer must also confirm the named pin SUBSUMES the mutated behavior, not merely that it is independently tested. Tighten the DP-3 proving-test shape to require the subsumption argument
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round3-CL4
     severity: LOW
-    summary: NON-BLOCKING — a non-zero U_BUDGET authorizes regeneration against a lock with known genuine un-pinned latitude (a known satisfy-and-reopen surface); require each budgeted class-U justification to argue why that specific behavior is safe for a regenerated impl to vary (not correctness/security-load-bearing). Guidance for the §6.1 owner decision
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-2b-detector-power-spec-review-round3-20261105.md
-artifact_sha: 70741d3b8749ed9b443edbf1324c82b17d9a05026afe77ccc743b4e196d07afb
+artifact_sha: 2486d29d63d01d90b9b25fba1c42708a9e8ad5310982d69aefce366b0ef07dfe
 ---
 
 # P7 #2b detector-power metric + regeneration-trust gate (spec draft 3) — non-author re-review, round 3 — ACCEPTABLE
@@ -202,3 +186,48 @@ shell-vs-package) and flip an owner-approved change intent to authorize the gove
 
 (Note: I am a non-author reviewer; per Law 9 this non-author verdict is the acceptance capacity for a
 spec this session did not author. I made no edit to the spec.)
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-2b-detector-power-spec-review-round2-N1
+    severity: MED
+    summary: Ratio holes (size-dependence, padding, operator-blind-spot) — RESOLVED. The trust gate now keys on the absolute class-U count against a per-tier U_BUDGET (top tier U=0); the ratio is demoted to a reported diagnostic; the operator-unreachable gap is correctly disclosed as necessary-not-sufficient rather than hidden
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N2
+    severity: MED
+    summary: Freshness digest scope — RESOLVED. DP-6 lock_inputs_sha256 covers non-test source + _test.go + the package register entries + the SPEC invariant rows; a test-only weakening or a class relabel now triggers stale-reject
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N3
+    severity: MED
+    summary: Raw-sweep execution binding — RESOLVED. DP-8 reproducible mode (re-run matches raw_sweep_sha256) is a full closure; attested mode is an honest named + Law-4-expiring + fail-closed advisory, not a silent reopening. One non-blocking clarification (CL-1) on attested re-runner independence
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N4
+    severity: LOW
+    summary: R/E justification + bijection — RESOLVED. §2/DP-3 require each R to name its pinning test/line and each E its equivalence argument; DP-2+DP-3 enforce an exact sweep↔record survivor bijection (unclassified survivor and extra record entry both fail closed)
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round3-CL1
+    severity: MED
+    summary: NON-BLOCKING clarification — DP-8 attested mode says "named non-author re-runner"; state that this means a non-author OF THE SWEEP/RECORD performing an independent re-run (not a sign-off), else attested collapses toward self-attestation for exactly the slow packages that use it. Law 9 already forbids self-grading repo-wide, so this is a wording tightening, not a new mechanism
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round3-CL2
+    severity: LOW
+    summary: NON-BLOCKING — lock_inputs_sha256 covers the lock but not the measurement tool; the sweep result also depends on the tools/mutants operator set (and Go toolchain). Pin the tools/mutants version/digest in the record so an operator-basis change invalidates stale evidence in attested mode (reproducible mode catches it on re-run)
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round3-CL3
+    severity: LOW
+    summary: NON-BLOCKING — DP-3's "R names a pinning test/line whose mutant dies" is necessary but not sufficient; the reviewer must also confirm the named pin SUBSUMES the mutated behavior, not merely that it is independently tested. Tighten the DP-3 proving-test shape to require the subsumption argument
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round3-CL4
+    severity: LOW
+    summary: NON-BLOCKING — a non-zero U_BUDGET authorizes regeneration against a lock with known genuine un-pinned latitude (a known satisfy-and-reopen surface); require each budgeted class-U justification to argue why that specific behavior is safe for a regenerated impl to vary (not correctness/security-load-bearing). Guidance for the §6.1 owner decision
+    verdict: CONFIRMED
+```

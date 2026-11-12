@@ -1,59 +1,35 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-2b-detector-power-spec-review-round2-20261105
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: 986d6d787bc56b3e93e38bf268abd1a7ba619cb9
 findings:
   - finding_id: p7-2b-detector-power-spec-review-round1-F1
     severity: HIGH
-    summary: Category error / perverse defense-in-depth incentive — RESOLVED. E/R/U classification, detector_power = K/(K+U) counting only class-U, E/R excluded; deleting a redundant check no longer raises the score
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F2
     severity: HIGH
-    summary: §6.3 contradiction — RESOLVED. The denominator question is decided by DP-1; §6 explicitly records it as RESOLVED, not open
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F3
     severity: HIGH
-    summary: Freshness binding — RESOLVED IN PRINCIPLE by DP-6 / source_tree_sha256 stale-reject, but the digest SCOPE is under-specified (see N2)
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F4
     severity: MED
-    summary: Necessary-not-sufficient — RESOLVED. §3 states it explicitly; the "trust the lock to catch a wrong candidate" over-claim is withdrawn
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F5
     severity: MED
-    summary: Hand-transcription — RESOLVED IN PART by committed raw sweep stdout + re-derivation (DP-5), but the raw sweep is not bound to a real/reproducible execution (see N3)
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F6
     severity: MED
-    summary: Loop-dependence — RESOLVED. §7 names both assumptions (operator distribution ≈ regenerator failure modes; no overfit against measured tests) as dependencies the loop spec MUST discharge
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F7
     severity: LOW
-    summary: Zero denominator — RESOLVED. K+U=0 ⇒ rejected (§2, DP-1)
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round1-F8
     severity: LOW
-    summary: Threshold — RESOLVED. Per-tier, explicitly provisional/conservative (§3, §6). But the ratio form has a within-tier size-dependence the per-tier split does not cure (see N1)
-    verdict: RESOLVED
   - finding_id: p7-2b-detector-power-spec-review-round2-N1
     severity: MED
-    summary: §2/§3 the trust criterion is a RATIO K/(K+U) but the exploitable quantity is the ABSOLUTE count U of unproven-latitude blind spots; the ratio dilutes U by K, so the same blind spot passes in a large/verbose package and fails in a small one, detector power can be inflated by adding easily-killed code, and a genuinely weak lock whose blind spots fall outside the mutation-operator basis scores 1.0 with no mis-declaration. Gate on U (U=0 or a per-tier U-budget, each U justified) with the ratio as a secondary diagnostic, or justify the ratio and add an anti-padding guard
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round2-N2
     severity: MED
-    summary: DP-6 freshness digest scope is under-specified — "current package source" plausibly excludes the two inputs that most change the result: the test files (the lock IS the tests) and the E/R/U survivor register. A test-only weakening or a stale register then escapes stale-reject, defeating F3 for its most sensitive input. State that source_tree_sha256 covers _test.go and the register (and the invariant/lock definition)
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round2-N3
     severity: MED
-    summary: §4/DP-5 the committed raw sweep stdout is re-derived-from but not bound to a real execution — a hand-authored sweep.txt with fabricated per-mutant lines, a calibration line, and an all-E/R survivor set re-derives self-consistently and passes. The regeneration-TRUST gate then rests on forgeable evidence (the B1 unit-3 hand-transcription class). Require the raw sweep be REPRODUCIBLE from source_tree_sha256 (a refresh/audit re-runs scripts/mutants.sh and matches raw_sweep_sha256), or state explicitly it is a human-attested artifact whose integrity depends on a named non-author re-run
-    verdict: CONFIRMED
   - finding_id: p7-2b-detector-power-spec-review-round2-N4
     severity: LOW
-    summary: §2/DP-3 the R class carries the most judgment and is the mis-declaration vector (label a U as R to exclude it); draft 2's own "falsifiable claim" promise is strongest if each R justification names the specific pinning line/test so the reviewer can confirm that line's mutant dies. Also state DP-2+DP-3 enforce an exact bijection sweep-survivors ↔ record-classified-survivors (no extra, no missing)
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-2b-detector-power-spec-review-round2-20261105.md
-artifact_sha: 08af1955f8815994a3f80c17d7bfd491720616297633d52865f992eda2cf634b
+artifact_sha: 4f9f3b0b1cb140dce3eccb7a1739b04abc566733b5163c6d07d279faecb709ad
 ---
 
 # P7 #2b detector-power metric + regeneration-trust gate (spec draft 2) — non-author re-review, round 2 — NEEDS_CHANGES
@@ -218,3 +194,64 @@ implementation.
 
 (Note: I am a non-author reviewer. This NEEDS_CHANGES verdict is a rejection with findings; per Law 9
 the author may revise and a non-author adjudicates the revision. I made no edit to the spec.)
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-2b-detector-power-spec-review-round1-F1
+    severity: HIGH
+    summary: Category error / perverse defense-in-depth incentive — RESOLVED. E/R/U classification, detector_power = K/(K+U) counting only class-U, E/R excluded; deleting a redundant check no longer raises the score
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F2
+    severity: HIGH
+    summary: §6.3 contradiction — RESOLVED. The denominator question is decided by DP-1; §6 explicitly records it as RESOLVED, not open
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F3
+    severity: HIGH
+    summary: Freshness binding — RESOLVED IN PRINCIPLE by DP-6 / source_tree_sha256 stale-reject, but the digest SCOPE is under-specified (see N2)
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F4
+    severity: MED
+    summary: Necessary-not-sufficient — RESOLVED. §3 states it explicitly; the "trust the lock to catch a wrong candidate" over-claim is withdrawn
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F5
+    severity: MED
+    summary: Hand-transcription — RESOLVED IN PART by committed raw sweep stdout + re-derivation (DP-5), but the raw sweep is not bound to a real/reproducible execution (see N3)
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F6
+    severity: MED
+    summary: Loop-dependence — RESOLVED. §7 names both assumptions (operator distribution ≈ regenerator failure modes; no overfit against measured tests) as dependencies the loop spec MUST discharge
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F7
+    severity: LOW
+    summary: Zero denominator — RESOLVED. K+U=0 ⇒ rejected (§2, DP-1)
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round1-F8
+    severity: LOW
+    summary: Threshold — RESOLVED. Per-tier, explicitly provisional/conservative (§3, §6). But the ratio form has a within-tier size-dependence the per-tier split does not cure (see N1)
+    verdict: RESOLVED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N1
+    severity: MED
+    summary: §2/§3 the trust criterion is a RATIO K/(K+U) but the exploitable quantity is the ABSOLUTE count U of unproven-latitude blind spots; the ratio dilutes U by K, so the same blind spot passes in a large/verbose package and fails in a small one, detector power can be inflated by adding easily-killed code, and a genuinely weak lock whose blind spots fall outside the mutation-operator basis scores 1.0 with no mis-declaration. Gate on U (U=0 or a per-tier U-budget, each U justified) with the ratio as a secondary diagnostic, or justify the ratio and add an anti-padding guard
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N2
+    severity: MED
+    summary: DP-6 freshness digest scope is under-specified — "current package source" plausibly excludes the two inputs that most change the result: the test files (the lock IS the tests) and the E/R/U survivor register. A test-only weakening or a stale register then escapes stale-reject, defeating F3 for its most sensitive input. State that source_tree_sha256 covers _test.go and the register (and the invariant/lock definition)
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N3
+    severity: MED
+    summary: §4/DP-5 the committed raw sweep stdout is re-derived-from but not bound to a real execution — a hand-authored sweep.txt with fabricated per-mutant lines, a calibration line, and an all-E/R survivor set re-derives self-consistently and passes. The regeneration-TRUST gate then rests on forgeable evidence (the B1 unit-3 hand-transcription class). Require the raw sweep be REPRODUCIBLE from source_tree_sha256 (a refresh/audit re-runs scripts/mutants.sh and matches raw_sweep_sha256), or state explicitly it is a human-attested artifact whose integrity depends on a named non-author re-run
+    verdict: CONFIRMED
+  - finding_id: p7-2b-detector-power-spec-review-round2-N4
+    severity: LOW
+    summary: §2/DP-3 the R class carries the most judgment and is the mis-declaration vector (label a U as R to exclude it); draft 2's own "falsifiable claim" promise is strongest if each R justification names the specific pinning line/test so the reviewer can confirm that line's mutant dies. Also state DP-2+DP-3 enforce an exact bijection sweep-survivors ↔ record-classified-survivors (no extra, no missing)
+    verdict: CONFIRMED
+```

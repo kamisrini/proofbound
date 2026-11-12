@@ -4,20 +4,14 @@ verdict_id: p7-postgres-b1-unit2-build-round2-20261103
 status: ACCEPTABLE
 reviewed_commit: a4642fe9ca4c3aa4aaffbf6555306ae3e6f172f8
 findings:
-  - id: 1
+  - finding_id: 1
     severity: LOW
-    law: 0
-    summary: HyperLogLog MIT verbatim block is truncated with an ellipsis on the final warranty/liability sentence; authoritative per-file header is cited, so non-blocking
-  - id: 2
+  - finding_id: 2
     severity: LOW
-    law: 0
-    summary: CJK-encoding row lists holders that live in the UCS_to_*.pl generator scripts (not compiled objects); errs toward over-counting (safe direction), hedged
-  - id: 3
+  - finding_id: 3
     severity: LOW
-    law: 0
-    summary: IANA timezone code is statically compiled into bin/postgres and unlisted; public-domain so no obligation, but a one-line note would make the static set airtight
 artifact_path: docs/verification/verdicts/p7-postgres-b1-unit2-build-round2-20261103.md
-artifact_sha: 285decc1059ddbd30117dff4ccc6568e66e3c561afe7eff742fd0b6b5b2ac15e
+artifact_sha: 14d7ea8bc78e82143bfd1df9aeb335dbce1692af83f1024465e2bfe75510066c
 ---
 
 # P7 B1 unit-2 build + license inventory (round 2) — non-author verdict
@@ -93,3 +87,28 @@ are recorded here as **optional future cleanup** rather than fixed under this ac
 
 `DEF-P7-001` stays OPEN/BLOCKED pending unit 3 (prepared-offline runtime fixture binding a real
 `vera.replay.v1` proof over this server tree, honoring the short-Unix-socket-dir constraint).
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - id: 1
+    severity: LOW
+    law: 0
+    summary: HyperLogLog MIT verbatim block is truncated with an ellipsis on the final warranty/liability sentence; authoritative per-file header is cited, so non-blocking
+  - id: 2
+    severity: LOW
+    law: 0
+    summary: CJK-encoding row lists holders that live in the UCS_to_*.pl generator scripts (not compiled objects); errs toward over-counting (safe direction), hedged
+  - id: 3
+    severity: LOW
+    law: 0
+    summary: IANA timezone code is statically compiled into bin/postgres and unlisted; public-domain so no obligation, but a one-line note would make the static set airtight
+```

@@ -1,15 +1,13 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-postgres-b1-unit2-build-round1-20261103
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: caf94c8f91e1a2b8edff10684e7ab33ee58bf949
 findings:
-  - id: 1
+  - finding_id: 1
     severity: MED
-    law: 2
-    summary: license inventory under-counts — ldd-only methodology is blind to statically-compiled vendored third-party source (Ryu Boost-1.0, hyperloglog MIT, Spencer/Tcl regex, ISC, Gifford SHA2, WIDE, Allman, encoding tables); all-permissive/no-copyleft conclusion still holds
 artifact_path: docs/verification/verdicts/p7-postgres-b1-unit2-build-round1-20261103.md
-artifact_sha: 17b4d331e553a4354cf8432c37a30ff3e90ee96f52554792f965de12c11bc472
+artifact_sha: a6e4cc64dd07649cfb0e7f61f126b4e9e98944555e161b0f21fae22bc3fdacb3
 ---
 
 # P7 B1 unit-2 build + license inventory (round 1) — non-author verdict
@@ -72,3 +70,20 @@ cited by source path. The methodology sentence in the build-evidence doc was cor
 all-permissive / no-copyleft conclusion is unchanged and now better supported. A round-2 non-author
 re-verify of the corrected inventory is owed before unit 2 is ACCEPTED (Law 9); `DEF-P7-001` stays
 OPEN/BLOCKED.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - id: 1
+    severity: MED
+    law: 2
+    summary: license inventory under-counts — ldd-only methodology is blind to statically-compiled vendored third-party source (Ryu Boost-1.0, hyperloglog MIT, Spencer/Tcl regex, ISC, Gifford SHA2, WIDE, Allman, encoding tables); all-permissive/no-copyleft conclusion still holds
+```

@@ -1,27 +1,19 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-b1-unit3-spec-review-round4-20261104
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: 7bb163fbcbdc3bc09bc25fdacae8f24ba58c0621
 findings:
   - finding_id: p7-b1-unit3-spec-review-round4-N5
     severity: MED
-    summary: the §5.1 launched-binary swap control is not implementable from the black-box fixture — no seam exists between staging and launch, so it tacitly requires a new governed kernel test-seam the spec neither names nor scopes
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round4-N6
     severity: LOW
-    summary: §9.3a asks the non-author to confirm the control fails "only at /proc, not step-2", but the spec mandates no distinct per-layer failure signal, so the layer cannot actually be told apart
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round4-N7
     severity: LOW
-    summary: the positive companion ("unmodified run must reach+pass /proc") specifies no observable that the /proc witness actually executed, so it cannot independently prove the witness ran rather than PASS emerging from the archive hash
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round4-N4
     severity: MED
-    summary: round-3 N4 attribution/labeling half RESOLVED (tampered-archive -> step-2 gate; swap -> /proc witness, both labeled; §9.3a requires the swap specifically); mechanism half rolls into N5
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round4-20261104.md
-artifact_sha: 708ee5e1e8c6ed0dfc62781fb1ce808d899ca89a8851ab43db4441652bde12db
+artifact_sha: e124e87a931f0ecc8240ac97031546a7a6b286e3ca2b9449ca7882def8c2a0f9
 ---
 
 # P7 B1 unit-3 runtime-fixture spec (round 4) — non-author re-verify
@@ -117,3 +109,32 @@ NEEDS a small round 5 (or, at minimum, a hardened §8 implementation-gate clause
   matched** on the positive path (N7).
 - **§8.4 is now settled by the owner** (2026-11-04, [[VD-p7-nofetch-witness-2026-11-04]]: network
   namespace primary + labeled declaration fallback); the round-5 revision folds that into the spec.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round4-N5
+    severity: MED
+    summary: the §5.1 launched-binary swap control is not implementable from the black-box fixture — no seam exists between staging and launch, so it tacitly requires a new governed kernel test-seam the spec neither names nor scopes
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round4-N6
+    severity: LOW
+    summary: §9.3a asks the non-author to confirm the control fails "only at /proc, not step-2", but the spec mandates no distinct per-layer failure signal, so the layer cannot actually be told apart
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round4-N7
+    severity: LOW
+    summary: the positive companion ("unmodified run must reach+pass /proc") specifies no observable that the /proc witness actually executed, so it cannot independently prove the witness ran rather than PASS emerging from the archive hash
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round4-N4
+    severity: MED
+    summary: round-3 N4 attribution/labeling half RESOLVED (tampered-archive -> step-2 gate; swap -> /proc witness, both labeled; §9.3a requires the swap specifically); mechanism half rolls into N5
+    verdict: CONFIRMED
+```

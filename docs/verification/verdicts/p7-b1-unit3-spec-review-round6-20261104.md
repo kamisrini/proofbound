@@ -6,14 +6,10 @@ reviewed_commit: 9393af4e70711cbd5071e47373d9aeaa2c66404a
 findings:
   - finding_id: p7-b1-unit3-spec-review-round6-NEW1
     severity: LOW
-    summary: §5.1 "closes the N8 gap by construction" slightly overstates; the forgery is reduced to a contract violation caught by §9.3a code inspection / Law-9 review, which the same sentence states — cosmetic wording only
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round6-NEW2
     severity: LOW
-    summary: §5.1 / §0 "the same call site the unit test calibrates" is imprecise shorthand for "the same function/implementation" (test and fixture are two call sites of one sole-producer function) — cosmetic wording only
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round6-20261104.md
-artifact_sha: 731df279a3495132520f585fc1805f44f8af5635359a54fc0f0bae119df3ff34
+artifact_sha: 39df69f0c7f4409d830641c56d757e21f6a639100e1ab1fc0c0c7c06ddb98d1e
 ---
 
 # P7 B1 unit-3 runtime-fixture spec (round 6) — non-author re-verify — ACCEPTABLE
@@ -110,3 +106,24 @@ ACCEPTABLE for implementation. N8 and N9 are both RESOLVED, the no-false-PASS re
   compatibility proof closing F5 → fixture + TWIN-INV-18..22 → behavior-lock/case-manifest over the
   real proof → `make mutants` + non-author ACCEPTABLE package verdict + the §9.3a live acceptance
   run). Only on that package acceptance can `DEF-P7-001` move toward RESOLVED.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round6-NEW1
+    severity: LOW
+    summary: §5.1 "closes the N8 gap by construction" slightly overstates; the forgery is reduced to a contract violation caught by §9.3a code inspection / Law-9 review, which the same sentence states — cosmetic wording only
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round6-NEW2
+    severity: LOW
+    summary: §5.1 / §0 "the same call site the unit test calibrates" is imprecise shorthand for "the same function/implementation" (test and fixture are two call sites of one sole-producer function) — cosmetic wording only
+    verdict: CONFIRMED
+```

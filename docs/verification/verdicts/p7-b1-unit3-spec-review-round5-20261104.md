@@ -1,31 +1,21 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-b1-unit3-spec-review-round5-20261104
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: 5287ab41f75e3e7e7b030f1f13793a30b9850d98
 findings:
   - finding_id: p7-b1-unit3-spec-review-round5-N8
     severity: MED
-    summary: §5.1 over-claims that a fixture that never reads /proc cannot populate resolved_sha256; the spec does not bind the fixture's proof_binding emission to the single calibrated witnessLaunchedProcess call site, so PASS stays forgeable by copying the pinned digest
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round5-N9
     severity: LOW
-    summary: §0's historical Round-4 paragraph still states §9.3a requires the launched-binary-swap control, contradicting the live round-5 §9.3a (witness-function unit test + resolved_sha256 inspection; swap now optional)
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round5-N5
     severity: MED
-    summary: round-4 N5 RESOLVED — witness calibrated by a direct unit test of a standalone witnessLaunchedProcess; optional end-to-end seam scoped as governed kernel code
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round5-N6
     severity: LOW
-    summary: round-4 N6 RESOLVED — distinct typed /proc mismatch error, assertable and separate from verified_archive.go:271
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round5-N7
     severity: LOW
-    summary: round-4 N7 PARTIALLY — the resolved_sha256 observable blocks the naive empty case but is value-non-discriminating on the positive path; closure completed by fixing N8
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round5-20261104.md
-artifact_sha: 89f33d6591817c72e3acd4fdb751958a75f49793c50294076f182f2810a05d60
+artifact_sha: dd08c27b3a8875b44d3c0bbc21ff8a05adcb424913ddcb06b15c695de53e8f00
 ---
 
 # P7 B1 unit-3 runtime-fixture spec (round 5) — non-author re-verify
@@ -116,3 +106,36 @@ NOT YET ACCEPTABLE — needs a small round 6. N5, N6 and §8.4 are RESOLVED and 
   round-6 edit ensures the spec does not *claim* a protection it lacks and that the implementer binds
   the witness correctly.
 - The fix is textual; round 6 is expected to converge.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round5-N8
+    severity: MED
+    summary: §5.1 over-claims that a fixture that never reads /proc cannot populate resolved_sha256; the spec does not bind the fixture's proof_binding emission to the single calibrated witnessLaunchedProcess call site, so PASS stays forgeable by copying the pinned digest
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round5-N9
+    severity: LOW
+    summary: §0's historical Round-4 paragraph still states §9.3a requires the launched-binary-swap control, contradicting the live round-5 §9.3a (witness-function unit test + resolved_sha256 inspection; swap now optional)
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round5-N5
+    severity: MED
+    summary: round-4 N5 RESOLVED — witness calibrated by a direct unit test of a standalone witnessLaunchedProcess; optional end-to-end seam scoped as governed kernel code
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round5-N6
+    severity: LOW
+    summary: round-4 N6 RESOLVED — distinct typed /proc mismatch error, assertable and separate from verified_archive.go:271
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round5-N7
+    severity: LOW
+    summary: round-4 N7 PARTIALLY — the resolved_sha256 observable blocks the naive empty case but is value-non-discriminating on the positive path; closure completed by fixing N8
+    verdict: CONFIRMED
+```

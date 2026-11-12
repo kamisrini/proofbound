@@ -1,31 +1,21 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-b1-unit3-spec-review-round2-20261104
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: b64a46eaff77c44038963fa451bb66cd89282c66
 findings:
   - finding_id: p7-b1-unit3-spec-review-round2-N1
     severity: HIGH
-    summary: case_status=PASS is still forgeable by declaration; DeriveCaseStatus is a pure fold and re-verifies no witness digest, so §1/§5/§6 over-claim
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round2-N2
     severity: MED
-    summary: §6.1 Law-1 exemption cites p6-artifact-integrity as covering build/verify-evidence, but that script only walks docs/verification/verdicts; the §6 artifacts get no automated integrity check
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round2-N3
     severity: LOW
-    summary: TWIN-INV-18 (launched-process) and TWIN-INV-22 (determinism) both fold into the single proof_binding key; proof_binding=PASS not explicitly gated on the launched-process witness
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round2-F1
     severity: HIGH
-    summary: F1 only PARTIALLY resolved — LOCKED correctly down-scoped, but closure moved onto case_status=PASS which is another pure fold (see N1)
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round2-F7
     severity: MED
-    summary: F7 only PARTIALLY resolved — dichotomy addressed, but justification rests on a precedent that does not exist (see N2)
-    verdict: CONFIRMED
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round2-20261104.md
-artifact_sha: d2233f4bad67dd02d04d46e6b3b456f3474c107a093f2863ebd577f20a5fbef1
+artifact_sha: 947f02f7d0ea370abcbc8dfab84278a3f46ad5688c6b493dcf9bbd7f0ad16d9f
 ---
 
 # P7 B1 unit-3 runtime-fixture spec (round 2) — non-author re-verify
@@ -156,3 +146,36 @@ The nine case-manifest outcome keys are fixed (CASE-INV-3). The §5 table maps B
   non-author must re-verify round 3 before `CI-p7-runtime-fixture-1a2b3c` leaves `proposed`.
 - **§8.4 (no-fetch mechanism) remains the one open owner decision** and is not a blocker to the
   round-3 correction.
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round2-N1
+    severity: HIGH
+    summary: case_status=PASS is still forgeable by declaration; DeriveCaseStatus is a pure fold and re-verifies no witness digest, so §1/§5/§6 over-claim
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round2-N2
+    severity: MED
+    summary: §6.1 Law-1 exemption cites p6-artifact-integrity as covering build/verify-evidence, but that script only walks docs/verification/verdicts; the §6 artifacts get no automated integrity check
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round2-N3
+    severity: LOW
+    summary: TWIN-INV-18 (launched-process) and TWIN-INV-22 (determinism) both fold into the single proof_binding key; proof_binding=PASS not explicitly gated on the launched-process witness
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round2-F1
+    severity: HIGH
+    summary: F1 only PARTIALLY resolved — LOCKED correctly down-scoped, but closure moved onto case_status=PASS which is another pure fold (see N1)
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round2-F7
+    severity: MED
+    summary: F7 only PARTIALLY resolved — dichotomy addressed, but justification rests on a precedent that does not exist (see N2)
+    verdict: CONFIRMED
+```

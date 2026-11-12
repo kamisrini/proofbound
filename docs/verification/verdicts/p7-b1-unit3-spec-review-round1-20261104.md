@@ -1,55 +1,33 @@
 ---
 schema: vera.verdict.v1
 verdict_id: p7-b1-unit3-spec-review-round1-20261104
-status: NEEDS_CHANGES
+status: NEEDS_WORK
 reviewed_commit: d468d9cfeb9921e2cb74be026f6e6e0263af0f27
 findings:
   - finding_id: p7-b1-unit3-spec-review-round1-F1
     severity: HIGH
-    summary: LOCKED is structurally independent of the runtime; TWIN-INV-22 over-claims
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round1-F2
     severity: HIGH
-    summary: TWIN-INV-18 launched-binary witness re-labels the exact code the deferral calls insufficient; permitted mechanisms do not witness the process
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round1-F3
     severity: MED
-    summary: Running process maps un-inventoried host shared libraries (zlib/libc); binary witness cannot cover full behavior
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F4
     severity: MED
-    summary: TWIN-INV-19 zero-fetch witness is a harness-wiring assertion, not an observation that no network fetch occurred
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F5
     severity: MED
-    summary: §8.1 "RESOLVED" proven on full install tree, but unit ships the bin/+share/ subset — shipping artifact unproven
-    verdict: CONFIRMED
   - finding_id: p7-b1-unit3-spec-review-round1-F6
     severity: MED
-    summary: §8.2 drop-vs-dereference undecidable from spec; dereference at prep time is unconstrained attack surface outside the staging guard
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F7
     severity: MED
-    summary: Law 1 (@generated) status of committed derived artifacts unresolved; cannot be regenerated in make check
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F8
     severity: MED
-    summary: Law 2 drift seed — toolchain identity copied into the new manifest instead of citing the unit-2 evidence home
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F9
     severity: MED
-    summary: TWIN-INV-20/-21 restate existing invariants without a discriminating positive control
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F10
     severity: MED
-    summary: t.Skip-on-absence plus DEF-KERNELCHECK-FLAKE-001 port contention create a silent-green acceptance hole
-    verdict: PLAUSIBLE
   - finding_id: p7-b1-unit3-spec-review-round1-F11
     severity: LOW
-    summary: DeriveCaseStatus PASS reachable from synthetic fixtures + injected stubs with no real postgres; needs a negative control
-    verdict: PLAUSIBLE
 artifact_path: docs/verification/verdicts/p7-b1-unit3-spec-review-round1-20261104.md
-artifact_sha: d2b9b4c385348bfd4052dd70a0bcd830473de3dfed50e64cee2daba8f3ba5878
+artifact_sha: a7f27f0e7951c7bb321a4be9f5116670fd4bcaafb234550b2cca05e8a15788d3
 ---
 
 # P7 B1 unit-3 runtime-fixture spec — non-author adversarial review
@@ -170,3 +148,60 @@ Unit-2 configured `--without-icu --without-readline` with zlib default-on; the f
   these to the owner — decisions §8.3 and §8.4 are where the HIGH/MED findings concentrate, and the
   review supplies concrete direction (PID-exe witness with a negative control; real network
   isolation vs. an honest down-scoped declaration; drop-all for symlinks).
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - finding_id: p7-b1-unit3-spec-review-round1-F1
+    severity: HIGH
+    summary: LOCKED is structurally independent of the runtime; TWIN-INV-22 over-claims
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round1-F2
+    severity: HIGH
+    summary: TWIN-INV-18 launched-binary witness re-labels the exact code the deferral calls insufficient; permitted mechanisms do not witness the process
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round1-F3
+    severity: MED
+    summary: Running process maps un-inventoried host shared libraries (zlib/libc); binary witness cannot cover full behavior
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F4
+    severity: MED
+    summary: TWIN-INV-19 zero-fetch witness is a harness-wiring assertion, not an observation that no network fetch occurred
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F5
+    severity: MED
+    summary: §8.1 "RESOLVED" proven on full install tree, but unit ships the bin/+share/ subset — shipping artifact unproven
+    verdict: CONFIRMED
+  - finding_id: p7-b1-unit3-spec-review-round1-F6
+    severity: MED
+    summary: §8.2 drop-vs-dereference undecidable from spec; dereference at prep time is unconstrained attack surface outside the staging guard
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F7
+    severity: MED
+    summary: Law 1 (@generated) status of committed derived artifacts unresolved; cannot be regenerated in make check
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F8
+    severity: MED
+    summary: Law 2 drift seed — toolchain identity copied into the new manifest instead of citing the unit-2 evidence home
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F9
+    severity: MED
+    summary: TWIN-INV-20/-21 restate existing invariants without a discriminating positive control
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F10
+    severity: MED
+    summary: t.Skip-on-absence plus DEF-KERNELCHECK-FLAKE-001 port contention create a silent-green acceptance hole
+    verdict: PLAUSIBLE
+  - finding_id: p7-b1-unit3-spec-review-round1-F11
+    severity: LOW
+    summary: DeriveCaseStatus PASS reachable from synthetic fixtures + injected stubs with no real postgres; needs a negative control
+    verdict: PLAUSIBLE
+```

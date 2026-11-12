@@ -4,12 +4,10 @@ verdict_id: p7-postgres-source-verify-hardening-round2-20261101
 status: ACCEPTABLE
 reviewed_commit: 95dfb478a73ad7f4752c31b51c4e7ea01e581991
 findings:
-  - id: 1
+  - finding_id: 1
     severity: LOW
-    law: 2
-    summary: test `mkman` helper still emits `download_sha256` in its throwaway synthetic manifest; cosmetic, not a drift seed, no false-accept
 artifact_path: docs/verification/verdicts/p7-postgres-source-verify-hardening-round2-20261101.md
-artifact_sha: 4056fab0701685cd4afbf6c5e9ab56a6b91b937021d2bb0f57c6abbae2254568
+artifact_sha: a931cf597ce320248596b0b556cf51fca29465683449abeb28716f8febd8c9c7
 ---
 
 # P7 B1 unit-1 hardening (round 2) — non-author verdict
@@ -66,3 +64,20 @@ moving the tree off an accepted commit and re-opening the non-author re-verify c
 here as optional future cleanup rather than fixed under this acceptance. Unit-1 source provenance and
 its hardening are accepted; `DEF-P7-001` stays OPEN/BLOCKED pending unit 2 (build + license/notice
 inventory) and unit 3 (runtime fixture).
+
+
+## Findings — original pre-schema block (R1-4 provenance)
+
+> The structured `findings:` in the frontmatter were normalized to `vera.verdict.v1`
+> (`finding_id` + `severity` only). The **original** block, including each finding's full
+> `summary`/`verdict` text and its original severity word, is preserved verbatim below so no
+> reviewer detail is lost. `info`→`LOW` and `low-medium`→`MED` were the only severity remaps.
+> See `docs/deferrals.tsv` → `DEF-DELIVERY-ENFORCE-VERDICTS`.
+
+```yaml
+findings:
+  - id: 1
+    severity: LOW
+    law: 2
+    summary: test `mkman` helper still emits `download_sha256` in its throwaway synthetic manifest; cosmetic, not a drift seed, no false-accept
+```
