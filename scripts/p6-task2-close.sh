@@ -7,8 +7,8 @@ artifact=${P6_TASK2_ARTIFACT:-$repo/docs/verification/p6-connector-reality.md}
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
 
-code_commit=$(git -C "$repo" log -1 --format=%H -- \
-  kernel/internal/connector kernel/internal/cli/cli.go scripts/delivery-enforce.sh scripts/tests/delivery-enforce.test.sh)
+pinned_paths=(kernel/internal/connector kernel/internal/cli/cli.go scripts/delivery-enforce.sh scripts/tests/delivery-enforce.test.sh)
+code_commit=$(git -C "$repo" log -1 --format=%H -- "${pinned_paths[@]}")
 [[ $code_commit =~ ^[0-9a-f]{40}$ ]] || { echo 'p6-task2-close: cannot resolve code commit' >&2; exit 1; }
 
 mapfile -t packages < <(git -C "$repo" ls-files 'kernel/internal/connector/**/*.go' | rg -v '_test\.go$' | sed 's#/[^/]*$##; s#kernel/internal/connector/##' | sort -u)
@@ -90,6 +90,12 @@ case $mode in
   --write) install -m 0644 "$tmp" "$artifact" ;;
   --check)
     [[ -f $artifact ]] || { echo 'p6-task2-close: artifact missing' >&2; exit 1; }
+    # Staged-aware freshness (DEF-ROUTE-MATRIX-PRECOMMIT, peer artifact): the `code_commit` pin is a
+    # `git log` of the pinned paths and cannot see uncommitted work, so a pre-commit --check would
+    # false-green while the pin goes stale on commit. Fail closed on pending changes to the pinned
+    # paths. P6_TASK2_PENDING_OVERRIDE is a test seam.
+    pending=${P6_TASK2_PENDING_OVERRIDE-$(git -C "$repo" status --porcelain -- "${pinned_paths[@]}")}
+    [[ -z $pending ]] || { echo 'p6-task2-close: uncommitted changes under pinned paths; the @generated pin will be stale after commit — commit the change, then `scripts/p6-task2-close.sh --write` and commit the refreshed pin.' >&2; exit 1; }
     diff -u "$artifact" "$tmp" || { echo 'p6-task2-close: artifact stale' >&2; exit 1; }
     ;;
   *) echo 'usage: scripts/p6-task2-close.sh [--write|--check]' >&2; exit 2 ;;

@@ -54,7 +54,8 @@ for citation in "${citations[@]}"; do
   }
 done
 
-code_commit=$(git -C "$repo" log -1 --format=%H -- kernel/internal/projections kernel/internal/cli kernel/internal/twin kernel/internal/gates)
+routed_dirs=(kernel/internal/projections kernel/internal/cli kernel/internal/twin kernel/internal/gates)
+code_commit=$(git -C "$repo" log -1 --format=%H -- "${routed_dirs[@]}")
 [[ $code_commit =~ ^[0-9a-f]{40}$ ]] || { echo 'p6-route-matrix: no code commit' >&2; exit 1; }
 
 {
@@ -84,6 +85,14 @@ case $mode in
   --write) install -m 0644 "$tmp" "$artifact" ;;
   --check)
     [[ -f $artifact ]] || { echo 'p6-route-matrix: artifact missing' >&2; exit 1; }
+    # Staged-aware freshness (DEF-ROUTE-MATRIX-PRECOMMIT): the `code_commit` pin is derived from
+    # `git log` of the routed dirs, which cannot see uncommitted work. Without this guard a PRE-commit
+    # --check false-greens while the pin goes stale the instant those changes are committed — this
+    # pushed a red gate at 057bc07. Fail closed when a routed dir has pending (staged/unstaged/
+    # untracked) changes, so the only way to a green pin is: commit the kernel change, then
+    # `--write` the pin, then commit it. P6_ROUTE_PENDING_OVERRIDE is a test seam (see the self-test).
+    pending=${P6_ROUTE_PENDING_OVERRIDE-$(git -C "$repo" status --porcelain -- "${routed_dirs[@]}")}
+    [[ -z $pending ]] || { echo 'p6-route-matrix: uncommitted changes under routed kernel dirs; the @generated pin references the last COMMITTED commit and will be stale once you commit them. Commit the kernel change, then run `scripts/p6-route-matrix.sh --write` and commit the refreshed pin.' >&2; exit 1; }
     diff -u "$artifact" "$tmp" || { echo 'p6-route-matrix: artifact stale' >&2; exit 1; }
     ;;
   *) echo 'usage: scripts/p6-route-matrix.sh [--write|--check]' >&2; exit 2 ;;
