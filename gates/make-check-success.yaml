@@ -2,7 +2,7 @@
   "schema": "proofbound.gate.v1",
   "id": "make-check-success",
   "description": "The latest make check witness succeeded",
-  "expires": "2026-10-16",
+  "expires": "2027-02-16",
   "mode": "enforce",
   "source": "checks",
   "kind": "check.run",

@@ -2,7 +2,7 @@
   "schema": "proofbound.gate.v1",
   "id": "link-success",
   "description": "The latest repository link lint check succeeded",
-  "expires": "2026-10-16",
+  "expires": "2027-02-16",
   "mode": "enforce",
   "source": "checks",
   "kind": "check.run",

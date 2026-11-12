@@ -2,7 +2,7 @@
   "schema": "proofbound.gate.v1",
   "id": "index-check-success",
   "description": "The latest generated-files freshness check succeeded",
-  "expires": "2026-10-16",
+  "expires": "2027-02-16",
   "mode": "enforce",
   "source": "checks",
   "kind": "check.run",
