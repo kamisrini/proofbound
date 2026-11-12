@@ -140,6 +140,23 @@ proofbound report requirement <BR-id>  # render one requirement and its authoriz
 proofbound verify                      # projection rebuild + snapshot equality (see R1-4 note above)
 ```
 
+### GitHub connector (optional)
+
+To ingest GitHub Actions runs and deployments for your repositories, configure the connector via
+environment variables before `proofbound sync github`:
+
+```bash
+export PROOFBOUND_GITHUB_OWNER='your-org-or-user'
+export PROOFBOUND_GITHUB_REPOS='repo-a,repo-b'        # comma-separated
+export GITHUB_TOKEN='ghp_...'                         # a read-only token
+export PROOFBOUND_GITHUB_API_BASE_URL='https://api.github.com'   # optional; set for GitHub Enterprise
+proofbound sync github
+proofbound report github
+```
+
+Without `PROOFBOUND_GITHUB_OWNER`/`PROOFBOUND_GITHUB_REPOS` set, `sync github` fails with
+`github connector: API, Owner, IDs, and Logger are required`.
+
 `sync` is idempotent: re-running it appends only new events. The full command surface is:
 
 ```
