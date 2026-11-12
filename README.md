@@ -39,76 +39,56 @@ it cannot retroactively prove behavior for which no evidence exists.
 
 ## Project status
 
-This repository is an early-stage working scaffold, not yet a finished end-user product.
+**Release 1 — "the Trust Record" — is feature-complete and independently accepted.** This is the
+*records-and-verifies* cut of Proofbound: it ingests a project's real delivery record and verifies it,
+run against a Postgres you supply (or an embedded dev-mode database). The release line is decided in
+[`VD-release-line-kwdh4v`](docs/decisions/VD-release-line-kwdh4v.md); the maintained scope view is
+[`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
 
-As of 2026-09-22, P0 through P5 are implemented and accepted under the repository’s independent
-verification rule. P6 consolidation is also closed: its final census contains 327/327 closed rows
-with zero unclassified items. P6 added no new product capability; it deep-completed and re-proved
-the earlier phases before any P7 implementation work could begin.
+Release 1 is built from phases that are each deep-complete and accepted under the repository's
+independent (non-author) verification rule:
 
-Current project status: P6 complete; P7 planning only. No P7 provider, feed, schema, event kind,
-behavior-lock, or regeneration implementation is currently authorized.
+- **Flight Recorder (P1)** — an append-only event ledger with git, check-runner, and agent-session
+  connectors, projections, and `proofbound verify` (projection rebuild + snapshot equality).
+- **Gates-as-data (P2)** — gate definitions evaluated against the ledger, with a canary→enforce
+  promotion workflow.
+- **First external connector (P3)** — read-only GitHub Actions / deployments ingestion.
+- **Intent provenance (P5)** — a business-decision → requirement → change-intent (BD/BR/CI) chain,
+  with governed change intents bound to the exact commit that satisfies them.
+- **Behavior locks + runtime replay (P7 B1)** — behavior locks over the twin-replay path, replayed
+  against a real PostgreSQL, with provenance and independent acceptance.
 
-Currently implemented and verified:
+The `proofbound` binary builds as **pure Go** (`CGO_ENABLED=0`): the Flight Recorder path needs no
+C toolchain, Java, or Docker. Proofbound's first tenant is Proofbound — the project ingests and
+verifies **its own** commits, checks, and intent records as its standing acceptance test. A reproduced
+clean-clone proof of this release is recorded in
+[`docs/verification/r1-2-fresh-clone-release1.md`](docs/verification/r1-2-fresh-clone-release1.md).
 
-- Go kernel and core event primitives
-- Durable store foundations with migrations and append/read operations
-- Transaction handling and embedded/external database configuration
-- PostgreSQL-backed integration tests
-- Git, checks, and sessions connectors
-- Projection rebuild and `proofbound verify`
-- `proofbound report week`, including event-ID proof and `[superseded]` commit marking
-- Review-verdict ingestion, review projection rows, and ledger-ordered red-verdict chains
-- Machine-enforced spec-first coverage for every kernel package
-- P2 gate canary evaluation for the latest `make check` witness
-- Explicit canary-to-enforce gate promotion workflow; current seven-gate set promoted to enforce
-- Generated-files freshness gate witness (`make index-check-witnessed`) with compound matching
-- Law citation lint gate witness (`make law-citation-witnessed`)
-- SPEC invariant numbering gate witness (`make spec-numbering-witnessed`)
-- Invariant table gate witness (`make invariant-table-witnessed`)
-- Link lint gate witness (`make link-witnessed`)
-- Kernel build/test/lint gate witness (`make kernel-check-witnessed`)
-- Explicit delivery enforcement workflow (`make delivery-enforce`): fresh witnesses, ingestion, then fail-closed gate enforcement
-- P2 canary-to-enforce bad-witness acceptance evidence
-- P3 GitHub connector decision and initial workflow/deployment ingestion slice
-- P3 live fixture-selection evidence for `github/docs`
-- P3 live GitHub sync/report acceptance evidence
-- Verification and mutation-testing infrastructure
+**What Release 1 does not do yet (this is Release 2):** it does not regenerate failing code, predict
+outcomes, govern actions with policy envelopes, issue portable signed warranties, or redistribute a
+bundled database. Those capabilities are planned and not built.
 
-P7 is a capability-planning phase, not a product release milestone. Its current contents are:
-
-- Behavior locks and witnessed regeneration for the existing `ReplayIsolated` twin-replay path.
-  The planning contract defines provenance, canonical lock identity, intent/obligation binding,
-  hostile fixtures, clean-clone evidence, and independent acceptance requirements.
-- A bounded offline setup slice for the replay work, including pinned Go and embedded-PostgreSQL
-  inputs. The setup documentation has been reviewed, but the runtime fixture and implementation
-  are not accepted.
-- A deferred snapshot-provider option. The provider skip was retained; no provider, vendor, or
-  external feed has been selected or authorized.
-
-P7 is currently blocked at the planning-to-implementation boundary. Publisher provenance and
-component-license evidence for the pinned PostgreSQL input remain open, as do the complete
-projector/build manifest, clean-clone runtime checks, companion SPEC and fixture corpus, and an
-independent implementation verdict. The full `make check` gate is also environment-unverified on
-the current host because of Go/Snap permissions and a `golangci-lint` toolchain mismatch. These
-limitations do not change the historical P6 closure, but they mean this checkout should not be
-described as product-ready.
+**Release 1 wrap-up still in progress:** a small number of hardening items remain before Release 1 is
+declared shipped — see [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md). Notably,
+`proofbound verify` on a brand-new clone currently requires the verdict-schema cleanup tracked as
+R1-4; until that lands, `verify` fails on pre-existing non-conformant verdicts.
 
 ## Quick start
 
 ### Prerequisites
 
-- Git
-- Go 1.26 or newer
-- Bash
-- `golangci-lint` (required by the full check)
-- Docker, if running PostgreSQL integration or mutation tests
+- Git, Bash, and GNU Make
+- Go 1.26 or newer (the maintained build uses Go 1.27)
+- `golangci-lint` on your `PATH` (required by `make check`; install to `$(go env GOPATH)/bin`)
+- **No Docker or C toolchain is required** to build the binary or run the Flight Recorder. Docker is
+  only needed for the PostgreSQL integration tests and mutation sweeps, which are not part of the
+  default `make check`.
 
 For native Windows, use Git for Windows or MSYS2 so Bash and GNU Make can run the repository's
 recipes; WSL is not native Windows verification. The tracked `setup-windows.ps1` and
 `check-windows.ps1` scripts are the entry points.
 
-### Build and test
+### Verify the checkout
 
 From the repository root:
 
@@ -116,28 +96,62 @@ From the repository root:
 make check
 ```
 
-The full gate runs repository checks, link and documentation checks, builds the Go packages, runs
-the unit tests, and runs linting. For a faster inner loop:
+The gate builds the Go packages, runs the unit tests (without the `integration` build tag), runs
+`golangci-lint`, and runs the repository's own hook, link, and freshness checks. For a faster inner
+loop use `make short`.
+
+### Run Proofbound on a project
+
+Build the command-line tool:
 
 ```bash
-make short
+cd kernel
+CGO_ENABLED=0 go build -o proofbound ./cmd/proofbound
 ```
 
-To run the promoted data gates as a delivery boundary, use `make delivery-enforce`. It serializes
-the workflow, emits fresh witnesses for every promoted target, ingests them, and then runs
-`proofbound gates enforce`.
+Choose a database. Either point Proofbound at your own PostgreSQL:
 
-Additional operator targets are `make check-witnessed`, `make verify`, `make gates-canary`,
-`make gates-enforce`, `make invariants-lock`, `make identity-inventory`, and
-`make mutants PKG=internal/<package>`. Witnessed and delivery targets require a configured local
-ledger; mutation sweeps are package-acceptance evidence and intentionally stay outside
-`make check`.
+```bash
+export DATABASE_URL='postgres://user:pass@host:5432/dbname?sslmode=disable'
+```
 
-For a fresh clone that is carrying the P6 portability archive, run the one-shot migration before
-verification: `go run ./cmd/proofbound migrate historical-evidence`.
+…or leave `DATABASE_URL` unset to use the **embedded dev-mode** database. On first run Proofbound
+downloads an embedded PostgreSQL into `./.proofbound/pgbin` and keeps its data under `./.proofbound`.
+Dev-mode is for local use, not redistribution.
 
-The current command-line entry point is a scaffold while the product workflow is being built. The
-working implementation and tests live under [`kernel/`](kernel/).
+Then ingest and read the record. **Order matters** — if this repository carries a one-shot historical
+portability archive (Proofbound's own checkout does), the migration must run **first, on an empty
+ledger, before any `sync`**:
+
+```bash
+# 1. Import the historical archive FIRST, on an empty ledger (only for repos that carry one,
+#    such as this one). Running sync first makes the ledger non-empty and this step will refuse,
+#    which later causes report/verify to fail closed on a dangling intent reference.
+proofbound migrate historical-evidence
+
+# 2. Ingest the intent records, then the git history.
+proofbound sync intent all
+proofbound sync git
+
+# 3. Read and verify.
+proofbound report week                 # weekly proof view: commits, cited decisions, proof IDs
+proofbound report intent   <CI-id>     # render one change-intent chain and its verdicts
+proofbound report requirement <BR-id>  # render one requirement and its authorization
+proofbound verify                      # projection rebuild + snapshot equality (see R1-4 note above)
+```
+
+`sync` is idempotent: re-running it appends only new events. The full command surface is:
+
+```
+proofbound sync {git|checks|sessions|reviews|github|all}
+proofbound sync intent {records|specdir|all}
+proofbound migrate historical-evidence
+proofbound rebuild | verify
+proofbound report {week|github|intent <id>|requirement <id>}
+proofbound intent check --commit <sha>
+proofbound gates {canary|enforce}
+proofbound twin replay [--through <seq>] [--candidate <file>]
+```
 
 ## Repository layout
 
@@ -147,6 +161,7 @@ working implementation and tests live under [`kernel/`](kernel/).
 | [`docs/`](docs/) | Specifications, decisions, and verification documentation |
 | [`scripts/`](scripts/) | Repository checks and development tooling |
 | [`ROADMAP.md`](ROADMAP.md) | Project phases and completion criteria |
+| [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md) | Release 1 vs Release 2 scope |
 
 ## Contributing
 
