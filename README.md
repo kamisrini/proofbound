@@ -68,10 +68,19 @@ clean-clone proof of this release is recorded in
 outcomes, govern actions with policy envelopes, issue portable signed warranties, or redistribute a
 bundled database. Those capabilities are planned and not built.
 
-**Release 1 wrap-up still in progress:** a small number of hardening items remain before Release 1 is
-declared shipped — see [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md). Notably,
-`proofbound verify` on a brand-new clone currently requires the verdict-schema cleanup tracked as
-R1-4; until that lands, `verify` fails on pre-existing non-conformant verdicts.
+**Release 1 wrap-up is complete.** The hardening items that make Release 1 usable by someone else
+(R1-1 through R1-4) are all done — the clean-clone proof, staged-aware pin freshness, and the
+verdict-schema cleanup that lets `proofbound verify` run on a fresh clone. The maintained scope and
+status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
+
+**New to Proofbound? Start here:**
+
+- [`docs/releases/r1/USER-GUIDE.md`](docs/releases/r1/USER-GUIDE.md) — step-by-step, with a sample
+  app you build from scratch, and how to run Proofbound on your own project (including a single-dev
+  corporate setup).
+- [`docs/releases/r1/DEMO.md`](docs/releases/r1/DEMO.md) — a copy-paste 5-minute demo.
+- [`docs/releases/r1/RELEASE-NOTES.md`](docs/releases/r1/RELEASE-NOTES.md) — what Release 1
+  includes, its limitations, and what is deferred to Release 2.
 
 ## Quick start
 
