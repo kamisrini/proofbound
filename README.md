@@ -153,6 +153,26 @@ proofbound gates {canary|enforce}
 proofbound twin replay [--through <seq>] [--candidate <file>]
 ```
 
+### Maintainer / operator targets
+
+Beyond `make check` and `make short`, the repository exposes operator targets used by maintainers and
+automated build agents:
+
+- `make verify` — projection rebuild + snapshot-equality verification against a configured ledger.
+- `make kernel-check` — build, test (no `integration` tag), and lint the Go kernel only.
+- `make delivery-enforce` — serialize fresh witnesses, ingest them, then run `proofbound gates enforce`
+  as a delivery boundary.
+- `make gates-canary` / `make gates-enforce` — evaluate the promoted data gates in canary or enforcing mode.
+- `make check-witnessed` — run the gate and publish a witness of the result to the local spool.
+- `make index` / `make index-check` — regenerate or verify the freshness of generated indexes.
+- `make invariants-lock` — refresh the invariant lock files.
+- `make identity-inventory` — audit identity markers for stray live aliases.
+- `make mutants PKG=internal/<package>` — run a package mutation sweep (package-acceptance evidence;
+  intentionally outside `make check`).
+
+Witnessed and delivery targets require a configured local ledger. For a fresh clone carrying a
+historical portability archive, run `proofbound migrate historical-evidence` before verification.
+
 ## Repository layout
 
 | Path | Purpose |
