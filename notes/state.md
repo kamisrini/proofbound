@@ -6,11 +6,12 @@ As of: 2026-11-12
 
 ## Resume — 2026-11-12
 
-**Exact next action:** nothing is mid-flight — all work is committed and `make check` is GREEN
-(verified bare, true exit 0, this session). **5 commits are unpushed** (`6f0a1b0`..`c6aa4db`); push
-them (`git push origin main`) as the closeout. Active push (unchanged): **make Release 1 (the Trust
-Record) usable on a real project** under `VD-agent-standing-authorization-5ouz7q` /
-[[proofbound-decision-commits-need-intent]].
+**Exact next action:** nothing is mid-flight — all work is committed, pushed (`origin/main` =
+`c7a8a39`), and `make check` is GREEN (verified bare, true exit 0, this session). Active push
+(unchanged): **make Release 1 (the Trust Record) usable on a real project** under
+`VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]]. The last
+required R1 item is **R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`** (governed; author a change intent under the
+gate-integrity chain, as done this session for `CI-readme-r1-status-b7f2a9` / `CI-gate-expiry-fresh-c4e2a1`).
 
 **R1 wrap-up status** (see [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)):
 - **R1-1** flaky test — RESOLVED (prior session).
@@ -46,10 +47,20 @@ convenient): `BR-release-line-governance-7ff96f`, `BR-self-hosting-correctness-4
   refresh broke `p6-task1-close` (C1-001), which hard-coded the stale phase sentence. Retargeted the
   assertion to the stable phrase `feature-complete and independently accepted`. See the
   `hardcoded-fixture-coupling` lesson.
+- **Corp-readiness live-verb probe** (self-hosting) — tested the untested surface. Working:
+  `sync checks/sessions`, `report github`, `gates canary`. Two findings, both fixed:
+  - **Finding A (docs gap, `b252c0a`):** `sync github` needs `PROOFBOUND_GITHUB_OWNER/REPOS/API_BASE_URL`
+    + `GITHUB_TOKEN` (the CLI wires them; they were undocumented). Documented in the README.
+  - **Finding B (real R1 defect, `c7a8a39`, governed `Intent: CI-gate-expiry-fresh-c4e2a1`):** all 7
+    enforce-mode gate definitions had expired 2026-10-16, so `gates enforce` was silently dead (make
+    check never runs enforce). Renewed to **2027-02-16**; `gates enforce` exits 0 again. Added
+    `scripts/gate-expiry.sh` + self-test (auto-run by hooks-test) so an expired/dateless gate can
+    never pass make check unseen (`LESSON class=silent-gate-expiry`).
 
 ## Branch status
-`main` → `origin/main` **[ahead 5]** (HEAD `c6aa4db`, NOT pushed). Two permanent untracked paths
-remain (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`).
+`main` → `origin/main` **synced** at HEAD `c7a8a39` (this state commit will put HEAD 1 ahead until
+pushed). Two permanent untracked paths remain (`docs/plans/P5-intent-provenance-plan.md`,
+`kernel/cmd/p6dbprobe/`). New this session: `gates enforce` restored + `scripts/gate-expiry.sh` guard.
 
 ## Open / deferred (see `docs/deferrals.tsv`) — 3 OPEN
 - `DEF-P7-REGENLOOP-001` OPEN — regen full loop (owner-gated).
