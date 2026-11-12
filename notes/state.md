@@ -6,13 +6,18 @@ As of: 2026-11-12
 
 ## Resume — 2026-11-12
 
-**Exact next action:** nothing is mid-flight — all work is committed, pushed (`origin/main` =
-`c7a8a39`), and `make check` is GREEN (verified bare, true exit 0, this session). Active push
-(unchanged): **make Release 1 (the Trust Record) usable on a real project** under
+**Exact next action:** push the local docs commits (HEAD is ahead of `origin/main`). Release 1
+user-facing docs are written, verified against the real binary, and committed (`e25f6cc`):
+`docs/releases/r1/{RELEASE-NOTES,USER-GUIDE,DEMO}.md` + README pointers. **All R1 wrap-up items
+(R1-1..R1-4) remain DONE.** Open owner decisions, neither started: (1) accept R1 as shipped; (2)
+tag `v0.1.0` (`git tag -a v0.1.0 -m "Release 1 — the Trust Record"`); (3) single-dev corp pilot.
+Active push (unchanged): make Release 1 (the Trust Record) usable on a real project under
 `VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]].
-**All R1 wrap-up items (R1-1..R1-4) are DONE.** The remaining step to "R1 shipped" is the **owner's
-acceptance**, after which: tag the release, write a demo script (`docs/DEMO.md`), and run a single-dev
-corp pilot. See the ship path laid out in the 2026-11-12 journal.
+
+**Docs layout note:** owner chose a single per-release folder (`docs/releases/r1/`) over the hybrid
+I recommended; I flagged the Law 2 drift risk (a living user guide forked per release is a drift
+seed). If/when R2's guide diverges, revisit — consolidate the living guide, version only the notes.
+The three docs are NOT governed (no intent chain needed to edit them).
 
 **R1 wrap-up status** (see [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)):
 - **R1-1** flaky test — RESOLVED (prior session).
@@ -88,6 +93,6 @@ pushed). Two permanent untracked paths remain (`docs/plans/P5-intent-provenance-
   `@generated` route matrix; regenerate with `scripts/p6-route-matrix.sh --write` AFTER committing.
 
 ## Next session's first action
-Run `/proofbound-next`. Push the 5 unpushed commits first (owner closeout). Then the last required R1
-item is **R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`** (governed; author a change intent under the
-gate-integrity chain).
+Run `/proofbound-next`. If `origin/main` is behind HEAD, push first. R1-1..R1-4 are all DONE; the
+open items are owner decisions only: accept R1 as shipped, tag `v0.1.0`, start a single-dev corp
+pilot. Release 1 user docs live under `docs/releases/r1/` (verified against the binary).
