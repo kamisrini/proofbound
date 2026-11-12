@@ -2,74 +2,79 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-11 (EOD wrap executed early 2026-11-12)
+As of: 2026-11-12
 
-## Resume — 2026-11-11
+## Resume — 2026-11-12
 
-**Exact next action:** nothing is mid-flight — everything is committed and `make check` is GREEN
-(verified bare, true exit 0, this session). `origin/main` is **1 commit behind** HEAD `93bebd2`:
-**push is the owner's closeout step** and was deliberately NOT done this session. Active push
-(unchanged): **make Release 1 (the Trust Record) usable on a real project** under standing
-authorization `VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]].
-The highest-value unblocked R1 item is **R1-2: the clean-clone proof** (fresh clone builds + `make
-check` green on a clean machine; mind the documented WSL prereqs — `~/go/bin` on PATH, Go-1.27
-golangci-lint, `PROOFBOUND_BACKUP_DIR`). After that, in priority order: **(a)** continue probing the
-live surface for real-data blockers (`verify`, `report github`, `intent check`, `gates enforce`) —
-self-hosting is the acceptance test (`BD-self-hosting-correctness-11bcf2`); **(b)** refresh the stale
-`README.md` (still says "not product-ready / P6 / P7-planning, 2026-09-22") + a real end-user
-quickstart; **(c)** R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`; **(d)** R1-4 `DEF-DELIVERY-ENFORCE-VERDICTS`
-(owner-optional). See [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md). **Immediate blockers:** none.
+**Exact next action:** nothing is mid-flight — all work is committed and `make check` is GREEN
+(verified bare, true exit 0, this session). **5 commits are unpushed** (`6f0a1b0`..`c6aa4db`); push
+them (`git push origin main`) as the closeout. Active push (unchanged): **make Release 1 (the Trust
+Record) usable on a real project** under `VD-agent-standing-authorization-5ouz7q` /
+[[proofbound-decision-commits-need-intent]].
 
-**Governance follow-ups (both normal lifecycle, run when convenient):** two requirements sit
-`proposed` pending a non-author requirement review (`scripts/p6-task5-review.sh`):
-`BR-release-line-governance-7ff96f` and `BR-self-hosting-correctness-4607a3`.
+**R1 wrap-up status** (see [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)):
+- **R1-1** flaky test — RESOLVED (prior session).
+- **R1-2** clean-clone proof — **DONE + pushed** ([`r1-2-fresh-clone-release1.md`](../docs/verification/r1-2-fresh-clone-release1.md)).
+- **R1-3** `DEF-ROUTE-MATRIX-PRECOMMIT` — **OPEN, not started.** The one remaining required R1 item.
+  It is a GOVERNED (`scripts/*`) change → needs an owner-approved change intent (author a CI under
+  the gate-integrity chain, as was just done for `CI-readme-r1-status-b7f2a9`).
+- **R1-4** `DEF-DELIVERY-ENFORCE-VERDICTS` — **DONE this session** (owner made it required): `verify`
+  now runs on a fresh clone. **RESOLVED.**
+- **README / quickstart + Finding A** — **DONE this session.**
 
-## This session (2026-11-11)
+**Immediate blockers:** none. **Remaining for R1:** R1-3 (route-matrix pre-commit), then owner
+accepts R1 as shipped. Governance follow-ups still `proposed` (run `scripts/p6-task5-review.sh` when
+convenient): `BR-release-line-governance-7ff96f`, `BR-self-hosting-correctness-4607a3`,
+`BR-gate-integrity-4b2e08`.
 
-- **Cleared the last Law-9 debt on the self-hosting fix.** Produced the non-author **ACCEPTABLE**
-  verdict for `internal/projections` on `CI-fix-vd-citation-9958b1` (the date-suffixed `VD-*` decision
-  citation fix, authored 2026-11-10 in `ac76f88` — this session did not author it, so the review is
-  acceptance, not a self pre-check). Focused calibrated mutation sweep on the changed surface:
-  positive controls A–D died, declared-equivalent neutral E survived, lethal injected-test F killed,
-  zero undeclared survivors. P-INV-7 fail-closed preserved; Laws 1/6/7 hold. One non-blocking advisory
-  (date branch is a shape guard, accepts calendar-invalid dates; pre-existing, attack surface
-  unchanged). Verdict `docs/verification/verdicts/p7-projections-vd-citation-round1-20261111.md`
-  (self-digest validated) + regenerated `@generated` audit (`docs/verification/p6-artifact-integrity.md`,
-  52 schema-bearing) committed as `93bebd2`. `docs/verification/*` is ungoverned → no `Intent:` trailer.
-- **Process slip caught in-session:** piped `make check` through `tail`, which masked a red
-  `commit-cadence` gate (tail's exit 0 ≠ make's). Caught it, committed to refresh HEAD, re-ran the
-  gate bare → genuinely green. See the 2026-11-11 journal `LESSON: class=unverified-gate-claim`.
+## This session (2026-11-12)
+
+- **R1-2 clean-clone proof** (`6f0a1b0`): fresh `git clone --no-local` of HEAD with fresh embedded-PG
+  + fresh build/lint caches builds (CGO off) and `make check` green (cold). Live surface proven
+  end-to-end in the correct bootstrap order. Surfaced two findings → both now addressed.
+- **Finding A (bootstrap order undocumented)** → **README refresh** (`a26e957`, `b3477c2`): replaced
+  the stale "P6 / not product-ready" front door with Release-1 reality + a real end-user quickstart
+  documenting the load-bearing order (`migrate historical-evidence` FIRST on an empty ledger → `sync
+  intent all` → `sync git` → `report`/`verify`). Re-added operator `make` targets for the p6-census C1.
+- **Finding B / R1-4 (`verify` red on fresh clone)** → reclassified R1-4 required (`074da6c`), then
+  **migrated 15 pre-schema verdicts to `vera.verdict.v1`** (`421938c`): status synonyms mapped,
+  findings reduced to `{finding_id,severity[,defect_commit]}` (info→LOW, low-medium→MED) with the
+  original block preserved **verbatim in-body**; NEEDS_WORK verdicts keep ≥1 finding (projection
+  invariant). **Proven on a clean-bootstrapped ledger: `sync reviews` malformed=0, `sync all` exit 0,
+  `verify` exit 0.** `DEF-DELIVERY-ENFORCE-VERDICTS` RESOLVED (`6b2961a`).
+- **Gate-integrity fix** (`c6aa4db`, governed, `Intent: CI-readme-r1-status-b7f2a9`): the README
+  refresh broke `p6-task1-close` (C1-001), which hard-coded the stale phase sentence. Retargeted the
+  assertion to the stable phrase `feature-complete and independently accepted`. See the
+  `hardcoded-fixture-coupling` lesson.
 
 ## Branch status
-`main` → `origin/main` **[ahead 1]** (HEAD `93bebd2`, NOT pushed — owner closeout). Two permanent
-untracked paths remain (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`); these
-keep the worktree permanently "dirty," so `commit-cadence` passes only within 90m of the last commit.
+`main` → `origin/main` **[ahead 5]** (HEAD `c6aa4db`, NOT pushed). Two permanent untracked paths
+remain (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`).
 
-## Open / deferred (see `docs/deferrals.tsv`) — 4 OPEN (unchanged this session)
-- `DEF-P7-REGENLOOP-001` OPEN — regen gate-only slice CI-complete + accepted; remaining is owner final
-  acceptance + the FULL loop (step 3/4), which reopens the §5.1 regenerator-boundary.
-- `DEF-P7-DP-TWINROOT-001` OPEN — heavy twin-root detector-power sweep; also the `deferrals.test.sh`
-  fixture anchor (keep OPEN, or repoint the fixture if it is ever closed).
-- `DEF-DELIVERY-ENFORCE-VERDICTS` OPEN — repo-wide verdict-schema cleanup (R1-4, owner-optional).
-- `DEF-ROUTE-MATRIX-PRECOMMIT` OPEN — staged-aware derived-pin freshness (R1-3).
-- RESOLVED: `DEF-P7-001`/`-002`/`-003`, `DEF-METATAX-001`, `DEF-KERNELCHECK-FLAKE-001`.
+## Open / deferred (see `docs/deferrals.tsv`) — 3 OPEN
+- `DEF-P7-REGENLOOP-001` OPEN — regen full loop (owner-gated).
+- `DEF-P7-DP-TWINROOT-001` OPEN — heavy twin-root detector-power sweep; `deferrals.test.sh` fixture anchor.
+- `DEF-ROUTE-MATRIX-PRECOMMIT` OPEN — R1-3, the last required R1 item (governed; needs a change intent).
+- RESOLVED this session: `DEF-DELIVERY-ENFORCE-VERDICTS`.
 
 ## Key facts
-- `make check` = Makefile `check:` target. It includes `commit-cadence` (dirty-tree > 90m fails) and
-  `state-freshness`. It does NOT run `delivery-enforce`, BUT `make hooks-test` (inside it) runs
-  `delivery-enforce.test.sh`, which requires an `Intent:` trailer when HEAD touches a governed path.
-  **Never pipe `make check`** (not even `| tail`) — the pipe swallows make's exit code and a red gate
-  reads as green. See [[proofbound-make-check-vs-delivery-enforce]], [[proofbound-decision-commits-need-intent]].
-- Governed paths (need an `Intent:` trailer): `scripts/*`, `tools/*`, `gates/*`, `kernel/*` (except
-  SPEC.md/testdata), `Makefile`, `CLAUDE.md`, `docs/gates.md`, `docs/decisions/INDEX.md`,
-  `docs/{invariants,laws}.lock`, `docs/allowed-{skips,survivors}.txt`. `docs/verification/*`,
-  `docs/intent/records/*`, `docs/decisions/VD-*.md`, `docs/plans/*`, `ROADMAP.md`, `notes/*` are NOT governed.
-- Verdict/intent schemas + digests: [[proofbound-intent-record-digests]]. After adding a verdict,
-  regenerate `docs/verification/p6-artifact-integrity.md` with `scripts/p6-artifact-integrity.sh --write`.
+- **Never pipe `make check`** (not even `| tail`) — the pipe swallows make's exit code; a red gate
+  reads as green. `make check` includes `commit-cadence` (dirty-tree > 90m fails), `state-freshness`
+  (HEAD > 3 commits past state.md fails), and `delivery-enforce.test.sh` (needs an `Intent:` trailer
+  when HEAD touches a governed path). See [[proofbound-make-check-vs-delivery-enforce]].
+- **Authoring an intent chain** (for a governed change): ID `^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`;
+  self-digest = zero the record's OWN (last) `"artifact_sha256"` then sha256 the file; CI
+  `targets[].artifact_sha256` = the BR's self-digest; must target ≥1 obligation. Home for governed
+  maintenance: `BR-gate-integrity-4b2e08` O-1. See [[proofbound-intent-record-digests]].
+- Governed paths need an `Intent:` trailer; `docs/verification/*`, `docs/intent/records/*`,
+  `docs/plans/*`, `README.md`, `notes/*` are NOT governed.
+- Embedded-PG dev mode: `DATABASE_URL` unset → embedded PG under `./.proofbound` (persistent, pure
+  Go). The ledger is append-only — a bad `sync` pollutes it; reset the dev DB by moving
+  `.proofbound/db` aside (don't `rm -rf`; the classifier blocks it).
 - Route-matrix trap: committing `kernel/internal/{projections,cli,twin,gates}` re-stales the
   `@generated` route matrix; regenerate with `scripts/p6-route-matrix.sh --write` AFTER committing.
-  See [[proofbound-route-matrix-staleness-trap]].
 
 ## Next session's first action
-Run `/proofbound-next`. Highest-value unblocked item: **R1-2 clean-clone proof**. If the owner wants
-this session's commit upstream first, **push `93bebd2`** (origin is 1 behind).
+Run `/proofbound-next`. Push the 5 unpushed commits first (owner closeout). Then the last required R1
+item is **R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`** (governed; author a change intent under the
+gate-integrity chain).
