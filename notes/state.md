@@ -9,16 +9,18 @@ As of: 2026-11-12
 **Exact next action:** nothing is mid-flight — all work is committed, pushed (`origin/main` =
 `c7a8a39`), and `make check` is GREEN (verified bare, true exit 0, this session). Active push
 (unchanged): **make Release 1 (the Trust Record) usable on a real project** under
-`VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]]. The last
-required R1 item is **R1-3 `DEF-ROUTE-MATRIX-PRECOMMIT`** (governed; author a change intent under the
-gate-integrity chain, as done this session for `CI-readme-r1-status-b7f2a9` / `CI-gate-expiry-fresh-c4e2a1`).
+`VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]].
+**All R1 wrap-up items (R1-1..R1-4) are DONE.** The remaining step to "R1 shipped" is the **owner's
+acceptance**, after which: tag the release, write a demo script (`docs/DEMO.md`), and run a single-dev
+corp pilot. See the ship path laid out in the 2026-11-12 journal.
 
 **R1 wrap-up status** (see [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)):
 - **R1-1** flaky test — RESOLVED (prior session).
 - **R1-2** clean-clone proof — **DONE + pushed** ([`r1-2-fresh-clone-release1.md`](../docs/verification/r1-2-fresh-clone-release1.md)).
-- **R1-3** `DEF-ROUTE-MATRIX-PRECOMMIT` — **OPEN, not started.** The one remaining required R1 item.
-  It is a GOVERNED (`scripts/*`) change → needs an owner-approved change intent (author a CI under
-  the gate-integrity chain, as was just done for `CI-readme-r1-status-b7f2a9`).
+- **R1-3** `DEF-ROUTE-MATRIX-PRECOMMIT` — **DONE** (`a5a085b`, `CI-staged-pin-guard-7b3c9d`): route-matrix
+  + `p6-task2-close` `--check` fail closed on pending pinned-path changes (seam-tested); `p6-census`
+  excluded by design (its pin also gates the C6 census horizon, which fails loudly, not silently).
+  **All R1 wrap-up items (R1-1..R1-4) are now DONE** — R1 is shippable pending owner acceptance.
 - **R1-4** `DEF-DELIVERY-ENFORCE-VERDICTS` — **DONE this session** (owner made it required): `verify`
   now runs on a fresh clone. **RESOLVED.**
 - **README / quickstart + Finding A** — **DONE this session.**

@@ -25,13 +25,14 @@ R1*. Update it as R1 wrap-up items close.
 |---|---|---|---|---|
 | R1-1 | `DEF-KERNELCHECK-FLAKE-001` — flaky embedded-postgres test | ~0 (done) | **FIXED + non-author accepted (r1+r2); awaiting owner final close.** Closing also repoints the `deferrals.test.sh` `--open` fixture. | ✅ required |
 | R1-2 | Clean-clone proof — fresh clone builds + `make check` green on a clean machine | medium | **PROVEN 2026-11-12** ([`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)): cold-cache build + `make check` green; live surface (migrate→sync→report/rebuild) green; two findings — (A) bootstrap order undocumented, (B) `verify` red on fresh clone via R1-4. | ✅ required |
-| R1-3 | `DEF-ROUTE-MATRIX-PRECOMMIT` — staged-aware derived-pin freshness (pre-commit blindspot) | small | not started | ✅ required |
+| R1-3 | `DEF-ROUTE-MATRIX-PRECOMMIT` — staged-aware derived-pin freshness (pre-commit blindspot) | small | **DONE 2026-11-12** (`a5a085b`, `CI-staged-pin-guard-7b3c9d`): route-matrix + `p6-task2-close` `--check` fail closed on pending pinned-path changes (seam-tested); `p6-census` excluded by design. Deferral RESOLVED. | ✅ required |
 | R1-4 | `DEF-DELIVERY-ENFORCE-VERDICTS` — bring the pre-schema verdicts to `vera.verdict.v1` so `proofbound verify` / `sync all` run on a fresh clone | medium (repo-wide, mechanical) | **DONE 2026-11-12** (`421938c`): 15 pre-schema verdicts normalized (status synonyms + structured findings; originals kept verbatim in-body). Proven on a clean ledger: `sync reviews` malformed=0, `sync all` exit 0, `verify` exit 0. `DEF-DELIVERY-ENFORCE-VERDICTS` RESOLVED. | ✅ required (owner, 2026-11-12) |
 
-**R1 is shippable when:** R1-1..R1-4 are closed, R1-2 proven (done — [`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)),
-and the owner accepts R1 as shipped. `make check` is already green at HEAD; `make delivery-enforce`
-is NOT a `make check` gate, so R1-4 does not block the local gate — but R1-2 proved it blocks the
-`proofbound verify` verb on a fresh clone, so R1-4 is now required (owner, 2026-11-12), not optional.
+**R1 is shippable when:** R1-1..R1-4 are closed, R1-2 proven, and the owner accepts R1 as shipped.
+**As of 2026-11-12, R1-1..R1-4 are all DONE** ([`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)
+is the clean-clone proof; the corp-readiness probe additionally restored `gates enforce`). The only
+remaining gate to "R1 shipped" is **the owner's acceptance**, after which: tag the release, add a demo
+script, and run a single-dev corp pilot.
 
 ## Release 2 — the revenue organs + turnkey redistribution (everything else)
 
