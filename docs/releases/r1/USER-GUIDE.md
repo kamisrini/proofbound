@@ -9,6 +9,8 @@ Proofbound turn its ordinary git history into a durable, machine-readable *trust
 end you'll know which commands to run on your own repository and what each one proves.
 
 - Just want to copy-paste? Use the [5-minute demo](DEMO.md).
+- Want to see *every* Release-1 capability on a sample project in one run? Use the
+  [Full Value Tour](FULL-TOUR.md) (`bash docs/releases/r1/full-tour.sh`).
 - Want the scope and caveats of this release? See the [Release Notes](RELEASE-NOTES.md).
 
 ---

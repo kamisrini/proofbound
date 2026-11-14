@@ -20,7 +20,8 @@ It answers questions that ordinary build logs and green CI badges do not preserv
 - What is *still* unverified?
 
 New to Proofbound? Start with the [**User Guide**](USER-GUIDE.md) (step-by-step, with a sample
-app you build from scratch) or the [**5-minute demo**](DEMO.md).
+app you build from scratch) or the [**5-minute demo**](DEMO.md). To see **every Release-1
+capability** on a sample project in one run, use the [**Full Value Tour**](FULL-TOUR.md).
 
 ## What's included
 
@@ -101,4 +102,4 @@ git push origin v0.1.0
 
 ---
 
-*Next: [User Guide](USER-GUIDE.md) · [5-minute demo](DEMO.md)*
+*Next: [User Guide](USER-GUIDE.md) · [5-minute demo](DEMO.md) · [Full Value Tour](FULL-TOUR.md)*

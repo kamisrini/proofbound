@@ -163,4 +163,6 @@ rm -rf /tmp/greeter
 ---
 
 *Next: the [User Guide](USER-GUIDE.md) explains every concept and shows how to run Proofbound on
-your real project in a corporate setting.*
+your real project in a corporate setting. To see **everything Release 1 does** on a sample project —
+the intent chain, review verdicts, red-verdict chains, and deterministic rebuild — run the
+[Full Value Tour](FULL-TOUR.md) (`bash docs/releases/r1/full-tour.sh`).*
