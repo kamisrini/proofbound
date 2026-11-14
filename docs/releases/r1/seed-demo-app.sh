@@ -166,11 +166,34 @@ tour "proofbound sync checks ingested the spool; the pass and the fail are now p
 tour "(In production, a one-line wrapper writes these witnesses as your real tests/CI run.)"
 
 # ---------------------------------------------------------------------------------------------------
-say "6. The whole trust record"
+say "6. Agent sessions — a record of what the AI actually did"
+tour "Proofbound ingests agent-session telemetry (messages, tool calls, files written) so the work an"
+tour "AI agent did is itself part of the trust record. We seed one synthetic session transcript."
+# Sessions are read from ~/.claude/projects/<encoded-project-path>/*.jsonl (a Claude Code transcript).
+# We compute that path for THIS app, write one transcript, and backdate it past the 10-minute
+# "still being written" skip. NOTE: this is the one artifact that lives outside the app dir.
+SESS_ROOT=$(pwd -P)
+SESS_ENC=$(printf '%s' "$SESS_ROOT" | sed 's/:/-/g; s#/#-#g; s/\./-/g')
+SESS_DIR="$HOME/.claude/projects/$SESS_ENC"
+rm -rf "$SESS_DIR"; mkdir -p "$SESS_DIR"
+cat > "$SESS_DIR/demo-session-01.jsonl" <<'SESS'
+{"session_id":"demo-session-01","type":"user","timestamp":"2026-11-14T09:00:00Z","text":"make sure tax is never negative"}
+{"session_id":"demo-session-01","type":"assistant","timestamp":"2026-11-14T09:00:05Z","text":"editing tax.go"}
+{"session_id":"demo-session-01","type":"tool_use","name":"Edit","timestamp":"2026-11-14T09:00:06Z"}
+{"session_id":"demo-session-01","type":"tool_use","name":"Bash","timestamp":"2026-11-14T09:00:10Z"}
+{"session_id":"demo-session-01","type":"tool_use","name":"Write","timestamp":"2026-11-14T09:00:20Z"}
+{"session_id":"demo-session-01","type":"assistant","timestamp":"2026-11-14T09:00:30Z","text":"done"}
+SESS
+touch -d '-15 minutes' "$SESS_DIR/demo-session-01.jsonl" 2>/dev/null || touch -d "$(date -u -d '-15 min' '+%Y-%m-%d %H:%M:%S')" "$SESS_DIR/demo-session-01.jsonl" 2>/dev/null || true
+pb sync sessions >/dev/null
+tour "proofbound sync sessions ingested it; report week now shows the session with its activity counts."
+
+# ---------------------------------------------------------------------------------------------------
+say "7. The whole trust record"
 pb report week | grep -E '^(week|commits|- |checks|sessions|reviews|red_)' | out
 
 # ---------------------------------------------------------------------------------------------------
-say "7. Gates — rules over the witnesses that stop the bad thing at the boundary"
+say "8. Gates — rules over the witnesses that stop the bad thing at the boundary"
 tour "A gate is a small declarative rule over the check witnesses. We define two: 'tests-pass' is"
 tour "promoted to ENFORCE; 'build-passes' is still in CANARY (canary evaluates without ever blocking)."
 EXP=$(date -u -d '+2 years' +%Y-%m-%d 2>/dev/null || date -u -v+2y +%Y-%m-%d)
@@ -191,7 +214,7 @@ tour "tests-pass gate is green. Flip build-passes to mode:enforce once the build
 tour "'proofbound gates enforce' would exit non-zero and stop the pipeline — the boundary stop."
 
 # ---------------------------------------------------------------------------------------------------
-say "8. The record is reproducible, not a snapshot"
+say "9. The record is reproducible, not a snapshot"
 B=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
 pb rebuild >/dev/null
 A=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
@@ -215,9 +238,9 @@ cat <<DONE
    # then: edit gates/build-passes.yaml -> "mode":"enforce" and re-run 'gates enforce' to see it BLOCK
 
  Not shown on a sample app (by design): verify (Proofbound-only),
- github (needs a token), sessions (agent telemetry), twin replay (advanced).
- See FULL-TOUR.md for why.
+ github (needs a token), twin replay (advanced). See FULL-TOUR.md for why.
 
  Re-run this script any time; it recreates the app cleanly.
- Remove it with:  rm -rf "$TARGET"
+ Remove it with:  rm -rf "$TARGET" "$SESS_DIR"
+ ($SESS_DIR is the seeded agent-session transcript, kept outside the app dir.)
 DONE

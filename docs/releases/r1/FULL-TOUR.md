@@ -6,8 +6,9 @@ not the 5-minute taste, but the whole trust surface — without reading Proofbou
 **What it shows:** a permanent trust record, decisions bound to the commits that implement them, the
 full **decision → requirement → change → commit** intent chain, independent **review verdicts**
 (including a *red-verdict chain*: a fix that introduced a new defect), **CI witnesses** (a passing and
-a failing check as permanent evidence), **gates** that evaluate those witnesses and stop the bad thing
-at the boundary, and a record that **rebuilds identically** from scratch.
+a failing check as permanent evidence), **agent-session telemetry**, **gates** that evaluate those
+witnesses and stop the bad thing at the boundary, and a record that **rebuilds identically** from
+scratch.
 
 > **Run it (≈1 minute):**
 > ```bash
@@ -123,7 +124,22 @@ is recorded too: failures are first-class evidence, not something a passing re-r
 project, a one-line wrapper writes these as your tests/CI actually run; this tour hand-seeds them so
 you can see the shape.)
 
-## 6. Gates — rules over the witnesses that stop the bad thing at the boundary
+## 6. Agent sessions — a record of what the AI actually did
+
+Proofbound ingests **agent-session telemetry** — so the work an AI agent performed is itself part of
+the record, not an invisible black box. The tour seeds one synthetic session transcript.
+
+```
+proofbound report week
+→ sessions count=1
+   - demo-session-01  messages=6  tool_calls=3  files_written=2  coverage=1.000  proof=01M…
+```
+
+**Business value:** "how much did the AI touch, and what did it do?" becomes a queryable, permanent
+fact — the raw material for later governing what agents are allowed to do unattended. (A real session
+comes from your agent's own transcript; the tour hand-seeds one so you can see the shape.)
+
+## 7. Gates — rules over the witnesses that stop the bad thing at the boundary
 
 A **gate** is a small declarative rule over the check witnesses. The tour defines two: `tests-pass`
 (promoted to **enforce**) and `build-passes` (still in **canary**).
@@ -147,7 +163,7 @@ pipeline — the boundary stop.
 its false-positive rate in canary, not by the people it wrongly blocks. Every result points at the
 exact witness that decided it, and every gate carries an expiry so no rule silently rots.
 
-## 7. The record is reproducible, not a snapshot
+## 8. The record is reproducible, not a snapshot
 
 ```
 proofbound rebuild          # drop every projection, rebuild from the raw ledger
@@ -168,7 +184,6 @@ Being honest about the edges:
   says `no make check witness found in spool` — **expected**. Your trust surface is
   `sync` + `report` + `rebuild`; `verify` is for Proofbound's self-hosting workflow.
 - **`proofbound sync github` / `report github`** need a real GitHub repo and a `GITHUB_TOKEN`.
-- **`proofbound sync sessions`** records agent-session telemetry, which a sample app doesn't produce.
 - **`proofbound twin replay`** is the advanced replay engine (it spins up a private PostgreSQL) —
   the foundation under behavior-locks, beyond this tour.
 
