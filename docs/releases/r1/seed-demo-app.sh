@@ -147,11 +147,30 @@ Implements the rounding policy decided in VD-rounding-policy-3f2a1b."
 pb sync git >/dev/null
 
 # ---------------------------------------------------------------------------------------------------
-say "5. The whole trust record"
+say "5. CI witnesses — tamper-evident proof that a check actually RAN"
+tour "A witness is produced by the check itself, never asserted by an agent: the command, the result,"
+tour "the timing, bound to the exact commit. We seed one PASSING and one FAILING check for HEAD —"
+tour "a failure recorded as permanent evidence, not a green badge that forgets."
+mkdir -p .proofbound/spool
+SHA=$(git rev-parse HEAD)
+mkwitness() { # $1 run_id(ULID)  $2 "make <target>"  $3 exit_code  $4 duration_ms  $5 started  $6 finished  $7 output
+  local osha; osha=$(printf '%s\n' "$7" | sha256sum | awk '{print $1}')
+  cat > ".proofbound/spool/$1.json" <<EOF
+{"schema":"vera.witness.v1","run_id":"$1","command":"$2","exit_code":$3,"started_at":"$5","finished_at":"$6","duration_ms":$4,"output_sha256":"$osha","git_sha":"$SHA","git_dirty":false,"tool_versions":{"go":"go1.27.4","golangci_lint":"2.13.2","make":"GNU Make 4.3"}}
+EOF
+}
+mkwitness 01HQRST9VWXYZ0123456789ABC "make test"  0 3000 "2026-11-14T10:00:00Z" "2026-11-14T10:00:03Z" "all tests passed"
+mkwitness 01HQRST9VWXYZ0123456789ABD "make build" 2 1200 "2026-11-14T10:05:00Z" "2026-11-14T10:05:01Z" "build failed: undefined symbol"
+pb sync checks >/dev/null
+tour "proofbound sync checks ingested the spool; the pass and the fail are now permanent evidence."
+tour "(In production, a one-line wrapper writes these witnesses as your real tests/CI run.)"
+
+# ---------------------------------------------------------------------------------------------------
+say "6. The whole trust record"
 pb report week | grep -E '^(week|commits|- |checks|sessions|reviews|red_)' | out
 
 # ---------------------------------------------------------------------------------------------------
-say "6. The record is reproducible, not a snapshot"
+say "7. The record is reproducible, not a snapshot"
 B=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
 pb rebuild >/dev/null
 A=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
@@ -172,7 +191,7 @@ cat <<DONE
    proofbound rebuild && proofbound report week   # prove determinism
 
  Not shown on a sample app (by design): verify (Proofbound-only),
- gates/checks (need CI witness data), github (needs a token),
+ gates (need gate definitions over the witnesses), github (needs a token),
  twin replay (advanced). See FULL-TOUR.md for why.
 
  Re-run this script any time; it recreates the app cleanly.

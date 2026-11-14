@@ -61,8 +61,8 @@ which proofbound                                  # should print /home/<you>/bin
 now — on a ready-made sample app — run the seeder (point the path at your repo):
 
 ```bash
-bash ~/proofbound/docs/releases/r1/seed-demo-app.sh            # concise; leaves an app to explore
-bash ~/proofbound/docs/releases/r1/seed-demo-app.sh --tour     # narrated walkthrough
+bash ~/projects/proofbound/docs/releases/r1/seed-demo-app.sh            # concise; leaves an app to explore
+bash ~/projects/proofbound/docs/releases/r1/seed-demo-app.sh --tour     # narrated walkthrough
 ```
 
 It builds its **own** throwaway sample app (default `~/proofbound-demo-app`) and records the full

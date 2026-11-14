@@ -103,7 +103,26 @@ that commit forever:
 **Business value:** the *why* travels with the *what*, permanently — even if the commit message is
 later rewritten or the decision file moves.
 
-## 5. The record is reproducible, not a snapshot
+## 5. CI witnesses — tamper-evident proof that a check actually *ran*
+
+The tour seeds two **witnesses** — a passing `make test` and a failing `make build` — bound to the
+exact commit. A witness is produced *by the check*, never asserted by an agent: it carries the
+command, the exit code, the timing, and a content hash of the output.
+
+```
+proofbound report week
+→ checks count=2
+   - 01HQRST9…ABC  pass  duration_ms=3000  proof=01M…
+   - 01HQRST9…ABD  fail  duration_ms=1200  proof=01M…
+```
+
+**Business value:** a green CI badge is a *claim* that evaporates; a witness is **evidence** — that
+a specific check ran, with a specific result, on a specific commit, permanently. Notice the **fail**
+is recorded too: failures are first-class evidence, not something a passing re-run erases. (In a real
+project, a one-line wrapper writes these as your tests/CI actually run; this tour hand-seeds them so
+you can see the shape.)
+
+## 6. The record is reproducible, not a snapshot
 
 ```
 proofbound rebuild          # drop every projection, rebuild from the raw ledger
@@ -123,8 +142,9 @@ Being honest about the edges:
 - **`proofbound verify`** checks Proofbound's *own* delivery boundary. On an ordinary app repo it
   says `no make check witness found in spool` — **expected**. Your trust surface is
   `sync` + `report` + `rebuild`; `verify` is for Proofbound's self-hosting workflow.
-- **`proofbound gates …`** evaluate rules against recorded CI/check *witnesses*, which a plain app
-  repo doesn't produce. Demonstrating gates needs check-run data.
+- **`proofbound gates …`** evaluate declarative rules over the check witnesses. The tour now seeds
+  witnesses (§5), so the missing piece is the gate *definitions* (`gates/*.yaml`) plus a
+  canary→enforce promotion — a layer beyond this tour.
 - **`proofbound sync github` / `report github`** need a real GitHub repo and a `GITHUB_TOKEN`.
 - **`proofbound twin replay`** is the advanced replay engine (it spins up a private PostgreSQL) —
   the foundation under behavior-locks, beyond this tour.
