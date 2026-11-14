@@ -101,6 +101,11 @@ tour "(review=UNREVIEWED, outcome=UNVERIFIED: Proofbound separates 'implemented'
 
 # ---------------------------------------------------------------------------------------------------
 say "3. Independent reviews — including a fix that introduced a new defect (red-verdict chain)"
+tour "A review verdict records what a reviewer FOUND — not just that a check ran. We file two, each"
+tour "flagging a real defect: first a false 'rounding' claim, then a NEW defect the FIX itself"
+tour "introduced. That pattern — a red review, then a change, then another red review — is a"
+tour "RED-VERDICT CHAIN, the signal a green CI badge can never give you. It shows up as reviews=2 and"
+tour "red_verdict_chains=1 in the whole record (step 7)."
 mkverdict() { # $1=id $2=commit $3=findingid $4=sev
   local p=docs/verification/verdicts/$1.md
   mkdir -p "$(dirname "$p")"
@@ -133,10 +138,13 @@ git commit -q -am "fix(tax): round half up instead of truncating"; FIX=$(git rev
 mkverdict review-tax-overflow-round1 "$FIX" tax-rounding-overflows HIGH
 git add -A; git commit -q -m "review: the rounding fix can overflow (NEEDS_WORK)"
 pb sync git >/dev/null; pb sync reviews >/dev/null
-tour "Two reviews recorded; the second caught a defect the FIX introduced."
+tour "Both reviews are now recorded; the second caught a defect the FIX introduced (see step 7)."
 
 # ---------------------------------------------------------------------------------------------------
 say "4. A decision bound to the commit that implements it"
+tour "A plain decision note (a VD-* file) is cited by the commit that implements it. Proofbound binds"
+tour "the WHY to the exact WHAT, permanently — even if the commit message is later rewritten or the"
+tour "file moves. It shows as decisions=VD-rounding-policy-3f2a1b on the last commit (step 7)."
 mkdir -p docs/decisions
 printf '# VD-rounding-policy-3f2a1b — Round tax half-up\n\nStatus: accepted\nDate: 2026-11-12\n\nTax rounds half-up to the nearest cent.\n' > docs/decisions/VD-rounding-policy-3f2a1b.md
 git add -A; git commit -q -m "docs: record rounding-policy decision"
@@ -191,6 +199,15 @@ tour "proofbound sync sessions ingested it; report week now shows the session wi
 # ---------------------------------------------------------------------------------------------------
 say "7. The whole trust record"
 pb report week | grep -E '^(week|commits|- |checks|sessions|reviews|red_)' | out
+cat <<'NOTICE'
+
+   What to notice in the record above — the full value in one view:
+     • every commit carries a permanent proof= id bound to its exact code
+     • decisions=VD-… on the last commit — the WHY bound to the WHAT
+     • checks count=2 — a PASS and a FAIL, recorded as evidence (not a badge that forgets)
+     • sessions count=1 — what the AI agent actually did (messages / tool-calls / files)
+     • reviews count=2 and red_verdict_chains=1 — a fix that INTRODUCED a new defect
+NOTICE
 
 # ---------------------------------------------------------------------------------------------------
 say "8. Gates — rules over the witnesses that stop the bad thing at the boundary"
