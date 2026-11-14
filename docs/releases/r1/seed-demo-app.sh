@@ -170,7 +170,28 @@ say "6. The whole trust record"
 pb report week | grep -E '^(week|commits|- |checks|sessions|reviews|red_)' | out
 
 # ---------------------------------------------------------------------------------------------------
-say "7. The record is reproducible, not a snapshot"
+say "7. Gates — rules over the witnesses that stop the bad thing at the boundary"
+tour "A gate is a small declarative rule over the check witnesses. We define two: 'tests-pass' is"
+tour "promoted to ENFORCE; 'build-passes' is still in CANARY (canary evaluates without ever blocking)."
+EXP=$(date -u -d '+2 years' +%Y-%m-%d 2>/dev/null || date -u -v+2y +%Y-%m-%d)
+mkdir -p gates
+cat > gates/tests-pass.yaml <<GATE
+{"schema":"proofbound.gate.v1","id":"tests-pass","description":"The make test check must succeed","expires":"$EXP","mode":"enforce","source":"checks","kind":"check.run","selector":{"field":"command","equals":"make test"},"condition":{"field":"exit_code","equals":0}}
+GATE
+cat > gates/build-passes.yaml <<GATE
+{"schema":"proofbound.gate.v1","id":"build-passes","description":"The make build check must succeed","expires":"$EXP","mode":"canary","source":"checks","kind":"check.run","selector":{"field":"command","equals":"make build"},"condition":{"field":"exit_code","equals":0}}
+GATE
+tour "proofbound gates canary  — evaluate ALL gates, block nothing (prove behavior first):"
+pb gates canary | out
+tour ""
+tour "proofbound gates enforce  — only PROMOTED (enforce-mode) gates can block:"
+pb gates enforce | out
+tour "The canary caught the failing build (would_block=true) WITHOUT blocking anything; the promoted"
+tour "tests-pass gate is green. Flip build-passes to mode:enforce once the build is fixed, and"
+tour "'proofbound gates enforce' would exit non-zero and stop the pipeline — the boundary stop."
+
+# ---------------------------------------------------------------------------------------------------
+say "8. The record is reproducible, not a snapshot"
 B=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
 pb rebuild >/dev/null
 A=$(pb report week | grep -E '^- .*whole-percent' | grep -oE 'proof=[0-9A-Z]+')
@@ -188,11 +209,14 @@ cat <<DONE
    proofbound report intent $CI   # the decision->commit chain
    proofbound report requirement $BR     # a requirement's obligations
    proofbound intent check --commit $IMPL   # bind a commit to its intent
+   proofbound gates canary                        # evaluate the gates (blocks nothing)
+   proofbound gates enforce                        # only promoted gates block
    proofbound rebuild && proofbound report week   # prove determinism
+   # then: edit gates/build-passes.yaml -> "mode":"enforce" and re-run 'gates enforce' to see it BLOCK
 
  Not shown on a sample app (by design): verify (Proofbound-only),
- gates (need gate definitions over the witnesses), github (needs a token),
- twin replay (advanced). See FULL-TOUR.md for why.
+ github (needs a token), sessions (agent telemetry), twin replay (advanced).
+ See FULL-TOUR.md for why.
 
  Re-run this script any time; it recreates the app cleanly.
  Remove it with:  rm -rf "$TARGET"

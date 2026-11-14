@@ -5,8 +5,9 @@ not the 5-minute taste, but the whole trust surface — without reading Proofbou
 
 **What it shows:** a permanent trust record, decisions bound to the commits that implement them, the
 full **decision → requirement → change → commit** intent chain, independent **review verdicts**
-(including a *red-verdict chain*: a fix that introduced a new defect), and a record that **rebuilds
-identically** from scratch.
+(including a *red-verdict chain*: a fix that introduced a new defect), **CI witnesses** (a passing and
+a failing check as permanent evidence), **gates** that evaluate those witnesses and stop the bad thing
+at the boundary, and a record that **rebuilds identically** from scratch.
 
 > **Run it (≈1 minute):**
 > ```bash
@@ -122,7 +123,31 @@ is recorded too: failures are first-class evidence, not something a passing re-r
 project, a one-line wrapper writes these as your tests/CI actually run; this tour hand-seeds them so
 you can see the shape.)
 
-## 6. The record is reproducible, not a snapshot
+## 6. Gates — rules over the witnesses that stop the bad thing at the boundary
+
+A **gate** is a small declarative rule over the check witnesses. The tour defines two: `tests-pass`
+(promoted to **enforce**) and `build-passes` (still in **canary**).
+
+```
+proofbound gates canary          # evaluate ALL gates, block nothing
+→ gate=build-passes  state=BLOCKED  would_block=true   proof=01M…
+  gate=tests-pass    state=PASS     would_block=false  proof=01M…
+
+proofbound gates enforce         # only PROMOTED (enforce-mode) gates can block
+→ gate=tests-pass    state=PASS     would_block=false  proof=01M…
+```
+
+The **canary** caught the failing build (`would_block=true`) **without blocking anything** — that's
+the point of canary: you watch a rule's behavior on real evidence *before* you trust it to block.
+The **enforce** run evaluates only the promoted gate (`tests-pass`, green). Flip `build-passes` to
+`mode: enforce` once the build is fixed, and `gates enforce` would exit non-zero and stop the
+pipeline — the boundary stop.
+
+**Business value:** this is *"stop the bad thing at the boundary"* — and a bad *gate* is caught by
+its false-positive rate in canary, not by the people it wrongly blocks. Every result points at the
+exact witness that decided it, and every gate carries an expiry so no rule silently rots.
+
+## 7. The record is reproducible, not a snapshot
 
 ```
 proofbound rebuild          # drop every projection, rebuild from the raw ledger
@@ -142,10 +167,8 @@ Being honest about the edges:
 - **`proofbound verify`** checks Proofbound's *own* delivery boundary. On an ordinary app repo it
   says `no make check witness found in spool` — **expected**. Your trust surface is
   `sync` + `report` + `rebuild`; `verify` is for Proofbound's self-hosting workflow.
-- **`proofbound gates …`** evaluate declarative rules over the check witnesses. The tour now seeds
-  witnesses (§5), so the missing piece is the gate *definitions* (`gates/*.yaml`) plus a
-  canary→enforce promotion — a layer beyond this tour.
 - **`proofbound sync github` / `report github`** need a real GitHub repo and a `GITHUB_TOKEN`.
+- **`proofbound sync sessions`** records agent-session telemetry, which a sample app doesn't produce.
 - **`proofbound twin replay`** is the advanced replay engine (it spins up a private PostgreSQL) —
   the foundation under behavior-locks, beyond this tour.
 
