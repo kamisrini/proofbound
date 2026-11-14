@@ -1,25 +1,64 @@
-# Proofbound — 5-Minute Demo
+# Proofbound — Demo Hub (Release 1)
 
-This demo builds a tiny sample app, records its delivery history with Proofbound, and reads
+**The single starting point for trying Proofbound.** Everyone does the one-time setup below
+(sections 0–1), then picks a path:
+
+| I want to… | Do this | Time |
+|---|---|---|
+| **See everything Release 1 does**, in one run *(recommended first look)* | Setup §0–1, then run the [**Full Value Tour**](FULL-TOUR.md): `bash docs/releases/r1/full-tour.sh` | ~1 min |
+| **Get the fast taste**, typing a few commands myself | Setup §0–1, then continue *this page* (§2–6) | ~5 min |
+| **Learn the concepts** step by step | Setup §0–1, then the [User Guide](USER-GUIDE.md) | ~20 min |
+| Know the scope & caveats of the release | [Release Notes](RELEASE-NOTES.md) | — |
+
+This page (§2–6) is the 5-minute taste: it builds a tiny sample app, records its history, and reads
 back a durable **trust record** — proof IDs bound to exact commits, and a decision bound to the
 commit that implements it. No prior Proofbound knowledge required.
 
-For the full walkthrough with explanations, see the [User Guide](USER-GUIDE.md).
-
 ---
 
-## 0. Prerequisites (one time)
+## 0. One-time setup
 
-- Git and Go 1.26+ on your machine.
-- Outbound internet on first run **or** your own PostgreSQL (see note at the end).
+### 0a. Use a WSL (Linux) terminal — not Windows cmd/PowerShell
+Proofbound's commands are Linux/bash, and its embedded database needs a real Linux filesystem.
+
+- Open **Ubuntu** / **WSL** from the Start menu (or type `wsl` in a cmd window). Your prompt should
+  end in `$` and show a Linux path — **not** `C:\…>` or `D:\…>` (that's Windows cmd, where these
+  commands fail with *"'export' is not recognized"*).
+- Work from your **Linux home**, not a Windows drive: run `cd ~` first. Do **not** run from
+  `/mnt/c/…` or `/mnt/d/…` — the embedded database often fails on Windows-mounted drives. (A `D:\`
+  folder is fine for *keeping* a copy; just don't *run* from it.)
+
+### 0b. Put `~/bin` on your PATH (so the built binary is found)
+Run once in WSL (from anywhere):
+
+```bash
+export PATH="$HOME/bin:$PATH"                         # this session
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc     # make it permanent for new terminals
+```
+
+### 0c. Prerequisites
+- Git and Go 1.26+ installed in WSL (`go version` should print 1.26 or newer).
+- Outbound internet on first run (downloads the embedded PostgreSQL once) **or** your own
+  PostgreSQL (see the note at the end).
 
 ## 1. Build the Proofbound binary
 
 ```bash
-git clone <this-repo-url> proofbound
+cd ~
+git clone <this-repo-url> proofbound     # or copy your repo to a Linux path (not /mnt/d)
 cd proofbound/kernel
-CGO_ENABLED=0 go build -o "$HOME/bin/proofbound" ./cmd/proofbound   # ensure ~/bin is on PATH
+CGO_ENABLED=0 go build -o "$HOME/bin/proofbound" ./cmd/proofbound
+which proofbound                         # should print /home/<you>/bin/proofbound
 ```
+
+**After sections 0–1 you're set up.** To see *everything* now, run the
+[Full Value Tour](FULL-TOUR.md):
+
+```bash
+bash ~/proofbound/docs/releases/r1/full-tour.sh
+```
+
+Or continue below for the hands-on 5-minute taste.
 
 ## 2. Create a sample app with some history
 
