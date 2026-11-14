@@ -10,12 +10,19 @@ identically** from scratch.
 
 > **Run it (≈1 minute):**
 > ```bash
-> # build the binary first (see DEMO.md step 1), then:
-> bash docs/releases/r1/full-tour.sh
+> # build the binary first (see DEMO.md §1), then:
+> bash docs/releases/r1/full-tour.sh                    # narrated
+> # or the same thing without narration, leaving an app to explore:
+> bash docs/releases/r1/seed-demo-app.sh
 > ```
-> Run it on a Linux filesystem (WSL home), **not** a Windows `/mnt/d` path. First run downloads the
-> embedded PostgreSQL once (needs internet). Set `PROOFBOUND_BIN=/path/to/proofbound` if it isn't on
-> your PATH. The script builds a throwaway sample repo ("ledgerloom") and narrates every step.
+> This tour is just [`seed-demo-app.sh`](seed-demo-app.sh) run in `--tour` mode (one source of truth).
+> It builds its **own** throwaway sample app (default `~/proofbound-demo-app`) and records the full
+> trust surface into it — so it runs from **any directory** on **any computer** and doesn't touch
+> your other projects. Run it on a Linux filesystem (WSL home), **not** a Windows `/mnt/d` path.
+> First run downloads the embedded PostgreSQL once (needs internet). Set
+> `PROOFBOUND_BIN=/path/to/proofbound` if it isn't on your PATH; pass a directory to choose where it
+> seeds. The seeded app is left in place — explore it with `proofbound report week`, `report intent`,
+> and friends.
 
 The 5-minute [DEMO](DEMO.md) shows the foundation; this tour shows the whole thing. Proof IDs
 (`proof=01M…`) are time-based and differ every run — that's expected.

@@ -5,7 +5,7 @@
 
 | I want to… | Do this | Time |
 |---|---|---|
-| **See everything Release 1 does**, in one run *(recommended first look)* | Setup §0–1, then run the [**Full Value Tour**](FULL-TOUR.md): `bash docs/releases/r1/full-tour.sh` | ~1 min |
+| **See everything Release 1 does** on a ready-made sample app *(recommended first look)* | Setup §0–1, then `bash <repo>/docs/releases/r1/seed-demo-app.sh` — seeds a demo app showing the full trust surface, and leaves it there to explore. Add `--tour` for a narrated [walkthrough](FULL-TOUR.md). | ~1 min |
 | **Get the fast taste**, typing a few commands myself | Setup §0–1, then continue *this page* (§2–6) | ~5 min |
 | **Learn the concepts** step by step | Setup §0–1, then the [User Guide](USER-GUIDE.md) | ~20 min |
 | Know the scope & caveats of the release | [Release Notes](RELEASE-NOTES.md) | — |
@@ -43,22 +43,33 @@ echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc     # make it permanent for ne
 
 ## 1. Build the Proofbound binary
 
+You build **once** from the Proofbound source. If you already have the repo, build from wherever it
+is — you do **not** need to re-clone. Once built, the binary lives on your PATH and **runs from any
+directory**; nothing below cares about your current folder.
+
 ```bash
-cd ~
-git clone <this-repo-url> proofbound     # or copy your repo to a Linux path (not /mnt/d)
-cd proofbound/kernel
+# If you don't have the source yet:
+cd ~ && git clone <this-repo-url> proofbound     # or copy your repo to a Linux path (not /mnt/d)
+
+# Build (adjust the path to wherever your proofbound repo is):
+cd ~/proofbound/kernel                            # e.g. ~/projects/proofbound/kernel
 CGO_ENABLED=0 go build -o "$HOME/bin/proofbound" ./cmd/proofbound
-which proofbound                         # should print /home/<you>/bin/proofbound
+which proofbound                                  # should print /home/<you>/bin/proofbound
 ```
 
-**After sections 0–1 you're set up.** To see *everything* now, run the
-[Full Value Tour](FULL-TOUR.md):
+**After sections 0–1 you're set up, and `proofbound` works from any directory.** To see *everything*
+now — on a ready-made sample app — run the seeder (point the path at your repo):
 
 ```bash
-bash ~/proofbound/docs/releases/r1/full-tour.sh
+bash ~/proofbound/docs/releases/r1/seed-demo-app.sh            # concise; leaves an app to explore
+bash ~/proofbound/docs/releases/r1/seed-demo-app.sh --tour     # narrated walkthrough
 ```
 
-Or continue below for the hands-on 5-minute taste.
+It builds its **own** throwaway sample app (default `~/proofbound-demo-app`) and records the full
+trust surface into it — so it works on any computer and doesn't touch your other projects. Pass a
+directory to choose where: `seed-demo-app.sh ~/my-demo`.
+
+Or continue below for the hands-on 5-minute taste on an app you build yourself.
 
 ## 2. Create a sample app with some history
 
