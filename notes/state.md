@@ -2,16 +2,24 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-13
+As of: 2026-11-16
 
-## Resume — 2026-11-13
+## Resume — 2026-11-16
 
-**Exact next action:** none required to ship — **Release 1 is written, verified, committed, AND
-pushed** (`HEAD == origin/main == 316f1e9`). The only remaining items are **owner decisions**, none
-started: (1) accept Release 1 as shipped; (2) tag `v0.1.0`
-(`git tag -a v0.1.0 -m "Release 1 — the Trust Record"`); (3) start a single-dev corp pilot. Active
-push (unchanged): make Release 1 (the Trust Record) usable on a real project under
-`VD-agent-standing-authorization-5ouz7q` / [[proofbound-decision-commits-need-intent]].
+**Exact next action:** the **release-line renumber is committed and pushed** (one governed commit,
+trailer `Intent: CI-release-line-r2-sdd-t5j34p`; owner authorized commit + push 2026-11-16). What it
+landed: **R1 ACCEPTED as shipped** + **release line redrawn into three cuts** — R1 = the Trust Record (shipped), **R2 = the
+SDD Warranty Connector**, **R3 = the revenue organs + turnkey redistribution** (the former R2 scope,
+unchanged). Authority: `VD-release-line-r2-sdd-t5j34p` (supersedes `VD-release-line-kwdh4v`).
+**Next: R2 build begins at M0**: the mapping spike (can OpenSpec + Spec Kit map onto
+BD/BR/CI without fabrication?), then the `intent/sdd` provider package's `SPEC.md` (a sibling of
+`records/` and `specdir/`; Law 6 — the file does not exist yet, so it is named here as a package, not
+a path: the census guard refuses a backticked kernel path that is not a tracked file) and the
+`BD`/`BR-sdd-warranty-*` intent home, per
+[`sdd-warranty-connector-plan.md`](../docs/plans/sdd-warranty-connector-plan.md) — **no connector
+code exists yet** (this session was documentary only: the governed renumber, not the build). The
+plan was validated against the intent-provider contract: the SDD connector is a **third intent
+provider** (sibling of `records`/`specdir`, which is the exact prior art), **not** a new IR.
 
 **⚠ Known gate trap — read before running `make check`:** the two permanent-untracked paths
 (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) keep the worktree dirty, and
@@ -23,37 +31,48 @@ decision** on those two files: commit them, `.gitignore` them, or delete them.
 
 **Docs layout note:** owner chose a single per-release folder (`docs/releases/r1/`) over the hybrid
 I recommended; I flagged the Law 2 drift risk (a living user guide forked per release is a drift
-seed). If/when R2's guide diverges, revisit — consolidate the living guide, version only the notes.
-The three docs are NOT governed (no intent chain needed to edit them).
+seed). Now a three-release line (R1 shipped / R2 SDD connector / R3 organs); if/when a later
+release's user guide diverges, revisit — consolidate the living guide, version only the notes. The
+R1 release docs are NOT governed (no intent chain needed to edit them).
 
-**R1 wrap-up status** (see [`RELEASE-PLAN.md`](../docs/plans/RELEASE-PLAN.md)) — **all DONE**:
-- **R1-1** flaky test — RESOLVED.
-- **R1-2** clean-clone proof — DONE + pushed ([`r1-2-fresh-clone-release1.md`](../docs/verification/r1-2-fresh-clone-release1.md)).
-- **R1-3** `DEF-ROUTE-MATRIX-PRECOMMIT` — **RESOLVED** (`fa8e1af`, `a5a085b`, `CI-staged-pin-guard-7b3c9d`):
-  route-matrix + `p6-task2-close` `--check` fail closed on pending pinned-path changes (seam-tested).
-- **R1-4** `DEF-DELIVERY-ENFORCE-VERDICTS` — **RESOLVED** (`6b2961a`): `verify` runs green on a fresh clone.
-- **README / quickstart + Finding A/B** — DONE.
+**R1 = ACCEPTED as shipped (owner, 2026-11-16)** — recorded in `VD-release-line-r2-sdd-t5j34p`. The
+wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
+(unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**Immediate blockers:** none. R1 is shippable; it is now an owner-acceptance call. Governance
-follow-ups still `proposed` (run `scripts/p6-task5-review.sh` when convenient):
-`BR-release-line-governance-7ff96f`, `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.
+**Immediate blockers:** none. Next is R2 M0 (the mapping spike); the Law 9 non-author verdict on
+the plan is owed before any M1 code. Governance follow-ups
+still `proposed` (run `scripts/p6-task5-review.sh` when convenient):
+`BR-release-line-governance-7ff96f` (its O-1 governs this renumber — a CI may target a proposed
+obligation), `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.
 
-## This session (2026-11-13)
+## This session (2026-11-16)
 
-- **No product work** — a state-reconciliation + gate-verification wrap. No source commits between
-  the prior wrap (`316f1e9`) and this one.
-- **Reconciled drift:** the prior state.md next-action still said "push the docs commits (HEAD ahead
-  of origin)", but the push had already completed (`HEAD == origin/main`). It also listed
-  `DEF-ROUTE-MATRIX-PRECOMMIT` as OPEN though the tsv records it RESOLVED. Both corrected here.
-- **make check:** RED only on `commit-cadence` (the idle-tree trap above); every other check green
-  (16 production packages PASS, generated-freshness ok, all hostile/closure checks ok). Cleared by
-  this wrap commit. See today's journal for the full LESSON.
+- **Governed release-line renumber (documentary only; no connector code).** Owner directed: accept
+  R1 shipped; insert **R2 = the SDD Warranty Connector** (warrant the output of any spec-driven-dev
+  tool — OpenSpec reference, Spec Kit subset); push former R2 (revenue organs + turnkey) to **R3**.
+- **New governance records:** `VD-release-line-r2-sdd-t5j34p` (supersedes `VD-release-line-kwdh4v`,
+  marked Superseded) + `CI-release-line-r2-sdd-t5j34p` (targets `BR-release-line-governance-7ff96f`
+  O-1; validated by feeding the working tree through the real `records` provider + `intent.Sync`
+  batch validation in a throwaway overlay test — all 36 records pass, the new CI ingests as
+  `change_intent.recorded`). **LESSON:** `proofbound sync` reads the committed `HEAD` tree, so it
+  silently ignores an uncommitted record — a green `sync` is NOT validation of an unstaged file.
+  `make index` regenerated the governed INDEX.
+- **R2 plan written:** [`sdd-warranty-connector-plan.md`](../docs/plans/sdd-warranty-connector-plan.md)
+  (M0–M6, roles, non-goals). Citation sweep R2→R3 across README / ROADMAP / RELEASE-PLAN / r1 notes;
+  committed preview `docs/releases/r2/regen-repair/` → `r3/` (git mv). No stale `releases/r2` refs.
+- **make check:** RED only on `commit-cadence` (the idle-tree trap above); every substantive check
+  green (16 production packages PASS, generated-freshness ok, delivery-enforce invariants ok,
+  non-author-identity ok). Clears on the commit below. A second full gate over the post-validation
+  bytes went RED on `p6-census` (unclassified mechanism: this file had backticked the not-yet-existing
+  `intent/sdd` SPEC *path*) — fixed by naming the package, not the path; see today's journal LESSON.
+  Third full gate over the final bytes: **green except `commit-cadence`** (22 checks ok, census
+  passes) — committed and pushed on owner go-ahead.
 
 ## Branch status
-`main` → `origin/main` **synced** at HEAD `316f1e9` (this notes wrap commit will put HEAD 1 ahead
-until pushed). Two permanent untracked paths remain (`docs/plans/P5-intent-provenance-plan.md`,
-`kernel/cmd/p6dbprobe/`) — owner decision pending (commit / ignore / delete); they are the cause of
-the commit-cadence idle-trap above.
+`main` → `origin/main` **synced** after this session's governed release-line commit (pushed
+2026-11-16). Two permanent untracked paths remain
+(`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) — owner decision pending
+(commit / ignore / delete); they are the cause of the commit-cadence idle-trap above.
 
 ## Open / deferred (see `docs/deferrals.tsv`) — 2 OPEN (both dormant, owner-gated)
 - `DEF-P7-REGENLOOP-001` OPEN (PENDING_PREREQUISITE) — regen full loop (owner-gated).

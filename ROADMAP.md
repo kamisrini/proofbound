@@ -269,13 +269,17 @@ and a deferred full-package mutation sweep). L12/L17, a clean-clone proof, and a
 steps (#2b witnessed regeneration → #3 Twin prediction ledger → #4 Governor → #5 Trust Engine /
 portable warranties, and the 2029 self-hosting milestone) is sequenced in
 [product-completion-plan-2026-11-05.md](docs/plans/product-completion-plan-2026-11-05.md), with each
-item's gate and the release/hardening gaps. The recommended next step is #2b, spec-first.
+item's gate and the release/hardening gaps. The recommended next step *was* #2b, spec-first; as of
+2026-11-16 the release line places the SDD Warranty Connector (Release 2) ahead of it, and #2b now
+leads Release 3 (still spec-first).
 
-**Release line (2026-11-10, VD-release-line-kwdh4v).** The owner drew a two-release line over the
-phase record: **Release 1 = "the Trust Record"** (P1–P3 + P5 + P7 B1 — records + verifies, run against
-a user-supplied Postgres), with a fixed usability wrap-up set; **Release 2** = the revenue organs (#2b
-full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB redistribution. The
-maintained scope split and R1 wrap-up checklist are in
-[RELEASE-PLAN.md](docs/plans/RELEASE-PLAN.md).
+**Release line (redrawn 2026-11-16, VD-release-line-r2-sdd-t5j34p; supersedes VD-release-line-kwdh4v).**
+A three-release line over the phase record: **Release 1 = "the Trust Record"** (P1–P3 + P5 + P7 B1 —
+records + verifies, run against a user-supplied Postgres) — **accepted as shipped 2026-11-16**;
+**Release 2 = the SDD Warranty Connector** — warrant the output of any spec-driven-dev tool (OpenSpec
+reference, Spec Kit subset), carrying all of R1; plan in
+[sdd-warranty-connector-plan.md](docs/plans/sdd-warranty-connector-plan.md); **Release 3** = the
+revenue organs (#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB
+redistribution. The maintained scope split is in [RELEASE-PLAN.md](docs/plans/RELEASE-PLAN.md).
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

@@ -1,11 +1,14 @@
-# Release plan — Release 1 (Trust Record) vs Release 2 (the organs)
+# Release plan — R1 (Trust Record) · R2 (SDD Warranty Connector) · R3 (the organs)
 
-**What this is:** the maintained, derived view of the two-release line the owner drew on 2026-11-10.
-The authority for the *line itself* is [`VD-release-line-kwdh4v`](../decisions/VD-release-line-kwdh4v.md);
-the technical authorities underneath remain [ROADMAP.md](../../ROADMAP.md), the vision build order
-(vision-2028 §9), and [`product-completion-plan-2026-11-05.md`](product-completion-plan-2026-11-05.md).
-This file does not restate rationale — it tracks *which cut each item is in* and *what remains to ship
-R1*. Update it as R1 wrap-up items close.
+**What this is:** the maintained, derived view of the three-release line. The owner drew the first
+line on 2026-11-10 (R1 vs "everything else") and redrew it on 2026-11-16: accept R1 as shipped,
+insert the **SDD Warranty Connector** as R2, and move the former R2 scope (the revenue organs +
+turnkey redistribution) to R3. The authority for the *line itself* is
+[`VD-release-line-r2-sdd-t5j34p`](../decisions/VD-release-line-r2-sdd-t5j34p.md) (which supersedes
+`VD-release-line-kwdh4v`); the technical authorities underneath remain [ROADMAP.md](../../ROADMAP.md),
+the vision build order (vision-2028 §9), and
+[`product-completion-plan-2026-11-05.md`](product-completion-plan-2026-11-05.md). This file does not
+restate rationale — it tracks *which cut each item is in*.
 
 ## Release 1 — "the Trust Record" (records + verifies)
 
@@ -29,14 +32,35 @@ R1*. Update it as R1 wrap-up items close.
 | R1-4 | `DEF-DELIVERY-ENFORCE-VERDICTS` — bring the pre-schema verdicts to `vera.verdict.v1` so `proofbound verify` / `sync all` run on a fresh clone | medium (repo-wide, mechanical) | **DONE 2026-11-12** (`421938c`): 15 pre-schema verdicts normalized (status synonyms + structured findings; originals kept verbatim in-body). Proven on a clean ledger: `sync reviews` malformed=0, `sync all` exit 0, `verify` exit 0. `DEF-DELIVERY-ENFORCE-VERDICTS` RESOLVED. | ✅ required (owner, 2026-11-12) |
 
 **R1 is shippable when:** R1-1..R1-4 are closed, R1-2 proven, and the owner accepts R1 as shipped.
-**As of 2026-11-12, R1-1..R1-4 are all DONE** ([`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)
-is the clean-clone proof; the corp-readiness probe additionally restored `gates enforce`). The only
-remaining gate to "R1 shipped" is **the owner's acceptance**, after which: tag the release, add a demo
-script, and run a single-dev corp pilot.
+**R1-1..R1-4 are all DONE** ([`r1-2-fresh-clone-release1.md`](../verification/r1-2-fresh-clone-release1.md)
+is the clean-clone proof; the corp-readiness probe additionally restored `gates enforce`).
+**✅ Release 1 ACCEPTED as shipped by the owner on 2026-11-16** (`VD-release-line-r2-sdd-t5j34p`).
+Follow-ups: tag the release, add a demo script, and run a single-dev corp pilot.
 
-## Release 2 — the revenue organs + turnkey redistribution (everything else)
+## Release 2 — the SDD Warranty Connector
 
-Marked R2 by default: anything not in the R1 set above is Release 2.
+**The next shippable cut after the Trust Record.** One framework-agnostic connector that lets
+Proofbound **warrant the output of any spec-driven-development tool** (OpenSpec, Spec Kit, others):
+it ingests SDD artifacts as intents, binds CI check-witnesses, extends `delivery-enforce` with a
+spec→code traceability gate, and detects spec-digest drift. It **carries all of R1** — the SDD tool
+is a new *source* feeding the same Trust Record; nothing bypasses the intent → verdict →
+`delivery-enforce` path. The build plan (phases M0–M6, roles, non-goals) is
+[`sdd-warranty-connector-plan.md`](sdd-warranty-connector-plan.md).
+
+| Item | Status | Notes |
+|---|---|---|
+| Mapping spike + package SPEC (`intent/sdd` provider: profile schema, BD/BR/CI mapping, `Resolve` seam) + intent home (`BD`/`BR-sdd-warranty-*`) | not started | M0; Law 6 spec-before-code; go/no-go on `ErrUnmappable` |
+| `intent.sdd` provider core (profile-driven parse → canonical revisions) | not started | M1; sibling of `records`/`specdir`; exact-byte digests, no normalization |
+| OpenSpec profile (reference) | not started | M2; the richest producer defines the mapping |
+| Binding + `delivery-enforce` traceability gate | not started | M3; tenant `Intent:` trailers resolve via the provider; no regression of existing enforce |
+| Spec drift projection (references bound to a superseded exact digest) | not started | M4; the differentiated payoff; projection over existing data |
+| Spec Kit subset-conformance profile | not started | M5; the agnosticism proof |
+| Self-hosting demo + acceptance | not started | M6 |
+
+## Release 3 — the revenue organs + turnkey redistribution (everything else)
+
+Marked R3 by default: anything not in the R1 or R2 sets above is Release 3. (This is the former
+Release 2 scope, unchanged — only the label moved from R2 to R3 on 2026-11-16.)
 
 | Item | Vision step | Status | Notes |
 |---|---|---|---|
@@ -48,6 +72,8 @@ Marked R2 by default: anything not in the R1 set above is Release 2.
 | **Embedded-DB redistribution** — shippable embedded-DB release, clean-clone-with-DB, `L12`/`L17` | release/hardening | gated | binary-exclusion law unchanged; `DEF-P7-001` resolved the *evidence* deferral only, NOT a release authorization; needs owner go/no-go |
 | Broader connectors / event kinds; verifier identities + signing (deferred since P1) | cross-cutting | not started | under existing no-hand-authored-facts + feed rules |
 
-**R1-vs-R2 boundary rule:** Release 1 ships a system that **records and verifies** on this repo plus
-one external connector, run against a user-supplied Postgres. It does **not** regenerate, predict,
-govern, issue portable warranties, or redistribute a database. Each of those crosses into Release 2.
+**Boundary rule:** **R1 records and verifies** on this repo plus one external connector, against a
+user-supplied Postgres. **R2 warrants the output of an external SDD tool** — it ingests specs +
+decisions as intents and binds/enforces/drift-checks them, but adds no new runtime organ. **R3
+regenerates, predicts, governs, issues portable warranties, or redistributes a database.** Each of
+those last four crosses into Release 3.

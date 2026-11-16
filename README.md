@@ -64,9 +64,10 @@ verifies **its own** commits, checks, and intent records as its standing accepta
 clean-clone proof of this release is recorded in
 [`docs/verification/r1-2-fresh-clone-release1.md`](docs/verification/r1-2-fresh-clone-release1.md).
 
-**What Release 1 does not do yet (this is Release 2):** it does not regenerate failing code, predict
-outcomes, govern actions with policy envelopes, issue portable signed warranties, or redistribute a
-bundled database. Those capabilities are planned and not built.
+**What Release 1 does not do yet:** it does not regenerate failing code, predict outcomes, govern
+actions with policy envelopes, issue portable signed warranties, or redistribute a bundled database —
+those are **Release 3**. **Release 2** is the SDD Warranty Connector (warranting the output of
+spec-driven-dev tools such as OpenSpec and Spec Kit). None of these capabilities are built yet.
 
 **Release 1 wrap-up is complete.** The hardening items that make Release 1 usable by someone else
 (R1-1 through R1-4) are all done — the clean-clone proof, staged-aware pin freshness, and the
@@ -80,7 +81,7 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
   corporate setup).
 - [`docs/releases/r1/DEMO.md`](docs/releases/r1/DEMO.md) — a copy-paste 5-minute demo.
 - [`docs/releases/r1/RELEASE-NOTES.md`](docs/releases/r1/RELEASE-NOTES.md) — what Release 1
-  includes, its limitations, and what is deferred to Release 2.
+  includes, its limitations, and what is deferred to later releases.
 
 ## Quick start
 
@@ -207,7 +208,7 @@ historical portability archive, run `proofbound migrate historical-evidence` bef
 | [`docs/`](docs/) | Specifications, decisions, and verification documentation |
 | [`scripts/`](scripts/) | Repository checks and development tooling |
 | [`ROADMAP.md`](ROADMAP.md) | Project phases and completion criteria |
-| [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md) | Release 1 vs Release 2 scope |
+| [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md) | Release 1 / 2 / 3 scope |
 
 ## Contributing
 

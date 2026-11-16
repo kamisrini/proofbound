@@ -1,12 +1,12 @@
 # Regeneration-repair — the "is this rebuild safe to trust?" gate
 
-**Status:** Release 2 *preview* — the first, gate-only slice of **witnessed regeneration** (vision
+**Status:** Release 3 *preview* — the first, gate-only slice of **witnessed regeneration** (vision
 build-order step #2b). This part is built, tested, and part of the build. The automatic *rebuilder*
 is deliberately **not** in this slice (see "What this is / isn't" below).
 
 > **Run the live demo (≈1 second):**
 > ```bash
-> bash docs/releases/r2/regen-repair/demo.sh
+> bash docs/releases/r3/regen-repair/demo.sh
 > ```
 > It shows the gate approving one clean rebuild and refusing three unsafe ones.
 

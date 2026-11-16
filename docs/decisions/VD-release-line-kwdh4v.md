@@ -1,6 +1,6 @@
 # VD-release-line-kwdh4v: Release 1 is the Trust Record; the revenue organs are Release 2
 
-**Status:** Accepted
+**Status:** Superseded by VD-release-line-r2-sdd-t5j34p
 **Date:** 2026-11-10
 
 **Context:** The repo is sequenced by phases (P0–P7) and by the vision's four organs, with no

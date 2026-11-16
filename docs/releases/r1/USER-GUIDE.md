@@ -329,8 +329,8 @@ relevant only if you adopt Proofbound's full witnessed-delivery workflow.
 
 Release 1 **records and verifies**. It does not regenerate failing code, predict outcomes, govern
 actions with policy, issue portable signed warranties, or redistribute a database. Those are
-**Release 2** and are not built yet — see [`plans/RELEASE-PLAN.md`](../../plans/RELEASE-PLAN.md) for the
-full boundary.
+**Release 3** and are not built yet (Release 2 is the SDD Warranty Connector) — see
+[`plans/RELEASE-PLAN.md`](../../plans/RELEASE-PLAN.md) for the full boundary.
 
 Other caveats: embedded dev-mode needs internet on first run and isn't for redistribution; embedded
 PostgreSQL logs to stdout in dev-mode; `report week` is a trailing 7-day window; the GitHub

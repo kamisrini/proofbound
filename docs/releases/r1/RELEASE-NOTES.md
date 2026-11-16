@@ -49,7 +49,7 @@ non-author verification rule.
 - **Proven on a clean clone.** A fresh clone builds and passes the full gate on a clean
   machine — see [`verification/r1-2-fresh-clone-release1.md`](../../verification/r1-2-fresh-clone-release1.md).
 
-## What Release 1 does *not* do yet (this is Release 2)
+## What Release 1 does *not* do yet (this is Release 3)
 
 Release 1 ships a system that **records and verifies**. It does **not**:
 
@@ -59,7 +59,8 @@ Release 1 ships a system that **records and verifies**. It does **not**:
 - issue portable, signed warranties (the Trust Engine), or
 - redistribute a bundled database.
 
-Those are planned for **Release 2** and are not built. The full R1-vs-R2 boundary is in
+Those are planned for **Release 3** and are not built (Release 2 is the SDD Warranty Connector — it
+warrants the output of spec-driven-dev tools). The full release boundary is in
 [`plans/RELEASE-PLAN.md`](../../plans/RELEASE-PLAN.md).
 
 ## Known limitations and honest caveats

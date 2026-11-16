@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proofbound — regeneration-repair SAFETY GATE demo (Release 2 preview, #2b gate-only slice).
+# Proofbound — regeneration-repair SAFETY GATE demo (Release 3 preview, #2b gate-only slice).
 #
 # What this shows, in one run: when a rule ("behavior lock") is broken and someone wants to REBUILD
 # the code that broke it, Proofbound's gate decides whether that rebuild can be TRUSTED — and refuses
