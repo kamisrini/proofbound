@@ -47,15 +47,7 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**Intent-trailer gap — FIXED, non-author verdict owed (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN /
-PENDING_PREREQUISITE).** The kernel binds `Intent:` only from the final trailer block; by its grammar
-17 of 30 Intent-bearing commits are unbindable (14 touched governed paths and fooled the old gate,
-3 touched none), incl. `a028984`. Fixed under `CI-intent-trailer-block-xp2pke` (BR-gate-integrity
-O-1): `scripts/intent-delivery-applicability.sh` now ports the kernel grammar, and one shared corpus
-(`scripts/tests/fixtures/intent-trailers/`) pins both parsers. **Convention: `Intent:` directly above
-`Co-Authored-By:`, no blank line** — the gate now refuses anything else. The 17 stay as a tombstone
-(no history rewrite). Condition (3) "live bind check in make check" was replaced by corpus parity
-(a live check would be environment-dependent). Detail: journal 2026-11-16 § "Fix-forward".
+**Intent-trailer gap (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN).** Gate fixed for round-1 findings (`07c384d`, `7293be8`); round 2 (`intent-trailer-gate-review-round2-20261116`) = NEEDS_WORK. Material gap: the gate checks only HEAD, and the pin-refresh pattern buries every governed commit under a non-governed one. **Owner decision: which commit range the gate checks.** Convention meanwhile: `Intent:` directly above `Co-Authored-By:`, no blank line.
 
 **Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
 deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
