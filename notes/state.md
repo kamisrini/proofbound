@@ -21,15 +21,13 @@ SPECs). Step 3 DONE (pending owner OK to commit): the `intent/sdd` SPEC is writt
 `docs/plans/R2-sdd-provider-spec-draft1.md` (SDD-INV-1..14; it becomes the kernel `SPEC.md` with
 M1's code and tests, per census row C2-036), and the intent connector SPEC's provider paragraph
 amended to admit `sdd` (production only once its proofs pass). **Next:
-step 4** — one non-author review round over the plan, the BR, both SPECs, and the gate change.
-Original M0 list: the `intent/sdd` provider package's `SPEC.md` (a sibling of
-`records/` and `specdir/`; Law 6 — the file does not exist yet, so it is named here as a package, not
-a path: the census guard refuses a backticked kernel path that is not a tracked file) and the
-`BD`/`BR-sdd-warranty-*` intent home, per
-[`sdd-warranty-connector-plan.md`](../docs/plans/sdd-warranty-connector-plan.md) — **no connector
-code exists yet** (this session was documentary only: the governed renumber, not the build). The
-plan was validated against the intent-provider contract: the SDD connector is a **third intent
-provider** (sibling of `records`/`specdir`, which is the exact prior art), **not** a new IR.
+step 4** (review round 1) DONE: both verdicts NEEDS_WORK (`a2cc920`). Response in progress: SPEC
+**draft 2** (`docs/plans/R2-sdd-provider-spec-draft2.md`): active-changes-only, native-name ids,
+manifest digests, a Linkage-and-lifecycle section (native-name trailers `Intent: sdd:<change>`,
+satisfaction via R1's obligation-verdict.v2 + readiness gate, read-only feedback). **Owner decisions
+open: A** (warranty across archive; author recommends A2 re-attest), **B** (obligation lifecycle vs
+intent SPEC §5; author recommends B1 deltas-as-lifecycle), **O-6 rewording.** Gate findings
+(verdict 2 F1/F3/F4) being fixed; F2's central claim was disproven by reproduction (journal).
 
 **⚠ Known gate trap — read before running `make check`:** the two permanent-untracked paths
 (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) keep the worktree dirty, and

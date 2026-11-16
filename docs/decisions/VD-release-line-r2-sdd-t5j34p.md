@@ -48,6 +48,12 @@ than adding regeneration, prediction, governance, or redistribution. A three-rel
 more surface to keep consistent, carried by this governed intent chain and `delivery-enforce` rather
 than by memory.
 
+**Amended 2026-11-16:** the Decision's mapping clause "governance/ADRs → business decisions" is
+withdrawn. The R2 M0 mapping spike (`docs/verification/r2-m0-mapping-spike.md`) found that no SDD
+kit records an approver, so mapping governance to a business decision would invent one; governance
+maps to nothing and requirements render `authorization: undeclared`. The release line itself is
+unchanged. Raised as finding F10 in `docs/verification/verdicts/r2-m0-review-round1-20261116.md`.
+
 **Revisit when:** Release 2 (the SDD Warranty Connector) wrap-up is complete and the owner accepts it
 as shipped — then open a Release 3 scope decision; OR the owner pulls a Release-3 organ forward into
 R2; OR a shift in the spec-driven-dev ecosystem makes "warrant any SDD kit" the wrong Release 2

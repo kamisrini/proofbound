@@ -72,9 +72,10 @@ impact graph stay home in the SDD tool; Proofbound links + digests them, never c
 
 ## Decisions to ratify before code (as `VD-*`, with intent chain)
 - **Intent home for the R2 build:** author `BD-sdd-warranty-*` → `BR-sdd-warranty-*` with
-  obligations (`O-1` provider contract, `O-2` profiles, `O-3` binding/enforce, `O-4` drift). Every
-  R2 change intent must target a requirement obligation; without this BR there is nothing to point
-  at. It stays `proposed` until a non-author requirement review (`scripts/p6-task5-review.sh`).
+  obligations O-1..O-7 as authored in `BR-sdd-warranty-i9miv7` (that record is the one home for
+  their numbering and wording). Every R2 change intent must target a requirement obligation. It stays
+  `proposed` until a non-author `proofbound.requirement-review.v1` makes it VERIFIABLE. **Done
+  2026-11-16.**
 - **Provider, not IR / connector:** the SDD connector is the `intent/sdd` provider package (a
   sibling of `records/` and `specdir/` inside the intent connector), a third production provider. This requires **amending the intent SPEC invariant** "P5 production
   providers are exactly `records` and `specdir`" — a spec amendment with its own non-author review.
@@ -91,30 +92,37 @@ impact graph stay home in the SDD tool; Proofbound links + digests them, never c
 ## Phases (each ends on `make check` green + a non-author verdict, Law 9)
 
 **M0 — Spike, spec, and intent home.** Run the mapping spike (precondition 2). Ratify the decisions
-above. Author the `BD`/`BR-sdd-warranty-*` chain. Write the `intent/sdd` package `SPEC.md`
-(Law 6): profile schema, the BD/BR/CI mapping, the
+above. Author the `BD`/`BR-sdd-warranty-*` chain. Write the `intent/sdd` package SPEC as a `docs/plans` draft
+(Law 6; it lands in the kernel with M1's code — census C2-036): profile schema, the BR/CI mapping, the
 `Resolve` seam, invariants (no fabrication; exact-byte digests; closed vocabularies), non-goals,
 test derivations. Amend the intent SPEC provider invariant.
 *Deliverable:* spike verdict (go/no-go) + ratified package SPEC + intent home, gate green.
+*Status 2026-11-16:* spike GO; intent home done; SPEC at draft 2
+([`R2-sdd-provider-spec-draft2.md`](R2-sdd-provider-spec-draft2.md)) after review round 1 returned
+NEEDS_WORK on draft 1's change lifecycle; open decisions A (warranty across archive) and B
+(obligation lifecycle vs intent SPEC §5) are the owner's.
 
 **M1 — `intent.sdd` provider core.** Profile loading + validation (JSON); profile-driven parse of
-committed artifacts at a tree → canonical revisions; `Resolve(tree, recordID)`; `core.Source`
+committed artifacts at a tree → canonical revisions; `Resolve(tree, token)` (native change name); `core.Source`
 `intent.sdd`; `sync intent sdd` in the CLI; target grammars accept `intent.sdd` as a source.
 *Deliverable:* provider conformance against the intent connector's conformance suite, unit +
 property tests, **calibration controls stated** (a positive control that must die, a neutral one
 that must survive).
 
 **M2 — OpenSpec profile (reference).** The profile: path patterns, ID rule, criteria → obligations,
-proposals/tasks → change intents, ADR → business decisions, status mapping; git correlation via
-`Resolve`.
-*Deliverable:* an OpenSpec repo syncs end-to-end; BD/BR/CI **with relationships** land in the record;
+active changes → change intents + delta requirement records, status mapping; governance maps to
+nothing (`authorization: undeclared`); git correlation via `Resolve`.
+*Deliverable:* an OpenSpec repo syncs end-to-end, across an archive; BR/CI **with relationships**
+land in the record;
 `report requirement <id>` reads correctly.
 
 **M3 — Binding + `delivery-enforce` traceability gate (the warranty).** Tenant commits carry
-`Intent: <sdd id>` trailers that resolve through the provider; CI check-witnesses bind to
-obligations; `delivery-enforce` gains a spec→code traceability check (change intent → requirement
-obligation → governance; obligation → satisfying verdict) **without regressing** existing behavior
-on this repo; verifier acceptance (Law 9).
+`Intent: sdd:<change-name>` trailers that resolve through the provider (git connector, trailer gate,
+and shared corpus extended; decision record for the native-name token); satisfaction is the existing
+`obligation-verdict.v2` citing check / workflow evidence; the existing `intent-delivery-readiness`
+gate applies to `intent.sdd` chains (change intent → requirement obligation → SATISFIED verdict with
+VERIFIABLE requirement review — governance is undeclared, so the chain does not reach it) **without
+regressing** existing behavior on this repo; verifier acceptance (Law 9).
 *Deliverable:* a change flows build → warrant; gaps blocked; verdict recorded.
 
 **M4 — Spec drift projection (the payoff).** A projection/report over existing data: any change
