@@ -25,3 +25,15 @@ uppercase-id	CI-Fixture-Item-ACDE12	fail
 crlf	-	fail
 latin1-other-trailer	CI-fixture-item-acde12	fail
 uppercase-slug	CI-Fixture-item-acde12	fail
+nospace-line-in-block	-	fail
+only-trailers	-	fail
+suffix-too-short	CI-fixture-item-acde1	fail
+double-qualifier	records:specdir:CI-fixture-item-acde12	fail
+slug-max	CI-abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-acde12	pass
+slug-min	CI-ab-acde12	pass
+slug-too-short	CI-a-acde12	fail
+intent-prefixed-key	-	fail
+above-unicode-max	CI-fixture-item-acde12	fail
+utf8-surrogate	CI-fixture-item-acde12	fail
+intent-ref-beside-intent	CI-fixture-item-acde12	pass
+trailing-qualifier-junk	records:CI-fixture-item-acde12:extra	fail

@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
-.PHONY: check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint invariant-lint spec-numbering-lint link-lint law-citation-lint identity-inventory p6-task1-close commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint meta-tax backup state wrap-verify
-check: hooks-test commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint link-lint index-check law-citation-lint invariant-table-lint invariant-lint spec-numbering-lint identity-inventory p6-task1-close kernel-check
+.PHONY: intent-trailer-gate check check-witnessed index-check-witnessed law-citation-witnessed spec-numbering-witnessed invariant-table-witnessed link-witnessed kernel-check-witnessed delivery-enforce verify gates-canary gates-enforce short hooks-test index index-check invariants-lock laws-lock invariant-table-lint invariant-lint spec-numbering-lint link-lint law-citation-lint identity-inventory p6-task1-close commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint meta-tax backup state wrap-verify
+check: hooks-test commit-cadence state-freshness cleanroom-lint lesson-recurrence figure-provenance prescription-lint link-lint index-check law-citation-lint invariant-table-lint invariant-lint spec-numbering-lint identity-inventory p6-task1-close kernel-check intent-trailer-gate
 check-witnessed:
 	@bash kernel/scripts/check-witness.sh
 index-check-witnessed:
@@ -73,3 +73,5 @@ mutants:
 	@scripts/mutants.sh "$${PKG:?set PKG, e.g. PKG=internal/store}"
 kernel-check:
 	@scripts/kernel-check.sh
+intent-trailer-gate:
+	@scripts/intent-delivery-applicability.sh >/dev/null

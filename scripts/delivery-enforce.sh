@@ -36,5 +36,7 @@ make link-witnessed
 make kernel-check-witnessed
 PROOFBOUND_CHECK_TARGET=check make check-witnessed
 (cd kernel && go run ./cmd/proofbound sync all)
-scripts/intent-delivery-applicability.sh
+# Overridable only so scripts/tests/delivery-enforce.test.sh can prove the gate is invoked here,
+# in order, and that its failure stops enforcement (gate review round 2, F3).
+"${PROOFBOUND_INTENT_GATE:-scripts/intent-delivery-applicability.sh}"
 (cd kernel && go run ./cmd/proofbound gates enforce)

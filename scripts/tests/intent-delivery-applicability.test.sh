@@ -89,4 +89,40 @@ if GIT_DIR=/nonexistent scripts/intent-delivery-applicability.sh --repo "$repo" 
   echo 'intent-delivery-applicability: an inherited GIT_DIR changed what the gate read' >&2; exit 1
 fi
 
+# Non-UTF-8 identity or path: the kernel rejects the whole commit (gate review round 2, F4).
+printf 'id\n' >"$repo/scripts/latin1-author.sh"; git -C "$repo" add .
+tree=$(git -C "$repo" write-tree); parent=$(git -C "$repo" rev-parse HEAD)
+sha=$({ printf 'tree %s\nparent %s\nauthor J\351 <j@example.invalid> 1700000000 +0000\ncommitter f <f@example.invalid> 1700000000 +0000\n\n' "$tree" "$parent"; cat "$PWD/$corpus/final-block.msg"; } | git -C "$repo" hash-object -t commit -w --stdin)
+git -C "$repo" update-ref HEAD "$sha"
+if scripts/intent-delivery-applicability.sh --repo "$repo" --commit "$sha" >/dev/null 2>&1; then
+  echo 'intent-delivery-applicability: a non-UTF-8 author name was accepted' >&2; exit 1
+fi
+printf 'p\n' >"$repo/scripts/path-"$'\351'".sh"
+sha=$(raw_commit "$PWD/$corpus/final-block.msg"); git -C "$repo" update-ref HEAD "$sha"
+if scripts/intent-delivery-applicability.sh --repo "$repo" --commit "$sha" >/dev/null 2>&1; then
+  echo 'intent-delivery-applicability: a non-UTF-8 touched path was accepted' >&2; exit 1
+fi
+git -C "$repo" rm -q --cached "scripts/path-"$'\351'".sh"; rm "$repo/scripts/path-"$'\351'".sh"
+
+# Default mode checks the whole unpushed range (gate review round 2, F2): a governed commit with a
+# body-only Intent, buried under a non-governed commit, must fail the default run even though
+# HEAD alone passes. Upstream = the last good commit.
+printf 'base\n' >"$repo/scripts/range-base.sh"
+base=$(raw_commit "$PWD/$corpus/final-block.msg"); git -C "$repo" update-ref HEAD "$base"
+git -C "$repo" branch -q -f range-upstream "$base"
+git -C "$repo" branch -q --set-upstream-to=range-upstream
+printf 'buried\n' >"$repo/scripts/buried.sh"
+buried=$(raw_commit "$PWD/$corpus/body-paragraph.msg"); git -C "$repo" update-ref HEAD "$buried"
+printf 'docs on top\n' >"$repo/README.md"
+top=$(raw_commit "$PWD/$corpus/prose-mention.msg"); git -C "$repo" update-ref HEAD "$top"
+scripts/intent-delivery-applicability.sh --repo "$repo" --commit HEAD >/dev/null ||
+  { echo 'intent-delivery-applicability: range probe is miscalibrated (HEAD should pass alone)' >&2; exit 1; }
+if (cd "$repo" && "$OLDPWD/scripts/intent-delivery-applicability.sh") >/dev/null 2>&1; then
+  echo 'intent-delivery-applicability: a governed commit buried under a non-governed one passed the default range' >&2; exit 1
+fi
+# Neutral control: once the buried commit is upstream ("pushed"), the default range excludes it.
+git -C "$repo" branch -q -f range-upstream "$buried"
+(cd "$repo" && "$OLDPWD/scripts/intent-delivery-applicability.sh") >/dev/null ||
+  { echo 'intent-delivery-applicability: default range rechecked an already-pushed commit' >&2; exit 1; }
+
 echo 'ok intent-delivery-applicability'

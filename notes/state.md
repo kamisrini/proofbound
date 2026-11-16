@@ -47,7 +47,9 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**Intent-trailer gap (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN).** Gate fixed for round-1 findings (`07c384d`, `7293be8`); round 2 (`intent-trailer-gate-review-round2-20261116`) = NEEDS_WORK. Material gap: the gate checks only HEAD, and the pin-refresh pattern buries every governed commit under a non-governed one. **Owner decision: which commit range the gate checks.** Convention meanwhile: `Intent:` directly above `Co-Authored-By:`, no blank line.
+**Intent-trailer gap (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN).** Round-2 findings fixed under `CI-intent-trailer-range-gwi9uu`: unpushed-range checking, strict UTF-8, explicit `make check` step, proven invocation in `delivery-enforce`; 32-case corpus; calibrated mutation runs all killed. **Next: review round 3.** Also new: `DEF-INTENT-CI-REVISION-001` (change intents cannot be revised — kernel limitation, dormant).
+
+**R2 M0:** SPEC draft 2 with A2 + B1 settled (Spec Kit lifecycle open as 9.C, needed by M5); BR rev 0002 (O-8, O-9). **Next: M0 review round 2.** Push is HELD by the owner until the round-2 findings are fixed and reviewed.
 
 **Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
 deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
