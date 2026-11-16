@@ -39,8 +39,23 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**Immediate blockers:** none. Next is R2 M0 (the mapping spike); the Law 9 non-author verdict on
-the plan is owed before any M1 code. Governance follow-ups
+**⚠ Owner decision needed before the next governed commit — the kernel has never bound an
+`Intent:` trailer.** `proofbound intent check --commit` prints `intent=none` for `a028984` AND for
+the precedent `34af46d`: in 17 of the 30 governed commits the `Intent:` line is in a body paragraph
+(blank line before `Co-Authored-By`), outside git's final trailer block, so per git-connector INV-28
+the kernel records no claim; 13 commits place it correctly and bind. The shell gate greps `%B`
+anywhere, so `make check` is green either way — the convention exists but was never enforced. Fix forward
+under `BR-gate-integrity-4b2e08` O-1: trailer convention (no blank line), `intent-delivery-
+applicability.sh` → final-trailer-block parse + a failing self-test for body-only lines, and a
+kernel-side bind check in the gate. The 17 pushed body-only commits stay unbound (no history
+rewrite) — recorded in today's journal and registered as `DEF-INTENT-TRAILER-BLOCK-001`
+(OPEN / DEFERRED, dormant until the owner names it). Full detail: journal 2026-11-16 § "Post-commit
+finding". Until fixed, author every governed commit with `Intent:` **adjacent to `Co-Authored-By`,
+no blank line**, and prove it with `proofbound intent check --commit HEAD` after `sync git`.
+
+**Immediate blockers:** the decision above gates the *next governed commit*, not R2 M0 planning.
+Next is R2 M0 (the mapping spike); the Law 9 non-author verdict on the plan is owed before any M1
+code. Governance follow-ups
 still `proposed` (run `scripts/p6-task5-review.sh` when convenient):
 `BR-release-line-governance-7ff96f` (its O-1 governs this renumber — a CI may target a proposed
 obligation), `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.
@@ -74,7 +89,10 @@ obligation), `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.
 (`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) — owner decision pending
 (commit / ignore / delete); they are the cause of the commit-cadence idle-trap above.
 
-## Open / deferred (see `docs/deferrals.tsv`) — 2 OPEN (both dormant, owner-gated)
+## Open / deferred (see `docs/deferrals.tsv`) — 3 OPEN (all dormant, owner-gated)
+- `DEF-INTENT-TRAILER-BLOCK-001` OPEN (DEFERRED) — 17/30 governed commits carry `Intent:` outside
+  git's final trailer block, so the kernel binds no claim; fix-forward under `BR-gate-integrity-4b2e08`
+  O-1 (convention + gate parses the trailer block + kernel-side bind check). Added 2026-11-16.
 - `DEF-P7-REGENLOOP-001` OPEN (PENDING_PREREQUISITE) — regen full loop (owner-gated).
 - `DEF-P7-DP-TWINROOT-001` OPEN (DEFERRED) — heavy twin-root detector-power sweep; `deferrals.test.sh` fixture anchor.
 - RESOLVED previously: `DEF-ROUTE-MATRIX-PRECOMMIT`, `DEF-DELIVERY-ENFORCE-VERDICTS`.
