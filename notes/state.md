@@ -39,23 +39,20 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**⚠ Owner decision needed before the next governed commit — the kernel has never bound an
-`Intent:` trailer.** `proofbound intent check --commit` prints `intent=none` for `a028984` AND for
-the precedent `34af46d`: in 17 of the 30 governed commits the `Intent:` line is in a body paragraph
-(blank line before `Co-Authored-By`), outside git's final trailer block, so per git-connector INV-28
-the kernel records no claim; 13 commits place it correctly and bind. The shell gate greps `%B`
-anywhere, so `make check` is green either way — the convention exists but was never enforced. Fix forward
-under `BR-gate-integrity-4b2e08` O-1: trailer convention (no blank line), `intent-delivery-
-applicability.sh` → final-trailer-block parse + a failing self-test for body-only lines, and a
-kernel-side bind check in the gate. The 17 pushed body-only commits stay unbound (no history
-rewrite) — recorded in today's journal and registered as `DEF-INTENT-TRAILER-BLOCK-001`
-(OPEN / DEFERRED, dormant until the owner names it). Full detail: journal 2026-11-16 § "Post-commit
-finding". Until fixed, author every governed commit with `Intent:` **adjacent to `Co-Authored-By`,
-no blank line**, and prove it with `proofbound intent check --commit HEAD` after `sync git`.
+**Intent-trailer gap — FIXED, non-author verdict owed (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN /
+PENDING_PREREQUISITE).** The kernel binds `Intent:` only from the final trailer block; by its grammar
+17 of 30 Intent-bearing commits are unbindable (14 touched governed paths and fooled the old gate,
+3 touched none), incl. `a028984`. Fixed under `CI-intent-trailer-block-xp2pke` (BR-gate-integrity
+O-1): `scripts/intent-delivery-applicability.sh` now ports the kernel grammar, and one shared corpus
+(`scripts/tests/fixtures/intent-trailers/`) pins both parsers. **Convention: `Intent:` directly above
+`Co-Authored-By:`, no blank line** — the gate now refuses anything else. The 17 stay as a tombstone
+(no history rewrite). Condition (3) "live bind check in make check" was replaced by corpus parity
+(a live check would be environment-dependent). Detail: journal 2026-11-16 § "Fix-forward".
 
-**Immediate blockers:** the decision above gates the *next governed commit*, not R2 M0 planning.
-Next is R2 M0 (the mapping spike); the Law 9 non-author verdict on the plan is owed before any M1
-code. Governance follow-ups
+**Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
+deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
+gate-fix commit, run `scripts/p6-task2-close.sh --write` and commit the refreshed pin (it pins
+`kernel/internal/connector`). Governance follow-ups
 still `proposed` (run `scripts/p6-task5-review.sh` when convenient):
 `BR-release-line-governance-7ff96f` (its O-1 governs this renumber — a CI may target a proposed
 obligation), `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.

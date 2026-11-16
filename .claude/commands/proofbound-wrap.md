@@ -25,8 +25,10 @@ In summary, that protocol has you:
    regenerate the derived artifact and rerun. Treat expected negative-test messages as non-failures.
    After adding documentary verdicts, run `scripts/p6-artifact-integrity.sh --check`.
 6. Commit only coherent, completed, verified changes. Governed-path changes expect an
-   owner-approved change intent and an `Intent:` trailer. Push only if authorized. Create and
-   verify the dated git bundle (`make backup`).
+   owner-approved change intent and an `Intent:` trailer. **Placement matters:** the kernel binds
+   `Intent:` only from the final trailer block, so write it directly above `Co-Authored-By:` with
+   no blank line between them (`scripts/intent-delivery-applicability.sh` now refuses anything
+   else). Push only if authorized. Create and verify the dated git bundle (`make backup`).
 7. Report: commit hash, push status, verification result, backup path, unresolved work, and
    tomorrow's first action.
 

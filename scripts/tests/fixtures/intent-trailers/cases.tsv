@@ -1,0 +1,17 @@
+# Shared fixture corpus for the Intent-trailer grammar (DEF-INTENT-TRAILER-BLOCK-001).
+# Consumed by BOTH parsers so they cannot drift apart again:
+#   kernel: kernel/internal/connector/git/gitcmd/gitcmd_test.go (intentTrailers, column 2)
+#   gate:   scripts/tests/intent-delivery-applicability.test.sh (exit status, column 3)
+# Columns (tab-separated): case  extracted-values(comma-joined, "-" = none)  gate(pass|fail)
+final-block	CI-fixture-item-acde12	pass
+body-paragraph	-	fail
+sole-trailer-paragraph	CI-fixture-item-acde12	pass
+no-blank-before-block	-	fail
+too-short	-	fail
+sorted-unique	CI-alpha-item-acde12,CI-zeta-item-acde12	pass
+qualified-specdir	specdir:CI-fixture-item-acde12	pass
+trailing-blank-lines	CI-fixture-item-acde12	pass
+no-space-after-colon	-	fail
+malformed-id	not-an-id	fail
+unknown-provider	github:CI-fixture-item-acde12	fail
+prose-mention	-	fail

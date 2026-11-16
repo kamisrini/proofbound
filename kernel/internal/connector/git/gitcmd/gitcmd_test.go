@@ -75,6 +75,45 @@ func TestCommits_ExtractsOnlyExplicitIntentTrailers(t *testing.T) {
 	}
 }
 
+// TestIntentTrailers_SharedCorpus pins the kernel grammar to the corpus the shell gate
+// (scripts/intent-delivery-applicability.sh) is also tested against, so the two parsers cannot
+// drift apart again (DEF-INTENT-TRAILER-BLOCK-001: the gate grepped the whole message while this
+// parser reads only the final trailer block, so 17 governed commits passed the gate and bound
+// nothing). Column 2 of cases.tsv is what this function must extract.
+func TestIntentTrailers_SharedCorpus(t *testing.T) {
+	dir := filepath.Join("..", "..", "..", "..", "..", "scripts", "tests", "fixtures", "intent-trailers")
+	table, err := os.ReadFile(filepath.Join(dir, "cases.tsv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := 0
+	for _, line := range strings.Split(strings.TrimRight(string(table), "\n"), "\n") {
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		cols := strings.Split(line, "\t")
+		if len(cols) != 3 {
+			t.Fatalf("malformed corpus row %q", line)
+		}
+		msg, err := os.ReadFile(filepath.Join(dir, cols[0]+".msg"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := "-"
+		if values := intentTrailers(string(msg)); values != nil {
+			got = strings.Join(values, ",")
+		}
+		if got != cols[1] {
+			t.Errorf("case %s: kernel extracted %q, corpus expects %q", cols[0], got, cols[1])
+		}
+		cases++
+	}
+	// Calibration: a corpus that silently shrank to nothing would make this test vacuous.
+	if cases < 12 {
+		t.Fatalf("corpus has %d cases, want >= 12", cases)
+	}
+}
+
 func TestCommits_EmptyRepositoryIsNotAnError(t *testing.T) {
 	fixture := newFixture(t)
 	repo, err := New(fixture.root)
