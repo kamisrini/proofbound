@@ -43,9 +43,11 @@ impact graph stay home in the SDD tool; Proofbound links + digests them, never c
   target lines with regexes, and emits canonical BR/CI revisions. The SDD provider is **`specdir`
   with a pluggable grammar**: a per-kit **profile** supplies the path patterns and extraction rules;
   the provider supplies the canonical output.
-- **The canonical model is fixed.** Governance / constitution / steering / ADR → `business_decision`;
-  requirements + acceptance criteria → `requirement` with `obligations[]`; change proposals and
-  tasks → `change_intent` with `targets[]` (`implements` → BR obligations). Design docs are not a
+- **The canonical model is fixed.** Requirements + acceptance criteria → `requirement` with
+  `obligations[]`; change proposals → `change_intent` with `targets[]` (OpenSpec deltas map
+  `ADDED`/`MODIFIED`/`REMOVED` → `implements`/`modifies`/`retires`). **Governance is not mapped to
+  `business_decision`:** the M0 spike ([`r2-m0-mapping-spike.md`](../verification/r2-m0-mapping-spike.md))
+  found no kit records an approver, so requirements carry `authorization: undeclared` instead. Design docs are not a
   kind: they appear only as a `constrained_by` reference where the kit makes that link explicit.
   Relationships use the closed relation vocabulary (`authorizes`, `implements`, `modifies`,
   `repairs`, `retires`, `supersedes`, `constrained_by`, `reviews`, `evaluates`).
