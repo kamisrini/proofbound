@@ -7,7 +7,7 @@ becomes `kernel/internal/connector/intent/sdd/SPEC.md` in the same M1 commit as 
 cites (census row C2-036). §9's decisions A and B were **settled by the owner on 2026-11-16** (A2,
 B1); one consequence for Spec Kit remains open (§9.C).
 
-Requirement: `BR-sdd-warranty-i9miv7` (O-6 to be restated — §10). Decisions:
+Requirement: `BR-sdd-warranty-i9miv7` revision 0002 (O-6 / O-7 retired → O-8 / O-9 — §10). Decisions:
 `VD-release-line-r2-sdd-t5j34p`, `VD-sdd-accountable-identity-ypcx7x`. Evidence:
 `docs/verification/r2-m0-mapping-spike.md`. Prior art: the sibling `specdir` provider.
 
@@ -29,7 +29,7 @@ and merges the deltas into the main specs. Every HIGH finding sat on that transi
 | F8 obligations vanish / change meaning in place, against intent SPEC §5 | **Open decision B** (§9) |
 | F9 id derivation underspecified | Fully specified, with collision checks (§4.1) |
 | F10 cross-document contradictions | Fixed in the plan, VD, and this draft (separate commit) |
-| F11 weak obligations | O-6 restated to the existing readiness gate (§10); BR revision comes back to the owner |
+| F11 weak obligations | BR revision 0002: O-6 / O-7 retired, O-8 (readiness gate) and O-9 (defined re-verification) added (§10) |
 | *(owner question)* how artifacts tie both ways | New §6, linkage and lifecycle |
 
 ## 1. Purpose and boundary
@@ -330,15 +330,17 @@ requirement record superseding nothing (honest but loses continuity); (C2) restr
 profile to append-only use and fail closed on an in-place edit; (C3) read Spec Kit's git history
 through the `Reader` to recover the lifecycle.
 
-## 10. `BR-sdd-warranty-i9miv7` changes this draft implies (owner approves the wording)
+## 10. `BR-sdd-warranty-i9miv7` revision 0002 (owner-approved 2026-11-16)
 
-- **O-6** currently says `delivery-enforce` refuses a change whose intent targets no requirement
-  obligation — nearly vacuous, because canonical validation already rejects such an intent (F11).
-  Proposed restatement: *the existing `intent-delivery-readiness` gate applies to `intent.sdd`
-  chains unchanged, and a tenant commit is warranted only when every exact target is SATISFIED with
-  VERIFIABLE requirement review.*
-- O-7's "until re-verified" gains a definition (a new `obligation-verdict.v2` bound to the new
-  revision), and O-2 / O-5 may be split; drafted in the BR revision, not here.
+Intent SPEC §5 forbids changing an obligation's meaning in place, so the revision **retires** O-6
+and O-7 (statements kept as tombstones) and **adds**:
+- **O-8** — the existing `intent-delivery-readiness` gate applies to `intent.sdd` chains unchanged:
+  a tenant commit is warranted only when every exact target is SATISFIED by an
+  `obligation-verdict.v2` and its requirement revision has a VERIFIABLE `requirement-review.v1` by a
+  reviewer other than the declared owner. (Replaces O-6, which was nearly vacuous: canonical
+  validation already rejects a change intent with no targets.)
+- **O-9** — drift is reported stale until a new `obligation-verdict.v2` bound to the new revision
+  re-verifies it. (Replaces O-7, whose "until re-verified" was undefined.)
 
 ## 11. Non-goals and boundaries owned elsewhere
 

@@ -72,7 +72,7 @@ impact graph stay home in the SDD tool; Proofbound links + digests them, never c
 
 ## Decisions to ratify before code (as `VD-*`, with intent chain)
 - **Intent home for the R2 build:** author `BD-sdd-warranty-*` → `BR-sdd-warranty-*` with
-  obligations O-1..O-7 as authored in `BR-sdd-warranty-i9miv7` (that record is the one home for
+  obligations as authored in `BR-sdd-warranty-i9miv7` (revision 0002: O-1..O-5, O-8, O-9 active; O-6 / O-7 retired) (that record is the one home for
   their numbering and wording). Every R2 change intent must target a requirement obligation. It stays
   `proposed` until a non-author `proofbound.requirement-review.v1` makes it VERIFIABLE. **Done
   2026-11-16.**
