@@ -17,8 +17,11 @@ is NO-GO (→ `authorization: undeclared`); owner chose **(a) profile-declared a
 identity** → `VD-sdd-accountable-identity-ypcx7x`. Step 2 DONE: R2 intent home
 `BD-sdd-warranty-jdyjhh` → `BR-sdd-warranty-i9miv7` (O-1..O-7 approved verbatim by the owner;
 `proposed` until non-author review) → `CI-sdd-warranty-m0-a49f5b` (covers M0 records + step 3
-SPECs). **Next: step 3** — amend the intent connector SPEC's provider invariant + write the
-`intent/sdd` package `SPEC.md`, under `CI-sdd-warranty-m0-a49f5b`; then step 4 non-author review.
+SPECs). Step 3 DONE (pending owner OK to commit): the `intent/sdd` SPEC is written as a **draft**,
+`docs/plans/R2-sdd-provider-spec-draft1.md` (SDD-INV-1..14; it becomes the kernel `SPEC.md` with
+M1's code and tests, per census row C2-036), and the intent connector SPEC's provider paragraph
+amended to admit `sdd` (production only once its proofs pass). **Next:
+step 4** — one non-author review round over the plan, the BR, both SPECs, and the gate change.
 Original M0 list: the `intent/sdd` provider package's `SPEC.md` (a sibling of
 `records/` and `specdir/`; Law 6 — the file does not exist yet, so it is named here as a package, not
 a path: the census guard refuses a backticked kernel path that is not a tracked file) and the
