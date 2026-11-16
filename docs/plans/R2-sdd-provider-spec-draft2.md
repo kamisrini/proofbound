@@ -4,7 +4,8 @@ Status: **DRAFT 2 (R2 M0), not yet a live kernel contract.** Supersedes
 [`R2-sdd-provider-spec-draft1.md`](R2-sdd-provider-spec-draft1.md), which is kept unchanged as the
 artifact reviewed in `docs/verification/verdicts/r2-m0-review-round1-20261116.md` (NEEDS_WORK). It
 becomes `kernel/internal/connector/intent/sdd/SPEC.md` in the same M1 commit as the code and tests it
-cites (census row C2-036). **Two decisions are open (§9) and must be settled before M1.**
+cites (census row C2-036). §9's decisions A and B were **settled by the owner on 2026-11-16** (A2,
+B1); one consequence for Spec Kit remains open (§9.C).
 
 Requirement: `BR-sdd-warranty-i9miv7` (O-6 to be restated — §10). Decisions:
 `VD-release-line-r2-sdd-t5j34p`, `VD-sdd-accountable-identity-ypcx7x`. Evidence:
@@ -131,6 +132,8 @@ One requirement record per matching main-spec artifact; `authorized_by` and `sup
   trimmed. Empty → `intent.ErrUnmappable`. Longer than 32 bytes after `O-` → the first 25 bytes
   (re-trimmed) + `-` + 6 upper-case hex characters of `SHA-256(name)`. **Never positional.** (The
   spike's "31" was wrong; the canonical regex allows 32.)
+  **Superseded for `name`-group obligations by §9.B** (decision B1): their id also carries a
+  statement fingerprint, so a MODIFIED requirement always gets a new id.
 - **Collisions fail closed**: two obligation names mapping to one id in a record, or two artifacts
   mapping to one record id in a batch, is `intent.ErrUnmappable` — checked by the provider before it
   returns, because the connector's duplicate check includes the digest and would not catch it.
@@ -227,7 +230,7 @@ match, or more than one match is an error. A withdrawn or superseded status is a
 
 IDs are permanent from draft 1 on (pinned by `docs/invariants.lock` when the file lands): new
 invariants append; none is inserted, reordered, reused, or silently retitled. INV-1..14 keep their
-draft-1 ids and titles; INV-15..20 are appended by draft 2.
+draft-1 ids and titles; INV-15..23 are appended by draft 2.
 
 1. **SDD-INV-1 — The profile is strict JSON and fails closed.**
 2. **SDD-INV-2 — Only requirements and change intents are emitted; governance maps to nothing.**
@@ -249,6 +252,9 @@ draft-1 ids and titles; INV-15..20 are appended by draft 2.
 18. **SDD-INV-18 — A change's artifact digest covers the exact bytes of every file it reads.**
 19. **SDD-INV-19 — A native-name token resolves to exactly one active change at the commit's tree.**
 20. **SDD-INV-20 — Archiving a change never makes a later sync fail.**
+21. **SDD-INV-21 — A modified heading obligation always receives a new id.**
+22. **SDD-INV-22 — Every removed or superseded obligation remains as a retired tombstone.**
+23. **SDD-INV-23 — Archived deltas that disagree with the main spec fail closed.**
 
 | Invariant | Statement | Proving test |
 |---|---|---|
@@ -272,38 +278,57 @@ draft-1 ids and titles; INV-15..20 are appended by draft 2.
 | SDD-INV-18 | The manifest digest changes when any one file in the change changes, and only then | sdd_test.go::TestChangeManifestDigest |
 | SDD-INV-19 | A token resolves to one active change; unknown, archived-only, or ambiguous tokens are errors | sdd_test.go::TestNativeTokenResolution |
 | SDD-INV-20 | Syncing the tree after an archive commit succeeds, including for a REMOVED-only change | sdd_test.go::TestArchiveNeverBreaksSync |
+| SDD-INV-21 | A MODIFIED requirement's obligation id differs from its predecessor's | sdd_test.go::TestModifiedObligationGetsNewID |
+| SDD-INV-22 | Across the T0-T1-T2 tree sequence no obligation id ever disappears from the main record | sdd_test.go::TestRetiredObligationsLeaveTombstones |
+| SDD-INV-23 | A main spec hand-edited away from its archived deltas, or same-date conflicting changes, is ErrUnmappable | sdd_test.go::TestDeltaFoldMismatchFailsClosed |
 
-## 9. Open decisions (must be settled before M1)
+## 9. Lifecycle decisions (settled by the owner 2026-11-16)
 
-### A. Carrying a warranty across archive (step 7; F4)
+### A. Carrying a warranty across archive — **A2: re-attest**
 
-Verdicts bind to an active change's delta record and change intent. After archive the requirement
-lives in the main record, which has no verdict, so a satisfied requirement would read UNVERIFIED.
-- **A1 — Derived carry-over.** A report joins an archived delta obligation to the main obligation with
-  the same capability, obligation id, and statement digest. Computed at report time, never stored;
-  any statement edit breaks the join. Convenient; the join is an inference the report makes.
-- **A2 — Re-attest at archive (author's recommendation).** A verifier writes an
-  `obligation-verdict.v2` for the main record, citing the earlier verdict's events as evidence. No new
-  mechanism, no inference; costs one verifier step per archived change. A1 may still be shown as a
-  non-authoritative *carry-over candidate* that counts for nothing.
+After an archive the requirement lives in the main record, which has no verdict of its own. A
+verifier writes an `obligation-verdict.v2` for the main record, citing the earlier verdict's
+evidence events. No new mechanism and no inference: the warranty moves only when someone signs it.
+Reports may show a *carry-over candidate* (an archived delta obligation and a main obligation with
+the same capability, id, and statement digest) **labelled non-authoritative**; it never counts as
+SATISFIED. Rejected: A1, the report-time join counted as satisfaction — an inference the report
+would make on the verifier's behalf.
 
-### B. Obligation lifecycle vs intent SPEC §5 (F8)
+### B. Obligation lifecycle vs intent SPEC §5 — **B1: deltas are the lifecycle** (OpenSpec)
 
-§5: *active obligation ids cannot disappear or change statement in place; meaning change uses a new
-id and retirement leaves a tombstone.* OpenSpec edits requirements in place (MODIFIED) and deletes
-them (REMOVED). The family invariant is not weakened (option B3 below is listed only to reject it).
-- **B1 — Deltas are the lifecycle (author's recommendation).** OpenSpec's archived deltas are the
-  tenant's own declarations of each change, kept in the repository and ordered by their date prefix.
-  The main record's obligations are rebuilt by folding them: ADDED adds; REMOVED leaves a `retired`
-  tombstone (declared by the tenant, not invented); MODIFIED retires the old statement and adds a new
-  obligation id carrying a statement fingerprint. The fold must equal the current main spec, or the
-  sync fails closed — a main spec hand-edited outside the workflow is detected, not guessed around.
-  Faithful to §5 and to OpenSpec; the most complex option, and strict for tenants who hand-edit.
-- **B2 — Statement-fingerprinted ids only.** `O-<NAME>-<6 hex of statement>`: a meaning change is
-  automatically a new id. Simple, but a REMOVED requirement still disappears without a tombstone, so
-  §5 is still broken for retirement.
-- **B3 — Amend §5 for mutable sources.** Rejected: it weakens a family invariant every provider and
-  report relies on.
+§5 (active obligation ids never disappear or change statement in place; meaning change uses a new
+id; retirement leaves a tombstone) is kept. For OpenSpec the archived deltas — the tenant's own
+dated declarations of each change, kept in the repository — are the lifecycle:
+
+- **Obligation ids for heading-named obligations carry a statement fingerprint**:
+  `O-<name-part>-<6 upper-case hex of SHA-256(statement)>`, where `name-part` is §4.1's name rule cut
+  to 25 bytes. A MODIFIED requirement therefore always gets a **new** id. (This replaces §4.1's
+  name-only rule for heading obligations; `id`-group obligations are unchanged.)
+- The main record's obligations are the current main spec's requirements **plus a `retired`
+  tombstone** for every requirement an archived delta REMOVED, or MODIFIED or RENAMED away from,
+  carrying the old id and statement. A tombstone records the tenant's own declaration, not an
+  inference.
+- **Ordering**: archived changes apply in `YYYY-MM-DD-` prefix order. Two same-date changes that touch
+  the same requirement have no declared order and are `intent.ErrUnmappable`.
+- **Consistency, fail closed**: folding the archived deltas must agree with the current main spec —
+  every ADDED or MODIFIED requirement present with its final statement, every REMOVED one absent.
+  Otherwise `intent.ErrUnmappable`: a main spec hand-edited outside the workflow is detected, not
+  guessed around.
+- **Baseline**: a main-spec requirement no archived delta mentions is taken as it stands (it predates
+  the tenant's use of deltas, or was never changed).
+
+Rejected: B2 (fingerprinted ids alone — removals still vanish without a tombstone) and B3 (amend §5 —
+weakens a family invariant).
+
+### C. Still open: Spec Kit has no lifecycle record
+
+B1 relies on OpenSpec's archived deltas. Spec Kit keeps none: editing `FR-001` in place changes its
+meaning under the same id, and a deleted line leaves nothing behind, so §5's conflict remains for
+the Spec Kit subset profile. Candidates for the owner before M5 (Spec Kit) — not M1, whose reference
+kit is OpenSpec: (C1) fingerprint Spec Kit ids as well and treat each spec revision as a new
+requirement record superseding nothing (honest but loses continuity); (C2) restrict the Spec Kit
+profile to append-only use and fail closed on an in-place edit; (C3) read Spec Kit's git history
+through the `Reader` to recover the lifecycle.
 
 ## 10. `BR-sdd-warranty-i9miv7` changes this draft implies (owner approves the wording)
 
