@@ -29,6 +29,7 @@
 - [VD-release-line-r2-sdd-t5j34p: Release 1 is shipped; Release 2 is the SDD Warranty Connector; the revenue organs are Release 3](VD-release-line-r2-sdd-t5j34p.md) — Accepted (2026-11-16)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
 - [VD-review-ceremony-tiers-v2b6kp: review ceremony is tiered by package class, and the parallel round comes EARLY](VD-review-ceremony-tiers-v2b6kp.md) — Accepted (2026-08-10)
+- [VD-sdd-accountable-identity-ypcx7x: SDD owner and sponsor are declared in the tenant's committed profile](VD-sdd-accountable-identity-ypcx7x.md) — Accepted (2026-11-16)
 - [VD-stack-go-fid9mi: Go all the way — kernel, CLI, connectors](VD-stack-go-fid9mi.md) — Accepted (2026-08-07)
 - [VD-verdicts-are-artifacts-rl0rab: a verification verdict is committed to the repo on receipt, verbatim](VD-verdicts-are-artifacts-rl0rab.md) — Accepted (2026-08-14)
 - [VD-verification-asymmetry-2dyjnd: finding defects converges; fixing them does not — mechanism is the only lever that has moved either](VD-verification-asymmetry-2dyjnd.md) — Accepted (2026-08-14)

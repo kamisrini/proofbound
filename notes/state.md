@@ -14,9 +14,12 @@ unchanged). Authority: `VD-release-line-r2-sdd-t5j34p` (supersedes `VD-release-l
 **R2 M0 in progress (owner-guided, one blocker at a time).** Step 1 DONE 2026-11-16: mapping spike
 = **GO** ([`r2-m0-mapping-spike.md`](../docs/verification/r2-m0-mapping-spike.md)); governance → BD
 is NO-GO (→ `authorization: undeclared`); owner chose **(a) profile-declared accountable
-identity** (owner/sponsor declared in the tenant's committed profile) — to be recorded as a VD in
-step 2. **Next: step 2** — author `BD`/`BR-sdd-warranty-*` (+ the identity VD + an M0 CI), then
-step 3 SPECs, then step 4 non-author review. Original M0 list: the `intent/sdd` provider package's `SPEC.md` (a sibling of
+identity** → `VD-sdd-accountable-identity-ypcx7x`. Step 2 DONE: R2 intent home
+`BD-sdd-warranty-jdyjhh` → `BR-sdd-warranty-i9miv7` (O-1..O-7 approved verbatim by the owner;
+`proposed` until non-author review) → `CI-sdd-warranty-m0-a49f5b` (covers M0 records + step 3
+SPECs). **Next: step 3** — amend the intent connector SPEC's provider invariant + write the
+`intent/sdd` package `SPEC.md`, under `CI-sdd-warranty-m0-a49f5b`; then step 4 non-author review.
+Original M0 list: the `intent/sdd` provider package's `SPEC.md` (a sibling of
 `records/` and `specdir/`; Law 6 — the file does not exist yet, so it is named here as a package, not
 a path: the census guard refuses a backticked kernel path that is not a tracked file) and the
 `BD`/`BR-sdd-warranty-*` intent home, per
