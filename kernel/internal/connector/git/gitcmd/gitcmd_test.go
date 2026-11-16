@@ -12,8 +12,14 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
+
+	"io"
+	"log/slog"
 
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
+	"github.com/kamisrini/proofbound/kernel/internal/core"
+	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
 func TestParseScalars_RejectsMisframing(t *testing.T) {
@@ -111,6 +117,92 @@ func TestIntentTrailers_SharedCorpus(t *testing.T) {
 	// Calibration: a corpus that silently shrank to nothing would make this test vacuous.
 	if cases < 12 {
 		t.Fatalf("corpus has %d cases, want >= 12", cases)
+	}
+}
+
+// corpusResolver resolves every well-formed claim, so a Sync failure can only come from the
+// kernel's own grammar, framing, or value rule — the properties the corpus pins.
+type corpusResolver struct{}
+
+func (corpusResolver) Resolve(_ context.Context, _ string, provider, id string) (connectorgit.IntentRef, error) {
+	return connectorgit.IntentRef{Provider: provider, RecordID: id, ArtifactSHA256: strings.Repeat("a", 64)}, nil
+}
+
+type corpusAppender struct{}
+
+func (corpusAppender) Append(_ context.Context, e core.Event) (store.Record, bool, error) {
+	return store.Record{Event: e}, true, nil
+}
+
+// TestIntentTrailers_SharedCorpusKernelBinds is the end-to-end kernel side of column 3 ("the
+// kernel binds a claim"): each corpus message is committed verbatim into a real repository, read
+// through this real adapter (UTF-8 framing, replace-object and environment handling), and synced
+// by the real connector (value rule). The shell gate's self-test asserts the same column, so the
+// two cannot disagree on any corpus input (gate review round 1, F1).
+func TestIntentTrailers_SharedCorpusKernelBinds(t *testing.T) {
+	dir, err := filepath.Abs(filepath.Join("..", "..", "..", "..", "..", "scripts", "tests", "fixtures", "intent-trailers"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	table, err := os.ReadFile(filepath.Join(dir, "cases.tsv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases, pass, fail := 0, 0, 0
+	for _, line := range strings.Split(strings.TrimRight(string(table), "\n"), "\n") {
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		cols := strings.Split(line, "\t")
+		if len(cols) != 3 {
+			t.Fatalf("malformed corpus row %q", line)
+		}
+		name, want := cols[0], cols[2]
+		// Build the commit object from the exact message bytes: `git commit` (even with
+		// --cleanup=verbatim) and `git commit-tree` re-encode non-UTF-8 input, so only hash-object
+		// stores what the corpus file holds.
+		msg, err := os.ReadFile(filepath.Join(dir, name+".msg"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		fixture := newFixture(t)
+		fixture.write("scripts/case.sh", name)
+		fixture.git("add", "-A")
+		tree := strings.TrimSpace(fixture.git("write-tree"))
+		object := append([]byte("tree "+tree+"\nauthor Fixture User <fixture@example.test> 1700000000 +0000\ncommitter Fixture User <fixture@example.test> 1700000000 +0000\n\n"), msg...)
+		sha := strings.TrimSpace(commandInput(t, fixture.root, nil, object, "git", "hash-object", "-t", "commit", "-w", "--stdin"))
+		fixture.git("update-ref", "refs/heads/master", sha)
+		binds := false
+		repo, err := New(fixture.root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if commits, err := repo.Commits(context.Background()); err == nil && len(commits) == 1 && len(commits[0].IntentTrailers) > 0 {
+			ids, err := core.NewIDGenerator(core.IDGeneratorConfig{Entropy: bytes.NewReader(bytes.Repeat([]byte{5}, 4096)), Now: func() time.Time { return time.Unix(2, 0).UTC() }})
+			if err != nil {
+				t.Fatal(err)
+			}
+			c, err := connectorgit.New(&connectorgit.Deps{Repo: repo, IDs: ids, Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Resolver: corpusResolver{}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, syncErr := c.Sync(context.Background(), corpusAppender{})
+			binds = syncErr == nil
+		}
+		got := "fail"
+		if binds {
+			got, pass = "pass", pass+1
+		} else {
+			fail++
+		}
+		if got != want {
+			t.Errorf("case %s: kernel binds=%v, corpus column 3 expects %s", name, binds, want)
+		}
+		cases++
+	}
+	// Calibration: both outcomes must be exercised, or a constant answer would pass.
+	if cases < 19 || pass < 4 || fail < 10 {
+		t.Fatalf("corpus too weak: cases=%d pass=%d fail=%d", cases, pass, fail)
 	}
 }
 

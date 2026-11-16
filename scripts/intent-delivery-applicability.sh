@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Read the repository the way the kernel's adapter does (gitcmd: repositoryGitEnv +
+# --no-replace-objects): drop every inherited GIT_* variable and ignore replace refs, so a
+# `git replace` ref or a stray GIT_DIR cannot show this gate a different commit than the kernel
+# binds (gate review round 1, F3). Exported so intent-applicability.sh inherits it.
+while IFS= read -r variable; do unset "$variable"; done < <(compgen -e | grep '^GIT_' || true)
+export GIT_NO_REPLACE_OBJECTS=1
+
 repo=$(git rev-parse --show-toplevel)
 commit=HEAD
 while (($#)); do
@@ -31,7 +38,15 @@ fi
 # (scripts/tests/fixtures/intent-trailers) so they cannot drift apart.
 sha=$(git -C "$repo" rev-parse "$commit")
 message=$(git -C "$repo" show -s --format=%B "$commit")
-values=$(printf '%s\n' "$message" | awk '
+# The kernel adapter rejects a commit whose message is not valid UTF-8 outright (gitcmd
+# parseScalars), so no claim of it can bind (gate review round 1, F4).
+if ! printf '%s' "$message" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+  printf 'intent-delivery-applicability: applicable commit %s has a message that is not valid UTF-8, which the kernel rejects outright, so no Intent claim can bind\n' "$sha" >&2
+  exit 1
+fi
+# LC_ALL=C: byte semantics and fixed character ranges, like Go regexp. Defence in depth: invalid
+# UTF-8 is already rejected above, so dropping it is an equivalent mutant today (mutation-tested).
+values=$(printf '%s\n' "$message" | LC_ALL=C awk '
   { line[NR] = $0 }
   END {
     n = NR
@@ -46,7 +61,9 @@ values=$(printf '%s\n' "$message" | awk '
     for (j = 1; j <= k; j++) print v[j]
   }')
 if [[ -z $values ]]; then
-  if printf '%s\n' "$message" | grep -q '^Intent:'; then
+  if [[ $message == *$'\r'* ]] && printf '%s\n' "$message" | grep -q '^Intent:'; then
+    printf 'intent-delivery-applicability: applicable commit %s has CRLF line endings; the kernel reads the carriage returns as content, so its Intent line binds no claim — rewrite the message with LF endings\n' "$sha" >&2
+  elif printf '%s\n' "$message" | grep -q '^Intent:'; then
     printf 'intent-delivery-applicability: applicable commit %s has an Intent line OUTSIDE the final trailer block, so the kernel binds no claim; put Intent: directly above Co-Authored-By with no blank line\n' "$sha" >&2
   else
     printf 'intent-delivery-applicability: applicable commit %s has no explicit Intent trailer\n' "$sha" >&2
