@@ -944,3 +944,150 @@ func contains(values []string, value string) bool {
 	}
 	return false
 }
+
+// TestCommitSHAs_EqualsCommitsAndRefuses proves G-INV-23: CommitSHAs is exactly Commits' SHA list
+// and repeats the shallow/graft refusal at every call.
+func TestCommitSHAs_EqualsCommitsAndRefuses(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("a", "a")
+	fixture.commit("one", "")
+	fixture.git("checkout", "-q", "-b", "side")
+	fixture.write("b", "b")
+	fixture.commit("two", "")
+	fixture.git("checkout", "-q", "master")
+	fixture.write("c", "c")
+	fixture.commit("three", "")
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commits, err := repo.Commits(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	shas, err := repo.CommitSHAs(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want []string
+	for _, c := range commits {
+		want = append(want, c.SHA)
+	}
+	if !reflect.DeepEqual(shas, want) || len(shas) != 3 {
+		t.Fatalf("CommitSHAs=%v want %v", shas, want)
+	}
+	grafts := filepath.Join(fixture.root, ".git", "info", "grafts")
+	if err := os.WriteFile(grafts, []byte(fixture.head()+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.CommitSHAs(context.Background()); !errors.Is(err, ErrShallow) {
+		t.Fatalf("grafted listing error=%v", err)
+	}
+}
+
+// TestTreeEntries_TypedLiteralAndNeverDereferenced proves G-INV-24 and G-INV-25: a path's own
+// entry is returned typed whatever its type (tree, blob, symlink, gitlink), an absent or
+// magic-looking path is simply absent, children of a non-tree are empty, a literal "*x" name is
+// read as itself, and a non-UTF-8 path is returned as raw bytes rather than refused.
+func TestTreeEntries_TypedLiteralAndNeverDereferenced(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlinks and non-UTF-8 names need a POSIX filesystem")
+	}
+	fixture := newFixture(t)
+	fixture.write("root/dir/f.md", "f")
+	fixture.write("root/*x/g.md", "g")
+	fixture.write("root/plain.md", "p")
+	if err := os.Symlink("dir", filepath.Join(fixture.root, "root", "link")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(fixture.root, "root", "caf\xe9.md"), []byte("c"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fixture.git("add", "-A")
+	fixture.git("update-index", "--add", "--cacheinfo", "160000,"+strings.Repeat("a", 40)+",root/sub")
+	fixture.git("commit", "-q", "-m", "tree") // not fixture.commit: `add -A` would drop the gitlink
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, head := context.Background(), fixture.head()
+	own := func(path string) TreeEntry {
+		t.Helper()
+		e, err := repo.TreeEntries(ctx, head, path, false, false)
+		if err != nil || len(e) != 1 {
+			t.Fatalf("%s: entries=%v err=%v", path, e, err)
+		}
+		return e[0]
+	}
+	if e := own("root/dir"); e.Type != "tree" || e.Mode != "040000" {
+		t.Fatalf("dir=%+v", e)
+	}
+	if e := own("root/plain.md"); e.Type != "blob" || e.Mode != "100644" {
+		t.Fatalf("plain=%+v", e)
+	}
+	if e := own("root/link"); e.Mode != "120000" {
+		t.Fatalf("symlink=%+v", e)
+	}
+	if e := own("root/sub"); e.Mode != "160000" || e.Type != "commit" {
+		t.Fatalf("gitlink=%+v", e)
+	}
+	if e := own("root/*x"); e.Type != "tree" || e.Path != "root/*x" {
+		t.Fatalf("literal star=%+v", e)
+	}
+	for _, absent := range []string{"root/nope", ":(glob)root/dir", ":!root"} {
+		if e, err := repo.TreeEntries(ctx, head, absent, false, false); err != nil || len(e) != 0 {
+			t.Fatalf("%q: entries=%v err=%v", absent, e, err)
+		}
+	}
+	for _, nontree := range []string{"root/plain.md", "root/link", "root/sub", "root/nope"} {
+		if e, err := repo.TreeEntries(ctx, head, nontree, true, true); err != nil || len(e) != 0 {
+			t.Fatalf("children of %q: entries=%v err=%v", nontree, e, err)
+		}
+	}
+	all, err := repo.TreeEntries(ctx, head, "root", true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var paths []string
+	for _, e := range all {
+		paths = append(paths, e.Path)
+	}
+	sort.Strings(paths)
+	want := []string{"root/*x", "root/*x/g.md", "root/caf\xe9.md", "root/dir", "root/dir/f.md", "root/link", "root/plain.md", "root/sub"}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("recursive children=%q want %q", paths, want)
+	}
+	if b, err := repo.Blob(ctx, own("root/plain.md").OID); err != nil || string(b) != "p" {
+		t.Fatalf("blob=%q err=%v", b, err)
+	}
+	if _, err := repo.TreeEntries(ctx, head, "", false, false); err == nil {
+		t.Fatal("empty path must be refused, not read as the whole tree")
+	}
+}
+
+// TestParents_IgnoresReplacementAndRoots proves G-INV-26: a replace --graft cannot turn a commit
+// into a fabricated root, and a real root has no parents.
+func TestParents_IgnoresReplacementAndRoots(t *testing.T) {
+	fixture := newFixture(t)
+	fixture.write("a", "a")
+	fixture.commit("one", "")
+	first := fixture.head()
+	fixture.write("b", "b")
+	fixture.commit("two", "")
+	second := fixture.head()
+	fixture.git("replace", "--graft", second)
+	repo, err := New(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p, err := repo.Parents(context.Background(), second); err != nil || !reflect.DeepEqual(p, []string{first}) {
+		t.Fatalf("parents=%v err=%v", p, err)
+	}
+	if p, err := repo.Parents(context.Background(), first); err != nil || len(p) != 0 {
+		t.Fatalf("root parents=%v err=%v", p, err)
+	}
+	shas, err := repo.CommitSHAs(context.Background())
+	if err != nil || !reflect.DeepEqual(shas, []string{first, second}) {
+		t.Fatalf("shas=%v err=%v", shas, err)
+	}
+}

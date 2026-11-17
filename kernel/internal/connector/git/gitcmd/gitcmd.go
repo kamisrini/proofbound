@@ -54,6 +54,28 @@ func (r *Repo) Commits(ctx context.Context) ([]connectorgit.Commit, error) {
 	if r == nil {
 		return nil, errors.New("gitcmd: repository is nil")
 	}
+	shas, err := r.CommitSHAs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	commits := make([]connectorgit.Commit, 0, len(shas))
+	for _, sha := range shas {
+		commit, readErr := r.readCommit(ctx, sha)
+		if readErr != nil {
+			return nil, readErr
+		}
+		commits = append(commits, commit)
+	}
+	return commits, nil
+}
+
+// CommitSHAs lists exactly the commits Commits ingests, oldest first, after the same shallow,
+// graft and ref refusals, without reading any commit payload or file list (G-INV-23). It is the
+// one home of the history walk's arguments: Commits and the intent.sdd reader both use it.
+func (r *Repo) CommitSHAs(ctx context.Context) ([]string, error) {
+	if r == nil {
+		return nil, errors.New("gitcmd: repository is nil")
+	}
 	if err := r.refusePartial(ctx); err != nil {
 		return nil, err
 	}
@@ -65,16 +87,91 @@ func (r *Repo) Commits(ctx context.Context) ([]connectorgit.Commit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("gitcmd: list commits: %w", err)
 	}
-	shas := strings.Fields(string(out))
-	commits := make([]connectorgit.Commit, 0, len(shas))
-	for _, sha := range shas {
-		commit, readErr := r.readCommit(ctx, sha)
-		if readErr != nil {
-			return nil, readErr
-		}
-		commits = append(commits, commit)
+	return strings.Fields(string(out)), nil
+}
+
+// Parents returns commit's recorded parents in order; a root commit has none. Replace refs and
+// grafts cannot alter them (G-INV-26).
+func (r *Repo) Parents(ctx context.Context, commit string) ([]string, error) {
+	if r == nil {
+		return nil, errors.New("gitcmd: repository is nil")
 	}
-	return commits, nil
+	out, err := r.run(ctx, "rev-list", "--parents", "-n", "1", commit, "--")
+	if err != nil {
+		return nil, fmt.Errorf("gitcmd: parents of %s: %w", commit, err)
+	}
+	fields := strings.Fields(string(out))
+	if len(fields) == 0 || fields[0] != commit {
+		return nil, fmt.Errorf("gitcmd: parents of %s: unexpected output", commit)
+	}
+	return fields[1:], nil
+}
+
+// TreeEntry is one entry of a commit's tree. Path is the full repository path as raw bytes (it may
+// be invalid UTF-8; callers decide). Mode is git's octal mode ("040000", "100644", "100755",
+// "120000", "160000") and Type is "tree", "blob" or "commit".
+type TreeEntry struct{ Mode, Type, OID, Path string }
+
+// TreeEntries looks paths up in commit's tree without ever dereferencing "<commit>:<path>"
+// (G-INV-24). With children=false it returns path's own entry (none when absent). With
+// children=true it returns the entries under path (recursive=true walks the whole subtree, trees
+// included); a path that is absent or not a tree has no children. Every lookup is literal.
+func (r *Repo) TreeEntries(ctx context.Context, commit, path string, children, recursive bool) ([]TreeEntry, error) {
+	if r == nil {
+		return nil, errors.New("gitcmd: repository is nil")
+	}
+	if path == "" || strings.HasPrefix(path, "/") || strings.HasSuffix(path, "/") {
+		return nil, fmt.Errorf("gitcmd: tree path %q is not a repository path", path)
+	}
+	if children {
+		own, err := r.TreeEntries(ctx, commit, path, false, false)
+		if err != nil {
+			return nil, err
+		}
+		if len(own) != 1 || own[0].Type != "tree" {
+			return nil, nil
+		}
+	}
+	args := []string{"--literal-pathspecs", "ls-tree", "-z", "--full-tree"}
+	if recursive {
+		args = append(args, "-r", "-t")
+	}
+	target := path
+	if children {
+		target += "/"
+	}
+	out, err := r.run(ctx, append(args, commit, "--", target)...)
+	if err != nil {
+		return nil, fmt.Errorf("gitcmd: tree of %s at %q: %w", commit, path, err)
+	}
+	var entries []TreeEntry
+	for _, record := range strings.Split(string(out), "\x00") {
+		if record == "" {
+			continue
+		}
+		meta, name, ok := strings.Cut(record, "\t")
+		fields := strings.Fields(meta)
+		if !ok || len(fields) != 3 {
+			return nil, fmt.Errorf("gitcmd: tree of %s at %q: misframed entry", commit, path)
+		}
+		if children == (name == path) {
+			continue // own-entry mode wants only path; children mode never reports path itself (-t does)
+		}
+		entries = append(entries, TreeEntry{Mode: fields[0], Type: fields[1], OID: fields[2], Path: name})
+	}
+	return entries, nil
+}
+
+// Blob returns the exact bytes of a blob object.
+func (r *Repo) Blob(ctx context.Context, oid string) ([]byte, error) {
+	if r == nil {
+		return nil, errors.New("gitcmd: repository is nil")
+	}
+	out, err := r.run(ctx, "cat-file", "blob", oid)
+	if err != nil {
+		return nil, fmt.Errorf("gitcmd: blob %s: %w", oid, err)
+	}
+	return out, nil
 }
 
 // Reachable returns the commit object names currently reachable from the

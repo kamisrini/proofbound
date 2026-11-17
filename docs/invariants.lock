@@ -75,6 +75,10 @@ kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-19	The requested root selects
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-20	Gitlink deltas are configuration-independent.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-21	Detached HEAD immediately names a commit object.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-22	Intent trailers are explicit.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-23	CommitSHAs is exactly the commit list Commits ingests, with the same refusals.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-24	Tree lookups are typed and never dereference a path.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-25	Tree lookups return non-UTF-8 paths as raw bytes.
+kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-26	Parents are the recorded parents.
 kernel/internal/connector/reviews/SPEC.md	R-INV-1	Committed-only input:
 kernel/internal/connector/reviews/SPEC.md	R-INV-2	Exact schema:
 kernel/internal/connector/reviews/SPEC.md	R-INV-3	Event mapping:

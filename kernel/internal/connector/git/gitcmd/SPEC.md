@@ -14,6 +14,13 @@ type Repo struct { /* unexported */ }
 func New(root string) (*Repo, error)
 func (r *Repo) Commits(ctx context.Context) ([]git.Commit, error)
 func (r *Repo) Tips(ctx context.Context) (map[string]string, error)
+
+// Read primitives for the intent.sdd reader (R2 M1, CI-sdd-warranty-m1-6op6vl).
+type TreeEntry struct{ Mode, Type, OID, Path string }
+func (r *Repo) CommitSHAs(ctx context.Context) ([]string, error)
+func (r *Repo) Parents(ctx context.Context, commit string) ([]string, error)
+func (r *Repo) TreeEntries(ctx context.Context, commit, path string, children, recursive bool) ([]TreeEntry, error)
+func (r *Repo) Blob(ctx context.Context, oid string) ([]byte, error)
 ```
 
 `New` requires a non-empty path to a non-bare work tree. It refuses shallow repositories and
@@ -50,6 +57,13 @@ cannot become partial after construction.
   appear. A failure from Git is always an error except the documented unborn-HEAD/empty-repository
   cases. `git show-ref` also exits 1 for a valid detached HEAD because no named ref is present; the
   already-validated detached HEAD object is therefore admitted rather than treated as a broken ref.
+
+- `CommitSHAs` is the single home of the history walk's arguments; `Commits` calls it, then reads
+  each commit. The `intent.sdd` reader uses `CommitSHAs`, `Parents`, `TreeEntries`, and `Blob`, and
+  never the per-commit file lists, so a non-UTF-8 path that `Commits` refuses never reaches it.
+- `TreeEntries` runs `git --literal-pathspecs ls-tree -z --full-tree [-r -t] <commit> -- <path>[/]`.
+  It never dereferences `<commit>:<path>`, so a path of any type yields a typed entry, not an error.
+  Paths are returned as raw bytes; an empty, leading-slash, or trailing-slash path is refused.
 
 ## 3. Invariants
 
@@ -95,6 +109,14 @@ cannot become partial after construction.
     objects are refused even when an annotated tag could peel to a valid commit.
 22. **G-INV-22 — Intent trailers are explicit.** Only exact keys in the terminal Git trailer block
     are emitted, in sorted unique order; arbitrary mentions and interrupted blocks are ignored.
+23. **G-INV-23 — CommitSHAs is exactly the commit list Commits ingests, with the same refusals.**
+24. **G-INV-24 — Tree lookups are typed and never dereference a path.** A tree, blob, symlink, or
+    gitlink path yields its own typed entry; an absent or pathspec-magic-looking path yields
+    nothing; a non-tree has no children; a literal `*` name is read as itself.
+25. **G-INV-25 — Tree lookups return non-UTF-8 paths as raw bytes.** Unlike `Commits`, they never
+    refuse a path; the caller decides.
+26. **G-INV-26 — Parents are the recorded parents.** Replace refs cannot fabricate a root or a
+    parent.
 
 Legacy graft refusal is a route to G-INV-5's harm: grafts make a boundary commit appear to change
 its whole tree, producing contradictory payloads for one SHA. Both `New` and `Commits` therefore
@@ -133,6 +155,10 @@ refuse a non-empty `.git/info/grafts` with `ErrShallow`.
 | G-INV-20 | Repository and user submodule-ignore config cannot change root/non-root gitlink paths | gitcmd_test.go::TestCommits_GitlinkPayloadIgnoresSubmoduleConfig |
 | G-INV-21 | Detached HEAD rejects every immediate non-commit object including annotated tags | gitcmd_test.go::TestRepo_MissingObjectRoutesAreErrors |
 | G-INV-22 | Only terminal explicit Intent trailers become claims | gitcmd_test.go::TestCommits_ExtractsOnlyExplicitIntentTrailers |
+| G-INV-23 | CommitSHAs equals Commits' SHAs across branches and refuses a grafted repository | gitcmd_test.go::TestCommitSHAs_EqualsCommitsAndRefuses |
+| G-INV-24 | Tree, blob, symlink, gitlink, and literal-`*` paths are typed; absent and `:(glob)` paths are empty; non-trees have no children | gitcmd_test.go::TestTreeEntries_TypedLiteralAndNeverDereferenced |
+| G-INV-25 | A non-UTF-8 name under a listed tree is returned byte-exact | gitcmd_test.go::TestTreeEntries_TypedLiteralAndNeverDereferenced |
+| G-INV-26 | A replace graft cannot make a commit a root; a real root has no parents | gitcmd_test.go::TestParents_IgnoresReplacementAndRoots |
 
 ## 6. Dependencies
 
