@@ -102,7 +102,24 @@ type Deps struct {
 	Logger    *slog.Logger
 }
 
-type ProviderResult struct{ Listed, Appended, Existing int }
+// Skip reports one unit a provider could not map, per intent SPEC §2 (R2 M1). Cause is one value
+// of the provider's closed cause list; Err wraps ErrUnmappable. Skips are derived from the source on
+// every sync and never ledgered.
+type Skip struct {
+	Commit string
+	Unit   string
+	Cause  string
+	Err    error
+}
+
+// Skipper is the optional interface a provider implements to report the Skips of its last
+// Revisions call.
+type Skipper interface{ Skipped() []Skip }
+
+type ProviderResult struct {
+	Listed, Appended, Existing int
+	Skipped                    []Skip
+}
 
 type Result struct {
 	Listed, Appended, Existing int
@@ -131,7 +148,7 @@ func New(d *Deps) (*Connector, error) {
 			return nil, errors.New("intent connector: nil provider")
 		}
 		name := p.Name()
-		if name != "records" && name != "specdir" {
+		if name != "records" && name != "specdir" && name != "sdd" {
 			return nil, fmt.Errorf("intent connector: production provider %q is not configured", name)
 		}
 		if _, exists := providers[name]; exists {
@@ -167,7 +184,11 @@ func (c *Connector) Sync(ctx context.Context, selection string, app Appender) (R
 		if err != nil {
 			return result, fmt.Errorf("intent connector: provider %s: %w", name, err)
 		}
-		result.ByProvider[name] = ProviderResult{Listed: len(revisions)}
+		pr := ProviderResult{Listed: len(revisions)}
+		if skipper, ok := c.providers[name].(Skipper); ok {
+			pr.Skipped = skipper.Skipped()
+		}
+		result.ByProvider[name] = pr
 		result.Listed += len(revisions)
 		for _, rev := range revisions {
 			batch = append(batch, batchItem{name, rev})
@@ -212,8 +233,14 @@ func (c *Connector) Sync(ctx context.Context, selection string, app Appender) (R
 }
 
 func ValidateRevision(rev Revision) error {
-	if rev.Source != core.SourceIntentRecords && rev.Source != core.SourceIntentSpecdir {
+	if rev.Source != core.SourceIntentRecords && rev.Source != core.SourceIntentSpecdir && rev.Source != core.SourceIntentSDD {
 		return fmt.Errorf("intent: invalid source %q", rev.Source)
+	}
+	// The append-time bound, checked here so no batch can fail after a partial append. It is
+	// retroactively safe: core.Event.Validate has always refused larger payloads at append, so no
+	// ledgered event exceeds it (sdd SPEC §10 I).
+	if len(rev.Payload) > core.MaxPayloadBytes {
+		return errors.New("intent: payload exceeds core.MaxPayloadBytes")
 	}
 	if rev.Kind != core.KindBusinessDecision && rev.Kind != core.KindRequirement && rev.Kind != core.KindChangeIntent {
 		return fmt.Errorf("intent: invalid kind %q", rev.Kind)

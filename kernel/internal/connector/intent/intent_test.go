@@ -353,6 +353,64 @@ func TestSyncValidatesBeforeAppendAndOrdersProviders(t *testing.T) {
 	}
 }
 
+// TestSyncRejectsOversizeBeforeAnyAppend extends INT-INV-4 (R2 M1): a payload over
+// core.MaxPayloadBytes fails batch validation, so nothing is appended (before M1 it failed inside
+// the append loop after earlier events had been appended). It also proves the bound is
+// retroactively safe: a revision at exactly the bound still validates.
+func TestSyncRejectsOversizeBeforeAnyAppend(t *testing.T) {
+	a := sampleRevision(t, core.SourceIntentRecords, "BR-records-item-acde12", strings.Repeat("a", 64))
+	big := func(statementLen int) Revision {
+		v := Requirement{Schema: "proofbound.requirement.v1", RequirementID: "BR-specdir-item-acde12", Status: "active", AuthorizedBy: []Reference{}, DeclaredOwner: "owner", Obligations: []Obligation{{ID: "O-1", Statement: strings.Repeat("s", statementLen), State: "active"}}, Supersedes: []Reference{}, ArtifactPath: "specs/x/requirements.md", ArtifactSHA256: strings.Repeat("b", 64)}
+		return Revision{Source: core.SourceIntentSpecdir, Kind: core.KindRequirement, NativeID: v.RequirementID, ArtifactPath: v.ArtifactPath, ArtifactSHA256: v.ArtifactSHA256, ObservedAt: time.Unix(1, 0).UTC(), Payload: canonical(t, v)}
+	}
+	over := big(core.MaxPayloadBytes)
+	if err := ValidateRevision(over); err == nil {
+		t.Fatal("oversize payload validated")
+	}
+	app := &testAppender{}
+	c := newTestConnector(t, testProvider{name: "specdir", revisions: []Revision{over}}, testProvider{name: "records", revisions: []Revision{a}})
+	if _, err := c.Sync(context.Background(), "all", app); err == nil || len(app.events) != 0 {
+		t.Fatalf("oversize batch: appended=%d err=%v", len(app.events), err)
+	}
+	fits := big(0)
+	room := core.MaxPayloadBytes - len(fits.Payload)
+	exact := big(room)
+	if len(exact.Payload) != core.MaxPayloadBytes {
+		t.Fatalf("calibration: payload is %d bytes, want exactly %d", len(exact.Payload), core.MaxPayloadBytes)
+	}
+	if err := ValidateRevision(exact); err != nil {
+		t.Fatalf("payload at exactly the bound must validate: %v", err)
+	}
+}
+
+type skippingProvider struct {
+	testProvider
+	skips []Skip
+}
+
+func (p skippingProvider) Skipped() []Skip { return p.skips }
+
+// TestSyncReportsProviderSkips proves INT-INV-13: a provider's Skips reach the Result unchanged and
+// nothing about them is appended.
+func TestSyncReportsProviderSkips(t *testing.T) {
+	a := sampleRevision(t, core.SourceIntentRecords, "BR-records-item-acde12", strings.Repeat("a", 64))
+	skip := Skip{Commit: strings.Repeat("c", 40), Unit: "change x", Cause: "name-reuse", Err: ErrUnmappable}
+	app := &testAppender{}
+	c := newTestConnector(t, skippingProvider{testProvider: testProvider{name: "records", revisions: []Revision{a}}, skips: []Skip{skip}})
+	res, err := c.Sync(context.Background(), "records", app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := res.ByProvider["records"].Skipped
+	if len(got) != 1 || got[0].Unit != skip.Unit || got[0].Cause != skip.Cause || len(app.events) != 1 || res.Appended != 1 {
+		t.Fatalf("skips=%v appended=%d events=%d", got, res.Appended, len(app.events))
+	}
+	plain := newTestConnector(t, testProvider{name: "specdir"})
+	if res, err := plain.Sync(context.Background(), "specdir", &testAppender{}); err != nil || res.ByProvider["specdir"].Skipped != nil {
+		t.Fatalf("a non-skipping provider reported skips: %v %v", res.ByProvider["specdir"].Skipped, err)
+	}
+}
+
 func TestSyncAcceptsNonPointerAppender(t *testing.T) {
 	c := newTestConnector(t, testProvider{name: "specdir"})
 	if _, err := c.Sync(context.Background(), "specdir", valueAppender{}); err != nil {

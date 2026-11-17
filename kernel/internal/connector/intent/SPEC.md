@@ -41,13 +41,21 @@ type Appender interface {
 }
 
 type Deps struct { Providers []Provider; IDs *core.IDGenerator; Logger *slog.Logger }
+// R2 M1 amendment: a provider may report units it could not map. Skips are derived from the
+// source on every sync, carried in the Result, and never appended.
+type Skip struct { Commit, Unit, Cause string; Err error } // Err wraps ErrUnmappable
+type Skipper interface { Skipped() []Skip }
+type ProviderResult struct { Listed, Appended, Existing int; Skipped []Skip }
 type Result struct { Listed, Appended, Existing int; ByProvider map[string]ProviderResult; Cursor json.RawMessage }
 func New(*Deps) (*Connector, error)
 func (c *Connector) Sync(context.Context, string, Appender) (Result, error)
 func ValidateRevision(Revision) error
 ```
 
-`Sync` accepts one configured provider name or `all`. It validates the entire batch, then orders it
+`Sync` accepts one configured provider name or `all`. **R2 M1:** `ValidateRevision` also refuses a
+payload larger than `core.MaxPayloadBytes`. That is the append-time bound, checked before any
+append, so a batch can no longer fail part-way through appending. It is retroactively safe, because
+append has always refused such payloads, so no ledgered event exceeds the bound. It validates the entire batch, then orders it
 dependency-topologically (BD before the BR it authorizes, BR before the CI that targets it, and
 predecessor before successor), with source, kind, record id, artifact digest, and path as stable
 tie-breakers. Cross-provider ordering and malformed input therefore cannot create partial trust.
@@ -94,7 +102,10 @@ The closed relation vocabulary is `authorizes`, `implements`, `modifies`, `repai
 bytes for the native provider and exact committed file bytes for `specdir`. `content_sha` is computed
 independently by core over canonical normalized payload JSON. Removing either comparison is a defect.
 
-Committed-file providers resolve at the commit's own tree. A later API provider would record a
+Committed-file providers resolve at the commit's own tree. **R2 M1:** for `sdd`,
+`artifact_sha256` is the SHA-256 of a manifest over the exact committed bytes, and git identity, of
+every entry that determines the payload. Resolution also reads the archive listings of the commit's
+parents. See `sdd/SPEC.md` §4.3 and §6. A later API provider would record a
 snapshot observed at ingest, but no API provider ships in P5. A resolution returns the exact digest;
 an upstream mutation between resolution and ingest fails before append.
 
@@ -110,7 +121,8 @@ digests are carried in payloads, so projection deletion and ledger replay are so
 - No mutable API provider, authenticated approval, inferred applicability, graph store, or fabricated
   chain segment.
 - No schema change to accommodate the deliberately unmappable foreign fixture. Encountering it is a
-  phase STOP result.
+  phase STOP result for `records` and `specdir`. **R2 M1:** for `sdd`, `ErrUnmappable` marks one
+  unit, which is reported as a `Skip` and never fails the sync (`sdd/SPEC.md` §7).
 - No prose-body ingestion beyond its source artifact digest.
 
 ## 7. Invariants and test derivation
@@ -129,3 +141,5 @@ digests are carried in payloads, so projection deletion and ledger replay are so
 | INT-INV-10 | Payloads reconstruct relation and obligation meaning without source files | conformance_test.go::TestReplaySufficiency |
 | INT-INV-11 | The unmappable foreign fixture returns the distinguished STOP error | conformance_test.go::TestUnmappableFixtureStops |
 | INT-INV-12 | No synthetic provider can be selected by a production constructor | intent_test.go::TestSyntheticProviderIsTestOnly |
+| INT-INV-4 | (R2 M1) An oversize payload fails validation before any append; a payload at exactly the bound validates | intent_test.go::TestSyncRejectsOversizeBeforeAnyAppend |
+| INT-INV-13 | Provider Skips reach the Result unchanged and are never appended | intent_test.go::TestSyncReportsProviderSkips |

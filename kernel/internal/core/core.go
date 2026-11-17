@@ -54,6 +54,7 @@ const (
 	SourceGitHub        Source = "github"
 	SourceIntentRecords Source = "intent.records"
 	SourceIntentSpecdir Source = "intent.specdir"
+	SourceIntentSDD     Source = "intent.sdd"
 )
 
 var sourceRE = regexp.MustCompile(`^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31})?$`)

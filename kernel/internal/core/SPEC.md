@@ -80,6 +80,7 @@ const (
 	SourceGitHub   Source = "github"
 	SourceIntentRecords Source = "intent.records"
 	SourceIntentSpecdir Source = "intent.specdir"
+	SourceIntentSDD     Source = "intent.sdd" // R2 M1 (CI-sdd-warranty-m1-6op6vl)
 )
 
 // WellFormed reports whether s matches ^[a-z][a-z0-9_]{0,31}(\.[a-z][a-z0-9_]{0,31})?$.
