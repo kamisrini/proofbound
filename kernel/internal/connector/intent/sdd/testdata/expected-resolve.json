@@ -1,0 +1,26 @@
+{
+  "schema": "proofbound.sdd-expected-resolve.v1",
+  "note": "Draft 8 SDD-INV-59: Resolve(step commit, name) outcome for the resolve-edges history. Outcomes: revision | ErrNoChangeIntent | ErrUnmappable:<cause> | ErrArchivedEarlier | ErrUnknownChange. Hand-authored from draft 8 section 6's precedence; each row names the rule that decides it.",
+  "resolve-edges": [
+    { "step": "01-root-archived-twice", "name": "twice", "outcome": "ErrUnmappable:name-reuse", "rule": "two archive entries name it at c" },
+    { "step": "02-propose-again", "name": "again", "outcome": "revision", "rule": "active, has records" },
+    { "step": "02-propose-again", "name": "twice", "outcome": "ErrUnmappable:name-reuse", "rule": "still two archive entries" },
+    { "step": "03-archive-again", "name": "again", "outcome": "revision", "rule": "one archive entry, absent from every parent" },
+    { "step": "04-repropose-again", "name": "again", "outcome": "ErrUnmappable:name-reuse", "rule": "active and archived at c" },
+    { "step": "05-rearchive-again", "name": "again", "outcome": "ErrUnmappable:name-reuse", "rule": "two archive entries at c (precedes archived-earlier)" },
+    { "step": "06-profile-invalid", "name": "again", "outcome": "ErrUnmappable:profile-invalid", "rule": "state-level cause precedes every name rule" },
+    { "step": "06-profile-invalid", "name": "nope", "outcome": "ErrUnmappable:profile-invalid", "rule": "state-level cause precedes every name rule" },
+    { "step": "07-edges", "name": "a", "outcome": "ErrUnmappable:slug-too-short", "rule": "change-unit cause precedes no-records" },
+    { "step": "07-edges", "name": "draft-only", "outcome": "ErrNoChangeIntent", "rule": "active, no records, no cause" },
+    { "step": "07-edges", "name": "zero-left", "outcome": "ErrUnmappable:name-reuse", "rule": "name-reuse precedes no-records" },
+    { "step": "07-edges", "name": ".", "outcome": "ErrUnknownChange", "rule": "outside the name domain" },
+    { "step": "07-edges", "name": "archive", "outcome": "ErrUnknownChange", "rule": "outside the name domain" },
+    { "step": "07-edges", "name": "archive/2026-02-01-again", "outcome": "ErrUnknownChange", "rule": "outside the name domain" },
+    { "step": "07-edges", "name": "nope", "outcome": "ErrUnknownChange", "rule": "no entry names it" }
+  ],
+  "branches": [
+    { "step": "08-merge-side", "name": "add-x", "outcome": "ErrArchivedEarlier", "rule": "one archive entry, present at a parent (the side branch archived it)" },
+    { "step": "07-side-archive", "name": "add-x", "outcome": "revision", "rule": "archived by this commit" },
+    { "step": "01-root-with-archive", "name": "seed", "outcome": "revision", "rule": "a root archives what it carries" }
+  ]
+}

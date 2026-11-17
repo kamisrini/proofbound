@@ -1,0 +1,8 @@
+{
+  "schema": "proofbound.sdd-profile.v1",
+  "kit": "openspec", "unknown": true,
+  "requirements": { "paths": ["openspec/changes/*/specs/*/spec.md", "openspec/changes/archive/*/specs/*/spec.md"] },
+  "changes": { "mode": "delta-sections", "root": "openspec/changes", "archive": "openspec/changes/archive", "status": "accepted" },
+  "owners":   [ { "pattern": "openspec/**", "owner": "team-fixture" } ],
+  "sponsors": [ { "pattern": "openspec/changes/**", "sponsor": "team-fixture" } ]
+}

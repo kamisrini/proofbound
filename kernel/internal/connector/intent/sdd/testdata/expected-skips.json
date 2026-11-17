@@ -1,8 +1,14 @@
 {
   "schema": "proofbound.sdd-expected-skips.v1",
-  "note": "Draft 6 SDD-INV-46: each fixture's EXACT Skip set. 'step' names the first fixture step carrying the state (histories); single trees have no step. Unit paths are fixture-relative.",
+  "note": "Draft 8 SDD-INV-46: each fixture's EXACT Skip set under M1 (OpenSpec only, VD-sdd-m1-openspec-first-2026-11-17). Skips are de-duplicated by (unit, cause, unit digest) and keyed by the first step carrying them. Unit forms: 'requirement <path>', 'change <name>', 'archive <entry>', 'profile'.",
   "openspec-history": [],
-  "speckit-history": [],
+  "speckit-history": [
+    {
+      "step": "01-feature-spec",
+      "unit": "profile",
+      "cause": "profile-invalid"
+    }
+  ],
   "branches": [
     {
       "step": "11-archive-leaves-leftover",
@@ -31,6 +37,38 @@
     {
       "step": "02-archive-leaves-leftover",
       "unit": "change add-w",
+      "cause": "name-reuse"
+    }
+  ],
+  "resolve-edges": [
+    {
+      "step": "01-root-archived-twice",
+      "unit": "change twice",
+      "cause": "name-reuse"
+    },
+    {
+      "step": "04-repropose-again",
+      "unit": "change again",
+      "cause": "name-reuse"
+    },
+    {
+      "step": "05-rearchive-again",
+      "unit": "change again",
+      "cause": "name-reuse"
+    },
+    {
+      "step": "06-profile-invalid",
+      "unit": "profile",
+      "cause": "profile-invalid"
+    },
+    {
+      "step": "07-edges",
+      "unit": "change a",
+      "cause": "slug-too-short"
+    },
+    {
+      "step": "07-edges",
+      "unit": "change zero-left",
       "cause": "name-reuse"
     }
   ]

@@ -1,7 +1,7 @@
 # `intent.sdd` provider fixtures (R2 M1) — DRAFT, written before the provider
 
 Test data only; no code. Written against `docs/plans/R2-sdd-provider-spec-draft3.md` and extended for
-drafts 4-7 (`docs/plans/R2-sdd-provider-spec-draft7.md` is current; invariant numbers below are draft 7's) while those drafts are under
+drafts 4-8 (`docs/plans/R2-sdd-provider-spec-draft8.md` is current; invariant numbers below are draft 8's; M1 maps OpenSpec only — `VD-sdd-m1-openspec-first-2026-11-17` — so the Spec Kit fixtures are M2's inputs and are `profile-invalid` under M1) while those drafts are under
 non-author review, so **the profile shape here is provisional** and must be updated
 if the reviewed contract changes it. These become the M1 tests' inputs once
 `kernel/internal/connector/intent/sdd/` gains its code and its `SPEC.md`.
@@ -19,7 +19,7 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Steps and what they exercise
 
-| Fixture step | Reproduces (real-history shape) | Invariants (draft 7) |
+| Fixture step | Reproduces (real-history shape) | Invariants (draft 8) |
 |---|---|---|
 | openspec 01-baseline | main spec present but never ingested | INV-30 |
 | openspec 02-draft-proposal-only | change with zero requirement entries (38 of 135 real changes at some state) | INV-28, INV-59 (Resolve → ErrNoChangeIntent) |
@@ -46,12 +46,15 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 | fenced/document-renames | an indented RENAMED example inside a fence (`adopt-delta-based-changes` shape) — 1 obligation either way | INV-39 (neutral control) |
 | fenced/fence-marker, fence-length, fence-info-backtick | §4.2 fence precision: a `~~~` line inside a backtick fence, a shorter closer, a backtick in a backtick opener's info string — each kills a naive toggle mask | INV-39 |
 | head-on-leftover | HEAD (`main`) itself ends on the dual-presence state | INV-35(c) |
+| resolve-edges | archived twice by a root; re-propose and re-archive a reused name; a profile-invalid state; a short name, a proposal-only change, a zero-entry leftover; names outside the domain | INV-59 (with `expected-resolve.json`) |
 | expected-skips.json | the exact Skip set of every fixture | INV-46 |
+| expected-resolve.json | Resolve outcome per (step, name) for resolve-edges and branches | INV-59 |
+| id-vectors.json | slug / namepart / suffix vectors, non-ASCII included (byte-wise ASCII mapping) | INV-7 |
 | expected-obligations.json | per fenced case: obligations under OpenSpec's mask, a naive toggle, and no mask | INV-39 |
 
 ## Re-deriving the evidence
 
-`derive/history_probe.py` is the probe that measured draft 3 §0 through draft 7 §0 (it implements draft 7 §4.2 —
-OpenSpec's fence, section and requirement rules — and prints every count draft 7 cites; `--pins` regenerates `expected-obligations.json`) over the full history of
+`derive/history_probe.py` is the probe that measured draft 3 §0 through draft 8 §0 (it implements draft 8 §4.2 —
+OpenSpec's fence, section and requirement rules — and prints every count draft 8 cites; `--pins` and `--vectors` regenerate `expected-obligations.json` and `id-vectors.json` without needing a git repository) over the full history of
 `Fission-AI/OpenSpec` (run: `python3 -I derive/history_probe.py <openspec-clone>`). It is kept so the
 fixture rows can be checked against a fresh measurement; it is documentation, not part of the build.
