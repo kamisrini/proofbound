@@ -6,12 +6,15 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **M0 review round 5** of `docs/plans/R2-sdd-provider-spec-draft5.md` (fresh
-non-author reviewer; re-check of the changed sections against round 4's F1-F10 and its five fitness
-conditions). Verdict → `docs/verification/verdicts/r2-m0-review-round5-20261117.md`; commit it with
-`scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → owner approves BR revision 0003 wording
-(draft 5 §11) and **authorizes committing the replay helper** (`fixture_test.go`, governed; round-4 F10
-makes it an M1 precondition) → **M1 code**, reviewed at the foundational tier.
+**Exact next action:** write **SPEC draft 6** answering M0 review round 5
+(`docs/verification/verdicts/r2-m0-review-round5-20261117.md`, NEEDS_WORK, 3 MED + 4 LOW, no HIGH):
+F1 classify every tenant byte the validator/reader/store/projector can reject (whitespace-only
+statements, over-long Spec Kit ids, non-UTF-8 paths in history, gitlinks/symlinks); F2 NUL bytes
+(ledger accepts, projection TEXT rejects); F3 pin §4.2 to OpenSpec's actual reader or list divergences;
+F4 fix §12 CLI rows (`syncIntentOnStore` is M1, `cli.go:247` is M3) and decide whether `all` includes
+`sdd`; F5 Spec Kit CI status declared, not inferred; F6 mechanise fixture claims; F7 drift. Then round 6.
+Owner decisions pending: commit the replay helper (`fixture_test.go`, governed; M1 precondition), and
+whether `sync intent all` includes `sdd`.
 
 **Draft 5 (2026-11-17)** answers round 4 (NEEDS_WORK, 6 MED + 4 LOW, no HIGH): closed list of tenant-data
 skip causes (incl. `payload-too-large`, `invalid-utf8`); everything else fails `Revisions`;
