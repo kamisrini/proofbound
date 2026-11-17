@@ -298,7 +298,7 @@ func TestBranchFixtureReplaysAsDocumented(t *testing.T) {
 	}
 	disc := read("improve-onboarding/specs/cli-init/spec.md")
 	open, tldr, after := strings.Index(disc, "\n```markdown\n"), strings.Index(disc, "\n## TL;DR"), strings.Index(disc, "### Requirement: Success Output")
-	if open < 0 || tldr < open || after < tldr || strings.Index(disc[tldr:], "\n```\n") < 0 {
+	if open < 0 || tldr < open || after < tldr || !strings.Contains(disc[tldr:], "\n```\n") {
 		t.Fatal("fenced fixture lacks a column-0 header inside a fence before later requirements")
 	}
 	if neutral := read("document-renames/specs/conventions/spec.md"); !strings.Contains(neutral, "\n  ## RENAMED Requirements") {
@@ -309,7 +309,7 @@ func TestBranchFixtureReplaysAsDocumented(t *testing.T) {
 	}
 }
 
-// skipCauses is draft 8 §7's closed list of tenant-data causes; a pin naming anything else is wrong.
+// skipCauses is draft 10 §7's closed list of tenant-data causes; a pin naming anything else is wrong.
 var skipCauses = map[string]bool{
 	"profile-invalid": true, "invalid-utf8": true, "nul-byte": true, "non-regular-file": true,
 	"owner-uncovered": true, "sponsor-uncovered": true, "status-unmapped": true,
@@ -369,7 +369,7 @@ func TestPinnedExpectationsMatchFixtures(t *testing.T) {
 				t.Fatalf("%s: unit %q has no known kind", fixture, s.Unit)
 			}
 			if !skipCauses[s.Cause] {
-				t.Fatalf("%s: pinned skip %+v has a cause outside draft 8 §7's closed list", fixture, s)
+				t.Fatalf("%s: pinned skip %+v has a cause outside draft 10 §7's closed list", fixture, s)
 			}
 			if _, err := os.Stat(probe); err != nil {
 				t.Fatalf("%s: pinned skip %+v does not name an existing unit (%s)", fixture, s, probe)
@@ -459,7 +459,7 @@ func TestPinnedExpectationsMatchFixtures(t *testing.T) {
 		for _, r := range rows {
 			cause, isUnmappable := strings.CutPrefix(r.Outcome, "ErrUnmappable:")
 			if _, err := os.Stat(filepath.Join("testdata", history, r.Step, "tree")); err != nil ||
-				r.Rule == "" || !(outcomes[r.Outcome] || isUnmappable && skipCauses[cause]) {
+				r.Rule == "" || !outcomes[r.Outcome] && (!isUnmappable || !skipCauses[cause]) {
 				t.Fatalf("expected-resolve %s: bad row %+v", history, r)
 			}
 		}

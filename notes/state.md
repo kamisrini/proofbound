@@ -10,7 +10,10 @@ As of: 2026-11-17
 implements BR rev 0003 O-1/O-2/O-10, OpenSpec only). Order: (1) DONE `61aecab` — gitcmd `CommitSHAs`
 / `Parents` / `TreeEntries` / `Blob` (G-INV-23..26, lock appended); (2a) DONE `b92adc4` — core
 `SourceIntentSDD`, intent connector admits `sdd`, `ValidateRevision` size bound, `Skip`/`Skipper`/
-`ProviderResult.Skipped` (INT-INV-13), intent SPEC §2/§4/§6 amended; (2b) NEXT: `sdd` provider (profile, §4.2 parser, ids, manifests,
+`ProviderResult.Skipped` (INT-INV-13), intent SPEC §2/§4/§6 amended; (2b) IN PROGRESS — provider
+core committed (profile/parser/ids/reader/changeOutcome/Revisions/Resolve) and already passes
+SDD-INV-46 (all 8 fixtures' exact skip sets) and SDD-INV-59 (all 21 Resolve pins), calibrated; NEXT:
+the remaining draft-10 §9 proving tests, then `sdd` provider (profile, §4.2 parser, ids, manifests,
 `changeOutcome`, Revisions/Skipped/Resolve) against the committed fixtures and pins; (3) intent
 connector + core + projections + gates + CLI sites (draft 10 §12); (4) copy draft 10 VERBATIM to
 `sdd/SPEC.md` in the commit with its tests, regenerate `docs/invariants.lock`, route matrix, census;
