@@ -6,13 +6,16 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** owner decision on closing M0. Targeted re-check of draft 9
-(`docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md`): NEEDS_WORK, 1 MED + 5 LOW, no HIGH;
-round 8's MEDs closed; reviewer's own oracle matched all 21 Resolve pins and 8 skip sets. Reviewer's
-fitness: **fit for M1 code if F1 (symlink/gitlink INSIDE a change directory has two contract outcomes)
-is fixed in the `sdd/SPEC.md` M1 commits and checked by M1's foundational non-author review — no
-further M0 paper round needed.** Proposed to owner: approve BR revision 0003 wording (draft 9 §11) and
-start M1 with the re-check's F1-F6 as M1 entry conditions.
+**Exact next action:** **R2 M1 (OpenSpec only)** — M0 is CLOSED (owner, 2026-11-17). Step 1: write
+`kernel/internal/connector/intent/sdd/SPEC.md` from `docs/plans/R2-sdd-provider-spec-draft9.md` (OpenSpec
+sections only; Appendix A stays in the draft), fixing the six findings of
+`docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md` (F1 MED: symlink/gitlink INSIDE a change
+directory has two outcomes; F2 parent-archive check must ignore regular files; F3 tree at a delta path;
+F4 profile-unit digest roots when the profile is invalid; F5 INV-65 kill; F6 drift). Then a
+**change intent for M1** (new CI targeting BR 0003 O-1/O-2/O-10, owner-accepted) BEFORE code; then
+code + tests + the §12 amendments in the same commit as the SPEC (Law 6); foundational-tier non-author
+review (Law 9). **BR-sdd-warranty-i9miv7 revision 0003 is written** (owner-approved, `proposed` until a
+non-author requirement-review.v1).
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
