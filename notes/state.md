@@ -6,11 +6,14 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **M0 review round 6** of `docs/plans/R2-sdd-provider-spec-draft6.md` (fresh
-non-author reviewer; check round 5's F1-F7 and its five fitness conditions). Verdict →
-`docs/verification/verdicts/r2-m0-review-round6-20261117.md`; commit it with
-`scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → owner approves BR revision 0003 wording
-(draft 6 §11) → **M1 code**, reviewed at the foundational tier.
+**Exact next action:** await the owner's go on **SPEC draft 7** answering M0 review round 6
+(`docs/verification/verdicts/r2-m0-review-round6-20261117.md`, NEEDS_WORK, 2 MED + 5 LOW, no HIGH). F1:
+Resolve needs a sentinel for an existing change with no change intent (proposal-only / zero-entry
+archive) and for reserved names. F2: the U+0000 rejection must not be added to `ValidateRevision` for
+all providers (rebuild re-validates history; could wedge an existing ledger) — scope it to `sdd` or to
+new appends. F3-F7 LOW (root/profile-path object types, ASCII-only case mapping, §12 omissions
+core/SPEC.md + CLI skip printing + USER-GUIDE, naive-toggle definition + self-test gaps, README/probe
+drift). Then round 7. BR revision 0003 approval still pending an ACCEPTABLE verdict.
 
 **Draft 6 (2026-11-17)** answers round 5 (NEEDS_WORK, 3 MED + 4 LOW, no HIGH). The §7 skip-cause table is
 derived from every check tenant bytes reach (adds `nul-byte`, `statement-blank`, `obligation-id-invalid`,
