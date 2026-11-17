@@ -2,120 +2,104 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-16
+As of: 2026-11-16 (EOD)
 
 ## Resume — 2026-11-16
 
-**Exact next action:** the **release-line renumber is committed and pushed** (one governed commit,
-trailer `Intent: CI-release-line-r2-sdd-t5j34p`; owner authorized commit + push 2026-11-16). What it
-landed: **R1 ACCEPTED as shipped** + **release line redrawn into three cuts** — R1 = the Trust Record (shipped), **R2 = the
-SDD Warranty Connector**, **R3 = the revenue organs + turnkey redistribution** (the former R2 scope,
-unchanged). Authority: `VD-release-line-r2-sdd-t5j34p` (supersedes `VD-release-line-kwdh4v`).
-**R2 M0 in progress (owner-guided, one blocker at a time).** Step 1 DONE 2026-11-16: mapping spike
-= **GO** ([`r2-m0-mapping-spike.md`](../docs/verification/r2-m0-mapping-spike.md)); governance → BD
-is NO-GO (→ `authorization: undeclared`); owner chose **(a) profile-declared accountable
-identity** → `VD-sdd-accountable-identity-ypcx7x`. Step 2 DONE: R2 intent home
-`BD-sdd-warranty-jdyjhh` → `BR-sdd-warranty-i9miv7` (O-1..O-7 approved verbatim by the owner;
-`proposed` until non-author review) → `CI-sdd-warranty-m0-a49f5b` (covers M0 records + step 3
-SPECs). Step 3 DONE (pending owner OK to commit): the `intent/sdd` SPEC is written as a **draft**,
-`docs/plans/R2-sdd-provider-spec-draft1.md` (SDD-INV-1..14; it becomes the kernel `SPEC.md` with
-M1's code and tests, per census row C2-036), and the intent connector SPEC's provider paragraph
-amended to admit `sdd` (production only once its proofs pass). **Next:
-step 4** (review round 1) DONE: both verdicts NEEDS_WORK (`a2cc920`). Response in progress: SPEC
-**draft 2** (`docs/plans/R2-sdd-provider-spec-draft2.md`): active-changes-only, native-name ids,
-manifest digests, a Linkage-and-lifecycle section (native-name trailers `Intent: sdd:<change>`,
-satisfaction via R1's obligation-verdict.v2 + readiness gate, read-only feedback). **Owner decisions
-open: A** (warranty across archive; author recommends A2 re-attest), **B** (obligation lifecycle vs
-intent SPEC §5; author recommends B1 deltas-as-lifecycle), **O-6 rewording.** Gate findings
-(verdict 2 F1/F3/F4) being fixed; F2's central claim was disproven by reproduction (journal).
+**Exact next action:** write **SPEC draft 4** of the R2 `intent.sdd` provider
+(`docs/plans/R2-sdd-provider-spec-draft4.md`, superseding draft 3) addressing M0 review round 3
+(`docs/verification/verdicts/r2-m0-review-round3-20261116.md`, NEEDS_WORK, 2 HIGH):
+1. **Per-state unmappability** (F1): a fail-closed condition at a *past* commit makes only that
+   state unmappable — skipped and reported, never a batch error — so no historical commit can block
+   every future sync. Only a *claim* on such a state fails, at resolution.
+2. **Walk = the git connector's commit set** (F2): `rev-list --all` semantics with `--full-history`,
+   plus an invariant that every `Resolve` result is a member of `Revisions()`.
+3. **Drop O-11** (change drift) from the proposed BR revision 0003 (F3); keep O-10 and O-12.
+4. **Discriminating tests** for SDD-INV-8/11/13/24/26/27 (F4); fix F5 drift (slug/suffix defined in
+   draft 4 itself, empty name-part, RENAMED as FROM/TO bullets, plan M1 text, name the intent SPEC §4
+   amendment).
+5. **Fixtures** (round-3 conditions): add a merge (incl. TREESAME), an unmerged-branch claim, the
+   leftover-after-archive state (OpenSpec `7ced2a87`..`df12368f`), a root commit.
+Then dispatch **M0 review round 4** (fresh non-author reviewer, same pattern as rounds 1-3). If
+ACCEPTABLE → bring BR revision 0003 wording to the owner → **M1 code** (fixtures + replay helper
+already committed in `kernel/internal/connector/intent/sdd/`).
 
-**⚠ Known gate trap — read before running `make check`:** the two permanent-untracked paths
-(`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) keep the worktree dirty, and
-`scripts/commit-cadence.sh` fails once HEAD is older than 90 minutes while the tree is dirty. So on
-any session that starts >90m after the last commit, bare `make check` goes **RED on
-`commit-cadence`** by the passage of time alone — not from any code change. The rest of the gate is
-green. Clear it with the normal wrap commit (makes HEAD <90m). The durable fix is an **owner
-decision** on those two files: commit them, `.gitignore` them, or delete them.
+**Owner priorities (2026-11-16):** build activities first; **checks, hooks, and pushes are held for a
+few days** (`DEF-PUSH-HOLD-20261116`). Do **not** push without the owner's word.
 
-**Docs layout note:** owner chose a single per-release folder (`docs/releases/r1/`) over the hybrid
-I recommended; I flagged the Law 2 drift risk (a living user guide forked per release is a drift
-seed). Now a three-release line (R1 shipped / R2 SDD connector / R3 organs); if/when a later
-release's user guide diverges, revisit — consolidate the living guide, version only the notes. The
-R1 release docs are NOT governed (no intent chain needed to edit them).
+**Immediate blockers:** none for draft 4. M1 code is blocked until an M0 review returns ACCEPTABLE
+(Law 9).
 
-**R1 = ACCEPTED as shipped (owner, 2026-11-16)** — recorded in `VD-release-line-r2-sdd-t5j34p`. The
-wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
-(unstarted): tag the release, add a demo script, run a single-dev corp pilot.
+**⚠ Known gate trap:** the two permanent-untracked paths (`docs/plans/P5-intent-provenance-plan.md`,
+`kernel/cmd/p6dbprobe/`) keep the tree dirty, so bare `make check` goes RED on `commit-cadence` once
+HEAD is >90 min old — by the clock alone. A commit clears it. Owner decision pending on those files.
 
-**R2 M0 review round 2 = NEEDS_WORK (6 HIGH): M1 must not start.** Draft 2's lifecycle fails against real OpenSpec history (verdict `r2-m0-review-round2-20261116`). **Owner chose option 2** → `VD-sdd-change-scoped-r2-k7q3wz`. **SPEC draft 3** written (`docs/plans/R2-sdd-provider-spec-draft3.md`), measured on OpenSpec's full history first. BR rev 0003 wording proposed in its §10 (owner approval pending). **M0 review round 3 = NEEDS_WORK (2 HIGH): M1 still blocked.** Draft 4 needed: per-state unmappability (no permanent sync failure from a past commit), walk = git connector's commit set with `--full-history`, Resolve ⊆ Revisions, O-11 out of rev 0003, discriminating invariant tests. My §0 "0 name reuses" was false (dead probe line) — corrected. M1 fixtures + replay self-test committed. Owner priority: build first; checks / hooks / pushes deferred a few days.
+## Where R2 stands
 
-**Trailer gate round 3 = NEEDS_WORK (1 MED, 5 LOW).** Range checking works; the remaining harm is structural: a pre-push check is skipped by pushing first. **Owner chose a local pre-push hook** (residual: --no-verify / uninstalled clones — record in the deferral). Push of local commits is HELD by the owner.
+- **Release line:** R1 (Trust Record) accepted as shipped; **R2 = SDD Warranty Connector**; R3 = the
+  revenue organs (`VD-release-line-r2-sdd-t5j34p`, amended).
+- **R2 scope (owner, option 2):** warrant OpenSpec changes / Spec Kit features against the
+  requirements they declare, read **history-natively**; main-spec lifecycle deferred
+  (`VD-sdd-change-scoped-r2-k7q3wz`). Accountable identity from the tenant's committed profile
+  (`VD-sdd-accountable-identity-ypcx7x`).
+- **Intent home:** `BD-sdd-warranty-jdyjhh` → `BR-sdd-warranty-i9miv7` rev 0002 (O-1..O-5, O-8, O-9
+  active; O-6/O-7 retired; `proposed`) → `CI-sdd-warranty-m0-a49f5b`, `CI-sdd-warranty-m0b-ti5ga9`.
+- **Contract history:** draft 1 (snapshot) and draft 2 (fold/tombstones) rejected by review; draft 3
+  (change-scoped, history-native, measured on OpenSpec's 256 change-touching commits) rejected on
+  2 HIGH, both tractable. Drafts kept as reviewed artifacts in `docs/plans/`.
+- **M1 test assets:** `kernel/internal/connector/intent/sdd/testdata/` (OpenSpec 10-step and Spec Kit
+  3-step commit-sequence fixtures, hostile trees, derivation probe) + `fixture_test.go` replay helper
+  and calibrated self-test. **Profile shape in the fixtures is provisional** until the contract lands.
 
-**Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
-deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
-gate-fix commit, run `scripts/p6-task2-close.sh --write` and commit the refreshed pin (it pins
-`kernel/internal/connector`). Governance follow-ups
-still `proposed` (run `scripts/p6-task5-review.sh` when convenient):
-`BR-release-line-governance-7ff96f` (its O-1 governs this renumber — a CI may target a proposed
-obligation), `BR-self-hosting-correctness-4607a3`, `BR-gate-integrity-4b2e08`.
+## Intent-trailer gate
 
-## This session (2026-11-16)
-
-- **Governed release-line renumber (documentary only; no connector code).** Owner directed: accept
-  R1 shipped; insert **R2 = the SDD Warranty Connector** (warrant the output of any spec-driven-dev
-  tool — OpenSpec reference, Spec Kit subset); push former R2 (revenue organs + turnkey) to **R3**.
-- **New governance records:** `VD-release-line-r2-sdd-t5j34p` (supersedes `VD-release-line-kwdh4v`,
-  marked Superseded) + `CI-release-line-r2-sdd-t5j34p` (targets `BR-release-line-governance-7ff96f`
-  O-1; validated by feeding the working tree through the real `records` provider + `intent.Sync`
-  batch validation in a throwaway overlay test — all 36 records pass, the new CI ingests as
-  `change_intent.recorded`). **LESSON:** `proofbound sync` reads the committed `HEAD` tree, so it
-  silently ignores an uncommitted record — a green `sync` is NOT validation of an unstaged file.
-  `make index` regenerated the governed INDEX.
-- **R2 plan written:** [`sdd-warranty-connector-plan.md`](../docs/plans/sdd-warranty-connector-plan.md)
-  (M0–M6, roles, non-goals). Citation sweep R2→R3 across README / ROADMAP / RELEASE-PLAN / r1 notes;
-  committed preview `docs/releases/r2/regen-repair/` → `r3/` (git mv). No stale `releases/r2` refs.
-- **make check:** RED only on `commit-cadence` (the idle-tree trap above); every substantive check
-  green (16 production packages PASS, generated-freshness ok, delivery-enforce invariants ok,
-  non-author-identity ok). Clears on the commit below. A second full gate over the post-validation
-  bytes went RED on `p6-census` (unclassified mechanism: this file had backticked the not-yet-existing
-  `intent/sdd` SPEC *path*) — fixed by naming the package, not the path; see today's journal LESSON.
-  Third full gate over the final bytes: **green except `commit-cadence`** (22 checks ok, census
-  passes) — committed and pushed on owner go-ahead.
+`DEF-INTENT-TRAILER-BLOCK-001` OPEN. Shipped: kernel-grammar port, shared 32-case corpus with
+end-to-end kernel test, unpushed-range checking, strict UTF-8, explicit `make check` step
+`intent-trailer-gate`, proven `delivery-enforce` invocation, `scripts/mutant-apply.sh`. Round 3
+(`intent-trailer-gate-review-round3-20261116`) NEEDS_WORK: any pre-push check is skipped by pushing
+first; owner chose a **local pre-push hook** (residual: `--no-verify`, uninstalled clones) — held
+with the other checks. Round-3 LOWs open: six unpinned mechanisms, Perl rejects noncharacters Go
+accepts, quoted paths in `intent-applicability.sh`, `mutant-apply` comment classification.
+**Convention:** `Intent:` directly above `Co-Authored-By:`, no blank line.
 
 ## Branch status
-`main` → `origin/main` **synced** after this session's governed release-line commit (pushed
-2026-11-16). Two permanent untracked paths remain
-(`docs/plans/P5-intent-provenance-plan.md`, `kernel/cmd/p6dbprobe/`) — owner decision pending
-(commit / ignore / delete); they are the cause of the commit-cadence idle-trap above.
 
-## Open / deferred (see `docs/deferrals.tsv`) — 3 OPEN (all dormant, owner-gated)
-- `DEF-INTENT-TRAILER-BLOCK-001` OPEN (DEFERRED) — 17/30 governed commits carry `Intent:` outside
-  git's final trailer block, so the kernel binds no claim; fix-forward under `BR-gate-integrity-4b2e08`
-  O-1 (convention + gate parses the trailer block + kernel-side bind check). Added 2026-11-16.
-- `DEF-P7-REGENLOOP-001` OPEN (PENDING_PREREQUISITE) — regen full loop (owner-gated).
-- `DEF-P7-DP-TWINROOT-001` OPEN (DEFERRED) — heavy twin-root detector-power sweep; `deferrals.test.sh` fixture anchor.
-- RESOLVED previously: `DEF-ROUTE-MATRIX-PRECOMMIT`, `DEF-DELIVERY-ENFORCE-VERDICTS`.
+`main` is **17 commits ahead of `origin/main` (`1de1b21`), unpushed by owner instruction.** Today's
+work exists only locally and in the dated git bundle under `~/Backups/proofbound`.
+
+## Open / deferred (`docs/deferrals.tsv`) — all dormant until the owner names them
+
+- `DEF-PUSH-HOLD-20261116` — local commits held unpushed (owner, 2026-11-16).
+- `DEF-INTENT-TRAILER-BLOCK-001` — gate: pre-push hook + round-3 LOWs.
+- `DEF-INTENT-CI-REVISION-001` — change intents cannot supersede themselves (kernel limitation).
+- `DEF-P7-REGENLOOP-001`, `DEF-P7-DP-TWINROOT-001` — unchanged.
+
+## Unverified assumptions
+
+- That draft 4's per-state unmappability is consistent with the intent connector's batch-validation
+  contract (INT-INV-4) — likely needs an intent SPEC amendment; check before writing.
+- That a history walk over `rev-list --all --full-history` stays fast on real tenants (OpenSpec:
+  ~7 s, reviewer-measured).
+
+## Institutionalized today
+
+- `scripts/mutant-apply.sh` (+ self-test in `make check`): refuses no-op / comment-only mutants —
+  compiled response to `LESSON class=fixture-not-what-it-claims` (3 sightings).
+- Trailer gate checks the unpushed range and runs as an explicit `make check` step.
+- Evidence-probe rule (journal): every metric a document cites must be a line the probe prints, and a
+  zero must be shown reachable by a run that finds a non-zero.
 
 ## Key facts
-- **Never pipe `make check`** (not even `| tail`) — the pipe swallows make's exit code; a red gate
-  reads as green. `make check` includes `commit-cadence` (dirty-tree while HEAD > 90m old fails — see
-  the idle-trap note under Resume), `state-freshness` (HEAD > 3 commits past state.md fails), and
-  `delivery-enforce.test.sh` (needs an `Intent:` trailer when HEAD touches a governed path). See
-  [[proofbound-make-check-vs-delivery-enforce]].
-- **Authoring an intent chain** (for a governed change): ID `^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`;
-  self-digest = zero the record's OWN (last) `"artifact_sha256"` then sha256 the file; CI
-  `targets[].artifact_sha256` = the BR's self-digest; must target ≥1 obligation. Home for governed
-  maintenance: `BR-gate-integrity-4b2e08` O-1. See [[proofbound-intent-record-digests]].
-- Governed paths need an `Intent:` trailer; `docs/verification/*`, `docs/intent/records/*`,
-  `docs/plans/*`, `README.md`, `notes/*` are NOT governed.
-- Embedded-PG dev mode: `DATABASE_URL` unset → embedded PG under `./.proofbound` (persistent, pure
-  Go). The ledger is append-only — a bad `sync` pollutes it; reset the dev DB by moving
-  `.proofbound/db` aside (don't `rm -rf`; the classifier blocks it).
-- Route-matrix trap: committing `kernel/internal/{projections,cli,twin,gates}` re-stales the
-  `@generated` route matrix; regenerate with `scripts/p6-route-matrix.sh --write` AFTER committing.
 
-## Next session's first action
-Run `/proofbound-next`. R1-1..R1-4 are all DONE and pushed; the open items are owner decisions only:
-accept R1 as shipped, tag `v0.1.0`, start a single-dev corp pilot. If bare `make check` is red on
-`commit-cadence` at start, that is the idle-tree trap (see Resume), not new breakage — a wrap commit
-clears it. Release 1 user docs live under `docs/releases/r1/` (verified against the binary).
+- **Never pipe `make check`** — the pipe swallows make's exit code.
+- **Validate uncommitted intent records** with the overlay test pattern, not `proofbound sync` (sync
+  reads committed HEAD only).
+- `block-secrets` refuses a command containing both `docs/decisions/INDEX.md` and a redirect / `>`
+  (including `<noreply@…>` in a heredoc) — stage `docs/decisions/` as a directory; run `make index`
+  alone.
+- Committing under `kernel/internal/connector`, `scripts/delivery-enforce.sh`, or its test requires
+  `scripts/p6-task2-close.sh --write` + a pin commit afterwards.
+- Census: live docs must not backtick a kernel path that is not a tracked file; kernel SPECs may not
+  cite tests that do not exist (spec-first drafts live in `docs/plans/`); new `docs/gates.md` rows
+  need a census row + `p6-task1-close.sh` count bumps + `--write` regeneration.
+- `specfirst` walks into `testdata/` — fixture stand-in code must not use `.go`.
