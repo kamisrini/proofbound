@@ -8,7 +8,9 @@ As of: 2026-11-17
 
 **Exact next action:** **M1 code** under `CI-sdd-warranty-m1-6op6vl` (owner-accepted 2026-11-17;
 implements BR rev 0003 O-1/O-2/O-10, OpenSpec only). Order: (1) DONE `61aecab` — gitcmd `CommitSHAs`
-/ `Parents` / `TreeEntries` / `Blob` (G-INV-23..26, lock appended); (2) NEXT: `sdd` provider (profile, §4.2 parser, ids, manifests,
+/ `Parents` / `TreeEntries` / `Blob` (G-INV-23..26, lock appended); (2a) DONE `b92adc4` — core
+`SourceIntentSDD`, intent connector admits `sdd`, `ValidateRevision` size bound, `Skip`/`Skipper`/
+`ProviderResult.Skipped` (INT-INV-13), intent SPEC §2/§4/§6 amended; (2b) NEXT: `sdd` provider (profile, §4.2 parser, ids, manifests,
 `changeOutcome`, Revisions/Skipped/Resolve) against the committed fixtures and pins; (3) intent
 connector + core + projections + gates + CLI sites (draft 10 §12); (4) copy draft 10 VERBATIM to
 `sdd/SPEC.md` in the commit with its tests, regenerate `docs/invariants.lock`, route matrix, census;
