@@ -6,11 +6,14 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **M0 review round 7** of `docs/plans/R2-sdd-provider-spec-draft7.md` (fresh
-non-author reviewer; round 6's F1-F7 + fitness conditions). Verdict →
-`docs/verification/verdicts/r2-m0-review-round7-20261117.md`; commit with
-`scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → bring the owner the exact BR revision 0003
-wording (draft 7 §11) for approval → **M1 code**, reviewed at the foundational tier.
+**Exact next action:** owner decision on how to proceed after M0 review round 7
+(`docs/verification/verdicts/r2-m0-review-round7-20261117.md`, NEEDS_WORK, 3 MED + 5 LOW, no HIGH):
+F1 Resolve totality gaps (archived twice by c; re-archive vs name-reuse; precedence); F2 Spec Kit has no
+Resolve rule / CI id formula; F3 profile path strings reach git pathspec magic (`:(glob)`, `../`, empty
+prefix → rc 128 = permanent Revisions failure); F4-F8 LOW (invalid-utf8 scope contradiction INV-55 vs
+INV-61, profile mode missing from state key, no non-ASCII id vector, `--pins` not standalone + no
+@generated marker, drift). Options put to owner: draft 8 as-is, or draft 8 with narrowed M1 scope
+(OpenSpec-only M1, Spec Kit to M2; literal-path grammar + literal pathspecs).
 
 **Draft 7 (2026-11-17)** answers round 6 (NEEDS_WORK, 2 MED + 5 LOW): `ErrNoChangeIntent` + a change-name
 domain make `Resolve` total (INV-59 re-issues INV-50); the U+0000 rule moved out of `ValidateRevision`
