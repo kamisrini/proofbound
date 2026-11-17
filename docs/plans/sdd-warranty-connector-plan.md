@@ -102,11 +102,11 @@ designs that real OpenSpec history breaks). **Scope narrowed** (`VD-sdd-change-s
 R2 warrants changes, read history-natively; the main-spec lifecycle is deferred. Contract at
 **draft 3** ([`R2-sdd-provider-spec-draft3.md`](R2-sdd-provider-spec-draft3.md)), measured against
 OpenSpec's full history before it was written; round 3 rejected it (2 HIGH: a past fail-closed
-commit wedges every sync; the walk was not the git connector's). Contract now at **draft 9** ([`R2-sdd-provider-spec-draft9.md`](R2-sdd-provider-spec-draft9.md); rounds 4-8 NEEDS_WORK, no HIGH; M1 narrowed to OpenSpec over a literal-path profile, `VD-sdd-m1-openspec-first-2026-11-17`) after **draft 4**
+commit wedges every sync; the walk was not the git connector's). **M0 CLOSED 2026-11-17** (owner). M1 contract: **draft 10** ([`R2-sdd-provider-spec-draft10.md`](R2-sdd-provider-spec-draft10.md); rounds 4-8 + a targeted re-check, no HIGH; `BR-sdd-warranty-i9miv7` rev 0003 written; M1 narrowed to OpenSpec over a literal-path profile, `VD-sdd-m1-openspec-first-2026-11-17`) after **draft 4**
 ([`R2-sdd-provider-spec-draft4.md`](R2-sdd-provider-spec-draft4.md)): fail-closed per state, the
-git connector's unsimplified walk. Next: a targeted non-author re-check of draft 9's changed sections (owner decision), then M1. **This
+git connector's unsimplified walk. Next: M1 (OpenSpec), under an owner-accepted M1 change intent. **This
 document's sections below that describe main-spec mapping, governance, and drift against
-superseded requirement digests are superseded by draft 3 (now draft 9).**
+superseded requirement digests are superseded by draft 3 (now draft 10).**
 
 **M1 — `intent.sdd` provider core.** **OpenSpec kit only** (`VD-sdd-m1-openspec-first-2026-11-17`); Spec Kit mapping moves to M2. Profile loading + validation (JSON); history-native mapping of
 every commit the git connector ingests, per distinct SDD state, fail-closed per state with reported
@@ -117,7 +117,7 @@ wired into the git connector until M3; `core.Source`
 property tests, **calibration controls stated** (a positive control that must die, a neutral one
 that must survive).
 
-**M2 — OpenSpec profile (reference).** **Also the Spec Kit mapping** (moved from M1 by `VD-sdd-m1-openspec-first-2026-11-17`; its starting point is draft 9 Appendix A, and it needs its own spec section and non-author review). The profile: path patterns, ID rule, criteria → obligations,
+**M2 — OpenSpec profile (reference).** **Also the Spec Kit mapping** (moved from M1 by `VD-sdd-m1-openspec-first-2026-11-17`; its starting point is draft 10 Appendix A, and it needs its own spec section and non-author review). The profile: path patterns, ID rule, criteria → obligations,
 active changes → change intents + delta requirement records, status mapping; governance maps to
 nothing (`authorization: undeclared`); git correlation via `Resolve`.
 *Deliverable:* an OpenSpec repo syncs end-to-end, across an archive; BR/CI **with relationships**

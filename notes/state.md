@@ -6,16 +6,13 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **R2 M1 (OpenSpec only)** — M0 is CLOSED (owner, 2026-11-17). Step 1: write
-`kernel/internal/connector/intent/sdd/SPEC.md` from `docs/plans/R2-sdd-provider-spec-draft9.md` (OpenSpec
-sections only; Appendix A stays in the draft), fixing the six findings of
-`docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md` (F1 MED: symlink/gitlink INSIDE a change
-directory has two outcomes; F2 parent-archive check must ignore regular files; F3 tree at a delta path;
-F4 profile-unit digest roots when the profile is invalid; F5 INV-65 kill; F6 drift). Then a
-**change intent for M1** (new CI targeting BR 0003 O-1/O-2/O-10, owner-accepted) BEFORE code; then
-code + tests + the §12 amendments in the same commit as the SPEC (Law 6); foundational-tier non-author
-review (Law 9). **BR-sdd-warranty-i9miv7 revision 0003 is written** (owner-approved, `proposed` until a
-non-author requirement-review.v1).
+**Exact next action:** owner acceptance of the **M1 change intent** (proposed in the session hand-off:
+`CI-sdd-warranty-m1-*` targeting `BR-sdd-warranty-i9miv7` rev 0003 O-1, O-2, O-10; scope = the
+`intent/sdd` package + draft 10 §12's M1 sites; OpenSpec only; no git-connector wiring). Then M1 code:
+copy `docs/plans/R2-sdd-provider-spec-draft10.md` VERBATIM to `kernel/internal/connector/intent/sdd/SPEC.md`
+in the same commit as the code + tests it cites (invariant-lint requires the cited tests to exist;
+regenerate `docs/invariants.lock`), then foundational-tier non-author review. M0 is CLOSED; BR rev 0003
+written (`b0b9859`). Draft 10 answers the re-check's six M1 entry conditions.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
