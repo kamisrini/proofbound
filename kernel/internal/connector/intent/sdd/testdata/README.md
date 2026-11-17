@@ -1,7 +1,7 @@
 # `intent.sdd` provider fixtures (R2 M1) — DRAFT, written before the provider
 
 Test data only; no code. Written against `docs/plans/R2-sdd-provider-spec-draft3.md` and extended for
-drafts 4-6 (`docs/plans/R2-sdd-provider-spec-draft6.md` is current; invariant numbers below are draft 6's) while those drafts are under
+drafts 4-7 (`docs/plans/R2-sdd-provider-spec-draft7.md` is current; invariant numbers below are draft 7's) while those drafts are under
 non-author review, so **the profile shape here is provisional** and must be updated
 if the reviewed contract changes it. These become the M1 tests' inputs once
 `kernel/internal/connector/intent/sdd/` gains its code and its `SPEC.md`.
@@ -19,15 +19,15 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Steps and what they exercise
 
-| Fixture step | Reproduces (real-history shape) | Invariants (draft 6) |
+| Fixture step | Reproduces (real-history shape) | Invariants (draft 7) |
 |---|---|---|
 | openspec 01-baseline | main spec present but never ingested | INV-30 |
-| openspec 02-draft-proposal-only | change with zero requirement entries (34 real) | INV-28 |
+| openspec 02-draft-proposal-only | change with zero requirement entries (38 of 135 real changes at some state) | INV-28, INV-59 (Resolve → ErrNoChangeIntent) |
 | openspec 03-deltas-added | change with two ADDED requirements | INV-9, INV-44 |
 | openspec 04-implement | the implementing commit a verdict binds | INV-31, INV-32 |
-| openspec 05-within-change-edit | requirement removed + statement changed within a change (47 / 10 real) | INV-44, INV-5 |
+| openspec 05-within-change-edit | requirement removed + statement changed within a change (83 removals in 17 changes / 39 statement changes in 9, provider walk) | INV-44, INV-5 |
 | openspec 06-archive | normal archive: dated move + main-spec merge | INV-20, INV-32 (archived earlier ⇒ not resolvable later) |
-| openspec 07-squash-merged | change arriving already archived with its code (16 / 108 real) | INV-32 (archived by this commit ⇒ resolvable), INV-31 |
+| openspec 07-squash-merged | change arriving already archived with its code (12 / 108 real on the provider walk) | INV-32 (archived by this commit ⇒ resolvable), INV-31 |
 | openspec 08-rework-active | RENAMED + MODIFIED (on the new name) + REMOVED in one delta | INV-9, INV-43 (no collision: section prefixes) |
 | openspec 09-archive-skip-specs | `--skip-specs` archive: main spec not updated | INV-20 |
 | openspec 10-main-spec-deleted | a main spec deleted outright | INV-20, INV-30 |
@@ -51,7 +51,7 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Re-deriving the evidence
 
-`derive/history_probe.py` is the probe that measured draft 3 §0 and draft 4 §0 (it implements draft 6 §4.2 —
-OpenSpec's fence, section and requirement rules — and prints every count draft 6 cites) over the full history of
+`derive/history_probe.py` is the probe that measured draft 3 §0 through draft 7 §0 (it implements draft 7 §4.2 —
+OpenSpec's fence, section and requirement rules — and prints every count draft 7 cites; `--pins` regenerates `expected-obligations.json`) over the full history of
 `Fission-AI/OpenSpec` (run: `python3 -I derive/history_probe.py <openspec-clone>`). It is kept so the
 fixture rows can be checked against a fresh measurement; it is documentation, not part of the build.

@@ -1,21 +1,17 @@
-"""Change-scoped, history-native mapping probe over a real OpenSpec repository.
+"""Change-scoped, history-native mapping probe over a real OpenSpec repository (draft 7 §0, §4.2).
 
-Walks every commit that touches openspec/changes, reads the change folders AT THAT COMMIT,
-and measures what would break a change-scoped warranty:
-  - changes never visible as active (archived without ever being observed active)
-  - changes with no requirement entries at all (a change intent needs >= 1 target)
-  - MODIFIED / REMOVED targets missing from the main spec at the same commit
-  - requirements without a statement paragraph
-  - within an active change, between consecutive observations: requirements that disappear,
-    and requirements whose statement changes (both are intent SPEC section 5 events)
-  - change names reused after archive (active and archived at once, or archived twice)
-  - draft 4 section 0 walk counts: the git connector's --all walk, merges, roots, distinct SDD
-    states, path-limited vs full-history coverage, tags on dual-presence commits, RENAMED entries
-Usage: python3 -I history_probe.py <repo>
+Walks the provider's own walk — every commit of `rev-list --all` (the git connector's arguments),
+unsimplified, date order — reads the change folders AT EACH COMMIT with draft 7 §4.2's parser
+(OpenSpec's parseDeltaSpec rules, ECMAScript regex semantics made explicit), and prints every count
+draft 7 §0 cites.
+
+Usage:
+  python3 -I history_probe.py <openspec-clone>      # print the §0 counts
+  python3 -I history_probe.py --pins <testdata-dir>  # regenerate <testdata-dir>/expected-obligations.json
 """
-import collections, re, subprocess, sys
+import collections, json, os, re, subprocess, sys
 
-repo = sys.argv[1]
+repo = sys.argv[2] if sys.argv[1] == "--pins" else sys.argv[1]
 def git(*a):
     return subprocess.run(["git", "-C", repo, *a], capture_output=True, check=True).stdout
 
@@ -64,6 +60,16 @@ def fence_mask(lines):
         if m and m.group(1)[0] == active[0] and len(m.group(1)) >= active[1]:
             active = None
     return mask
+def naive_fence_mask(lines):
+    """The NAIVE TOGGLE (draft 7 §13): the mutant SDD-INV-39 must kill. Every line matching
+    ^[ \t]*(```|~~~) flips an in-fence flag and is itself masked; marker, length and info string
+    are ignored."""
+    mask, inside = [], False
+    for l in lines:
+        if re.match(r"^[ \t]*(```|~~~)", l):
+            inside = not inside; mask.append(True); continue
+        mask.append(inside)
+    return mask
 def name_of(raw): return js_trim(re.sub(r"[ \t]+#+[ \t]*$", "", raw))
 def split_lines(text):
     if text.startswith("﻿"): text = text[1:]
@@ -72,9 +78,10 @@ def title_kind(raw):
     t = name_of(raw)
     return TITLES.get(t.lower()) if t.isascii() else None
 def parse_delta(text, masked=True, unpaired=None):
-    """[(SEC, name, statement)] for one delta file; `unpaired` collects unpaired RENAMED lines."""
+    """[(SEC, name, statement)] for one delta file. masked: True (OpenSpec mask), False (no mask),
+    or "naive" (the naive toggle). `unpaired` collects unpaired RENAMED lines."""
     lines = split_lines(text)
-    mask = fence_mask(lines) if masked else [False] * len(lines)
+    mask = naive_fence_mask(lines) if masked == "naive" else fence_mask(lines) if masked else [False] * len(lines)
     heads = [(i, title_kind(m.group(1))) for i, l in enumerate(lines) if not mask[i] and (m := SECTION_LINE.match(l))]
     out = []
     for n, (start, kind) in enumerate(heads):
@@ -106,12 +113,33 @@ def parse_delta(text, masked=True, unpaired=None):
                 if entry: entry[2] = False
                 continue
             if kind == "REMOVED" and (bm := REMOVED_BULLET.match(l)):
-                close(); entry = None; out.append((kind, name_of(bm.group(1)), name_of(bm.group(1)))); continue
+                close(); entry = None  # a REMOVED bullet is its own entry and ends the open block (§4.2)
+                out.append((kind, name_of(bm.group(1)), name_of(bm.group(1)))); continue
             if entry and entry[2] and entry[1] is None:
                 if l.startswith("#"): entry[2] = False
                 elif not blank(l): entry[1] = l
         close()
     return out
+if sys.argv[1] == "--pins":
+    base = os.path.join(repo, "fenced", "openspec", "changes")
+    cases = {}
+    for ch in sorted(os.listdir(base)):
+        specs = os.path.join(base, ch, "specs")
+        for cap in sorted(os.listdir(specs)):
+            rel = os.path.relpath(os.path.join(specs, cap, "spec.md"), repo)
+            text = open(os.path.join(repo, rel), encoding="utf-8").read()
+            lists = {k: [list(x[:2]) for x in parse_delta(text, m)] for k, m in
+                     (("openspec_mask", True), ("naive_toggle", "naive"), ("unmasked", False))}
+            lists["discriminates"] = lists["openspec_mask"] != lists["naive_toggle"] or lists["openspec_mask"] != lists["unmasked"]
+            cases[rel] = lists
+    out = {"schema": "proofbound.sdd-expected-obligations.v1",
+           "generated_by": "python3 -I kernel/internal/connector/intent/sdd/testdata/derive/history_probe.py --pins kernel/internal/connector/intent/sdd/testdata",
+           "note": "Draft 7 SDD-INV-39: obligations (section, name) per fenced case under OpenSpec's mask (the contract), the naive toggle (draft 7 §13; the mutant), and no mask. Regenerate; never hand-edit.",
+           "cases": cases}
+    with open(os.path.join(repo, "expected-obligations.json"), "w") as f:
+        json.dump(out, f, indent=2); f.write("\n")
+    sys.exit(0)
+
 def main_reqs(text):
     return {m.group(1) for l in text.split("\n") if (m := REQ.match(l))}
 

@@ -1,6 +1,7 @@
 {
   "schema": "proofbound.sdd-expected-obligations.v1",
-  "note": "Draft 6 SDD-INV-39: obligations (section, name) per fenced case under OpenSpec's mask (the contract) and under a naive toggle mask (the mutant it must kill). 'neutral' cases are equal under both.",
+  "generated_by": "python3 -I kernel/internal/connector/intent/sdd/testdata/derive/history_probe.py --pins kernel/internal/connector/intent/sdd/testdata",
+  "note": "Draft 7 SDD-INV-39: obligations (section, name) per fenced case under OpenSpec's mask (the contract), the naive toggle (draft 7 \u00a713; the mutant), and no mask. Regenerate; never hand-edit.",
   "cases": {
     "fenced/openspec/changes/document-renames/specs/conventions/spec.md": {
       "openspec_mask": [
