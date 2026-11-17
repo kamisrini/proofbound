@@ -1,1 +1,1 @@
-profile fixed; 'a' (slug too short, no records); 'draft-only' (proposal only); 'zero-left' zero-entry leftover beside its archive
+profile fixed; 'a' (slug too short, no records); 'draft-only' (proposal only); 'zero-left' zero-entry leftover beside its archive; IMPLEMENTATION_ORDER.md and archive/README.md (plain files: never changes); 'rename-only' (a delta holding only an unpaired FROM)

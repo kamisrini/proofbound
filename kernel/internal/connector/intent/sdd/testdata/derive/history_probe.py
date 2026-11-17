@@ -1,9 +1,9 @@
-"""Change-scoped, history-native mapping probe over a real OpenSpec repository (draft 8 §0, §4.2).
+"""Change-scoped, history-native mapping probe over a real OpenSpec repository (draft 9 §0, §4.2).
 
 Walks the provider's own walk — every commit of `rev-list --all` (the git connector's arguments),
-unsimplified, date order — reads the change folders AT EACH COMMIT with draft 8 §4.2's parser
+unsimplified, date order — reads the change folders AT EACH COMMIT with draft 9 §4.2's parser
 (OpenSpec's parseDeltaSpec rules, ECMAScript regex semantics made explicit), and prints every count
-draft 8 §0 cites.
+draft 9 §0 cites.
 
 Usage:
   python3 -I history_probe.py <openspec-clone>      # print the §0 counts
@@ -308,3 +308,9 @@ for c in fp:
     else:
         run = cur_nm = 0
 print(f"longest run of HEAD first-parent commits on a dual-presence state: {best} ({best_nonmerge} non-merge)")
+root_blob_commits, root_blob_names = 0, set()
+for c in walk:
+    blobs = [l.split("\t", 1)[1] for l in git("ls-tree", c, "openspec/changes/").decode().splitlines() if l.split()[1] == "blob"]
+    if blobs:
+        root_blob_commits += 1; root_blob_names.update(b.rsplit("/", 1)[-1] for b in blobs)
+print(f"commits with a regular file directly under openspec/changes (never a change, draft 9 section 5): {root_blob_commits} {sorted(root_blob_names)}")

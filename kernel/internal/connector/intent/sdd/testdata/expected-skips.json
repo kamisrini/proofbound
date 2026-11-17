@@ -1,6 +1,6 @@
 {
   "schema": "proofbound.sdd-expected-skips.v1",
-  "note": "Draft 8 SDD-INV-46: each fixture's EXACT Skip set under M1 (OpenSpec only, VD-sdd-m1-openspec-first-2026-11-17). Skips are de-duplicated by (unit, cause, unit digest) and keyed by the first step carrying them. Unit forms: 'requirement <path>', 'change <name>', 'archive <entry>', 'profile'.",
+  "note": "Draft 9 SDD-INV-46: each fixture's EXACT Skip set under M1 (OpenSpec only, VD-sdd-m1-openspec-first-2026-11-17). Skips are de-duplicated by (unit, cause, unit digest) and keyed by the first step carrying them. Unit forms: 'requirement <path>', 'change <name>', 'archive <entry>', 'profile'.",
   "openspec-history": [],
   "speckit-history": [
     {
@@ -70,6 +70,16 @@
       "step": "07-edges",
       "unit": "change zero-left",
       "cause": "name-reuse"
+    },
+    {
+      "step": "07-edges",
+      "unit": "requirement openspec/changes/rename-only/specs/core/spec.md",
+      "cause": "unpaired-rename"
+    },
+    {
+      "step": "07-edges",
+      "unit": "change rename-only",
+      "cause": "cascade"
     }
   ]
 }

@@ -9,7 +9,7 @@ contract consumed by projections, reports, gates, and verdicts.
 
 P5 production providers are exactly `records` and `specdir`. **Amended 2026-11-16 (R2,
 `BR-sdd-warranty-i9miv7` O-1):** a third provider, `sdd` (source `intent.sdd`; draft contract
-`docs/plans/R2-sdd-provider-spec-draft8.md`, which becomes `sdd/SPEC.md` beside this file in M1),
+`docs/plans/R2-sdd-provider-spec-draft9.md`, which becomes `sdd/SPEC.md` beside this file in M1),
 is admitted. It becomes a production provider only once its
 package exists and its proofs pass `make check`; until then the production set is still the two P5
 providers. Adding any further provider requires amending this paragraph. A synthetic provider may

@@ -1,7 +1,7 @@
 # `intent.sdd` provider fixtures (R2 M1) — DRAFT, written before the provider
 
 Test data only; no code. Written against `docs/plans/R2-sdd-provider-spec-draft3.md` and extended for
-drafts 4-8 (`docs/plans/R2-sdd-provider-spec-draft8.md` is current; invariant numbers below are draft 8's; M1 maps OpenSpec only — `VD-sdd-m1-openspec-first-2026-11-17` — so the Spec Kit fixtures are M2's inputs and are `profile-invalid` under M1) while those drafts are under
+drafts 4-9 (`docs/plans/R2-sdd-provider-spec-draft9.md` is current; invariant numbers below are draft 9's; M1 maps OpenSpec only — `VD-sdd-m1-openspec-first-2026-11-17` — so the Spec Kit fixtures are M2's inputs and are `profile-invalid` under M1) while those drafts are under
 non-author review, so **the profile shape here is provisional** and must be updated
 if the reviewed contract changes it. These become the M1 tests' inputs once
 `kernel/internal/connector/intent/sdd/` gains its code and its `SPEC.md`.
@@ -19,10 +19,10 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Steps and what they exercise
 
-| Fixture step | Reproduces (real-history shape) | Invariants (draft 8) |
+| Fixture step | Reproduces (real-history shape) | Invariants (draft 9) |
 |---|---|---|
 | openspec 01-baseline | main spec present but never ingested | INV-30 |
-| openspec 02-draft-proposal-only | change with zero requirement entries (38 of 135 real changes at some state) | INV-28, INV-59 (Resolve → ErrNoChangeIntent) |
+| openspec 02-draft-proposal-only | change with zero requirement entries (38 of 135 real changes at some state) | INV-28 (Resolve → ErrNoChangeIntent is pinned on resolve-edges `draft-only`) |
 | openspec 03-deltas-added | change with two ADDED requirements | INV-9, INV-44 |
 | openspec 04-implement | the implementing commit a verdict binds | INV-31, INV-32 |
 | openspec 05-within-change-edit | requirement removed + statement changed within a change (83 removals in 17 changes / 39 statement changes in 9, provider walk) | INV-44, INV-5 |
@@ -31,9 +31,9 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 | openspec 08-rework-active | RENAMED + MODIFIED (on the new name) + REMOVED in one delta | INV-9, INV-43 (no collision: section prefixes) |
 | openspec 09-archive-skip-specs | `--skip-specs` archive: main spec not updated | INV-20 |
 | openspec 10-main-spec-deleted | a main spec deleted outright | INV-20, INV-30 |
-| speckit 01-feature-spec | FR / SC ids; no tasks yet ⇒ no change intent | INV-10, INV-42 |
-| speckit 02-tasks-added | sibling appears ⇒ feature-level change intent | INV-10 |
-| speckit 03-in-place-edit | `FR-001` edited in place + status Draft→Approved ⇒ new record | INV-44, INV-42 |
+| speckit 01-feature-spec | FR / SC ids; no tasks yet ⇒ no change intent | M1: INV-64 (profile-invalid); M2: INV-10, INV-42 |
+| speckit 02-tasks-added | sibling appears ⇒ feature-level change intent | M1: INV-64; M2: INV-10 |
+| speckit 03-in-place-edit | `FR-001` edited in place + status Draft→Approved ⇒ new record | M1: INV-64; M2: INV-44, INV-42 |
 | unmappable/duplicate-obligation | two names mapping to one obligation id | INV-43, INV-46 |
 | unmappable/reused-name | one name both active and archived | INV-45 |
 | branches 01-root-with-archive | root commit already carrying an archived change | INV-32 (archived by the root ⇒ resolves) |
@@ -46,7 +46,7 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 | fenced/document-renames | an indented RENAMED example inside a fence (`adopt-delta-based-changes` shape) — 1 obligation either way | INV-39 (neutral control) |
 | fenced/fence-marker, fence-length, fence-info-backtick | §4.2 fence precision: a `~~~` line inside a backtick fence, a shorter closer, a backtick in a backtick opener's info string — each kills a naive toggle mask | INV-39 |
 | head-on-leftover | HEAD (`main`) itself ends on the dual-presence state | INV-35(c) |
-| resolve-edges | archived twice by a root; re-propose and re-archive a reused name; a profile-invalid state; a short name, a proposal-only change, a zero-entry leftover; names outside the domain | INV-59 (with `expected-resolve.json`) |
+| resolve-edges | archived twice by a root; re-propose and re-archive a reused name; a profile-invalid state; a short name, a proposal-only change, a zero-entry leftover; plain files under the root and archive (`IMPLEMENTATION_ORDER.md`, as on 1393 real commits); a rename-only delta; names outside the domain | INV-59, INV-66 (with `expected-resolve.json`) |
 | expected-skips.json | the exact Skip set of every fixture | INV-46 |
 | expected-resolve.json | Resolve outcome per (step, name) for resolve-edges and branches | INV-59 |
 | id-vectors.json | slug / namepart / suffix vectors, non-ASCII included (byte-wise ASCII mapping) | INV-7 |
@@ -54,7 +54,7 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Re-deriving the evidence
 
-`derive/history_probe.py` is the probe that measured draft 3 §0 through draft 8 §0 (it implements draft 8 §4.2 —
-OpenSpec's fence, section and requirement rules — and prints every count draft 8 cites; `--pins` and `--vectors` regenerate `expected-obligations.json` and `id-vectors.json` without needing a git repository) over the full history of
+`derive/history_probe.py` is the probe that measured draft 3 §0 through draft 9 §0 (it implements draft 9 §4.2 —
+OpenSpec's fence, section and requirement rules — and prints every count draft 9 cites; `--pins` and `--vectors` regenerate `expected-obligations.json` and `id-vectors.json` without needing a git repository) over the full history of
 `Fission-AI/OpenSpec` (run: `python3 -I derive/history_probe.py <openspec-clone>`). It is kept so the
 fixture rows can be checked against a fresh measurement; it is documentation, not part of the build.

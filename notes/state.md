@@ -6,13 +6,16 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** owner decision on how to close M0 after review round 8
-(`docs/verification/verdicts/r2-m0-review-round8-20261117.md`, NEEDS_WORK, 2 MED + 5 LOW, no HIGH):
-F1 `changeOutcome` rule 5 undefined for delta files skipped before parsing (symlink/gitlink/invalid
-UTF-8/NUL) and for an unpaired-RENAMED-only record; F2 a regular FILE under `changes.root`
-(real: `openspec/changes/IMPLEMENTATION_ORDER.md` at 1393/1624 commits) becomes a `change` skip;
-F3-F7 LOW. Reviewer's own text-derived oracle matched all 18 Resolve pins and all 8 skip sets.
-Options put to owner: draft 9 + targeted re-check of changed sections, then M1.
+**Exact next action:** **targeted non-author re-check** of draft 9's changed sections (owner decision
+2026-11-17: no full round 9). Verdict → `docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md`;
+commit with `scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → bring the owner the exact BR
+revision 0003 wording (draft 9 §11) → **M1 code (OpenSpec only)**, reviewed at the foundational tier.
+
+**Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
+unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
+under root/archive ignored (real `IMPLEMENTATION_ORDER.md` at 1393/1624 commits; INV-66); name domain
+inside §5; archive = direct child of root; `requirements.paths` fixed to the exact pair; literal
+pathspecs = defence in depth, not claimed tested; INV-63 → INV-65; uniform Skip-digest definition.
 
 **Draft 8 (2026-11-17)** answers round 7 under **`VD-sdd-m1-openspec-first-2026-11-17`** (owner: M1 =
 OpenSpec only, Spec Kit → M2 parked in Appendix A; literal profile path grammar + `--literal-pathspecs`).
