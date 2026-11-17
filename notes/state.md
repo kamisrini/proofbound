@@ -2,37 +2,45 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-16 (EOD)
+As of: 2026-11-17
 
-## Resume — 2026-11-16
+## Resume — 2026-11-17
 
-**Exact next action:** write **SPEC draft 4** of the R2 `intent.sdd` provider
-(`docs/plans/R2-sdd-provider-spec-draft4.md`, superseding draft 3) addressing M0 review round 3
-(`docs/verification/verdicts/r2-m0-review-round3-20261116.md`, NEEDS_WORK, 2 HIGH):
-1. **Per-state unmappability** (F1): a fail-closed condition at a *past* commit makes only that
-   state unmappable — skipped and reported, never a batch error — so no historical commit can block
-   every future sync. Only a *claim* on such a state fails, at resolution.
-2. **Walk = the git connector's commit set** (F2): `rev-list --all` semantics with `--full-history`,
-   plus an invariant that every `Resolve` result is a member of `Revisions()`.
-3. **Drop O-11** (change drift) from the proposed BR revision 0003 (F3); keep O-10 and O-12.
-4. **Discriminating tests** for SDD-INV-8/11/13/24/26/27 (F4); fix F5 drift (slug/suffix defined in
-   draft 4 itself, empty name-part, RENAMED as FROM/TO bullets, plan M1 text, name the intent SPEC §4
-   amendment).
-5. **Fixtures** (round-3 conditions): add a merge (incl. TREESAME), an unmerged-branch claim, the
-   leftover-after-archive state (OpenSpec `7ced2a87`..`df12368f`), a root commit.
-Then dispatch **M0 review round 4** (fresh non-author reviewer, same pattern as rounds 1-3). If
-ACCEPTABLE → bring BR revision 0003 wording to the owner → **M1 code** (fixtures + replay helper
-already committed in `kernel/internal/connector/intent/sdd/`).
+**Exact next action:** get the owner's word on committing the extended replay helper
+(`kernel/internal/connector/intent/sdd/fixture_test.go` — governed path, needs an `Intent:` +
+`Authorized-By:` trailer; precedent `4d91413` used `CI-sdd-warranty-m0b-ti5ga9`), then dispatch
+**M0 review round 4** (fresh non-author reviewer, same pattern as rounds 1-3) on
+`docs/plans/R2-sdd-provider-spec-draft4.md` + the new fixtures. If ACCEPTABLE → bring BR revision
+0003 wording (draft 4 §11: O-10 reworded, O-12; **O-11 dropped**) to the owner → **M1 code**.
+
+**Draft 4 (written 2026-11-17)** answers round 3: fail-closed **per state** with reported `Skip`s and a
+cascade (never batch-fatal; INT-INV-4 holds unchanged because the provider pre-validates); the walk is
+the git connector's own `rev-list --all`, unsimplified, deduplicated by SDD state key (OpenSpec: 1624
+commits → 338 states); "archived by" = absent from **every** parent (merge / root cases defined); drifted
+invariants retired and re-issued (INV-8/11/14/24/27 → INV-31..39); slug/suffix (`kit`, `kind` literals)
+defined in-draft; RENAMED read as FROM/TO pairs; intent SPEC §1/§2/§4 amendments named (§12); M3 entry
+conditions named (§14, incl. the git connector's own unresolvable-claim wedge). **New beyond round 3:**
+re-running the probe found fenced documentation examples (`## RENAMED Requirements` inside a code fence,
+47 lines) that an unmasked parser would mint as renames → code fences are masked (SDD-INV-39).
+
+**Fixtures added:** `testdata/branches/` (13-step commit graph: root-with-archive, TREESAME `--no-ff`
+merge, side-branch archive + merge, unmerged-branch claim, leftover-after-archive) and `testdata/fenced/`;
+the replay helper gained `PARENTS`/`REF`; `TestBranchFixtureReplaysAsDocumented` passes and was
+calibrated (breaking the TREESAME revert makes it fail). The probe now prints every draft-4 §0 count.
+**Found + fixed:** root `.gitignore` (`.proofbound/`) had kept every fixture profile out of git since
+`4d91413`; a re-include rule now tracks all 29, and `requireProfiles` (in the held helper) guards it.
 
 **Owner priorities (2026-11-16):** build activities first; **checks, hooks, and pushes are held for a
 few days** (`DEF-PUSH-HOLD-20261116`). Do **not** push without the owner's word.
 
-**Immediate blockers:** none for draft 4. M1 code is blocked until an M0 review returns ACCEPTABLE
-(Law 9).
+**Immediate blockers:** the helper commit needs owner authorization (governed path). M1 code is blocked
+until an M0 review returns ACCEPTABLE (Law 9).
 
 **⚠ Known gate trap:** the two permanent-untracked paths (`docs/plans/P5-intent-provenance-plan.md`,
 `kernel/cmd/p6dbprobe/`) keep the tree dirty, so bare `make check` goes RED on `commit-cadence` once
 HEAD is >90 min old — by the clock alone. A commit clears it. Owner decision pending on those files.
+Committing under `kernel/internal/connector/` re-stales the `p6-task2-close` pin: run
+`scripts/p6-task2-close.sh --write` and commit the refresh.
 
 ## Where R2 stands
 
@@ -45,8 +53,8 @@ HEAD is >90 min old — by the clock alone. A commit clears it. Owner decision p
 - **Intent home:** `BD-sdd-warranty-jdyjhh` → `BR-sdd-warranty-i9miv7` rev 0002 (O-1..O-5, O-8, O-9
   active; O-6/O-7 retired; `proposed`) → `CI-sdd-warranty-m0-a49f5b`, `CI-sdd-warranty-m0b-ti5ga9`.
 - **Contract history:** draft 1 (snapshot) and draft 2 (fold/tombstones) rejected by review; draft 3
-  (change-scoped, history-native, measured on OpenSpec's 256 change-touching commits) rejected on
-  2 HIGH, both tractable. Drafts kept as reviewed artifacts in `docs/plans/`.
+  (change-scoped, history-native) rejected on 2 HIGH (round 3); **draft 4** (per-state fail-closed,
+  git-connector walk) awaits round 4. Drafts kept as reviewed artifacts in `docs/plans/`.
 - **M1 test assets:** `kernel/internal/connector/intent/sdd/testdata/` (OpenSpec 10-step and Spec Kit
   3-step commit-sequence fixtures, hostile trees, derivation probe) + `fixture_test.go` replay helper
   and calibrated self-test. **Profile shape in the fixtures is provisional** until the contract lands.
@@ -64,7 +72,7 @@ accepts, quoted paths in `intent-applicability.sh`, `mutant-apply` comment class
 
 ## Branch status
 
-`main` is **17 commits ahead of `origin/main` (`1de1b21`), unpushed by owner instruction.** Today's
+`main` is **18+ commits ahead of `origin/main` (`1de1b21`), unpushed by owner instruction.** Today's
 work exists only locally and in the dated git bundle under `~/Backups/proofbound`.
 
 ## Open / deferred (`docs/deferrals.tsv`) — all dormant until the owner names them
@@ -76,8 +84,9 @@ work exists only locally and in the dated git bundle under `~/Backups/proofbound
 
 ## Unverified assumptions
 
-- That draft 4's per-state unmappability is consistent with the intent connector's batch-validation
-  contract (INT-INV-4) — likely needs an intent SPEC amendment; check before writing.
+- Checked 2026-11-17: per-state unmappability needs **no** INT-INV-4 change (the provider pre-validates
+  and cascades); it needs an additive intent SPEC §2 `Skip` report (draft 4 §12).
+- Round 4 has not yet confirmed that skips being derived-not-ledgered is acceptable (draft 4 §7).
 - That a history walk over `rev-list --all --full-history` stays fast on real tenants (OpenSpec:
   ~7 s, reviewer-measured).
 

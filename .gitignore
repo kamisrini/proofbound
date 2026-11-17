@@ -24,3 +24,6 @@ docs/FAQ.md
 
 # Local-only overall project status (internal working document)
 notes/overall-status.md
+# sdd provider fixtures carry tenant profiles at <tree>/.proofbound/ (draft 4 §13); the
+# runtime-dir ignore above must not swallow them, or every fixture commit has no profile.
+!kernel/internal/connector/intent/sdd/testdata/**/.proofbound/

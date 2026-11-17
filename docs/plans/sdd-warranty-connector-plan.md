@@ -101,12 +101,17 @@ test derivations. Amend the intent SPEC provider invariant.
 designs that real OpenSpec history breaks). **Scope narrowed** (`VD-sdd-change-scoped-r2-k7q3wz`):
 R2 warrants changes, read history-natively; the main-spec lifecycle is deferred. Contract at
 **draft 3** ([`R2-sdd-provider-spec-draft3.md`](R2-sdd-provider-spec-draft3.md)), measured against
-OpenSpec's full history before it was written. Next: M0 review round 3, then M1. **This
+OpenSpec's full history before it was written; round 3 rejected it (2 HIGH: a past fail-closed
+commit wedges every sync; the walk was not the git connector's). Contract now at **draft 4**
+([`R2-sdd-provider-spec-draft4.md`](R2-sdd-provider-spec-draft4.md)): fail-closed per state, the
+git connector's unsimplified walk. Next: M0 review round 4, then M1. **This
 document's sections below that describe main-spec mapping, governance, and drift against
-superseded requirement digests are superseded by draft 3.**
+superseded requirement digests are superseded by draft 3 (now draft 4).**
 
-**M1 — `intent.sdd` provider core.** Profile loading + validation (JSON); profile-driven parse of
-committed artifacts at a tree → canonical revisions; `Resolve(tree, token)` (native change name); `core.Source`
+**M1 — `intent.sdd` provider core.** Profile loading + validation (JSON); history-native mapping of
+every commit the git connector ingests, per distinct SDD state, fail-closed per state with reported
+skips → canonical revisions; `Resolve(ctx, commit, name)` (native change name; draft 4 §2, §6) — not
+wired into the git connector until M3; `core.Source`
 `intent.sdd`; `sync intent sdd` in the CLI; target grammars accept `intent.sdd` as a source.
 *Deliverable:* provider conformance against the intent connector's conformance suite, unit +
 property tests, **calibration controls stated** (a positive control that must die, a neutral one
