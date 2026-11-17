@@ -84,3 +84,18 @@ that wants governance warranted authors real BDs in Proofbound's own records for
   unlisted status is `ErrUnmappable`; Spec Kit change intents are feature-level only.
 - **Plan:** governance → BD is removed from the mapping ("Mechanism" section) and moved to
   non-goals for R2.
+
+## Correction (2026-11-16, after review rounds 1-2)
+
+This spike checked a **snapshot** mapping. Three of its statements are superseded and kept above
+unchanged as the record of what was believed then:
+- "Active change → `proposed`; archived → `accepted`" — `accepted` is not a requirement status. In
+  draft 3 an archived delta record is `active` and the change intent `accepted`.
+- Record ids derived from paths — they change on archive. Draft 3 derives change ids from native
+  names and makes requirement records content-addressed.
+- "hash-suffixed past 31 chars" — the canonical obligation regex allows 32.
+
+The snapshot method itself was the larger miss: an OpenSpec change's lifecycle lives in git history.
+The replacement evidence — a probe over all 256 commits of OpenSpec's history that touch
+`openspec/changes` — is summarised in `docs/plans/R2-sdd-provider-spec-draft3.md` §0, and draft 3 is
+built on it (`VD-sdd-change-scoped-r2-k7q3wz`).

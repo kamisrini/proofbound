@@ -97,10 +97,13 @@ above. Author the `BD`/`BR-sdd-warranty-*` chain. Write the `intent/sdd` package
 `Resolve` seam, invariants (no fabrication; exact-byte digests; closed vocabularies), non-goals,
 test derivations. Amend the intent SPEC provider invariant.
 *Deliverable:* spike verdict (go/no-go) + ratified package SPEC + intent home, gate green.
-*Status 2026-11-16:* spike GO; intent home done; SPEC at draft 2
-([`R2-sdd-provider-spec-draft2.md`](R2-sdd-provider-spec-draft2.md)) after review round 1 returned
-NEEDS_WORK on draft 1's change lifecycle; open decisions A (warranty across archive) and B
-(obligation lifecycle vs intent SPEC §5) are the owner's.
+*Status 2026-11-16:* spike GO; intent home done. Reviews rejected drafts 1 and 2 (snapshot
+designs that real OpenSpec history breaks). **Scope narrowed** (`VD-sdd-change-scoped-r2-k7q3wz`):
+R2 warrants changes, read history-natively; the main-spec lifecycle is deferred. Contract at
+**draft 3** ([`R2-sdd-provider-spec-draft3.md`](R2-sdd-provider-spec-draft3.md)), measured against
+OpenSpec's full history before it was written. Next: M0 review round 3, then M1. **This
+document's sections below that describe main-spec mapping, governance, and drift against
+superseded requirement digests are superseded by draft 3.**
 
 **M1 — `intent.sdd` provider core.** Profile loading + validation (JSON); profile-driven parse of
 committed artifacts at a tree → canonical revisions; `Resolve(tree, token)` (native change name); `core.Source`
