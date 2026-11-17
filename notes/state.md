@@ -47,9 +47,9 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**Intent-trailer gap (`DEF-INTENT-TRAILER-BLOCK-001`, OPEN).** Round-2 findings fixed under `CI-intent-trailer-range-gwi9uu`: unpushed-range checking, strict UTF-8, explicit `make check` step, proven invocation in `delivery-enforce`; 32-case corpus; calibrated mutation runs all killed. **Next: review round 3.** Also new: `DEF-INTENT-CI-REVISION-001` (change intents cannot be revised — kernel limitation, dormant).
+**R2 M0 review round 2 = NEEDS_WORK (6 HIGH): M1 must not start.** Draft 2's lifecycle fails against real OpenSpec history (verdict `r2-m0-review-round2-20261116`). **Owner decision pending on R2 direction:** (1) history-native provider, full lifecycle; (2) narrow R2 to change-scoped warranty, history-native for change folders, main-spec lifecycle deferred (author recommends); (3) pause R2.
 
-**R2 M0:** SPEC draft 2 with A2 + B1 settled (Spec Kit lifecycle open as 9.C, needed by M5); BR rev 0002 (O-8, O-9). **Next: M0 review round 2.** Push is HELD by the owner until the round-2 findings are fixed and reviewed.
+**Trailer gate round 3 = NEEDS_WORK (1 MED, 5 LOW).** Range checking works; the remaining harm is structural: a pre-push check is skipped by pushing first. **Owner decision pending:** a push- or server-side check mechanism. Push of local commits is HELD by the owner.
 
 **Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
 deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
