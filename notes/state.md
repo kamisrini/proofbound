@@ -6,12 +6,16 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** get the owner's word on committing the extended replay helper
-(`kernel/internal/connector/intent/sdd/fixture_test.go` — governed path, needs an `Intent:` +
-`Authorized-By:` trailer; precedent `4d91413` used `CI-sdd-warranty-m0b-ti5ga9`), then dispatch
-**M0 review round 4** (fresh non-author reviewer, same pattern as rounds 1-3) on
-`docs/plans/R2-sdd-provider-spec-draft4.md` + the new fixtures. If ACCEPTABLE → bring BR revision
-0003 wording (draft 4 §11: O-10 reworded, O-12; **O-11 dropped**) to the owner → **M1 code**.
+**Exact next action:** write **SPEC draft 5** answering M0 review round 4
+(`docs/verification/verdicts/r2-m0-review-round4-20261117.md`, NEEDS_WORK, 6 MED + 4 LOW, **no HIGH**;
+round 3's two HIGHs closed in design). Reviewer allows the fixes to land as draft 5 *or* directly in
+M1's `sdd/SPEC.md`, provided a non-author re-checks the changed sections. Key fixes: F1 payload-size /
+invalid-UTF-8 per-state rule; F2 split provider bugs from tenant skips + pin expected skip sets; F3
+name every `intent.sdd` rejection site (intent.go, projections, gates, intent SPEC §6/INT-INV-11);
+F4 share gitcmd's full walk semantics (replace objects, grafts, shallow); F5 re-target the fence
+fixture at a column-0 header (`improve-init-onboarding` `## TL;DR`); F6 ref-tip test + retire-reissue
+INV-1/6/29 + restore tombstone reasons; F7-F10 per verdict. The extended replay helper
+(`fixture_test.go`) stays uncommitted by owner decision; it needs `Intent:` + owner `Authorized-By:`.
 
 **Draft 4 (written 2026-11-17)** answers round 3: fail-closed **per state** with reported `Skip`s and a
 cascade (never batch-fatal; INT-INV-4 holds unchanged because the provider pre-validates); the walk is
@@ -33,8 +37,8 @@ calibrated (breaking the TREESAME revert makes it fail). The probe now prints ev
 **Owner priorities (2026-11-16):** build activities first; **checks, hooks, and pushes are held for a
 few days** (`DEF-PUSH-HOLD-20261116`). Do **not** push without the owner's word.
 
-**Immediate blockers:** the helper commit needs owner authorization (governed path). M1 code is blocked
-until an M0 review returns ACCEPTABLE (Law 9).
+**Immediate blockers:** none for draft 5. M1 code is blocked until the round-4 findings are fixed and
+a non-author re-check passes (Law 9).
 
 **⚠ Known gate trap:** the two permanent-untracked paths (`docs/plans/P5-intent-provenance-plan.md`,
 `kernel/cmd/p6dbprobe/`) keep the tree dirty, so bare `make check` goes RED on `commit-cadence` once
