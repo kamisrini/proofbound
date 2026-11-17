@@ -6,13 +6,14 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** owner acceptance of the **M1 change intent** (proposed in the session hand-off:
-`CI-sdd-warranty-m1-*` targeting `BR-sdd-warranty-i9miv7` rev 0003 O-1, O-2, O-10; scope = the
-`intent/sdd` package + draft 10 §12's M1 sites; OpenSpec only; no git-connector wiring). Then M1 code:
-copy `docs/plans/R2-sdd-provider-spec-draft10.md` VERBATIM to `kernel/internal/connector/intent/sdd/SPEC.md`
-in the same commit as the code + tests it cites (invariant-lint requires the cited tests to exist;
-regenerate `docs/invariants.lock`), then foundational-tier non-author review. M0 is CLOSED; BR rev 0003
-written (`b0b9859`). Draft 10 answers the re-check's six M1 entry conditions.
+**Exact next action:** **M1 code** under `CI-sdd-warranty-m1-6op6vl` (owner-accepted 2026-11-17;
+implements BR rev 0003 O-1/O-2/O-10, OpenSpec only). Order: (1) gitcmd shared listing + `sdd` Reader
+(`--literal-pathspecs`, typed entries); (2) `sdd` provider (profile, §4.2 parser, ids, manifests,
+`changeOutcome`, Revisions/Skipped/Resolve) against the committed fixtures and pins; (3) intent
+connector + core + projections + gates + CLI sites (draft 10 §12); (4) copy draft 10 VERBATIM to
+`sdd/SPEC.md` in the commit with its tests, regenerate `docs/invariants.lock`, route matrix, census;
+(5) foundational-tier non-author review. Governed commits carry `Intent: CI-sdd-warranty-m1-6op6vl`
++ owner `Authorized-By`. Excluded: Spec Kit, git-connector wiring (M3), `sdd` in `all`.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
