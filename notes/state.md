@@ -6,16 +6,21 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** write **SPEC draft 5** answering M0 review round 4
-(`docs/verification/verdicts/r2-m0-review-round4-20261117.md`, NEEDS_WORK, 6 MED + 4 LOW, **no HIGH**;
-round 3's two HIGHs closed in design). Reviewer allows the fixes to land as draft 5 *or* directly in
-M1's `sdd/SPEC.md`, provided a non-author re-checks the changed sections. Key fixes: F1 payload-size /
-invalid-UTF-8 per-state rule; F2 split provider bugs from tenant skips + pin expected skip sets; F3
-name every `intent.sdd` rejection site (intent.go, projections, gates, intent SPEC §6/INT-INV-11);
-F4 share gitcmd's full walk semantics (replace objects, grafts, shallow); F5 re-target the fence
-fixture at a column-0 header (`improve-init-onboarding` `## TL;DR`); F6 ref-tip test + retire-reissue
-INV-1/6/29 + restore tombstone reasons; F7-F10 per verdict. The extended replay helper
-(`fixture_test.go`) stays uncommitted by owner decision; it needs `Intent:` + owner `Authorized-By:`.
+**Exact next action:** **M0 review round 5** of `docs/plans/R2-sdd-provider-spec-draft5.md` (fresh
+non-author reviewer; re-check of the changed sections against round 4's F1-F10 and its five fitness
+conditions). Verdict → `docs/verification/verdicts/r2-m0-review-round5-20261117.md`; commit it with
+`scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → owner approves BR revision 0003 wording
+(draft 5 §11) and **authorizes committing the replay helper** (`fixture_test.go`, governed; round-4 F10
+makes it an M1 precondition) → **M1 code**, reviewed at the foundational tier.
+
+**Draft 5 (2026-11-17)** answers round 4 (NEEDS_WORK, 6 MED + 4 LOW, no HIGH): closed list of tenant-data
+skip causes (incl. `payload-too-large`, `invalid-utf8`); everything else fails `Revisions`;
+`ValidateRevision` gains the size bound for all providers; complete grep-derived amendment list (§12,
+M1 vs M3 sites); the reader is `gitcmd.Repo` (replace/graft/shallow contract); fence/section rules
+pinned to OpenSpec's code; INV-1/3/4/6/25/29/36/37/38 retired and re-issued as INV-40..52; tombstone
+reasons restored; profile schema inlined; Resolve sentinels. Fixtures: `branches/14-stale-tip`, the
+column-0 fenced case (masked 3 / unmasked 1), `expected-skips.json`. Probe re-measured: 23
+dual-presence commits on the provider walk, 4 branch tips, 1 of 401 delta blobs changes under masking.
 
 **Draft 4 (written 2026-11-17)** answers round 3: fail-closed **per state** with reported `Skip`s and a
 cascade (never batch-fatal; INT-INV-4 holds unchanged because the provider pre-validates); the walk is

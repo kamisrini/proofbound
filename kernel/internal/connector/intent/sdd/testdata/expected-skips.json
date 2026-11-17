@@ -1,0 +1,17 @@
+{
+  "schema": "proofbound.sdd-expected-skips.v1",
+  "note": "Draft 5 SDD-INV-46: each fixture's EXACT Skip set. A state is named by the first fixture step that carries it; Skip.Commit is that step's commit.",
+  "openspec-history": [],
+  "speckit-history": [],
+  "branches": [
+    { "step": "11-archive-leaves-leftover", "unit": "change add-z", "cause": "name-reuse" }
+  ],
+  "unmappable/duplicate-obligation": [
+    { "unit": "requirement openspec/changes/dup/specs/auth/spec.md", "cause": "obligation-collision" },
+    { "unit": "change dup", "cause": "cascade" }
+  ],
+  "unmappable/reused-name": [
+    { "unit": "change add-login", "cause": "name-reuse" }
+  ],
+  "fenced": []
+}

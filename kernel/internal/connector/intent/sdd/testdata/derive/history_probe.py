@@ -29,32 +29,54 @@ def blob(rev, path):
     data = cat.stdout.read(int(head[2])); cat.stdout.read(1)
     return data.decode("utf-8", "replace")
 
-SECTION = re.compile(r"^## (ADDED|MODIFIED|REMOVED|RENAMED) Requirements\s*$")
-REQ = re.compile(r"^### Requirement: (.+?)\s*$")
-FENCE = re.compile(r"^\s*(```|~~~)")
-def unfenced(lines):
-    """Blank every line inside a fenced code block (and the fence lines), as OpenSpec's
-    buildCodeFenceMask does, so a fenced example header is never read as a section."""
-    out, inside = [], False
-    for l in lines:
-        if FENCE.match(l):
-            inside = not inside; out.append(""); continue
-        out.append("" if inside else l)
-    return out
-def parse_delta(text):
-    out = []  # (section, name, statement)
-    section = None; lines = unfenced(text.split("\n"))
+# Draft 5 section 4.2 rules: OpenSpec's own (src/core/parsers/code-fence.ts, spec-structure.ts,
+# requirement-blocks.ts at f085c850).
+SECTION = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements(?:[ \t]+#+)?\s*$", re.I)
+TOP = re.compile(r"^##\s+")
+REQ = re.compile(r"^###\s*Requirement:\s*(.+)\s*$", re.I)
+FROM = re.compile(r"^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$")
+OPEN = re.compile(r"^\s*(`{3,}|~{3,})(.*)")
+CLOSE = re.compile(r"^\s*(`{3,}|~{3,})\s*$")
+def fence_mask(lines):
+    """OpenSpec buildCodeFenceMask: opener/closer lines masked; a backtick opener's info string
+    may not contain a backtick; the closer uses the same marker, at least as long; unclosed → EOF."""
+    mask, active = [False] * len(lines), None
     for i, l in enumerate(lines):
+        if active is None:
+            m = OPEN.match(l)
+            if m and not (m.group(1)[0] == "`" and "`" in m.group(2)):
+                active = (m.group(1)[0], len(m.group(1))); mask[i] = True
+            continue
+        mask[i] = True
+        m = CLOSE.match(l)
+        if m and m.group(1)[0] == active[0] and len(m.group(1)) >= active[1]:
+            active = None
+    return mask
+def name_of(raw):
+    return re.sub(r"[ \t]+#+[ \t]*$", "", raw).strip()
+def split_lines(text):
+    return text.lstrip("﻿").replace("\r\n", "\n").replace("\r", "\n").split("\n")
+def parse_delta(text, masked=True):
+    out = []  # (section, name, statement)
+    lines = split_lines(text)
+    mask = fence_mask(lines) if masked else [False] * len(lines)
+    section = None
+    for i, l in enumerate(lines):
+        if mask[i]: continue
         m = SECTION.match(l)
-        if m: section = m.group(1); continue
-        if l.startswith("## "): section = None; continue
+        if m: section = m.group(1).upper(); continue
+        if TOP.match(l): section = None; continue
+        f = FROM.match(l)
+        if f and section == "RENAMED":
+            out.append((section, name_of(f.group(1)), "")); continue
         r = REQ.match(l)
         if r and section:
             stmt = ""
-            for l2 in lines[i + 1:]:
-                if l2.startswith("#"): break
-                if l2.strip(): stmt = l2.strip(); break
-            out.append((section, r.group(1), stmt))
+            for j in range(i + 1, len(lines)):
+                if mask[j]: continue
+                if lines[j].startswith("#"): break
+                if lines[j].strip(): stmt = lines[j].strip(); break
+            out.append((section, name_of(r.group(1)), stmt))
     return out
 def main_reqs(text):
     return {m.group(1) for l in text.split("\n") if (m := REQ.match(l))}
@@ -62,7 +84,7 @@ def main_reqs(text):
 stats = collections.Counter()
 reuse_commits = collections.defaultdict(set)  # name -> commits where it is both active and archived
 twice_commits = collections.defaultdict(set)  # name -> commits where it is archived twice
-renamed_entries = 0; fenced_from = 0
+renamed_entries = 0
 observed_active = set(); archived_names = collections.Counter(); prev = {}  # name -> {req: stmt}
 zero_target = set(); missing_target = []; no_stmt = set()
 disappear = []; meaning = []
@@ -92,9 +114,7 @@ for c in commits:
             m = re.match(r"^specs/([^/]+)/spec\.md$", f)
             if not m: continue
             text = blob(c, f"openspec/changes/{name}/{f}") or ""
-            fenced_from += sum(1 for l in text.split("\n") if re.match(r"^\s*-\s*FROM:", l))
-            renamed_entries += sum(1 for sec, _, _ in parse_delta(text) if sec == "RENAMED") + sum(
-                1 for l in unfenced(text.split("\n")) if re.match(r"^\s*-\s*FROM:", l))
+            renamed_entries += sum(1 for sec, _, _ in parse_delta(text) if sec == "RENAMED")
             for section, rname, stmt in parse_delta(text):
                 entries += 1
                 if section in ("ADDED", "MODIFIED"):
@@ -128,8 +148,7 @@ print(f"within-change: statement changed between observations:      {len(meaning
 for label, rows in (("missing-target sample", missing_target), ("disappear sample", disappear), ("meaning sample", meaning)):
     print(f"  {label}: {rows[:2]}")
 print(f"names archived twice at a commit: {len(twice_commits)} names, {sum(len(v) for v in twice_commits.values())} commits")
-print(f"RENAMED entries outside code fences in active deltas (summed over walked commits): {renamed_entries}")
-print(f"  FROM: lines anywhere, fences included (documentation examples): {fenced_from}")
+print(f"RENAMED FROM entries in active deltas, fences masked (summed over walked commits): {renamed_entries}")
 
 # Draft 4 section 0: the git connector's walk (gitcmd.go), unsimplified, deduplicated by SDD state.
 walk = git("rev-list", "--reverse", "--date-order", "--exclude=refs/stash", "--exclude=refs/notes/*",
@@ -143,16 +162,29 @@ def state_key(c):
 states = {state_key(c) for c in walk}
 limited = len(git("rev-list", "HEAD", "--", "openspec/changes").decode().split())
 full = len(git("rev-list", "--all", "--full-history", "--", "openspec/changes").decode().split())
-dual = []
-for c in git("rev-list", "--all", "--full-history", "--", "openspec/changes").decode().split():
+heads = {}
+for line in git("for-each-ref", "--format=%(objectname) %(refname:short)", "refs/heads", "refs/remotes", "refs/tags").decode().splitlines():
+    sha, ref = line.split(" ", 1); heads.setdefault(sha, []).append(ref)
+dual, delta_blobs = [], {}
+for c in walk:  # the provider's own walk: unsimplified --all
     names = git("ls-tree", "--name-only", c, "openspec/changes/").decode().split("\n")
     act = {n.split("/")[-1] for n in names if n and n.split("/")[-1] != "archive"}
     arch = git("ls-tree", "--name-only", c, "openspec/changes/archive/").decode().split("\n")
-    archn = [re.sub(r"^\d{4}-\d{2}-\d{2}-", "", a.split("/")[-1]) for a in arch if a]
+    archn = [m.group(1) for a in arch if a and (m := re.match(r"^\d{4}-\d{2}-\d{2}-(.+)$", a.split("/")[-1]))]
     if act & set(archn) or len(archn) != len(set(archn)):
         dual.append(c)
-tagged = [t for c in dual for t in git("tag", "--points-at", c).decode().split()]
+for line in git("rev-list", "--all", "--objects", "--", "openspec/changes").decode().splitlines():
+    parts = line.split(" ", 1)
+    if len(parts) == 2 and re.match(r"^openspec/changes/.*/specs/[^/]+/spec\.md$", parts[1]):
+        delta_blobs[parts[0]] = parts[1]
+differ = []
+for sha, path in delta_blobs.items():
+    text = git("cat-file", "-p", sha).decode("utf-8", "replace")
+    if parse_delta(text, True) != parse_delta(text, False):
+        differ.append(path)
+tips = sorted(r for c in dual for r in heads.get(c, []))
 print(f"git-connector walk (--all): {len(walk)} commits, {merges} merges, {roots} roots")
 print(f"distinct SDD states over that walk (openspec/changes tree id): {len(states)}")
 print(f"commits touching openspec/changes: HEAD path-limited {limited} / --all --full-history {full}")
-print(f"dual-presence or archived-twice commits (--all --full-history): {len(dual)}; tags pointing at them: {len(tagged)}")
+print(f"dual-presence or archived-twice commits on the unsimplified --all walk: {len(dual)}; refs pointing at them: {len(tips)} {tips}")
+print(f"distinct delta blobs: {len(delta_blobs)}; whose obligations change under fence masking: {len(differ)} {sorted(set(differ))}")
