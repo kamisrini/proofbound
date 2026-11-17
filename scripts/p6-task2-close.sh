@@ -12,7 +12,7 @@ code_commit=$(git -C "$repo" log -1 --format=%H -- "${pinned_paths[@]}")
 [[ $code_commit =~ ^[0-9a-f]{40}$ ]] || { echo 'p6-task2-close: cannot resolve code commit' >&2; exit 1; }
 
 mapfile -t packages < <(git -C "$repo" ls-files 'kernel/internal/connector/**/*.go' | rg -v '_test\.go$' | sed 's#/[^/]*$##; s#kernel/internal/connector/##' | sort -u)
-expected=(checks git git/gitcmd github intent intent/records intent/specdir reviews sessions)
+expected=(checks git git/gitcmd github intent intent/records intent/sdd intent/specdir reviews sessions)
 [[ "${packages[*]}" == "${expected[*]}" ]] || {
   printf 'p6-task2-close: connector universe mismatch: %s\n' "${packages[*]}" >&2
   exit 1
@@ -57,9 +57,10 @@ done
   printf '| C4-005 | intent | live | self-hosted provider coordination in `docs/verification/p5-self-hosting.md` plus accepted P5 obligation verdict |\n'
   printf '| C4-006 | intent/records | live | Proofbound P5 records ingested in `docs/verification/p5-self-hosting.md` plus accepted P5 obligation verdict |\n'
   printf '| C4-007 | intent/specdir | synthetic | foreign mapping and impossible-mapping fixtures in `kernel/internal/connector/intent/specdir/specdir_test.go` |\n'
+  printf '| C4-013 | intent/sdd | synthetic | R2 M1 (`CI-sdd-warranty-m1-6op6vl`): replayed commit-graph fixtures shaped on real OpenSpec history in `kernel/internal/connector/intent/sdd/sdd_test.go`; no live tenant run yet |\n'
   printf '| C4-008 | reviews | live | committed accepted `docs/verification/verdicts/p5-obligation-verdict-round1.md` |\n'
   printf '| C4-009 | sessions | live | explicit genuine-corpus result below |\n\n'
-  printf 'Every package is classified exactly once; result: `live=7 synthetic=2 none=0`.\n\n'
+  printf 'Every package is classified exactly once; result: `live=7 synthetic=3 none=0`.\n\n'
   printf '## C4-010 — sessions genuine-corpus acceptance\n\n'
   printf 'Command: `PROOFBOUND_SESSIONS_LIVE_FILE=<founder-owned-file> go test -tags=liveacceptance ./internal/connector/sessions -run '\''^TestLiveQuiescentJSONLAcceptance$'\'' -count=1 -v`\n\n'
   printf '%s\n' '- Source SHA-256: `d292c04548116eb932768353cc125858a8191fa9512a187d7da020a8ff99532a`.'
