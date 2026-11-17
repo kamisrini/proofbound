@@ -6,10 +6,13 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **targeted non-author re-check** of draft 9's changed sections (owner decision
-2026-11-17: no full round 9). Verdict → `docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md`;
-commit with `scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → bring the owner the exact BR
-revision 0003 wording (draft 9 §11) → **M1 code (OpenSpec only)**, reviewed at the foundational tier.
+**Exact next action:** owner decision on closing M0. Targeted re-check of draft 9
+(`docs/verification/verdicts/r2-m0-recheck-draft9-20261117.md`): NEEDS_WORK, 1 MED + 5 LOW, no HIGH;
+round 8's MEDs closed; reviewer's own oracle matched all 21 Resolve pins and 8 skip sets. Reviewer's
+fitness: **fit for M1 code if F1 (symlink/gitlink INSIDE a change directory has two contract outcomes)
+is fixed in the `sdd/SPEC.md` M1 commits and checked by M1's foundational non-author review — no
+further M0 paper round needed.** Proposed to owner: approve BR revision 0003 wording (draft 9 §11) and
+start M1 with the re-check's F1-F6 as M1 entry conditions.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
