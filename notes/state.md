@@ -6,15 +6,21 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** write **SPEC draft 6** answering M0 review round 5
-(`docs/verification/verdicts/r2-m0-review-round5-20261117.md`, NEEDS_WORK, 3 MED + 4 LOW, no HIGH):
-F1 classify every tenant byte the validator/reader/store/projector can reject (whitespace-only
-statements, over-long Spec Kit ids, non-UTF-8 paths in history, gitlinks/symlinks); F2 NUL bytes
-(ledger accepts, projection TEXT rejects); F3 pin §4.2 to OpenSpec's actual reader or list divergences;
-F4 fix §12 CLI rows (`syncIntentOnStore` is M1, `cli.go:247` is M3) and decide whether `all` includes
-`sdd`; F5 Spec Kit CI status declared, not inferred; F6 mechanise fixture claims; F7 drift. Then round 6.
-Owner decisions pending: commit the replay helper (`fixture_test.go`, governed; M1 precondition), and
-whether `sync intent all` includes `sdd`.
+**Exact next action:** **M0 review round 6** of `docs/plans/R2-sdd-provider-spec-draft6.md` (fresh
+non-author reviewer; check round 5's F1-F7 and its five fitness conditions). Verdict →
+`docs/verification/verdicts/r2-m0-review-round6-20261117.md`; commit it with
+`scripts/p6-artifact-integrity.sh --write`. If ACCEPTABLE → owner approves BR revision 0003 wording
+(draft 6 §11) → **M1 code**, reviewed at the foundational tier.
+
+**Draft 6 (2026-11-17)** answers round 5 (NEEDS_WORK, 3 MED + 4 LOW, no HIGH). The §7 skip-cause table is
+derived from every check tenant bytes reach (adds `nul-byte`, `statement-blank`, `obligation-id-invalid`,
+`non-regular-file`); `ValidateRevision` rejects U+0000 + oversize for all providers; the reader shares
+gitcmd's listing but not its per-commit file lists; §4.2 is re-pinned to OpenSpec's `parseDeltaSpec`
+with JS regex classes made explicit; Spec Kit `changes.status` is declared. **Owner decisions
+2026-11-17:** `sync intent all` excludes `sdd` (SDD-INV-56); the replay helper is committed. Fixtures:
+fence-precision cases, `head-on-leftover`, `expected-obligations.json`, a mechanised pin test.
+**Raised to owner, not filed:** the git connector itself fails on any non-UTF-8 path in history
+(pre-existing; draft 6 §14).
 
 **Draft 5 (2026-11-17)** answers round 4 (NEEDS_WORK, 6 MED + 4 LOW, no HIGH): closed list of tenant-data
 skip causes (incl. `payload-too-large`, `invalid-utf8`); everything else fails `Revisions`;

@@ -1,17 +1,37 @@
 {
   "schema": "proofbound.sdd-expected-skips.v1",
-  "note": "Draft 5 SDD-INV-46: each fixture's EXACT Skip set. A state is named by the first fixture step that carries it; Skip.Commit is that step's commit.",
+  "note": "Draft 6 SDD-INV-46: each fixture's EXACT Skip set. 'step' names the first fixture step carrying the state (histories); single trees have no step. Unit paths are fixture-relative.",
   "openspec-history": [],
   "speckit-history": [],
   "branches": [
-    { "step": "11-archive-leaves-leftover", "unit": "change add-z", "cause": "name-reuse" }
+    {
+      "step": "11-archive-leaves-leftover",
+      "unit": "change add-z",
+      "cause": "name-reuse"
+    }
   ],
   "unmappable/duplicate-obligation": [
-    { "unit": "requirement openspec/changes/dup/specs/auth/spec.md", "cause": "obligation-collision" },
-    { "unit": "change dup", "cause": "cascade" }
+    {
+      "unit": "requirement openspec/changes/dup/specs/auth/spec.md",
+      "cause": "obligation-collision"
+    },
+    {
+      "unit": "change dup",
+      "cause": "cascade"
+    }
   ],
   "unmappable/reused-name": [
-    { "unit": "change add-login", "cause": "name-reuse" }
+    {
+      "unit": "change add-login",
+      "cause": "name-reuse"
+    }
   ],
-  "fenced": []
+  "fenced": [],
+  "head-on-leftover": [
+    {
+      "step": "02-archive-leaves-leftover",
+      "unit": "change add-w",
+      "cause": "name-reuse"
+    }
+  ]
 }

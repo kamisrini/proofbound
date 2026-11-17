@@ -19,7 +19,8 @@ repo = sys.argv[1]
 def git(*a):
     return subprocess.run(["git", "-C", repo, *a], capture_output=True, check=True).stdout
 
-commits = git("rev-list", "--reverse", "--topo-order", "HEAD", "--", "openspec/changes").decode().split()
+commits = git("rev-list", "--reverse", "--date-order", "--exclude=refs/stash", "--exclude=refs/notes/*",
+              "--exclude=refs/replace/*", "--all").decode().split()  # the provider's walk (draft 6 section 3)
 cat = subprocess.Popen(["git", "-C", repo, "cat-file", "--batch"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 def blob(rev, path):
     cat.stdin.write(f"{rev}:{path}\n".encode()); cat.stdin.flush()
@@ -29,17 +30,28 @@ def blob(rev, path):
     data = cat.stdout.read(int(head[2])); cat.stdout.read(1)
     return data.decode("utf-8", "replace")
 
-# Draft 5 section 4.2 rules: OpenSpec's own (src/core/parsers/code-fence.ts, spec-structure.ts,
-# requirement-blocks.ts at f085c850).
-SECTION = re.compile(r"^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements(?:[ \t]+#+)?\s*$", re.I)
-TOP = re.compile(r"^##\s+")
-REQ = re.compile(r"^###\s*Requirement:\s*(.+)\s*$", re.I)
-FROM = re.compile(r"^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$")
-OPEN = re.compile(r"^\s*(`{3,}|~{3,})(.*)")
-CLOSE = re.compile(r"^\s*(`{3,}|~{3,})\s*$")
+# Draft 6 section 4.2: OpenSpec's delta READER (src/core/parsers/requirement-blocks.ts parseDeltaSpec,
+# code-fence.ts) at f085c850, with ECMAScript regex semantics made explicit: \s is the JS set below,
+# `.` excludes JS line terminators, and the only case-insensitive match (the requirement header's /i,
+# non-unicode mode) folds ASCII letters only.
+WS = "\t\n\v\f\r    -     　﻿"
+W, DOT = f"[{WS}]", "[^\n\r  ]"
+def ci(word): return "".join(f"[{c.upper()}{c.lower()}]" if c.isalpha() else re.escape(c) for c in word)
+SECTION_LINE = re.compile(rf"^##{W}+({DOT}+)$")
+TOP = re.compile(rf"^##{W}+")
+REQ = re.compile(rf"^###{W}*{ci('Requirement:')}{W}*({DOT}+){W}*$")
+REMOVED_BULLET = re.compile(rf"^{W}*[-*+]{W}*`?###{W}*Requirement:{W}*({DOT}+?)`?{W}*$")
+FROM = re.compile(rf"^{W}*[-*+]?{W}*FROM:{W}*`?###{W}*Requirement:{W}*({DOT}+?)`?{W}*$")
+TO = re.compile(rf"^{W}*[-*+]?{W}*TO:{W}*`?###{W}*Requirement:{W}*({DOT}+?)`?{W}*$")
+OPEN = re.compile(rf"^{W}*(`{{3,}}|~{{3,}})({DOT}*)")
+CLOSE = re.compile(rf"^{W}*(`{{3,}}|~{{3,}}){W}*$")
+TITLES = {"added requirements": "ADDED", "modified requirements": "MODIFIED",
+          "removed requirements": "REMOVED", "renamed requirements": "RENAMED"}
+JS_WS = set("\t\n\v\f\r       　﻿") | {chr(c) for c in range(0x2000, 0x200b)}
+GO_SPACE = {"\t", "\n", "\v", "\f", "\r", " ", "\x85", "\xa0", " ", " ", " ", " ", " ", "　"} | {chr(c) for c in range(0x2000, 0x200b)}
+def js_trim(t): return t.strip("".join(JS_WS))
+def blank(t): return all(ch in JS_WS or ch in GO_SPACE for ch in t)
 def fence_mask(lines):
-    """OpenSpec buildCodeFenceMask: opener/closer lines masked; a backtick opener's info string
-    may not contain a backtick; the closer uses the same marker, at least as long; unclosed → EOF."""
     mask, active = [False] * len(lines), None
     for i, l in enumerate(lines):
         if active is None:
@@ -52,31 +64,53 @@ def fence_mask(lines):
         if m and m.group(1)[0] == active[0] and len(m.group(1)) >= active[1]:
             active = None
     return mask
-def name_of(raw):
-    return re.sub(r"[ \t]+#+[ \t]*$", "", raw).strip()
+def name_of(raw): return js_trim(re.sub(r"[ \t]+#+[ \t]*$", "", raw))
 def split_lines(text):
-    return text.lstrip("﻿").replace("\r\n", "\n").replace("\r", "\n").split("\n")
-def parse_delta(text, masked=True):
-    out = []  # (section, name, statement)
+    if text.startswith("﻿"): text = text[1:]
+    return re.sub(r"\r\n?", "\n", text).split("\n")
+def title_kind(raw):
+    t = name_of(raw)
+    return TITLES.get(t.lower()) if t.isascii() else None
+def parse_delta(text, masked=True, unpaired=None):
+    """[(SEC, name, statement)] for one delta file; `unpaired` collects unpaired RENAMED lines."""
     lines = split_lines(text)
     mask = fence_mask(lines) if masked else [False] * len(lines)
-    section = None
-    for i, l in enumerate(lines):
-        if mask[i]: continue
-        m = SECTION.match(l)
-        if m: section = m.group(1).upper(); continue
-        if TOP.match(l): section = None; continue
-        f = FROM.match(l)
-        if f and section == "RENAMED":
-            out.append((section, name_of(f.group(1)), "")); continue
-        r = REQ.match(l)
-        if r and section:
-            stmt = ""
-            for j in range(i + 1, len(lines)):
-                if mask[j]: continue
-                if lines[j].startswith("#"): break
-                if lines[j].strip(): stmt = lines[j].strip(); break
-            out.append((section, name_of(r.group(1)), stmt))
+    heads = [(i, title_kind(m.group(1))) for i, l in enumerate(lines) if not mask[i] and (m := SECTION_LINE.match(l))]
+    out = []
+    for n, (start, kind) in enumerate(heads):
+        if kind is None: continue
+        end = heads[n + 1][0] if n + 1 < len(heads) else len(lines)
+        body = [(i, lines[i]) for i in range(start + 1, end) if not mask[i]]
+        if kind == "RENAMED":
+            pending = None
+            for _, l in body:
+                f, t = FROM.match(l), TO.match(l)
+                if f:
+                    if pending is not None and unpaired is not None: unpaired.append(pending)
+                    pending = name_of(f.group(1))
+                elif t:
+                    if pending is None:
+                        if unpaired is not None: unpaired.append(name_of(t.group(1)))
+                        continue
+                    out.append((kind, pending, l)); pending = None
+            if pending is not None and unpaired is not None: unpaired.append(pending)
+            continue
+        entry = None  # [name, statement-or-None, open]
+        def close():
+            if entry: out.append((kind, entry[0], entry[1] if entry[1] is not None else entry[0]))
+        for _, l in body:
+            r = REQ.match(l)
+            if r:
+                close(); entry = [name_of(r.group(1)), None, True]; continue
+            if TOP.match(l):
+                if entry: entry[2] = False
+                continue
+            if kind == "REMOVED" and (bm := REMOVED_BULLET.match(l)):
+                close(); entry = None; out.append((kind, name_of(bm.group(1)), name_of(bm.group(1)))); continue
+            if entry and entry[2] and entry[1] is None:
+                if l.startswith("#"): entry[2] = False
+                elif not blank(l): entry[1] = l
+        close()
     return out
 def main_reqs(text):
     return {m.group(1) for l in text.split("\n") if (m := REQ.match(l))}
@@ -119,7 +153,7 @@ for c in commits:
                 entries += 1
                 if section in ("ADDED", "MODIFIED"):
                     reqs[(m.group(1), rname)] = stmt
-                    if not stmt: no_stmt.add((name, rname))
+                    if stmt == rname: no_stmt.add((name, rname))
                 if section in ("MODIFIED", "REMOVED"):
                     mp = mains.get(m.group(1))
                     mt = main_reqs(blob(c, mp) or "") if mp else set()
@@ -135,7 +169,7 @@ for c in commits:
 
 all_archived = set(archived_names)
 never_active = all_archived - observed_active
-print(f"commits walked:                     {stats['commits']}")
+print(f"commits walked (the provider's unsimplified --all walk): {stats['commits']}")
 print(f"changes ever observed active:       {len(observed_active)}")
 print(f"changes ever archived:              {len(all_archived)}")
 print(f"archived but NEVER observed active: {len(never_active)}  e.g. {sorted(never_active)[:3]}")

@@ -1,7 +1,7 @@
 # `intent.sdd` provider fixtures (R2 M1) — DRAFT, written before the provider
 
 Test data only; no code. Written against `docs/plans/R2-sdd-provider-spec-draft3.md` and extended for
-drafts 4 and 5 (`docs/plans/R2-sdd-provider-spec-draft5.md` is current; invariant numbers below are draft 5's) while those drafts are under
+drafts 4-6 (`docs/plans/R2-sdd-provider-spec-draft6.md` is current; invariant numbers below are draft 6's) while those drafts are under
 non-author review, so **the profile shape here is provisional** and must be updated
 if the reviewed contract changes it. These become the M1 tests' inputs once
 `kernel/internal/connector/intent/sdd/` gains its code and its `SPEC.md`.
@@ -19,7 +19,7 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 
 ## Steps and what they exercise
 
-| Fixture step | Reproduces (real-history shape) | Invariants (draft 5) |
+| Fixture step | Reproduces (real-history shape) | Invariants (draft 6) |
 |---|---|---|
 | openspec 01-baseline | main spec present but never ingested | INV-30 |
 | openspec 02-draft-proposal-only | change with zero requirement entries (34 real) | INV-28 |
@@ -44,11 +44,14 @@ real histories broke them. `branches/` is a commit **graph** (draft 4 §13). `un
 | branches 14-stale-tip | a ref tip (`stale`) left on the leftover state (OpenSpec: 4 remote tips) | INV-35(b) |
 | fenced/improve-onboarding | a column-0 `## TL;DR` inside a fence, followed by two more requirements (`improve-init-onboarding` shape) — masked 3 obligations, unmasked 1 | INV-39 (discriminating) |
 | fenced/document-renames | an indented RENAMED example inside a fence (`adopt-delta-based-changes` shape) — 1 obligation either way | INV-39 (neutral control) |
+| fenced/fence-marker, fence-length, fence-info-backtick | §4.2 fence precision: a `~~~` line inside a backtick fence, a shorter closer, a backtick in a backtick opener's info string — each kills a naive toggle mask | INV-39 |
+| head-on-leftover | HEAD (`main`) itself ends on the dual-presence state | INV-35(c) |
 | expected-skips.json | the exact Skip set of every fixture | INV-46 |
+| expected-obligations.json | per fenced case: obligations under OpenSpec's mask, a naive toggle, and no mask | INV-39 |
 
 ## Re-deriving the evidence
 
-`derive/history_probe.py` is the probe that measured draft 3 §0 and draft 4 §0 (it implements draft 5 §4.2 —
-OpenSpec's fence, section and requirement rules — and prints every count draft 5 cites) over the full history of
+`derive/history_probe.py` is the probe that measured draft 3 §0 and draft 4 §0 (it implements draft 6 §4.2 —
+OpenSpec's fence, section and requirement rules — and prints every count draft 6 cites) over the full history of
 `Fission-AI/OpenSpec` (run: `python3 -I derive/history_probe.py <openspec-clone>`). It is kept so the
 fixture rows can be checked against a fresh measurement; it is documentation, not part of the build.

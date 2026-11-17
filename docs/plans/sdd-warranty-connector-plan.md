@@ -102,11 +102,11 @@ designs that real OpenSpec history breaks). **Scope narrowed** (`VD-sdd-change-s
 R2 warrants changes, read history-natively; the main-spec lifecycle is deferred. Contract at
 **draft 3** ([`R2-sdd-provider-spec-draft3.md`](R2-sdd-provider-spec-draft3.md)), measured against
 OpenSpec's full history before it was written; round 3 rejected it (2 HIGH: a past fail-closed
-commit wedges every sync; the walk was not the git connector's). Contract now at **draft 5** ([`R2-sdd-provider-spec-draft5.md`](R2-sdd-provider-spec-draft5.md); round 4 NEEDS_WORK, no HIGH) after **draft 4**
+commit wedges every sync; the walk was not the git connector's). Contract now at **draft 6** ([`R2-sdd-provider-spec-draft6.md`](R2-sdd-provider-spec-draft6.md); rounds 4-5 NEEDS_WORK, no HIGH) after **draft 4**
 ([`R2-sdd-provider-spec-draft4.md`](R2-sdd-provider-spec-draft4.md)): fail-closed per state, the
-git connector's unsimplified walk. Next: M0 review round 5 (re-check of the changed sections), then M1. **This
+git connector's unsimplified walk. Next: M0 review round 6, then M1. **This
 document's sections below that describe main-spec mapping, governance, and drift against
-superseded requirement digests are superseded by draft 3 (now draft 4).**
+superseded requirement digests are superseded by draft 3 (now draft 6).**
 
 **M1 — `intent.sdd` provider core.** Profile loading + validation (JSON); history-native mapping of
 every commit the git connector ingests, per distinct SDD state, fail-closed per state with reported

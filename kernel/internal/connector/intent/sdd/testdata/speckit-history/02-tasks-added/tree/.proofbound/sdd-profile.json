@@ -2,7 +2,7 @@
   "schema": "proofbound.sdd-profile.v1",
   "kit": "speckit",
   "requirements": { "paths": ["specs/*/spec.md"], "status": { "line": "^\\*\\*Status:?\\*\\*:? *(?P<status>.+?) *$", "map": { "Draft": "proposed", "Approved": "active" } } },
-  "changes": { "mode": "feature-sibling", "sibling": "tasks.md" },
+  "changes": { "mode": "feature-sibling", "sibling": "tasks.md", "status": "proposed" },
   "owners":   [ { "pattern": "specs/**", "owner": "team-fixture" } ],
   "sponsors": [ { "pattern": "specs/**", "sponsor": "team-fixture" } ]
 }
