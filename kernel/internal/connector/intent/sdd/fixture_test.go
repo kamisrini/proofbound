@@ -309,6 +309,16 @@ func TestBranchFixtureReplaysAsDocumented(t *testing.T) {
 	}
 }
 
+// skipCauses is draft 7 §7's closed list of tenant-data causes; a pin naming anything else is wrong.
+var skipCauses = map[string]bool{
+	"profile-invalid": true, "invalid-utf8": true, "nul-byte": true, "non-regular-file": true,
+	"owner-uncovered": true, "sponsor-uncovered": true, "status-unmapped": true,
+	"obligation-id-invalid": true, "statement-blank": true, "obligation-collision": true,
+	"empty-name-part": true, "slug-too-short": true, "unpaired-rename": true,
+	"record-id-collision": true, "name-reuse": true, "archive-name-invalid": true,
+	"payload-too-large": true, "cascade": true,
+}
+
 // TestPinnedExpectationsMatchFixtures mechanises the pins M1's tests consume (draft 6 §13): every
 // unit in expected-skips.json names a step and a path that exist, and every fenced case in
 // expected-obligations.json exists, carries each pinned requirement header verbatim, and either
@@ -348,7 +358,10 @@ func TestPinnedExpectationsMatchFixtures(t *testing.T) {
 			default:
 				t.Fatalf("%s: unit %q has no known kind", fixture, s.Unit)
 			}
-			if _, err := os.Stat(probe); err != nil || s.Cause == "" {
+			if !skipCauses[s.Cause] {
+				t.Fatalf("%s: pinned skip %+v has a cause outside draft 7 §7's closed list", fixture, s)
+			}
+			if _, err := os.Stat(probe); err != nil {
 				t.Fatalf("%s: pinned skip %+v does not name an existing unit (%s)", fixture, s, probe)
 			}
 		}
