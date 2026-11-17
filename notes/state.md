@@ -47,9 +47,9 @@ R1 release docs are NOT governed (no intent chain needed to edit them).
 wrap-up set R1-1..R1-4 was all DONE and the clean-clone proven before acceptance. Follow-ups
 (unstarted): tag the release, add a demo script, run a single-dev corp pilot.
 
-**R2 M0 review round 2 = NEEDS_WORK (6 HIGH): M1 must not start.** Draft 2's lifecycle fails against real OpenSpec history (verdict `r2-m0-review-round2-20261116`). **Owner decision pending on R2 direction:** (1) history-native provider, full lifecycle; (2) narrow R2 to change-scoped warranty, history-native for change folders, main-spec lifecycle deferred (author recommends); (3) pause R2.
+**R2 M0 review round 2 = NEEDS_WORK (6 HIGH): M1 must not start.** Draft 2's lifecycle fails against real OpenSpec history (verdict `r2-m0-review-round2-20261116`). **Owner chose option 2:** narrow R2 to a change-scoped warranty, history-native for change folders; main-spec lifecycle deferred. Next: SPEC draft 3 + scope VD + BR revision → M0 review round 3.
 
-**Trailer gate round 3 = NEEDS_WORK (1 MED, 5 LOW).** Range checking works; the remaining harm is structural: a pre-push check is skipped by pushing first. **Owner decision pending:** a push- or server-side check mechanism. Push of local commits is HELD by the owner.
+**Trailer gate round 3 = NEEDS_WORK (1 MED, 5 LOW).** Range checking works; the remaining harm is structural: a pre-push check is skipped by pushing first. **Owner chose a local pre-push hook** (residual: --no-verify / uninstalled clones — record in the deferral). Push of local commits is HELD by the owner.
 
 **Immediate blockers:** none for planning. Owed: a non-author verdict on the gate change (closes the
 deferral) and on the R2 plan (before any M1 code). Next work: R2 M0 (the mapping spike). After the
