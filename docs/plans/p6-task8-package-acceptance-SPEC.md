@@ -8,13 +8,16 @@ package acceptance bar: calibrated mutation evidence plus a non-author verdict. 
 capability and does not reinterpret older verdicts as current acceptance.
 
 The production package set is every package returned by `go list ./internal/...` that contains at
-least one non-test `.go` file. At the current inventory this is 17 packages. `internal/specfirst`
+least one non-test `.go` file. At the current inventory this is 18 packages. `internal/specfirst`
 is returned by `go list` but contains only `SPEC.md` and `_test.go`; it is explicitly classified as
 `not-in-production-package-set` and receives no mutation requirement.
 
 The 17th package, `internal/twin/manifest`, landed after the original P6 freeze as authorized P7
 non-runtime work and is accepted under this same bar on 2026-10-31 — see the addendum at the end of
 this SPEC.
+
+The 18th package, `internal/connector/intent/sdd`, landed as R2 M1 (OpenSpec `intent.sdd` provider)
+and is accepted under this same bar on 2026-11-18 — see its addendum at the end of this SPEC.
 
 ## Frozen package evidence
 
@@ -43,7 +46,7 @@ missing package, or missing exact non-author verdict keeps the package row open.
 
 ## Acceptance
 
-Task 8 closes only after the final code-changing commit is frozen and all 17 production rows have
+Task 8 closes only after the final code-changing commit is frozen and all 18 production rows have
 calibrated mutation results, zero undeclared survivors, exact tree-object bindings, and committed
 non-author verdict coverage. Then, and only then, the C3 census rows may cite the packet and the
 final package acceptance sweep may proceed to the Task 9 consolidation round.
@@ -75,3 +78,26 @@ accepted here under the same bar; `DEF-P7-003` tracked the gap and is now resolv
 - Committed non-author verdict:
   [`p7-twin-manifest-acceptance-round1-20261031.md`](../verification/verdicts/p7-twin-manifest-acceptance-round1-20261031.md)
   — `ACCEPTABLE`, binding the same commit and tree object.
+
+## Addendum — 18th production package `internal/connector/intent/sdd` (accepted 2026-11-18)
+
+This package is R2 milestone M1 (the OpenSpec `intent.sdd` provider, change intent
+`CI-sdd-warranty-m1-6op6vl`, scope per `VD-sdd-m1-openspec-first-2026-11-17`) and is accepted here
+under the same bar.
+
+- Reviewed commit: `77cc6ba57aa1d6e42ee1bf02401a4f55d6a6173e`; production package tree object
+  `066f8b01d873986fc645d4e402a13739408ce55f` (`git rev-parse <commit>:kernel/internal/connector/intent/sdd`;
+  production `.go` byte-identical to the reviewed tree — later commits add only
+  `mutation_kill_test.go` and `survivors_test.go`).
+- Calibrated mutation evidence (`MUTANT_TEST_TIMEOUT=4m scripts/mutants.sh
+  internal/connector/intent/sdd`; the suite's honest run exceeds the 1-minute default bound): 252
+  candidates, 248 killed, 0 invalid, 4 survived. Calibration controls behaved (neutral=survived,
+  invalid=invalid, lethal=killed). The 4 survivors are all REDUNDANTLY-PINNED and declared in
+  `docs/allowed-survivors.txt` (each flipped condition admits only input a later check already
+  rejects). Zero undeclared survivors. The first sweep's 24 other survivors (per-branch gaps) were
+  closed in `mutation_kill_test.go`.
+- Committed non-author verdicts:
+  [`r2-m1-review-round1-20261117.md`](../verification/verdicts/r2-m1-review-round1-20261117.md)
+  (`NEEDS_WORK`, findings fixed) and
+  [`r2-m1-recheck-round1-20261118.md`](../verification/verdicts/r2-m1-recheck-round1-20261118.md)
+  — `ACCEPTABLE`, binding the reviewed commit above.
