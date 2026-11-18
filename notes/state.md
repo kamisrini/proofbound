@@ -2,19 +2,24 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-17
+As of: 2026-11-18
 
-## Resume — 2026-11-17
+## Resume — 2026-11-18
 
-**Exact next action:** wait for the official full re-sweep of `internal/connector/intent/sdd`
-(background, `MUTANT_TEST_TIMEOUT=4m`, log `<scratchpad>/sdd-resweep.log`); expected 252 candidates,
-248 killed, 4 survived (the 4 REDUNDANTLY-PINNED ones declared in `docs/allowed-survivors.txt`). Then
-admit `sdd` as the 18th Task-8 production package, following `7cc048f`: bump 17→18 in
-`scripts/tests/p6-task8-package-universe.test.sh` (count, '18 packages' grep, name the 18th) and the
-Task-8 SPEC (count text + an addendum citing the reviewed commit/tree object, the sweep numbers, and
-the M1 non-author verdicts `r2-m1-review-round1-20261117` + `r2-m1-recheck-round1-20261118`); commit;
-run `make check` — its only red was this package count. First sweep: 252/224/0/28; one-flip re-run of
-the 28 after `7263319`: 24 killed, 4 redundant.
+**R2 M1 is closed and the gate is green.** `make check` exit 0 at `71128fe`. `sdd` was admitted as the
+18th Task-8 production package in `9e97749`. Reviewed commit `77cc6ba`, tree `066f8b01…`. Production
+`.go` is unchanged since then. Official re-sweep with `MUTANT_TEST_TIMEOUT=4m`: 252/248/0/4. The 4
+REDUNDANTLY-PINNED survivors are declared. The `7263319` test commit had re-staled the task2 pin;
+it was refreshed in `71128fe`.
+
+**Exact next action:** report to the owner and ask which comes next. Options:
+- M2 (Spec Kit mapping; VD-sdd-m1-openspec-first-2026-11-17, Appendix A).
+- M3 (git-connector binding).
+- The non-blocking leftovers: the re-check's LOWs and round-1 F8.
+- The pre-existing projections integration-suite setup failure ("ledger tables are append-only").
+  It also fails on `61aecab^`. The owner has not decided whether to investigate or file a deferral.
+
+**Immediate blockers:** pushes are held (DEF-PUSH-HOLD-20261116). Do not push without the owner's word.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
