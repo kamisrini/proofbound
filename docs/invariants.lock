@@ -79,6 +79,73 @@ kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-23	CommitSHAs is exactly the 
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-24	Tree lookups are typed and never dereference a path.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-25	Tree lookups return non-UTF-8 paths as raw bytes.
 kernel/internal/connector/git/gitcmd/SPEC.md	G-INV-26	Parents are the recorded parents.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-1	RETIRED (draft 5): profile violations are now per-state, not sync-fatal; replaced by INV-40.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-2	Only requirements and change intents are emitted; governance maps to nothing.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-3	RETIRED (draft 5): uncovered identity is now per-unit; replaced by INV-41.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-4	RETIRED (draft 5): an unmapped status is now per-unit; replaced by INV-42.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-5	Obligation ids are never positional.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-6	RETIRED (draft 5): obligation defects are now per-record; replaced by INV-43.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-7	Record ids are deterministic.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-8	RETIRED (draft 4): the digest is a manifest digest; replaced by INV-34.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-9	Delta sections map onto the closed relation vocabulary.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-10	Feature-sibling change intents are feature-level only.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-11	RETIRED (draft 4): resolution also reads parent archive listings; replaced by INV-33.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-12	Canonical payload bytes are stable across runs.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-13	Two kits run on one provider with only the profile differing.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-14	RETIRED (draft 4): unmappable content no longer stops the sync; replaced by INV-35/36.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-15	RETIRED (draft 3): archived changes are now ingested.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-16	RETIRED (draft 3): requirement records are content-addressed; change ids remain name-derived (INV-25).
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-17	RETIRED (draft 3): archived delta records are `active`.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-18	A change's artifact digest covers the exact bytes of every file it reads.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-19	RETIRED (draft 3): replaced by INV-27.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-20	Archiving a change never makes a later sync fail.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-21	RETIRED (draft 3): no fingerprinted obligation ids.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-22	RETIRED (draft 3): no tombstones; records never change.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-23	RETIRED (draft 3): no delta fold.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-24	RETIRED (draft 4): the walk is no longer HEAD-scoped; replaced by INV-31.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-25	RETIRED (draft 5): a cross-state id collision yields two revisions of one id; replaced by INV-44.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-26	The payload is a pure function of the manifest bytes.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-27	RETIRED (draft 4): "archived by" now means absent from every parent; replaced by INV-32.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-28	A commit with no requirement records for a change yields no change intent, not an error.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-29	RETIRED (draft 5): name reuse is now per change and state; replaced by INV-45.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-30	Main specs are not ingested in R2.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-31	Every commit the git connector lists contributes its state, and every successful Resolve is a member of Revisions.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-32	A name resolves only to a change active at the commit, or archived by it and in none of its parents.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-33	Resolution reads only the commit's state and its parents' archive listings.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-34	The artifact digest is the SHA-256 of the manifest of exact committed bytes.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-35	No tenant content at any commit makes Revisions fail.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-36	RETIRED (draft 5): skips now come only from the closed cause list; replaced by INV-46.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-37	RETIRED (draft 5): the guarantee now covers append, not only validation; replaced by INV-47.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-38	RETIRED (draft 5): collisions are now per state; replaced by INV-48.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-39	Nothing inside a code fence is read as a section, entry, or rename.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-40	The profile is strict JSON; a violation makes that state unmappable, never the sync.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-41	Accountable identity comes only from the profile at the same state; uncovered makes that unit unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-42	A Spec Kit status comes only from the explicit map or the declared absent value; otherwise that record is unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-43	Duplicate ids, empty name-parts, and unpaired renames make that record unmappable; zero entries yield no record.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-44	Each distinct (key, manifest) yields exactly one requirement revision, with a content-addressed id.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-45	A reused change name makes that change unmappable at that state only.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-46	Only the closed list of data causes yields a Skip, each fixture's Skip set is exactly the pinned one, and dependants cascade.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-47	Every returned batch syncs end to end: validation, ordering, and append.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-48	Within one state, two keys minting one record id are both unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-49	A failure outside the closed cause list fails Revisions; it is never a Skip.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-50	RETIRED (draft 7): Resolve gains a fourth outcome and a name domain; replaced by INV-59.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-51	The reader shares the git connector's read contract: replace refs ignored, shallow and graft refused, refs validated.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-52	A sync containing intent.sdd events projects and rebuilds.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-53	Every payload string is valid UTF-8 without U+0000, and every statement is non-blank; a violation skips its unit.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-54	Only regular files are read under SDD roots; a symlink or gitlink a unit reads makes that unit unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-55	A path outside the SDD roots, whatever its bytes, never affects the sdd provider.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-56	`sdd` runs only when selected by name; `sync intent all` neither constructs nor walks it.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-57	The §4.2 parser agrees with OpenSpec's reader on the pinned corpus.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-58	A Spec Kit id outside the canonical obligation grammar makes that record unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-59	Resolve is total over tenant states: a revision or one of four sentinels; any other error comes only from the reader.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-60	`sync intent sdd` prints every Skip and exits 0.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-61	Unexpected object types at a root, the archive, or the profile path are state-level skips, never reader errors; files a unit neither parses nor carries are never a cause.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-62	RETIRED (draft 10): its literal-pathspec clause is untestable (§3); replaced by INV-67.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-63	RETIRED (draft 9): "equal outcomes" was false for Resolve, which also reads parents; replaced by INV-65.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-64	M1 maps OpenSpec only; a speckit profile is profile-invalid.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-65	The state key carries the mode and object id of the profile entry and of every root; equal keys imply equal changeOutcome and equal Skips.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-66	A regular file directly under changes.root or changes.archive is never a change, a unit, or a cause.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-67	Profile paths follow the literal grammar; a malformed path is profile-invalid, never a reader error.
 kernel/internal/connector/reviews/SPEC.md	R-INV-1	Committed-only input:
 kernel/internal/connector/reviews/SPEC.md	R-INV-2	Exact schema:
 kernel/internal/connector/reviews/SPEC.md	R-INV-3	Event mapping:

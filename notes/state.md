@@ -6,19 +6,17 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** R2 M1 under `CI-sdd-warranty-m1-6op6vl` — next is (1) CLI wiring + cli tests. Done so far: gitcmd read primitives (`61aecab`); core/intent
-registration (`b92adc4`); provider core (`11f1916`); P6 connector universe C4-013 (`5d1caef`); proving
-tests batches (`e110b6c`, + this commit: INV-48 pinned colliding pair, INV-51 reader contract);
-projections `eventRoute` + gates matcher route `intent.sdd`. All sdd tests pass; golangci-lint clean.
-**Remaining:** (1) cli wiring (`syncIntentOnStore` sdd-only construction, enum/dispatch/usage, skip
-printing) + `cli_test.go` (INV-56, INV-60) in `sdd/` as package `sdd_test`; (2) `sdd_projection_test.go`
-(INV-52, integration-tagged, embedded PG: sync hostile+clean history then `projections.New().Rebuild`);
-(3) copy draft 10 VERBATIM → `sdd/SPEC.md` (unblocks `specfirst` TestEveryInternalPackageHasSpecAndProof,
-currently the ONE failing unit test) + `make invariants-lock`; (4) DONE `a094e4d` (owner chose extend):
-route matrix 60 cells, census rows C3-019/C4-013/C5-053..060, consumer proofs extended — NEVER edit
-`scripts/p6-census.sh` (it bounds the P6 C6 window; see journal); (5) foundational non-author review.
-**Found during M1 (for the review):** draft 10 §12 missed `scripts/p6-task2-close.sh` (connector
-universe) and the P6 census depth; a JSON "\u0000" owner/sponsor bypassed the raw-NUL check (fixed).
+**Exact next action:** **dispatch the R2 M1 foundational-tier non-author review** (Law 9) of everything
+under `CI-sdd-warranty-m1-6op6vl` (commits `61aecab`..HEAD): the `intent/sdd` package + `sdd/SPEC.md`
+(verbatim draft 10), gitcmd G-INV-23..26, intent connector size bound + Skip report, projections/gates
+routing, the CLI `sync intent sdd`, the route matrix/census extension. Verdict →
+`docs/verification/verdicts/r2-m1-review-round1-<date>.md`. M1 code is COMPLETE: every draft-10 §9
+proving test exists and passes (unit + the INV-52 integration test against embedded Postgres, calibrated
+by a NUL-check mutant that reproduces the rebuild wedge); full kernel unit suite green; golangci-lint
+clean; SPEC lints + invariants lock green. **Not run:** `make check` (owner hold) — the intent SPEC still
+says `sdd` becomes a production provider only once `make check` passes. Review should also check the §12
+omissions found during M1 (p6-task2-close connector universe; P6 census depth) and the census-window
+lesson (never edit `scripts/p6-census.sh`).
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files

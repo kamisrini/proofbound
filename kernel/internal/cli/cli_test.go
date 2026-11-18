@@ -111,6 +111,7 @@ func TestParseCommand(t *testing.T) {
 		{[]string{"sync", "all"}, commandSyncAll},
 		{[]string{"sync", "intent", "records"}, commandSyncIntentRecords},
 		{[]string{"sync", "intent", "specdir"}, commandSyncIntentSpecdir},
+		{[]string{"sync", "intent", "sdd"}, commandSyncIntentSDD},
 		{[]string{"sync", "intent", "all"}, commandSyncIntentAll},
 		{[]string{"rebuild"}, commandRebuild},
 		{[]string{"verify"}, commandVerify},

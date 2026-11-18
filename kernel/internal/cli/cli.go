@@ -23,6 +23,7 @@ import (
 	connectorgithub "github.com/kamisrini/proofbound/kernel/internal/connector/github"
 	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
 	intentrecords "github.com/kamisrini/proofbound/kernel/internal/connector/intent/records"
+	intentsdd "github.com/kamisrini/proofbound/kernel/internal/connector/intent/sdd"
 	intentspecdir "github.com/kamisrini/proofbound/kernel/internal/connector/intent/specdir"
 	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	connectorsessions "github.com/kamisrini/proofbound/kernel/internal/connector/sessions"
@@ -34,7 +35,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>]"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -69,6 +70,7 @@ const (
 	commandGatesEnforce
 	commandMigrateHistoricalEvidence
 	commandTwinReplay
+	commandSyncIntentSDD
 )
 
 func parseCommand(args []string) command {
@@ -89,6 +91,8 @@ func parseCommand(args []string) command {
 		return commandSyncIntentRecords
 	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "specdir":
 		return commandSyncIntentSpecdir
+	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "sdd":
+		return commandSyncIntentSDD
 	case len(args) == 3 && args[0] == "sync" && args[1] == "intent" && args[2] == "all":
 		return commandSyncIntentAll
 	case len(args) == 1 && args[0] == "rebuild":
@@ -364,17 +368,11 @@ func (r committedIntentReader) read(ctx context.Context, tree, prefix string) ([
 }
 
 func syncIntentOnStore(ctx context.Context, root, selection string, ledger *store.Store, ids *core.IDGenerator) (connectorintent.Result, error) {
-	reader := committedIntentReader{root: root}
-	now := time.Now().UTC()
-	recordsProvider, err := intentrecords.New(reader, now)
+	providers, err := intentProviders(root, selection, time.Now().UTC())
 	if err != nil {
 		return connectorintent.Result{}, err
 	}
-	specdirProvider, err := intentspecdir.New(reader, now)
-	if err != nil {
-		return connectorintent.Result{}, err
-	}
-	connector, err := connectorintent.New(&connectorintent.Deps{Providers: []connectorintent.Provider{recordsProvider, specdirProvider}, IDs: ids, Logger: logger()})
+	connector, err := connectorintent.New(&connectorintent.Deps{Providers: providers, IDs: ids, Logger: logger()})
 	if err != nil {
 		return connectorintent.Result{}, err
 	}
@@ -384,6 +382,54 @@ func syncIntentOnStore(ctx context.Context, root, selection string, ledger *stor
 	}
 	result, syncErr := connector.Sync(ctx, selection, run)
 	return result, errors.Join(syncErr, run.Finish(ctx, result.Cursor, syncErr))
+}
+
+// intentProviders constructs the intent providers a selection needs. intent.sdd is constructed only
+// when selected by name: `all` keeps meaning records + specdir, so `sync all`, `verify`, and
+// delivery-enforce never walk full history (sdd SPEC §12, SDD-INV-56).
+func intentProviders(root, selection string, now time.Time) ([]connectorintent.Provider, error) {
+	if selection == "sdd" {
+		repo, err := gitcmd.New(root)
+		if err != nil {
+			return nil, err
+		}
+		reader, err := intentsdd.NewGitReader(repo)
+		if err != nil {
+			return nil, err
+		}
+		provider, err := intentsdd.New(reader, now)
+		if err != nil {
+			return nil, err
+		}
+		return []connectorintent.Provider{provider}, nil
+	}
+	reader := committedIntentReader{root: root}
+	recordsProvider, err := intentrecords.New(reader, now)
+	if err != nil {
+		return nil, err
+	}
+	specdirProvider, err := intentspecdir.New(reader, now)
+	if err != nil {
+		return nil, err
+	}
+	return []connectorintent.Provider{recordsProvider, specdirProvider}, nil
+}
+
+// writeSkips prints one line per Skip after the counts line (sdd SPEC §7, SDD-INV-60).
+func writeSkips(output io.Writer, result connectorintent.Result) error {
+	names := make([]string, 0, len(result.ByProvider))
+	for name := range result.ByProvider {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		for _, skip := range result.ByProvider[name].Skipped {
+			if _, err := fmt.Fprintf(output, "skip %s %s at %s\n", skip.Cause, skip.Unit, skip.Commit); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (reviewsResult, error) {
@@ -510,8 +556,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
 		return err
-	case commandSyncIntentRecords, commandSyncIntentSpecdir, commandSyncIntentAll:
-		selection := map[command]string{commandSyncIntentRecords: "records", commandSyncIntentSpecdir: "specdir", commandSyncIntentAll: "all"}[cmd]
+	case commandSyncIntentRecords, commandSyncIntentSpecdir, commandSyncIntentSDD, commandSyncIntentAll:
+		selection := map[command]string{commandSyncIntentRecords: "records", commandSyncIntentSpecdir: "specdir", commandSyncIntentSDD: "sdd", commandSyncIntentAll: "all"}[cmd]
 		ids, err := newIDs()
 		if err != nil {
 			return err
@@ -525,8 +571,10 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing)
-		return err
+		if _, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", result.Listed, result.Appended, result.Existing); err != nil {
+			return err
+		}
+		return writeSkips(output, result)
 	case commandMigrateHistoricalEvidence:
 		ledger, err := openHistoricalEvidenceStore(ctx, root, databaseURL)
 		if err != nil {
