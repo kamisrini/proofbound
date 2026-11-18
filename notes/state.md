@@ -6,17 +6,17 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **targeted non-author re-check** of the M1 review round 1 fixes (F1-F4, re-running
-its surviving mutants), verdict `docs/verification/verdicts/r2-m1-recheck-round1-20261118.md`. Fixed:
-F1 regular files at `specs`/directly under `specs/` ignored (real `no-changes.md`; §0 row, probe prints
-it); F2 `TestResolveIsTotal/corners` (synthesized corners, Skipped/Resolve agreement sweep, failing
-reader — both former surviving mutants now die); F3 INV-52 history carries all 15 causes, per-unit row
-asserts; F4 `prescription-lint` green (§0 words, not flag literals); F5 exact-case profile keys; F6
-`archive` → ErrUnknownChange before state causes; F7 no ancestor trees in children listings; F9 CLI
-quotes hostile units + deterministic skip/revision order; F10 interface lock + §12 as-done. F8 test-row
-sharpening NOT done (LOW). sdd/SPEC.md and draft 10 byte-identical. Then: `make check` (needs the owner
-to lift the hold) → M1 acceptance. Pre-existing, owner undecided: projections integration suite fails
-at setup on `61aecab^` too.
+**Exact next action:** **owner: lift the checks hold and run `make check`** — the ONLY remaining M1
+acceptance condition. R2 M1 is ACCEPTED by the non-author re-check
+(`docs/verification/verdicts/r2-m1-recheck-round1-20261118.md`: round-1 MEDs F1-F4 closed; real history
+1624 commits / 338 states / 810 revisions / 3 skips, all plausible). Open LOWs (non-blocking, M1
+follow-up): re-check F1 (regular file AT `specs` untested; §0 re-check-F1 answer row contradicts §4.1;
+INV-54 row), F2 (failing reader only fails Read — Parents-error mutant survives; sweep checks mapState
+not Skipped()), F3 (skip/revision sort unpinned; C1 controls + U+2028/9 printed unquoted), F4 (probe
+counts symlinks as blobs), F5 (survivors from round-1 F8 + this round not in
+`docs/allowed-survivors.txt` / deferrals). After `make check`: decide those LOWs, then R2 M2 (Spec Kit,
+Appendix A) or M3 (git-connector binding). Pre-existing, owner undecided: projections integration suite
+fails at setup on `61aecab^` too.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
