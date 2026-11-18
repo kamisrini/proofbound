@@ -696,7 +696,7 @@ review re-runs the grep.
 | `connector/intent/intent.go:215` (`ValidateRevision`) | admit `intent.sdd`. **For every provider:** enforce `len(payload) ≤ core.MaxPayloadBytes`. This is retroactively safe, because `core.Event.Validate` already rejects such payloads at append, so no ledgered event exceeds it (§10 I). It closes the partial-append path for `records` / `specdir`. **No** U+0000 rule here (round-6 F2) |
 | `connector/intent` (`Result`) | additive `Skip { Commit, Unit, Cause string; Err error }`, optional `interface{ Skipped() []Skip }`, and `ProviderResult.Skipped` (omitted when empty) |
 | `projections/projections.go:296` (`eventRoute`) | route `intent.sdd` intent kinds |
-| `gates/gates.go:304` (`intent-reference-integrity`) | include `intent.sdd` |
+| `kernel/internal/gates/gates.go:304` (`intent-reference-integrity`) | include `intent.sdd` |
 | `cli/cli.go:57-60` (command enum), `:92`-area parse, `:513-514` (dispatch), `:37` (usage) | add `sync intent sdd` |
 | `cli/cli.go:366-382` (`syncIntentOnStore`) | construct the `sdd` provider **only when the selection is `sdd`** (SDD-INV-56) |
 | `cli/cli.go:~528` (the `listed=… appended=… existing=…` print) | print one `skip …` line per `Skip` (SDD-INV-60) |
