@@ -6,8 +6,7 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** R2 M1 under `CI-sdd-warranty-m1-6op6vl` — **paused for an owner decision** on the
-P6 census / route matrix (below). Done so far: gitcmd read primitives (`61aecab`); core/intent
+**Exact next action:** R2 M1 under `CI-sdd-warranty-m1-6op6vl` — next is (1) CLI wiring + cli tests. Done so far: gitcmd read primitives (`61aecab`); core/intent
 registration (`b92adc4`); provider core (`11f1916`); P6 connector universe C4-013 (`5d1caef`); proving
 tests batches (`e110b6c`, + this commit: INV-48 pinned colliding pair, INV-51 reader contract);
 projections `eventRoute` + gates matcher route `intent.sdd`. All sdd tests pass; golangci-lint clean.
@@ -15,10 +14,9 @@ projections `eventRoute` + gates matcher route `intent.sdd`. All sdd tests pass;
 printing) + `cli_test.go` (INV-56, INV-60) in `sdd/` as package `sdd_test`; (2) `sdd_projection_test.go`
 (INV-52, integration-tagged, embedded PG: sync hostile+clean history then `projections.New().Rebuild`);
 (3) copy draft 10 VERBATIM → `sdd/SPEC.md` (unblocks `specfirst` TestEveryInternalPackageHasSpecAndProof,
-currently the ONE failing unit test) + `make invariants-lock`; (4) P6 route matrix/census — draft 10 §12
-says extend `scripts/p6-route-matrix.sh` (13 pairs/52 rows hard-coded) and `p6-census.sh`; that needs
-new `docs/plans/p6-census-rows.tsv` C5 rows + consumer proofs — OWNER DECISION pending (extend the P6
-artifacts vs. record R2 routing outside the P6 snapshot); (5) foundational non-author review.
+currently the ONE failing unit test) + `make invariants-lock`; (4) DONE `a094e4d` (owner chose extend):
+route matrix 60 cells, census rows C3-019/C4-013/C5-053..060, consumer proofs extended — NEVER edit
+`scripts/p6-census.sh` (it bounds the P6 C6 window; see journal); (5) foundational non-author review.
 **Found during M1 (for the review):** draft 10 §12 missed `scripts/p6-task2-close.sh` (connector
 universe) and the P6 census depth; a JSON "\u0000" owner/sponsor bypassed the raw-NUL check (fixed).
 
