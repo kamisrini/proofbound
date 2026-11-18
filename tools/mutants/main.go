@@ -303,7 +303,17 @@ func testArgs(pattern string) []string {
 	return append(args, pattern)
 }
 
+// testTimeout bounds one mutant's test run. MUTANT_TEST_TIMEOUT (a Go duration, e.g. "3m")
+// overrides the defaults for packages whose honest suite is slower than they are; a run that
+// exceeds the bound is reported "killed", so a bound below the clean suite's time would make the
+// neutral calibration mutant fail rather than silently inflate kills. An unparsable or
+// non-positive value is ignored.
 func testTimeout() time.Duration {
+	if v := os.Getenv("MUTANT_TEST_TIMEOUT"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			return d
+		}
+	}
 	if testTags != "" {
 		return 2 * time.Minute
 	}

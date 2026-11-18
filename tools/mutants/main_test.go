@@ -97,3 +97,19 @@ func TestValidateRange(t *testing.T) {
 		}
 	}
 }
+
+func TestTestTimeoutOverride(t *testing.T) {
+	original := testTags
+	t.Cleanup(func() { testTags = original })
+	testTags = ""
+	t.Setenv("MUTANT_TEST_TIMEOUT", "3m")
+	if got := testTimeout(); got != 3*time.Minute {
+		t.Fatalf("override timeout=%s", got)
+	}
+	for _, bad := range []string{"soon", "-1m", "0s"} {
+		t.Setenv("MUTANT_TEST_TIMEOUT", bad)
+		if got := testTimeout(); got != time.Minute {
+			t.Fatalf("%q must fall back to the default, got %s", bad, got)
+		}
+	}
+}
