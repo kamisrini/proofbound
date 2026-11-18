@@ -1,0 +1,6 @@
+{
+  "schema": "proofbound.sdd-record-id-collision.v1",
+  "note": "Draft 10 SDD-INV-48: two change names with one slug whose delta records (capability core, the synth_test.go testProfile, delta 'Do' / 'The system SHALL do.') mint the same record id. Found offline by a birthday search over a + {-,_,.}^k + b (k <= 12); the search reproduces with the manifest and suffix rules of draft 10 section 4.3.",
+  "names": ["a.._-.--_..b", "a---__-___-_b"],
+  "suffix": "buw465"
+}

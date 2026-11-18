@@ -6,22 +6,21 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **M1 code** under `CI-sdd-warranty-m1-6op6vl` (owner-accepted 2026-11-17;
-implements BR rev 0003 O-1/O-2/O-10, OpenSpec only). Order: (1) DONE `61aecab` — gitcmd `CommitSHAs`
-/ `Parents` / `TreeEntries` / `Blob` (G-INV-23..26, lock appended); (2a) DONE `b92adc4` — core
-`SourceIntentSDD`, intent connector admits `sdd`, `ValidateRevision` size bound, `Skip`/`Skipper`/
-`ProviderResult.Skipped` (INT-INV-13), intent SPEC §2/§4/§6 amended; (2b) IN PROGRESS — provider
-core committed (profile/parser/ids/reader/changeOutcome/Revisions/Resolve) and already passes
-SDD-INV-46 (all 8 fixtures' exact skip sets) and SDD-INV-59 (all 21 Resolve pins), calibrated; most §9 proving tests now written and passing (found
-and fixed a real bug: a JSON "\u0000" owner/sponsor escaped the raw-NUL check). REMAINING tests:
-TestRecordIDCollisionIsPerState (needs an offline-searched colliding pair),
-gitcmd_test.go::TestSDDReaderSharesReadContract, cli_test.go (INV-56, 60), sdd_projection_test.go
-(INV-52); then `sdd` provider (profile, §4.2 parser, ids, manifests,
-`changeOutcome`, Revisions/Skipped/Resolve) against the committed fixtures and pins; (3) intent
-connector + core + projections + gates + CLI sites (draft 10 §12); (4) copy draft 10 VERBATIM to
-`sdd/SPEC.md` in the commit with its tests, regenerate `docs/invariants.lock`, route matrix, census;
-(5) foundational-tier non-author review. Governed commits carry `Intent: CI-sdd-warranty-m1-6op6vl`
-+ owner `Authorized-By`. Excluded: Spec Kit, git-connector wiring (M3), `sdd` in `all`.
+**Exact next action:** R2 M1 under `CI-sdd-warranty-m1-6op6vl` — **paused for an owner decision** on the
+P6 census / route matrix (below). Done so far: gitcmd read primitives (`61aecab`); core/intent
+registration (`b92adc4`); provider core (`11f1916`); P6 connector universe C4-013 (`5d1caef`); proving
+tests batches (`e110b6c`, + this commit: INV-48 pinned colliding pair, INV-51 reader contract);
+projections `eventRoute` + gates matcher route `intent.sdd`. All sdd tests pass; golangci-lint clean.
+**Remaining:** (1) cli wiring (`syncIntentOnStore` sdd-only construction, enum/dispatch/usage, skip
+printing) + `cli_test.go` (INV-56, INV-60) in `sdd/` as package `sdd_test`; (2) `sdd_projection_test.go`
+(INV-52, integration-tagged, embedded PG: sync hostile+clean history then `projections.New().Rebuild`);
+(3) copy draft 10 VERBATIM → `sdd/SPEC.md` (unblocks `specfirst` TestEveryInternalPackageHasSpecAndProof,
+currently the ONE failing unit test) + `make invariants-lock`; (4) P6 route matrix/census — draft 10 §12
+says extend `scripts/p6-route-matrix.sh` (13 pairs/52 rows hard-coded) and `p6-census.sh`; that needs
+new `docs/plans/p6-census-rows.tsv` C5 rows + consumer proofs — OWNER DECISION pending (extend the P6
+artifacts vs. record R2 routing outside the P6 snapshot); (5) foundational non-author review.
+**Found during M1 (for the review):** draft 10 §12 missed `scripts/p6-task2-close.sh` (connector
+universe) and the P6 census depth; a JSON "\u0000" owner/sponsor bypassed the raw-NUL check (fixed).
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files

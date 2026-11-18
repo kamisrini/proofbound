@@ -3,6 +3,7 @@ package sdd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -588,6 +589,62 @@ func TestBatchSyncsEndToEnd(t *testing.T) {
 		}
 		if name == "hostile" && len(res.ByProvider["sdd"].Skipped) == 0 {
 			t.Fatal("hostile history reported no skips")
+		}
+	}
+}
+
+// TestRecordIDCollisionIsPerState proves SDD-INV-48 with the pinned colliding pair: at one state
+// both records are unmappable (record-id-collision); at two different states they are two
+// revisions of one id, bound by digest.
+func TestRecordIDCollisionIsPerState(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "record-id-collision.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pin struct {
+		Names  []string `json:"names"`
+		Suffix string   `json:"suffix"`
+	}
+	if err := json.Unmarshal(raw, &pin); err != nil || len(pin.Names) != 2 {
+		t.Fatalf("pin: %v", err)
+	}
+	delta := addedDelta("Do", "The system SHALL do.")
+	together := newSynth(t)
+	for _, n := range pin.Names {
+		together.write("openspec/changes/"+n+"/specs/core/spec.md", delta)
+	}
+	together.commit("both at one state")
+	revs, skips := syncAll(t, together.provider())
+	for _, n := range pin.Names {
+		if !skips["requirement openspec/changes/"+n+"/specs/core/spec.md|record-id-collision"] {
+			t.Fatalf("%s not skipped: %s", n, fmtSkips(skips))
+		}
+	}
+	if len(revs) != 0 {
+		t.Fatalf("colliding records emitted: %v", revs)
+	}
+	apart := newSynth(t)
+	apart.write("openspec/changes/"+pin.Names[0]+"/specs/core/spec.md", delta)
+	apart.commit("first alone")
+	apart.remove("openspec/changes/" + pin.Names[0])
+	apart.write("openspec/changes/"+pin.Names[1]+"/specs/core/spec.md", delta)
+	apart.commit("second alone")
+	all, err := apart.provider().Revisions(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids, digests := map[string]bool{}, map[string]bool{}
+	for _, r := range all {
+		if r.Kind == core.KindRequirement {
+			ids[r.NativeID], digests[r.ArtifactSHA256] = true, true
+		}
+	}
+	if len(ids) != 1 || len(digests) != 2 {
+		t.Fatalf("want one id with two digests: ids=%v digests=%d", ids, len(digests))
+	}
+	for id := range ids {
+		if !strings.HasSuffix(id, "-"+pin.Suffix) {
+			t.Fatalf("pinned suffix drifted: %s", id)
 		}
 	}
 }

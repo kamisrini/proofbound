@@ -301,7 +301,7 @@ func latestIntentProof(ctx context.Context, s *store.Store, rule, commit string)
 		match := false
 		switch rule {
 		case "intent-reference-integrity":
-			match = (record.Event.Source == core.SourceIntentRecords || record.Event.Source == core.SourceIntentSpecdir || record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded)
+			match = (record.Event.Source == core.SourceIntentRecords || record.Event.Source == core.SourceIntentSpecdir || record.Event.Source == core.SourceIntentSDD || record.Event.Source == core.SourceGit && record.Event.Kind == core.KindCommitRecorded)
 		case "intent-verdict-integrity":
 			match = record.Event.Source == core.SourceReviews && (record.Event.Kind == core.KindReviewVerdict || record.Event.Kind == core.KindRequirementReview)
 		case "intent-delivery-readiness":

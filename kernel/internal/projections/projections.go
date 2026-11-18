@@ -293,7 +293,7 @@ func eventRoute(s core.Source, k core.Kind) route {
 	if s == core.SourceGitHub && (k == core.KindGitHubWorkflow || k == core.KindGitHubDeployment) {
 		return routeGitHub
 	}
-	if (s == core.SourceIntentRecords || s == core.SourceIntentSpecdir) && (k == core.KindBusinessDecision || k == core.KindRequirement || k == core.KindChangeIntent) {
+	if (s == core.SourceIntentRecords || s == core.SourceIntentSpecdir || s == core.SourceIntentSDD) && (k == core.KindBusinessDecision || k == core.KindRequirement || k == core.KindChangeIntent) {
 		return routeIntent
 	}
 	return routeUnsupported
