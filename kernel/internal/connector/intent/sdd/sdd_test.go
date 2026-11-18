@@ -199,6 +199,110 @@ func TestResolveIsTotal(t *testing.T) {
 			}
 		}
 	}
+	t.Run("corners", testResolveTotalityCorners)
+}
+
+// failingReader fails every read, to prove a reader failure is never a tenant sentinel.
+type failingReader struct{ Reader }
+
+func (failingReader) Read(context.Context, string) ([]Artifact, error) {
+	return nil, errors.New("disk on fire")
+}
+
+// testResolveTotalityCorners (a TestResolveIsTotal subtest) completes SDD-INV-59's row: the synthesized corners the replay
+// helper cannot commit, the Skipped()/Resolve agreement sweep, and a failing reader (M1 review F2).
+func testResolveTotalityCorners(t *testing.T) {
+	ctx := context.Background()
+	s := newSynth(t)
+	s.remove(ProfilePath)
+	s.write("openspec/changes/early/specs/core/spec.md", addedDelta("Early", "E."))
+	noProfile := s.commit("before opting in")
+	s.write(ProfilePath, testProfile)
+	s.remove("openspec/changes")
+	s.write("real/x/specs/core/spec.md", addedDelta("X", "X."))
+	s.symlink("openspec/changes", "../real")
+	symRoot := s.commit("symlinked root")
+	s.remove("openspec/changes")
+	s.write("openspec/changes/archive", "a blob archive")
+	blobArchive := s.commit("blob archive")
+	s.remove("openspec/changes/archive")
+	s.write("openspec/changes/target/specs/core/spec.md", addedDelta("T", "T."))
+	s.symlink("openspec/changes/linked", "target")
+	s.write("openspec/changes/symdelta/specs/core/real.md", addedDelta("R", "R."))
+	s.symlink("openspec/changes/symdelta/specs/core/spec.md", "real.md")
+	clean := s.commit("change-level corners")
+	p := s.provider()
+	for _, c := range []struct {
+		commit, name, want string
+	}{
+		{noProfile, "early", "ErrUnknownChange"},
+		{symRoot, "x", "ErrUnmappable:non-regular-file"},
+		{symRoot, "archive", "ErrUnknownChange"},
+		{blobArchive, "target", "ErrUnmappable:non-regular-file"},
+		{blobArchive, "archive", "ErrUnknownChange"},
+		{clean, "linked", "ErrUnmappable:non-regular-file"},
+		{clean, "symdelta", "ErrUnmappable:cascade"},
+		{clean, "target", "revision"},
+	} {
+		if _, err := p.Resolve(ctx, c.commit, c.name); outcomeOf(err) != c.want {
+			t.Errorf("Resolve(%s): got %s want %s", c.name, outcomeOf(err), c.want)
+		}
+	}
+	// Agreement sweep: at every commit of every committed history and this one, each change Skip
+	// mapState reports is exactly Resolve's ErrUnmappable cause for that name.
+	type history struct {
+		p      *Provider
+		r      Reader
+		commit []string
+	}
+	var hs []history
+	for _, h := range []string{"openspec-history", "branches", "head-on-leftover", "resolve-edges"} {
+		root, shas := replayHistory(t, h)
+		repo, err := gitcmd.New(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gr, _ := NewGitReader(repo)
+		hp, _ := New(gr, timeOne)
+		hs = append(hs, history{hp, gr, shas})
+	}
+	repo, _ := gitcmd.New(s.root)
+	gr, _ := NewGitReader(repo)
+	sp, _ := New(gr, timeOne)
+	hs = append(hs, history{sp, gr, []string{noProfile, symRoot, blobArchive, clean}})
+	checked := 0
+	for _, h := range hs {
+		for _, c := range h.commit {
+			arts, err := h.r.Read(ctx, c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			st, err := h.p.mapState(arts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, sk := range st.skips {
+				n, ok := strings.CutPrefix(sk.unit, "change ")
+				if !ok {
+					continue
+				}
+				checked++
+				if _, err := h.p.Resolve(ctx, c, n); outcomeOf(err) != "ErrUnmappable:"+sk.cause {
+					t.Errorf("%s at %s: Skipped says %s, Resolve says %s", n, c, sk.cause, outcomeOf(err))
+				}
+			}
+		}
+	}
+	if checked == 0 {
+		t.Fatal("agreement sweep checked nothing")
+	}
+	// A failing reader yields none of the tenant sentinels.
+	fp, _ := New(failingReader{gr}, timeOne)
+	_, err := fp.Resolve(ctx, clean, "target")
+	var u *UnmappableError
+	if err == nil || errors.Is(err, ErrUnknownChange) || errors.Is(err, ErrArchivedEarlier) || errors.Is(err, ErrNoChangeIntent) || errors.As(err, &u) {
+		t.Fatalf("a reader failure surfaced as a tenant outcome: %v", err)
+	}
 }
 
 func outcomeOf(err error) string {
@@ -768,6 +872,8 @@ func TestProfileIsStrict(t *testing.T) {
 		"non-utf8":        profileWith(`"owner": "team-fixture"`, "\"owner\": \"\xff\""),
 		"no owners":       profileWith(`[ { "pattern": "openspec/**", "owner": "team-fixture" } ]`, `[]`),
 		"trailing data":   testProfile + "{}",
+		"upper-case key":  profileWith(`"kit": "openspec",`, `"KIT": "openspec",`),
+		"case-twin keys":  profileWith(`"kit": "openspec",`, `"kit": "speckit", "Kit": "openspec",`),
 		"not json":        "not json",
 	}
 	for name, body := range cases {
@@ -859,6 +965,8 @@ func TestNonRegularFilesAreUnits(t *testing.T) {
 	s.symlink("openspec/changes/archive/2026-01-01-sym-archived", "../target")
 	s.write("openspec/changes/designlink/specs/core/spec.md", addedDelta("D", "The system SHALL design."))
 	s.symlink("openspec/changes/designlink/design.md", "../target/specs/core/spec.md")
+	s.write("openspec/changes/notes-only/specs/no-changes.md", "No spec files are needed for this fix.\n")
+	s.write("openspec/changes/notes-only/proposal.md", "# notes only")
 	s.commit("links", "openspec/changes/gitlinked", "openspec/changes/designlink/vendor")
 	revs, skips := syncAll(t, s.provider())
 	for _, want := range []string{
@@ -879,6 +987,16 @@ func TestNonRegularFilesAreUnits(t *testing.T) {
 	}
 	if _, ok := revs[ciKind+"openspec/changes/target"]; !ok {
 		t.Fatal("regular sibling not emitted")
+	}
+	// A regular file directly under specs/ (OpenSpec's real "no-changes.md" shape, M1 review F1) is
+	// ignored, as OpenSpec ignores it: no unit, no cause, and the change is simply spec-less.
+	for k := range skips {
+		if strings.Contains(k, "notes-only") {
+			t.Fatalf("a plain note under specs/ became %s", k)
+		}
+	}
+	if _, err := s.provider().Resolve(context.Background(), s.git("rev-parse", "HEAD"), "notes-only"); !errors.Is(err, ErrNoChangeIntent) {
+		t.Fatalf("notes-only change: %v", err)
 	}
 }
 

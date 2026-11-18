@@ -242,12 +242,18 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 				continue
 			}
 			if specs.Mode != "040000" {
-				addRecord(n, &record{change: n, unitPath: specs.Path, skip: "non-regular-file", posLine: lineOf(specs)})
+				if !specs.Regular { // a regular file named specs is ignored, as OpenSpec ignores it
+					addRecord(n, &record{change: n, unitPath: specs.Path, skip: "non-regular-file", posLine: lineOf(specs)})
+				}
 				continue
 			}
 			for _, capDir := range children[specs.Path] {
 				if capDir.Mode != "040000" {
-					addRecord(n, &record{change: n, unitPath: capDir.Path, skip: "non-regular-file", posLine: lineOf(capDir)})
+					// A regular file directly under specs/ (e.g. a "no spec changes" note) is ignored,
+					// as OpenSpec's reader ignores it; only a symlink or gitlink is a cause.
+					if !capDir.Regular {
+						addRecord(n, &record{change: n, unitPath: capDir.Path, skip: "non-regular-file", posLine: lineOf(capDir)})
+					}
 					continue
 				}
 				spec, ok := byPath[capDir.Path+"/spec.md"]
@@ -362,5 +368,13 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 		}
 		st.revisions = append(st.revisions, *cr.rev)
 	}
+	sort.Slice(st.skips, func(i, j int) bool {
+		a, b := st.skips[i], st.skips[j]
+		return a.unit+"\x00"+a.cause+"\x00"+a.digest < b.unit+"\x00"+b.cause+"\x00"+b.digest
+	})
+	sort.Slice(st.revisions, func(i, j int) bool {
+		a, b := st.revisions[i], st.revisions[j]
+		return string(a.Kind)+"\x00"+a.NativeID+"\x00"+a.ArtifactSHA256 < string(b.Kind)+"\x00"+b.NativeID+"\x00"+b.ArtifactSHA256
+	})
 	return st, nil
 }

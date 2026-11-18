@@ -9,6 +9,16 @@ It is copied **verbatim** into `kernel/internal/connector/intent/sdd/SPEC.md` in
 adds the code and tests it cites. It cannot land earlier: `invariant-lint` fails `make check` when a
 kernel SPEC cites a test that does not exist. M1's foundational-tier non-author review checks these
 six answers.
+
+**Amended in M1 (2026-11-18), answering the M1 foundational review round 1**
+(`docs/verification/verdicts/r2-m1-review-round1-20261117.md`):
+- **F1:** §4.1's layout rule no longer treats a regular file at `specs` or directly under `specs/`
+  as a cause. OpenSpec's reader ignores it, and real history has one (`no-changes.md`, §0).
+- **F4:** §0 names git walk options in words, not as backticked literals.
+- **F10:** §2's interface lock lists every exported name; §12 records how the census and connector
+  universe were really registered.
+- **F2 and F3:** test-only (SDD-INV-59, SDD-INV-52).
+
 **Self-contained:** every definition the contract uses is in this file, and earlier drafts are cited
 only as history. This draft becomes `kernel/internal/connector/intent/sdd/SPEC.md` in the same M1
 commit as the code and tests it cites, together with every amendment listed in §12.
@@ -38,7 +48,7 @@ labelled.
 |---|---|---|
 | Commits on the walk / merges / roots | 1624 / 120 / 1 | The provider walks this set (§3) |
 | Distinct SDD states | 338 | Mapping cost tracks states (§3) |
-| Commits touching `openspec/changes` on HEAD path-limited / `--all --full-history` (labelled: other walks) | 256 / 451 | Path-limited walks miss states (§3) |
+| Commits touching `openspec/changes` on the HEAD path-limited walk / on all refs with full history (labelled: other walks) | 256 / 451 | Path-limited walks miss states (§3) |
 | Changes observed active / archived | 135 / 108 | — |
 | **Commits carrying a change both active and archived** | **23** (1 name) | Unmappable for that change at that state only (§7) |
 | …of which are ref tips | **4 remote branches**, 0 tags; `main` itself sat on this state for 13 consecutive first-parent commits, 8 of them non-merge (probe-printed; round 7's "9" was one too many) | Neither tip-fatal nor HEAD-fatal is acceptable (§10 D, SDD-INV-35) |
@@ -47,6 +57,7 @@ labelled.
 | Changes with zero requirement entries at some commit | 38 | Absence, never an error (§5) |
 | Requirement removals / statement changes between consecutive observations of a change (date order across all refs, so branch interleaving inflates both) | 83 (17 changes) / 39 (9 changes) | Content-addressed records (§4) |
 | Requirements with no statement line (statement = name) | 4 | §4.2 fallback |
+| Regular files directly under a change's `specs/` (`archive/2026-01-30-opencode-command-references/specs/no-changes.md`, "no spec files are needed") | 1 | Ignored, as OpenSpec ignores it: never a unit or cause (§4.1) |
 | Commits with a **regular file directly under `openspec/changes`** (`IMPLEMENTATION_ORDER.md`, `skills-only-migration.napkin.md`) | **1393** / 1624 | Never a change (§5, SDD-INV-66) |
 | RENAMED `FROM` entries in a real delta section | 0 | RENAMED is tested on fixtures only (§4.2) |
 | Distinct delta blobs (labelled: all objects reachable on any ref) / blobs whose obligations change under fence masking | 401 / **1** (`improve-init-onboarding/specs/cli-init`: a column-0 `## TL;DR` inside a fence) | Masking is required (§4.2, SDD-INV-39) |
@@ -120,6 +131,16 @@ var (
     ErrArchivedEarlier = errors.New("sdd: change was archived before this commit")         // §6
     ErrNoChangeIntent  = errors.New("sdd: change exists at this commit but has no intent") // §6
 )
+
+// UnmappableError carries one §7 cause; it wraps intent.ErrUnmappable.
+type UnmappableError struct{ Cause string }
+
+const ProfilePath = ".proofbound/sdd-profile.json" // §2.1
+const Kit = "openspec"                              // the only kit M1 maps; suffix hashes it (§4.3)
+
+// GitReader is the production Reader over the git connector's gitcmd.Repo (§3).
+type GitReader struct{ /* unexported */ }
+func NewGitReader(repo *gitcmd.Repo) (*GitReader, error)
 
 func New(reader Reader, observedAt time.Time) (*Provider, error)
 func (p *Provider) Name() string                                             // "sdd"
@@ -231,9 +252,11 @@ Field rules:
 - **Layout types (re-check F1, F3).** On a delta path `<change>/specs/<cap>/spec.md`, `<change>/specs`
   and `<change>/specs/<cap>` must be trees, and `spec.md` must be a regular file (`100644` or
   `100755`).
-  - If a symlink, gitlink, or blob occupies `specs` or `specs/<cap>`, or a symlink, gitlink, or tree
+  - If a symlink or gitlink occupies `specs` or `specs/<cap>`, or a symlink, gitlink, or tree
     occupies `spec.md`, the unit is **one record unit** at that position (`requirement <path of the
     position>`), skipped with `non-regular-file`.
+  - A **regular file** at `specs`, or directly under `specs/` (OpenSpec's real `no-changes.md` note,
+    §0), is ignored, as OpenSpec's reader ignores it: never a record unit and never a cause.
   - Every other entry in a change directory, of any type, is never a record unit and never a cause.
 - **Record unit (round-8 F1).** Every delta path matched by `requirements.paths` (active
   `<root>/<name>/specs/<capability>/spec.md`, or archived
@@ -715,7 +738,8 @@ release documentation, at the R2 release. That is not an M1 code site.
 | Site | Change |
 |---|---|
 | `scripts/p6-route-matrix.sh:19-24` | add the three `intent.sdd` routes, then regenerate the `@generated` route matrix |
-| `scripts/p6-census.sh:233-235` | add the `intent.sdd` rows |
+| `docs/plans/p6-census-rows.tsv` | add C3-019 (the package), C4-013 (the connector), and C5-053..060 (the two `intent.sdd` kinds × four consumers). **As done:** `scripts/p6-census.sh` itself is deliberately **not** edited, because its last commit bounds the closed P6 C6 intent-commit window; editing it pulls every later commit into the P6 census |
+| `scripts/p6-task2-close.sh` | add `intent/sdd` to the pinned connector universe, classified C4-013 synthetic (missed by draft 10, found by the gate during M1) |
 
 **Intent SPEC text, M1:**
 - **§1:** point at `sdd/SPEC.md`.

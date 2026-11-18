@@ -180,11 +180,14 @@ func (p *Provider) Resolve(ctx context.Context, commit, name string) (intent.Rev
 	if err != nil {
 		return intent.Revision{}, err
 	}
+	if st.archiveBase != "" && name == st.archiveBase {
+		return intent.Revision{}, ErrUnknownChange // §6 line 1: the name domain precedes every state rule
+	}
 	if st.stateSkip != "" {
 		return intent.Revision{}, unmappable(st.stateSkip)
 	}
 	cr, ok := st.changes[name]
-	if name == st.archiveBase || !ok {
+	if !ok {
 		return intent.Revision{}, ErrUnknownChange
 	}
 	if cr.skip != "" {

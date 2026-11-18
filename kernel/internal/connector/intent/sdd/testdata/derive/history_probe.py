@@ -314,3 +314,10 @@ for c in walk:
     if blobs:
         root_blob_commits += 1; root_blob_names.update(b.rsplit("/", 1)[-1] for b in blobs)
 print(f"commits with a regular file directly under openspec/changes (never a change, draft 9 section 5): {root_blob_commits} {sorted(root_blob_names)}")
+spec_notes = set()
+for c in walk:
+    for line in git("ls-tree", "-r", c, "--", "openspec/changes").decode().splitlines():
+        meta, p = line.split("\t", 1)
+        if meta.split()[1] == "blob" and re.match(r"^openspec/changes/(archive/)?[^/]+/specs/[^/]+$", p) and not p.endswith("/specs"):
+            spec_notes.add(p)
+print(f"regular files directly under a change's specs/ (ignored, draft 10 section 4.1): {len(spec_notes)} {sorted(spec_notes)}")

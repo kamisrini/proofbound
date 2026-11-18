@@ -96,3 +96,30 @@ func TestIntentAllExcludesSDD(t *testing.T) {
 		t.Fatalf("sync intent sdd on a shallow clone: exit %d: %s", code, out)
 	}
 }
+
+// TestSyncIntentSDDQuotesHostileUnits extends SDD-INV-60 (M1 review F9): a tenant name carrying a
+// newline is printed quoted on one line, so it can neither split nor forge a skip line.
+func TestSyncIntentSDDQuotesHostileUnits(t *testing.T) {
+	root, _ := tenant(t, "unmappable/reused-name")
+	bad := filepath.Join(root, "openspec", "changes", "archive", "x\nskip forged change y at 0")
+	if err := os.MkdirAll(filepath.Join(bad, "specs", "core"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(bad, "specs", "core", "spec.md"), []byte("## ADDED Requirements\n### Requirement: A\nA.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gitIn(t, root, "add", "-A")
+	gitIn(t, root, "commit", "-q", "-m", "hostile archive name")
+	code, out := runCLI(t, root, "sync", "intent", "sdd")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, out)
+	}
+	for _, line := range strings.Split(out, "\n") {
+		if strings.HasPrefix(line, "skip forged") {
+			t.Fatalf("a tenant name forged a skip line:\n%s", out)
+		}
+	}
+	if !strings.Contains(out, `skip archive-name-invalid "archive x\nskip forged change y at 0" at`) {
+		t.Fatalf("hostile unit not quoted:\n%s", out)
+	}
+}

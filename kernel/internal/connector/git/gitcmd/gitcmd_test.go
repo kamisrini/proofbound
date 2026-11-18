@@ -1057,6 +1057,10 @@ func TestTreeEntries_TypedLiteralAndNeverDereferenced(t *testing.T) {
 	if !reflect.DeepEqual(paths, want) {
 		t.Fatalf("recursive children=%q want %q", paths, want)
 	}
+	nested, err := repo.TreeEntries(ctx, head, "root/dir", true, true)
+	if err != nil || len(nested) != 1 || nested[0].Path != "root/dir/f.md" {
+		t.Fatalf("children of a nested path must not include its ancestors: %+v %v", nested, err)
+	}
 	if b, err := repo.Blob(ctx, own("root/plain.md").OID); err != nil || string(b) != "p" {
 		t.Fatalf("blob=%q err=%v", b, err)
 	}

@@ -6,19 +6,17 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** fix R2 M1 review round 1 (`docs/verification/verdicts/r2-m1-review-round1-20261117.md`,
-NEEDS_WORK, 4 MED + 6 LOW, no HIGH), then a non-author re-check of F1-F4 re-running the surviving
-mutants. F1: a regular file directly under `specs/` (real: `archive/2026-01-30-opencode-command-references/
-specs/no-changes.md`) is wrongly a `non-regular-file` record unit — OpenSpec ignores it; must amend
-§4.1 layout rule in draft 10 AND sdd/SPEC.md (byte copy) + measure it in §0. F2: INV-59 test lacks the
-synthesized rows, the Skipped/Resolve agreement sweep and the failing-reader case (2 mutants survive).
-F3: INV-52 covers 11/15 causes, weak row assertions. F4: `prescription-lint` (make check) fails on
-sdd/SPEC.md §0 quoting `--all --full-history`. LOWs F5-F10 (case-insensitive JSON keys in profile;
-Resolve("archive") at state-level cause; ls-tree -t ancestors in Read; §9 kills; CLI prints raw
-tenant bytes + nondeterministic skip order; §12/interface-lock drift). Real-history run: 1624 commits,
-338 states, 810 revisions, 5 skips, no errors, 22587 sampled Resolve calls all consistent.
-Pre-existing (not M1): projections integration tests fail at setup ("ledger tables are append-only")
-on 61aecab^ too — raise with owner.
+**Exact next action:** **targeted non-author re-check** of the M1 review round 1 fixes (F1-F4, re-running
+its surviving mutants), verdict `docs/verification/verdicts/r2-m1-recheck-round1-20261118.md`. Fixed:
+F1 regular files at `specs`/directly under `specs/` ignored (real `no-changes.md`; §0 row, probe prints
+it); F2 `TestResolveIsTotal/corners` (synthesized corners, Skipped/Resolve agreement sweep, failing
+reader — both former surviving mutants now die); F3 INV-52 history carries all 15 causes, per-unit row
+asserts; F4 `prescription-lint` green (§0 words, not flag literals); F5 exact-case profile keys; F6
+`archive` → ErrUnknownChange before state causes; F7 no ancestor trees in children listings; F9 CLI
+quotes hostile units + deterministic skip/revision order; F10 interface lock + §12 as-done. F8 test-row
+sharpening NOT done (LOW). sdd/SPEC.md and draft 10 byte-identical. Then: `make check` (needs the owner
+to lift the hold) → M1 acceptance. Pre-existing, owner undecided: projections integration suite fails
+at setup on `61aecab^` too.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files

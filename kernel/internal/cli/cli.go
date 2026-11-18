@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/kamisrini/proofbound/kernel/internal/connector/checks"
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
@@ -415,6 +416,20 @@ func intentProviders(root, selection string, now time.Time) ([]connectorintent.P
 	return []connectorintent.Provider{recordsProvider, specdirProvider}, nil
 }
 
+// printableUnit keeps a tenant-controlled unit name on one line: a name with a control byte or
+// invalid UTF-8 is printed Go-quoted, so it can neither split nor forge a skip line.
+func printableUnit(unit string) string {
+	if !utf8.ValidString(unit) {
+		return strconv.Quote(unit)
+	}
+	for _, r := range unit {
+		if r < 0x20 || r == 0x7f {
+			return strconv.Quote(unit)
+		}
+	}
+	return unit
+}
+
 // writeSkips prints one line per Skip after the counts line (sdd SPEC §7, SDD-INV-60).
 func writeSkips(output io.Writer, result connectorintent.Result) error {
 	names := make([]string, 0, len(result.ByProvider))
@@ -424,7 +439,7 @@ func writeSkips(output io.Writer, result connectorintent.Result) error {
 	sort.Strings(names)
 	for _, name := range names {
 		for _, skip := range result.ByProvider[name].Skipped {
-			if _, err := fmt.Fprintf(output, "skip %s %s at %s\n", skip.Cause, skip.Unit, skip.Commit); err != nil {
+			if _, err := fmt.Fprintf(output, "skip %s %s at %s\n", skip.Cause, printableUnit(skip.Unit), skip.Commit); err != nil {
 				return err
 			}
 		}

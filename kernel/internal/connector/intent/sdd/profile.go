@@ -156,6 +156,14 @@ func parseProfile(raw []byte) (profile, error) {
 	return p, nil
 }
 
+// profileKeys is every key §2.1 allows, in its exact case: encoding/json matches keys
+// case-insensitively, so without this "KIT" would be accepted and "kit" + "Kit" would both map.
+var profileKeys = map[string]bool{
+	"schema": true, "kit": true, "requirements": true, "paths": true, "changes": true, "mode": true,
+	"root": true, "archive": true, "status": true, "owners": true, "sponsors": true,
+	"pattern": true, "owner": true, "sponsor": true,
+}
+
 // strictShape rejects duplicate object keys and null values anywhere in the document, which
 // encoding/json would otherwise accept silently.
 func strictShape(raw []byte) error {
@@ -180,7 +188,7 @@ func strictShape(raw []byte) error {
 						return err
 					}
 					key, ok := k.(string)
-					if !ok || seen[key] {
+					if !ok || seen[key] || !profileKeys[key] {
 						return fmt.Errorf("duplicate key %v", k)
 					}
 					seen[key] = true

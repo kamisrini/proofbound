@@ -154,8 +154,8 @@ func (r *Repo) TreeEntries(ctx context.Context, commit, path string, children, r
 		if !ok || len(fields) != 3 {
 			return nil, fmt.Errorf("gitcmd: tree of %s at %q: misframed entry", commit, path)
 		}
-		if children == (name == path) {
-			continue // own-entry mode wants only path; children mode never reports path itself (-t does)
+		if !children && name != path || children && !strings.HasPrefix(name, path+"/") {
+			continue // own-entry mode wants only path; children mode only what lies under it (-t also lists ancestors)
 		}
 		entries = append(entries, TreeEntry{Mode: fields[0], Type: fields[1], OID: fields[2], Path: name})
 	}
