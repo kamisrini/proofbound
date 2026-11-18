@@ -6,14 +6,15 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** admit `intent/sdd` as the **18th** frozen P6 Task-8 production package (owner chose
-the full-sweep route 2026-11-18). A full `scripts/mutants.sh internal/connector/intent/sdd` sweep is
-RUNNING in the background with `MUTANT_TEST_TIMEOUT=4m` (override added in `d617f61`; sdd's clean
-suite is 63 s), log `<scratchpad>/sdd-sweep.log`. When it finishes: kill or declare (EQUIVALENT /
-UNREACHABLE only, with reasons) every survivor in `docs/allowed-survivors.txt`; then follow `7cc048f`'s
-pattern — bump 17→18 in `scripts/tests/p6-task8-package-universe.test.sh` and the Task-8 SPEC (+ an
-addendum citing the M1 non-author verdicts and the sweep), commit, and run `make check` (hold lifted;
-its ONLY red was this package count). Survivors from both M1 reviews are already killed (`48614c3`).
+**Exact next action:** wait for the official full re-sweep of `internal/connector/intent/sdd`
+(background, `MUTANT_TEST_TIMEOUT=4m`, log `<scratchpad>/sdd-resweep.log`); expected 252 candidates,
+248 killed, 4 survived (the 4 REDUNDANTLY-PINNED ones declared in `docs/allowed-survivors.txt`). Then
+admit `sdd` as the 18th Task-8 production package, following `7cc048f`: bump 17→18 in
+`scripts/tests/p6-task8-package-universe.test.sh` (count, '18 packages' grep, name the 18th) and the
+Task-8 SPEC (count text + an addendum citing the reviewed commit/tree object, the sweep numbers, and
+the M1 non-author verdicts `r2-m1-review-round1-20261117` + `r2-m1-recheck-round1-20261118`); commit;
+run `make check` — its only red was this package count. First sweep: 252/224/0/28; one-flip re-run of
+the 28 after `7263319`: 24 killed, 4 redundant.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
