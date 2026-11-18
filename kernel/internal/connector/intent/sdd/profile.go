@@ -90,6 +90,8 @@ func firstMatch(rules []rule, path string) (string, bool) {
 var errProfile = errors.New("profile-invalid")
 
 // parseProfile applies every SPEC §2.1 rule; any violation is errProfile (cause profile-invalid).
+// Values are checked decoded as well as raw: a JSON "\u0000" escape decodes to U+0000 without
+// a raw NUL byte, and would otherwise reach a TEXT projection column.
 func parseProfile(raw []byte) (profile, error) {
 	if !utf8.Valid(raw) || bytes.IndexByte(raw, 0) >= 0 {
 		return profile{}, errProfile
@@ -140,13 +142,13 @@ func parseProfile(raw []byte) (profile, error) {
 	}
 	p := profile{Root: root, Archive: archive, ChangeStatus: *doc.Changes.Status}
 	for _, o := range doc.Owners {
-		if o.Pattern == nil || o.Owner == nil || !patternPath(*o.Pattern) || blank(*o.Owner) {
+		if o.Pattern == nil || o.Owner == nil || !patternPath(*o.Pattern) || blank(*o.Owner) || strings.ContainsRune(*o.Owner, 0) {
 			return profile{}, errProfile
 		}
 		p.Owners = append(p.Owners, rule{*o.Pattern, *o.Owner})
 	}
 	for _, o := range doc.Sponsors {
-		if o.Pattern == nil || o.Sponsor == nil || !patternPath(*o.Pattern) || blank(*o.Sponsor) {
+		if o.Pattern == nil || o.Sponsor == nil || !patternPath(*o.Pattern) || blank(*o.Sponsor) || strings.ContainsRune(*o.Sponsor, 0) {
 			return profile{}, errProfile
 		}
 		p.Sponsors = append(p.Sponsors, rule{*o.Pattern, *o.Sponsor})

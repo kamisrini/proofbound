@@ -10,6 +10,10 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 )
 
+// defectHook lets a test inject a provider defect into a built payload (SDD-INV-49). It is nil in
+// production and never set outside tests.
+var defectHook func(payload []byte) []byte
+
 // buildRecord builds one requirement revision (SPEC §4.2-§4.3), or sets *skip to its cause. An
 // error is a provider defect (a candidate failing ValidateRevision for an unlisted reason).
 func (p *Provider) buildRecord(key string, spec, prof Artifact, pr profile, found []entry, active bool, skip *string, rev **intent.Revision, obligations *[]string) error {
@@ -51,6 +55,9 @@ func (p *Provider) buildRecord(key string, spec, prof Artifact, pr profile, foun
 	if len(payload) > core.MaxPayloadBytes {
 		*skip = "payload-too-large"
 		return nil
+	}
+	if defectHook != nil {
+		payload = defectHook(payload)
 	}
 	r := p.build(core.KindRequirement, id, spec.Path, digest, payload)
 	if err := intent.ValidateRevision(r); err != nil {

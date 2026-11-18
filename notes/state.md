@@ -12,8 +12,11 @@ implements BR rev 0003 O-1/O-2/O-10, OpenSpec only). Order: (1) DONE `61aecab` �
 `SourceIntentSDD`, intent connector admits `sdd`, `ValidateRevision` size bound, `Skip`/`Skipper`/
 `ProviderResult.Skipped` (INT-INV-13), intent SPEC §2/§4/§6 amended; (2b) IN PROGRESS — provider
 core committed (profile/parser/ids/reader/changeOutcome/Revisions/Resolve) and already passes
-SDD-INV-46 (all 8 fixtures' exact skip sets) and SDD-INV-59 (all 21 Resolve pins), calibrated; NEXT:
-the remaining draft-10 §9 proving tests, then `sdd` provider (profile, §4.2 parser, ids, manifests,
+SDD-INV-46 (all 8 fixtures' exact skip sets) and SDD-INV-59 (all 21 Resolve pins), calibrated; most §9 proving tests now written and passing (found
+and fixed a real bug: a JSON "\u0000" owner/sponsor escaped the raw-NUL check). REMAINING tests:
+TestRecordIDCollisionIsPerState (needs an offline-searched colliding pair),
+gitcmd_test.go::TestSDDReaderSharesReadContract, cli_test.go (INV-56, 60), sdd_projection_test.go
+(INV-52); then `sdd` provider (profile, §4.2 parser, ids, manifests,
 `changeOutcome`, Revisions/Skipped/Resolve) against the committed fixtures and pins; (3) intent
 connector + core + projections + gates + CLI sites (draft 10 §12); (4) copy draft 10 VERBATIM to
 `sdd/SPEC.md` in the commit with its tests, regenerate `docs/invariants.lock`, route matrix, census;

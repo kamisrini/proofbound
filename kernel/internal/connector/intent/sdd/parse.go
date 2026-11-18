@@ -97,9 +97,13 @@ func titleKind(raw string) string {
 }
 
 // parseDelta returns a delta file's entries and the number of unpaired RENAMED lines (SPEC §4.2).
-func parseDelta(text string) ([]entry, int) {
+func parseDelta(text string) ([]entry, int) { return parseDeltaMasked(text, fenceMask) }
+
+// parseDeltaMasked is parseDelta with a chosen fence mask; tests use it to prove that the
+// OpenSpec mask discriminates from a naive toggle and from no mask (SDD-INV-39).
+func parseDeltaMasked(text string, maskFn func([]string) []bool) ([]entry, int) {
 	lines := splitLines(text)
-	mask := fenceMask(lines)
+	mask := maskFn(lines)
 	type head struct {
 		at   int
 		kind string
