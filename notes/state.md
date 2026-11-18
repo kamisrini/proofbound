@@ -6,17 +6,17 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **owner: lift the checks hold and run `make check`** — the ONLY remaining M1
-acceptance condition. R2 M1 is ACCEPTED by the non-author re-check
-(`docs/verification/verdicts/r2-m1-recheck-round1-20261118.md`: round-1 MEDs F1-F4 closed; real history
-1624 commits / 338 states / 810 revisions / 3 skips, all plausible). Open LOWs (non-blocking, M1
-follow-up): re-check F1 (regular file AT `specs` untested; §0 re-check-F1 answer row contradicts §4.1;
-INV-54 row), F2 (failing reader only fails Read — Parents-error mutant survives; sweep checks mapState
-not Skipped()), F3 (skip/revision sort unpinned; C1 controls + U+2028/9 printed unquoted), F4 (probe
-counts symlinks as blobs), F5 (survivors from round-1 F8 + this round not in
-`docs/allowed-survivors.txt` / deferrals). After `make check`: decide those LOWs, then R2 M2 (Spec Kit,
-Appendix A) or M3 (git-connector binding). Pre-existing, owner undecided: projections integration suite
-fails at setup on `61aecab^` too.
+**Exact next action:** owner decision — how to admit `intent/sdd` into the frozen P6 Task-8 production
+package set. `make check` (hold lifted 2026-11-18) is RED on exactly one gate:
+`scripts/tests/p6-task8-package-universe.test.sh` "expected 17 production packages, got 18". The
+precedent (`7cc048f`, twin/manifest as 17th) required a full `scripts/mutants.sh` sweep, zero
+undeclared survivors, a non-author verdict, then a count bump in the gate + Task-8 SPEC addendum.
+Blocker: the mutation tool's fixed 1-minute per-mutant timeout < sdd's 63 s suite, so its neutral
+calibration is "killed" and no sweep can run. Done meanwhile: every survivor from both M1 reviews is
+now killed by `survivors_test.go` (7/7, via the reviewers' own mutant-apply defs; B3-F4 judged
+equivalent by construction). Options put to owner: (A) make the tool timeout configurable + full
+background sweep; (B) speed the sdd suite; (C) admit on review + targeted mutation evidence.
+make check log: scratchpad make-check.log.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
