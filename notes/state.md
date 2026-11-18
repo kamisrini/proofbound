@@ -6,17 +6,14 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** owner decision — how to admit `intent/sdd` into the frozen P6 Task-8 production
-package set. `make check` (hold lifted 2026-11-18) is RED on exactly one gate:
-`scripts/tests/p6-task8-package-universe.test.sh` "expected 17 production packages, got 18". The
-precedent (`7cc048f`, twin/manifest as 17th) required a full `scripts/mutants.sh` sweep, zero
-undeclared survivors, a non-author verdict, then a count bump in the gate + Task-8 SPEC addendum.
-Blocker: the mutation tool's fixed 1-minute per-mutant timeout < sdd's 63 s suite, so its neutral
-calibration is "killed" and no sweep can run. Done meanwhile: every survivor from both M1 reviews is
-now killed by `survivors_test.go` (7/7, via the reviewers' own mutant-apply defs; B3-F4 judged
-equivalent by construction). Options put to owner: (A) make the tool timeout configurable + full
-background sweep; (B) speed the sdd suite; (C) admit on review + targeted mutation evidence.
-make check log: scratchpad make-check.log.
+**Exact next action:** admit `intent/sdd` as the **18th** frozen P6 Task-8 production package (owner chose
+the full-sweep route 2026-11-18). A full `scripts/mutants.sh internal/connector/intent/sdd` sweep is
+RUNNING in the background with `MUTANT_TEST_TIMEOUT=4m` (override added in `d617f61`; sdd's clean
+suite is 63 s), log `<scratchpad>/sdd-sweep.log`. When it finishes: kill or declare (EQUIVALENT /
+UNREACHABLE only, with reasons) every survivor in `docs/allowed-survivors.txt`; then follow `7cc048f`'s
+pattern — bump 17→18 in `scripts/tests/p6-task8-package-universe.test.sh` and the Task-8 SPEC (+ an
+addendum citing the M1 non-author verdicts and the sweep), commit, and run `make check` (hold lifted;
+its ONLY red was this package count). Survivors from both M1 reviews are already killed (`48614c3`).
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
