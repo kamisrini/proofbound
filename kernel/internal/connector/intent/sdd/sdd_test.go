@@ -756,36 +756,105 @@ var hostileSkips = []string{
 	"requirement openspec/changes/huge/specs/core/spec.md|payload-too-large", "change huge|cascade",
 }
 
-// TestHistoricalFailClosedIsRecoverable proves SDD-INV-35: every state-local cause, placed (a) at
-// a non-tip commit later fixed, (b) at a non-HEAD ref tip, and (c) at HEAD, leaves Revisions
-// without error and every clean unit emitted; profile-invalid likewise at a state of its own.
+// collisionNames returns the pinned record-id collision pair (testdata/record-id-collision.json);
+// the pair collides only under testProfile's exact bytes.
+func collisionNames(t *testing.T) []string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join("testdata", "record-id-collision.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pin struct {
+		Names []string `json:"names"`
+	}
+	if err := json.Unmarshal(raw, &pin); err != nil || len(pin.Names) != 2 {
+		t.Fatalf("pin: %v", err)
+	}
+	return pin.Names
+}
+
+// dataState writes, under testProfile, one unit per state-local cause that profile can carry:
+// hostile()'s set plus the record-id collision pair.
+func dataState(t *testing.T, s *synth) []string {
+	s.write(ProfilePath, testProfile)
+	hostile(s)
+	want := append([]string(nil), hostileSkips...)
+	for _, n := range collisionNames(t) {
+		s.write("openspec/changes/"+n+"/specs/core/spec.md", addedDelta("Do", "The system SHALL do."))
+		want = append(want, "requirement openspec/changes/"+n+"/specs/core/spec.md|record-id-collision")
+	}
+	return want
+}
+
+// narrowState writes the two coverage causes, which need a profile narrower than testProfile.
+func narrowState(s *synth) []string {
+	p := profileWith(`[ { "pattern": "openspec/**", "owner": "team-fixture" } ]`,
+		`[ { "pattern": "openspec/changes/good/**", "owner": "team-fixture" }, { "pattern": "openspec/changes/sponsorless/**", "owner": "team-fixture" } ]`)
+	s.write(ProfilePath, strings.Replace(p, `"pattern": "openspec/changes/**", "sponsor"`, `"pattern": "openspec/changes/good/**", "sponsor"`, 1))
+	s.write("openspec/changes/ownerless/specs/core/spec.md", addedDelta("Owner", "O."))
+	s.write("openspec/changes/sponsorless/specs/core/spec.md", addedDelta("Sponsor", "S."))
+	return []string{"requirement openspec/changes/ownerless/specs/core/spec.md|owner-uncovered", "change sponsorless|sponsor-uncovered"}
+}
+
+// TestHistoricalFailClosedIsRecoverable proves SDD-INV-35: every state-local cause (hostile()'s
+// set, the record-id collision pair, owner- and sponsor-uncovered, and profile-invalid), placed
+// (a) at a non-tip commit later fixed, (b) at a non-HEAD ref tip, and (c) at HEAD, leaves Revisions
+// without error and every clean unit emitted. The causes need three profiles, so they span three
+// states, and each of the three "head" variants puts a different one of them at HEAD (round-1 F8:
+// previously only profile-invalid was ever at HEAD).
 func TestHistoricalFailClosedIsRecoverable(t *testing.T) {
-	for _, where := range []string{"history", "tip", "head"} {
-		t.Run(where, func(t *testing.T) {
+	broken := func(s *synth) []string {
+		s.write(ProfilePath, `{"schema": "proofbound.sdd-profile.v1"}`)
+		return []string{"profile|profile-invalid"}
+	}
+	for _, v := range []struct {
+		where string
+		order []string // the three defect states, in commit order
+		fixed bool
+	}{
+		{"history", []string{"data", "narrow", "broken"}, true},
+		{"tip", []string{"data", "narrow", "broken"}, true},
+		{"head-data", []string{"narrow", "broken", "data"}, false},
+		{"head-narrow", []string{"data", "broken", "narrow"}, false},
+		{"head-profile", []string{"data", "narrow", "broken"}, false},
+	} {
+		t.Run(v.where, func(t *testing.T) {
 			s := newSynth(t)
 			s.write("openspec/changes/good/specs/core/spec.md", addedDelta("Good", "The system SHALL be good."))
 			s.commit("clean")
-			hostile(s)
-			bad := s.commit("hostile")
-			s.write(ProfilePath, `{"schema": "proofbound.sdd-profile.v1"}`)
-			s.commit("profile broken")
-			if where != "head" {
+			var want []string
+			bad := ""
+			for _, st := range v.order {
+				switch st {
+				case "data":
+					want = append(want, dataState(t, s)...)
+				case "narrow":
+					want = append(want, narrowState(s)...)
+				case "broken":
+					want = append(want, broken(s)...)
+				}
+				c := s.commit(st)
+				if st == "data" {
+					bad = c
+				}
+			}
+			if v.fixed {
 				s.write(ProfilePath, testProfile)
-				for _, d := range []string{"nul-one", "bad-utf", "rename-only", "bang", "dup", "reused", "a", "archive", "linked", "huge"} {
+				for _, d := range append([]string{"nul-one", "bad-utf", "rename-only", "bang", "dup", "reused", "a", "archive", "linked", "huge", "ownerless", "sponsorless"}, collisionNames(t)...) {
 					s.remove("openspec/changes/" + d)
 				}
 				s.commit("fixed")
 			}
-			if where == "tip" {
+			if v.where == "tip" {
 				s.git("branch", "stale", bad)
 			}
 			revs, skips := syncAll(t, s.provider())
 			if _, ok := revs[ciKind+"openspec/changes/good"]; !ok {
 				t.Fatalf("clean change not emitted: %v", revs)
 			}
-			for _, want := range append(hostileSkips, "profile|profile-invalid") {
-				if !skips[want] {
-					t.Errorf("missing skip %s; got %s", want, fmtSkips(skips))
+			for _, w := range want {
+				if !skips[w] {
+					t.Errorf("missing skip %s; got %s", w, fmtSkips(skips))
 				}
 			}
 		})

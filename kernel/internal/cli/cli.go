@@ -416,14 +416,18 @@ func intentProviders(root, selection string, now time.Time) ([]connectorintent.P
 	return []connectorintent.Provider{recordsProvider, specdirProvider}, nil
 }
 
-// printableUnit keeps a tenant-controlled unit name on one line: a name with a control byte or
-// invalid UTF-8 is printed Go-quoted, so it can neither split nor forge a skip line.
+// printableUnit keeps a tenant-controlled unit name on one line: a name with a C0 or C1 control,
+// DEL, U+2028/U+2029, or invalid UTF-8 is printed Go-quoted (strconv.Quote escapes every one of
+// them), so it can neither split nor forge a skip line (sdd re-check
+// r2-m1-recheck-round1-20261118 F3).
 func printableUnit(unit string) string {
 	if !utf8.ValidString(unit) {
 		return strconv.Quote(unit)
 	}
 	for _, r := range unit {
-		if r < 0x20 || r == 0x7f {
+		// C0, DEL and C1 (U+0080-U+009F, incl. NEL and CSI), and the Unicode line and paragraph
+		// separators, which some terminals treat as line breaks or escape introducers.
+		if r < 0x20 || (r >= 0x7f && r <= 0x9f) || r == 0x2028 || r == 0x2029 {
 			return strconv.Quote(unit)
 		}
 	}

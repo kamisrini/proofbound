@@ -15,6 +15,7 @@ import collections, json, os, re, subprocess, sys
 
 MODE = sys.argv[1] if sys.argv[1] in ("--pins", "--vectors") else None
 repo = sys.argv[2] if MODE else sys.argv[1]
+REGULAR = ("100644", "100755")  # regular-file modes; 120000 symlink and 160000 gitlink are not
 def git(*a):
     return subprocess.run(["git", "-C", repo, *a], capture_output=True, check=True).stdout
 
@@ -310,14 +311,21 @@ for c in fp:
 print(f"longest run of HEAD first-parent commits on a dual-presence state: {best} ({best_nonmerge} non-merge)")
 root_blob_commits, root_blob_names = 0, set()
 for c in walk:
-    blobs = [l.split("\t", 1)[1] for l in git("ls-tree", c, "openspec/changes/").decode().splitlines() if l.split()[1] == "blob"]
+    blobs = [l.split("\t", 1)[1] for l in git("ls-tree", c, "openspec/changes/").decode().splitlines() if l.split()[0] in REGULAR]
     if blobs:
         root_blob_commits += 1; root_blob_names.update(b.rsplit("/", 1)[-1] for b in blobs)
 print(f"commits with a regular file directly under openspec/changes (never a change, draft 9 section 5): {root_blob_commits} {sorted(root_blob_names)}")
-spec_notes = set()
+# Type by MODE, not by ls-tree's object type: git lists a symlink (120000) as type "blob" too, and
+# section 4.1 treats a symlink at these positions differently from a regular file (M1 re-check F4).
+spec_notes, specs_files, specs_links = set(), set(), set()
 for c in walk:
     for line in git("ls-tree", "-r", c, "--", "openspec/changes").decode().splitlines():
         meta, p = line.split("\t", 1)
-        if meta.split()[1] == "blob" and re.match(r"^openspec/changes/(archive/)?[^/]+/specs/[^/]+$", p) and not p.endswith("/specs"):
-            spec_notes.add(p)
+        mode = meta.split()[0]
+        if re.match(r"^openspec/changes/(archive/)?[^/]+/specs/[^/]+$", p):
+            (spec_notes if mode in REGULAR else specs_links).add(p)
+        elif re.match(r"^openspec/changes/(archive/)?[^/]+/specs$", p):
+            (specs_files if mode in REGULAR else specs_links).add(p)
 print(f"regular files directly under a change's specs/ (ignored, draft 10 section 4.1): {len(spec_notes)} {sorted(spec_notes)}")
+print(f"regular files AT a change's specs (ignored, draft 10 section 4.1): {len(specs_files)} {sorted(specs_files)}")
+print(f"symlinks or gitlinks at or directly under a change's specs (non-regular-file units): {len(specs_links)} {sorted(specs_links)}")
