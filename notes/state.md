@@ -6,17 +6,19 @@ As of: 2026-11-17
 
 ## Resume — 2026-11-17
 
-**Exact next action:** **dispatch the R2 M1 foundational-tier non-author review** (Law 9) of everything
-under `CI-sdd-warranty-m1-6op6vl` (commits `61aecab`..HEAD): the `intent/sdd` package + `sdd/SPEC.md`
-(verbatim draft 10), gitcmd G-INV-23..26, intent connector size bound + Skip report, projections/gates
-routing, the CLI `sync intent sdd`, the route matrix/census extension. Verdict →
-`docs/verification/verdicts/r2-m1-review-round1-<date>.md`. M1 code is COMPLETE: every draft-10 §9
-proving test exists and passes (unit + the INV-52 integration test against embedded Postgres, calibrated
-by a NUL-check mutant that reproduces the rebuild wedge); full kernel unit suite green; golangci-lint
-clean; SPEC lints + invariants lock green. **Not run:** `make check` (owner hold) — the intent SPEC still
-says `sdd` becomes a production provider only once `make check` passes. Review should also check the §12
-omissions found during M1 (p6-task2-close connector universe; P6 census depth) and the census-window
-lesson (never edit `scripts/p6-census.sh`).
+**Exact next action:** fix R2 M1 review round 1 (`docs/verification/verdicts/r2-m1-review-round1-20261117.md`,
+NEEDS_WORK, 4 MED + 6 LOW, no HIGH), then a non-author re-check of F1-F4 re-running the surviving
+mutants. F1: a regular file directly under `specs/` (real: `archive/2026-01-30-opencode-command-references/
+specs/no-changes.md`) is wrongly a `non-regular-file` record unit — OpenSpec ignores it; must amend
+§4.1 layout rule in draft 10 AND sdd/SPEC.md (byte copy) + measure it in §0. F2: INV-59 test lacks the
+synthesized rows, the Skipped/Resolve agreement sweep and the failing-reader case (2 mutants survive).
+F3: INV-52 covers 11/15 causes, weak row assertions. F4: `prescription-lint` (make check) fails on
+sdd/SPEC.md §0 quoting `--all --full-history`. LOWs F5-F10 (case-insensitive JSON keys in profile;
+Resolve("archive") at state-level cause; ls-tree -t ancestors in Read; §9 kills; CLI prints raw
+tenant bytes + nondeterministic skip order; §12/interface-lock drift). Real-history run: 1624 commits,
+338 states, 810 revisions, 5 skips, no errors, 22587 sampled Resolve calls all consistent.
+Pre-existing (not M1): projections integration tests fail at setup ("ledger tables are append-only")
+on 61aecab^ too — raise with owner.
 
 **Draft 9 (2026-11-17)** answers round 8 (NEEDS_WORK, 2 MED + 5 LOW): record units (pre-parse skips and
 unpaired-only deltas count → `cascade`); change entries are trees/symlinks/gitlinks only — plain files
