@@ -104,6 +104,8 @@ func TestReplayProofCoversEveryRegisteredEventPair(t *testing.T) {
 		{core.SourceIntentSpecdir, core.KindBusinessDecision},
 		{core.SourceIntentSpecdir, core.KindRequirement},
 		{core.SourceIntentSpecdir, core.KindChangeIntent},
+		{core.SourceIntentSDD, core.KindRequirement},
+		{core.SourceIntentSDD, core.KindChangeIntent},
 	}
 	candidates := make([]Candidate, 0, len(pairs))
 	for i, pair := range pairs {
