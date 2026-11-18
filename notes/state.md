@@ -6,18 +6,28 @@ As of: 2026-11-18
 
 ## Resume — 2026-11-18
 
-**R2 M1 is closed and the gate is green.** `make check` exit 0 at `71128fe`. `sdd` was admitted as the
-18th Task-8 production package in `9e97749`. Reviewed commit `77cc6ba`, tree `066f8b01…`. Production
-`.go` is unchanged since then. Official re-sweep with `MUTANT_TEST_TIMEOUT=4m`: 252/248/0/4. The 4
-REDUNDANTLY-PINNED survivors are declared. The `7263319` test commit had re-staled the task2 pin;
-it was refreshed in `71128fe`.
+**R2 M1 is closed.** `sdd` is the 18th Task-8 production package (`9e97749`). Option 1, the M1 reviews'
+remaining LOW findings, is done in `5aafb55` and `b7bf296`:
+- re-check `r2-m1-recheck-round1-20261118` F1-F5;
+- round-1 `r2-m1-review-round1-20261117` F8, beyond the 7 survivors already killed in `48614c3`.
 
-**Exact next action:** report to the owner and ask which comes next. Options:
-- M2 (Spec Kit mapping; VD-sdd-m1-openspec-first-2026-11-17, Appendix A).
-- M3 (git-connector binding).
-- The non-blocking leftovers: the re-check's LOWs and round-1 F8.
-- The pre-existing projections integration-suite setup failure ("ledger tables are append-only").
-  It also fails on `61aecab^`. The owner has not decided whether to investigate or file a deferral.
+The new tests are `recheck_kill_test.go` and an INV-35 rework in `sdd_test.go`. Each passes on the real
+code and fails under its own hand mutant. Other changes:
+- cli `printableUnit` now also quotes C1 controls and U+2028/U+2029, with
+  `cli/printable_unit_test.go`.
+- `history_probe.py` types entries by mode; its counts are unchanged.
+- SPEC wording and §9 citations fixed; draft 10 stays byte-identical.
+
+sdd production `.go` is unchanged, so the admission still binds. `make check` is green at HEAD.
+
+**Exact next action:** the owner decides whether a non-author re-check covers these LOW fixes (Law 9).
+They are test and SPEC work, plus a small change in the cli package. Then choose between M2 (Spec Kit),
+M3 (git-connector binding), and the projections integration-suite setup failure ("ledger tables are
+append-only"). That failure predates M1, and the owner has not decided whether to investigate it or
+file a deferral.
+
+**Gotcha learned:** invariant-lint resolves `file_test.go::Test` citations only inside the SPEC's own
+package. Name cross-package tests in prose.
 
 **Immediate blockers:** pushes are held (DEF-PUSH-HOLD-20261116). Do not push without the owner's word.
 
