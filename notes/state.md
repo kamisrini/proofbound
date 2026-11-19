@@ -6,34 +6,42 @@ As of: 2026-11-18
 
 ## Resume — 2026-11-18
 
-**Now: R2 M3, binding tenant commits to `intent.sdd`.** The owner picked it on 2026-11-18. This is
-SPEC work only; no code yet.
+**Now: R2 M3, binding tenant commits to `intent.sdd`.** This is SPEC work only; no code yet.
+- Four drafts have had four non-author rounds:
+  - round 1 (`82a92ec`): 1 HIGH, 7 MED, 3 LOW;
+  - round 2 (`1489027`): 4 MED, 5 LOW;
+  - round 3 (`bd6f95f`): 1 MED, 4 LOW;
+  - round 4 (`70b8a7e`, over draft 4 `9c913e6`): 2 MED, 2 LOW.
+- The current draft is `docs/plans/R2-sdd-m3-git-binding-spec-draft4.md`.
 
-| Draft | Commit | Review round | Commit | Result |
-|---|---|---|---|---|
-| draft 1 | `5ab7059` | round 1 | `82a92ec` | NEEDS_WORK (1 HIGH, 7 MED, 3 LOW) |
-| draft 2 | `722240b` | round 2 | `1489027` | NEEDS_WORK (4 MED, 5 LOW) |
-| draft 3 | `36012cf` | round 3 | — | running (`r2-m3-spec-review-round3-20261118`) |
+**Design so far:**
+- **Ledger check on claims:** an `sdd` ref binds only when its exact revision is already ledgered.
+- **Skips:** per commit, all-or-nothing. A malformed `sdd:` value is skipped, never sync-fatal.
+- **Bindings:** insert-only and monotone.
+- **This repository's trailer gate:** unchanged.
 
-**Design as of draft 3:**
-- **Ledger check:** an `sdd` ref binds only when its exact revision is already ledgered. Otherwise the
-  claim is skipped, and recovery is `sync intent sdd` then `sync git`.
-- **Skips are per commit and all-or-nothing:** a commit with a skipped claim binds no refs at all.
-- **Malformed values:** an `sdd:` value with any case of the prefix that fails the grammar is a
-  `malformed` skip, never a sync failure.
-- **Bindings stay insert-only (monotone).**
-- **This repository's trailer gate is unchanged.**
+**Round-4 F2 needs an owner decision (D5).** The reviews connector appends a v2 verdict without checking
+that its exact commit claim is ledgered. `reduceObligationVerdict` then fails every Apply and Rebuild.
+- This hazard predates M3 for `records` too.
+- M3 makes "claim not yet bound" a normal state, so correct tenant data could wedge projections.
+- Recommended: apply the same ledger check to `sync reviews`. Hold a verdict until its claim is
+  ledgered, and pick it up on a later sync. This widens M3 into the reviews connector.
+- Alternatives:
+  - a dangling-tolerant verdict projection, which hides errors;
+  - keeping the hard failure, which the reviewer showed is reachable with correct data.
 
-**Owner decisions pending:**
-- D1: the token. Recommended: `sdd:<name>`.
-- D2: per-commit, all-or-nothing skips.
-- D3': the ledger check.
-- D4: the records/specdir ordering hazard. Recommended: file a deferral and fix it later with the same
-  mechanism.
+**Mechanical items left for draft 5:**
+- Round-4 F1: row 8's test must run `sync git` before `sync reviews`. It must also write the verdict at
+  run time, because it needs the evidence ULIDs, the commit sha and its own digest, and commit it as
+  HEAD. It needs one exact-sha gate file per gated commit.
+- Round-4 F3: the two-claim kill lives in row 3 only.
+- Round-4 F4: §9's revisit trigger must also land in the sdd SPEC §14 and the git SPEC.
 
-**Exact next action:** when the round-3 verdict arrives, commit it verbatim and regenerate
-p6-artifact-integrity. If it is NEEDS_WORK, write draft 4. If it is ACCEPTABLE, bring D1-D4 and the CI
-wording to the owner. No M3 code before both.
+**Owner decisions pending:** D1 (token), D2 (skips), D3' (the ledger check), D4 (the records/specdir
+deferral), D5 (above).
+
+**Exact next action:** get the owner's D5 choice, then write draft 5 and run round 5. No M3 code
+before an ACCEPTABLE round plus the owner's approval of D1-D5 and the CI wording.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
 re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
