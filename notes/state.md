@@ -21,27 +21,25 @@ As of: 2026-11-19
    - 9/9 mutants are killed.
 2. **Projections** (`b993d0b`, pin `9cb920c`): provider `sdd` is accepted, under P-INV-33 with an
    untagged test, and the invariants lock is regenerated. 2/2 mutants are killed.
-3. **CLI resolver** (`e596e06`, pins `5a0f7ed`):
-   - the `sdd` arm: lazy provider, lazy `L`, the §4.2 checks and the cause mapping;
+3. **CLI resolver** (`e596e06`):
+   - the `sdd` arm, with the lazy provider, lazy `L` and the §4.2 checks;
    - claim-skip lines;
-   - CLI-INV-13/14;
-   - 14 mutants are killed.
-
-**Lesson:** the embedded Postgres listens on one fixed port (55432), and `go test` runs packages in
-parallel. So **every embedded-store test must live in one package**: the sdd package, beside its
-`cli.Run` tests (`m3_cli_test.go`). A first draft in package `cli` collided.
+   - 14 mutants killed.
+4. **Reviews hold and refusal, plus the CLI `storeLedgerView`** (`fc96b9c`):
+   - D5/D6 per draft 8 §4.6: R-INV-13, CLI-INV-15/16;
+   - 27 mutants killed;
+   - the view is checked against this repo's own archived p5 claim.
+- **Lesson compiled** (`7ffe671`): `port_home_test.go` fails `make check` if an untagged test outside
+  the sdd package opens the default embedded port. Every end-to-end embedded test lives in the sdd
+  package; cli tests use ephemeral ports.
 
 **Next units, in order:**
-4. **Reviews connector:**
-   - `LedgerView`, the hold, the refusal and `duplicate-identity` (draft 8 §4.6);
-   - the reviews SPEC amendments;
-   - row 11 (unit, fake view).
-5. **CLI `storeLedgerView`:**
-   - held and refused output, and a non-zero exit on refusal;
-   - rows 8 and 12, plus the §7.1-7.3 procedures. These are end-to-end and go in the sdd package.
+5. **End-to-end procedures** in the sdd package (`m3_cli_test.go`):
+   - §7.1, row 8: X1 PASS, X2/X3 BLOCKED, X3's verdict held;
+   - §7.2, row 5: interleavings A and B with the five-record archive;
+   - §7.3: the round-6 refusal sequence.
 6. **Docs and pins:**
    - sdd SPEC §12, the SDD-INV-56 text and §14's M2 entry condition;
-   - pins;
    - a non-author implementation review.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
