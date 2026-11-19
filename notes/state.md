@@ -133,8 +133,12 @@ unchanged, and a 15-shape hostile probe gave no wrong record and no panic. 3 LOW
 near-miss FR line format is dropped silently; the sibling can be any segment; the init profile test
 checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
 
-**Exact next action:** R2 release notes (`docs/releases/r2/RELEASE-NOTES.md`), then the owner's
-acceptance of Release 2. No push without the owner's word.
+**R2 release notes drafted** (`docs/releases/r2/RELEASE-NOTES.md`, suggested tag `v0.2.0`), linked from
+the README and the R2 demo hub.
+
+**Exact next action:** the owner's acceptance of Release 2: the owner reads the notes and runs
+`bash docs/releases/r2/demo-openspec.sh`. On acceptance, mark the notes accepted; the tag and push
+wait for the owner's word (pushes are held, DEF-PUSH-HOLD-20261116).
 No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 

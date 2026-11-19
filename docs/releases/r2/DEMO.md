@@ -7,6 +7,7 @@ and refuses to vouch for work nobody has verified. This page shows it on a real 
 | I want to… | Do this | Time |
 |---|---|---|
 | **See Release 2 on a real OpenSpec project** | Setup below, then `bash docs/releases/r2/demo-openspec.sh` | ~4 min |
+| See what Release 2 includes and its caveats | [Release Notes](RELEASE-NOTES.md) | — |
 | See what Release 1 does (the trust record) | [Release 1 Demo Hub](../r1/DEMO.md) | ~5 min |
 
 ## Setup

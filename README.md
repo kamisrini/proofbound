@@ -82,8 +82,9 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
 - [`docs/releases/r1/DEMO.md`](docs/releases/r1/DEMO.md) — a copy-paste 5-minute demo.
 - [`docs/releases/r1/RELEASE-NOTES.md`](docs/releases/r1/RELEASE-NOTES.md) — what Release 1
   includes, its limitations, and what is deferred to later releases.
-- [`docs/releases/r2/DEMO.md`](docs/releases/r2/DEMO.md) — Release 2 (in progress): Proofbound
-  warrants a real OpenSpec project, in one command.
+- [`docs/releases/r2/DEMO.md`](docs/releases/r2/DEMO.md) — Release 2 (awaiting acceptance): Proofbound
+  warrants a real OpenSpec project, in one command. What it includes:
+  [`RELEASE-NOTES.md`](docs/releases/r2/RELEASE-NOTES.md).
 
 ## Quick start
 
