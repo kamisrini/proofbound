@@ -85,7 +85,7 @@ claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
 `report intent sdd:<change-name>` looks a change up by name (CLI-INV-17). The demo moved to
 `docs/releases/r2/` (`demo-openspec.sh` + `DEMO.md`, R1's layout) and is linked from the README.
 
-**Exact next action:** the owner runs `bash docs/releases/r2/demo-openspec.sh`; one non-author review of the fix commit is due (Law 11 budget). Then R2 step 2: M4 drift, under the review budget.
+**Exact next action:** the owner runs `bash docs/releases/r2/demo-openspec.sh`; the fix commit `c9818c8` passed its one non-author review (`r2-demo-polish-review-20261119`, ACCEPTABLE, 3 LOW recorded, not fixed). Then R2 step 2: M4 drift. Then R2 step 2: M4 drift, under the review budget.
 No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
