@@ -173,6 +173,17 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
       `ErrRevisionRefused` that names every refusal. A malformed artifact after a refusal still stops
       the sync at once, and its error is joined with the refusal error.
 
+    **Accepted limitation — held versus refused is per-reader, not linearizable.** The `Ledger` view
+    is read once per sync and the ledger is append-only, so a stale view can only UNDER-report:
+    nothing is ever appended ahead of its prerequisites, in any interleaving. Two processes on one
+    state root cannot interleave (the store's DataDir lock). Two different roots sharing one external
+    `DATABASE_URL` can: if the other process ledgers a first revision after this view was read, a
+    later revision of it is reported **held** (exit 0) instead of **refused** for that one run, and
+    the next sync refuses it (review `r2-m3-impl-review-mutation-concurrency-20261119` F5).
+    **Revisit trigger:** supporting several roots or writers on one database (a hosted or team
+    ledger) must make this classification read the ledger under the same snapshot or lock as the
+    append it guards.
+
 ## Proving table
 
 | Invariant | Statement | Proving test |

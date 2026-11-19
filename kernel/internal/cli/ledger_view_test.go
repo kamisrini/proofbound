@@ -314,6 +314,7 @@ func TestStoreLedgerViewFailsClosedOnUndecodablePayloads(t *testing.T) {
 	for name, event := range map[string]core.NewEventParams{
 		"git payload":        {Source: core.SourceGit, NativeID: strings.Repeat("f", 40), Kind: core.KindCommitRecorded, Payload: []byte(`{"sha":1}`)},
 		"schema-less review": {Source: core.SourceReviews, NativeID: "V-no-schema", Kind: core.KindReviewVerdict, Payload: []byte(`{"verdict_id":"V-no-schema"}`)},
+		"requirement":        {Source: core.SourceIntentSDD, NativeID: "R-bad", Kind: core.KindRequirement, Payload: []byte(`{"requirement_id":1}`)},
 	} {
 		t.Run(name, func(t *testing.T) {
 			ledger, err := store.Open(ctx, store.Config{Root: t.TempDir(), Port: ephemeralPort(t), DatabaseURL: os.Getenv("DATABASE_URL")})
@@ -340,10 +341,63 @@ func TestStoreLedgerViewFailsClosedOnUndecodablePayloads(t *testing.T) {
 			if err := run.Finish(ctx, json.RawMessage(`[]`), nil); err != nil {
 				t.Fatal(err)
 			}
-			view := &storeLedgerView{ledger: ledger}
-			if _, err := view.Ledgered(ctx, "proofbound.obligation-verdict.v2", "x"); err == nil {
-				t.Fatal("the view skipped an undecodable payload")
+			// Every method fails, not only the first to load: a view that kept the partial sets after
+			// a failed load would answer the other two from them (mutation review F1, C49).
+			for method, ask := range map[string]func(*storeLedgerView) error{
+				"Ledgered": func(v *storeLedgerView) error {
+					_, err := v.Ledgered(ctx, "proofbound.obligation-verdict.v2", "x")
+					return err
+				},
+				"CommitClaimed": func(v *storeLedgerView) error {
+					_, err := v.CommitClaimed(ctx, strings.Repeat("f", 40), "records", "CI-x-abcdef", strings.Repeat("a", 64))
+					return err
+				},
+				"RequirementLedgered": func(v *storeLedgerView) error {
+					_, err := v.RequirementLedgered(ctx, core.SourceIntentSDD, "R-bad", strings.Repeat("a", 64))
+					return err
+				},
+			} {
+				view := &storeLedgerView{ledger: ledger}
+				if err := ask(view); err == nil {
+					t.Fatalf("%s skipped an undecodable payload", method)
+				}
+				if err := ask(view); err == nil {
+					t.Fatalf("%s answered from partial sets on a second call", method)
+				}
 			}
 		})
+	}
+}
+
+// M3 SPEC §4.3: L is read fail-closed too. A ledgered intent.sdd change intent whose payload does not
+// decode fails the read, rather than being left out of L (which would quietly turn every claim on it
+// into a not-ledgered skip) (review r2-m3-impl-review-mutation-concurrency-20261119 F1, C22).
+func TestSDDLedgeredSetFailsClosedOnUndecodablePayload(t *testing.T) {
+	ctx := context.Background()
+	ledger, err := store.Open(ctx, store.Config{Root: t.TempDir(), Port: ephemeralPort(t), DatabaseURL: os.Getenv("DATABASE_URL")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = ledger.Close() })
+	ids, err := newIDs()
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, err := ledger.BeginSync(ctx, "m3-l-errors")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, err := ids.NewEvent(core.NewEventParams{Source: core.SourceIntentSDD, NativeID: "CI-bad-abcdef", Kind: core.KindChangeIntent, OccurredAt: time.Unix(10, 0).UTC(), ConnectorVersion: "m3-test/1", Payload: []byte(`{"intent_id":1}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := run.Append(ctx, e); err != nil {
+		t.Fatal(err)
+	}
+	if err := run.Finish(ctx, json.RawMessage(`[]`), nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readSDDLedgered(ctx, ledger); err == nil {
+		t.Fatal("L skipped an undecodable change intent")
 	}
 }

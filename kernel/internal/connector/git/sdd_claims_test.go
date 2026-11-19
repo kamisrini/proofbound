@@ -126,6 +126,10 @@ func TestSync_SDDTenantOutcomesAreClaimSkips(t *testing.T) {
 		{"sdd:add_auth", "malformed"},
 		{"sdd:add-auth:extra", "malformed"},
 		{"sdd:-lead", "malformed"},
+		// D1's upper bound: a change name of 100 bytes is well formed (it reaches the resolver),
+		// one of 101 is malformed (review r2-m3-impl-review-mutation-concurrency-20261119 F3).
+		{"sdd:a" + strings.Repeat("b", 99), "unknown-change"},
+		{"sdd:a" + strings.Repeat("b", 100), "malformed"},
 	}
 	for _, c := range cases {
 		t.Run(c.value, func(t *testing.T) {
@@ -177,5 +181,23 @@ func TestSync_SDDResolverErrorsFailSync(t *testing.T) {
 	}
 	if !errors.Is(&ClaimUnboundError{Cause: "x"}, ErrClaimUnbound) {
 		t.Fatal("ClaimUnboundError does not match ErrClaimUnbound")
+	}
+}
+
+// INV-31's detector is exactly "the first four bytes fold to sdd:". A value that differs in any one
+// of those bytes, or is shorter than four bytes, is NOT an sdd claim: it keeps the records/specdir
+// path, where an unknown provider or a malformed id fails the sync loudly, never a quiet ClaimSkip
+// (review r2-m3-impl-review-mutation-concurrency-20261119 F3).
+func TestSync_NearSDDValuesAreNotClaims(t *testing.T) {
+	for _, value := range []string{"sdd", "sd", "sdx:add-auth", "xdd:add-auth", "sxd:add-auth", "abc:CI-sample-item-acde12", "sdd-x:add-auth", "sdd;add-auth"} {
+		t.Run(value, func(t *testing.T) {
+			result, _, err := syncCommits(t, addAuthResolver(), claimed("aaa", value))
+			if err == nil {
+				t.Fatalf("%q did not fail the sync", value)
+			}
+			if len(result.ClaimSkips) != 0 {
+				t.Fatalf("%q became a claim skip: %+v", value, result.ClaimSkips)
+			}
+		})
 	}
 }

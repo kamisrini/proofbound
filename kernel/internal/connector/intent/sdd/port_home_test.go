@@ -21,7 +21,7 @@ import (
 // defaultPortOpeners parses one test file and returns each syntactic way it can open the embedded
 // store at the default port:
 //   - cli.Run from another package (cli.Run always opens at the default port);
-//   - forcing the embedded store with Setenv("DATABASE_URL", "");
+//   - forcing the embedded store with Setenv("DATABASE_URL", "") or Unsetenv("DATABASE_URL");
 //   - a store.Config literal (any layout) without a Port, or with Port: 0, outside package store;
 //   - inside package cli, a bare Run or runCommand call in a file that never stubs openStore.
 func defaultPortOpeners(name, src string) ([]string, error) {
@@ -53,6 +53,9 @@ func defaultPortOpeners(name, src string) ([]string, error) {
 				}
 				if fun.Sel.Name == "Setenv" && len(v.Args) == 2 && stringLit(v.Args[0]) == "DATABASE_URL" && stringLit(v.Args[1]) == "" {
 					at(v, `Setenv("DATABASE_URL", "")`)
+				}
+				if fun.Sel.Name == "Unsetenv" && len(v.Args) == 1 && stringLit(v.Args[0]) == "DATABASE_URL" {
+					at(v, `Unsetenv("DATABASE_URL")`)
 				}
 			case *ast.Ident:
 				if file.Name.Name == "cli" && (fun.Name == "Run" || fun.Name == "runCommand") && !stubsOpenStore {
@@ -117,6 +120,8 @@ func TestDefaultPortDetectorCalibration(t *testing.T) {
 	}{
 		"cli.Run elsewhere":      {"package gates\nfunc f() { cli.Run(ctx, \"\", nil, nil, nil) }\n", true},
 		"empty DATABASE_URL":     {"package cli\nfunc f(t *T) { openStore = nil; t.Setenv(\"DATABASE_URL\", \"\") }\n", true},
+		"unset DATABASE_URL":     {"package gates\nfunc f() { os.Unsetenv(\"DATABASE_URL\") }\n", true},
+		"unset other variable":   {"package gates\nfunc f() { os.Unsetenv(\"HOME\") }\n", false},
 		"portless config":        {"package migration\nvar c = store.Config{Root: \"x\"}\n", true},
 		"multi-line portless":    {"package migration\nvar c = store.Config{\n\tRoot: \"x\",\n\tDatabaseURL: \"\",\n}\n", true},
 		"port zero":              {"package migration\nvar c = store.Config{Root: \"x\", Port: 0}\n", true},
