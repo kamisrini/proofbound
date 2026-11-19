@@ -18,25 +18,30 @@ As of: 2026-11-19
    - sdd claims become per-commit `ClaimSkip`s with all-or-nothing refs;
    - git SPEC INV-29 is amended and INV-31/32 appended;
    - 3 sdd corpus rows are added, and the oracle counts a bound ref;
-   - 9/9 mutants are killed, and the neutral control survives.
+   - 9/9 mutants are killed.
+2. **Projections** (`b993d0b`, pin `9cb920c`): provider `sdd` is accepted, under P-INV-33 with an
+   untagged test, and the invariants lock is regenerated. 2/2 mutants are killed.
+3. **CLI resolver** (`e596e06`, pins `5a0f7ed`):
+   - the `sdd` arm: lazy provider, lazy `L`, the §4.2 checks and the cause mapping;
+   - claim-skip lines;
+   - CLI-INV-13/14;
+   - 14 mutants are killed.
+
+**Lesson:** the embedded Postgres listens on one fixed port (55432), and `go test` runs packages in
+parallel. So **every embedded-store test must live in one package**: the sdd package, beside its
+`cli.Run` tests (`m3_cli_test.go`). A first draft in package `cli` collided.
 
 **Next units, in order:**
-2. **Projections:** `commitPayload.validate` accepts provider `sdd` (draft 5 §4.5).
-3. **CLI resolver:**
-   - the `sdd` arm, with lazy provider construction, the lazy `L` set and the §4.2 checks;
-   - the claim-skip output;
-   - CLI SPEC CLI-INV-7/8;
-   - rows 1 (cli half), 5 and 6.
 4. **Reviews connector:**
    - `LedgerView`, the hold, the refusal and `duplicate-identity` (draft 8 §4.6);
    - the reviews SPEC amendments;
-   - row 11.
+   - row 11 (unit, fake view).
 5. **CLI `storeLedgerView`:**
    - held and refused output, and a non-zero exit on refusal;
-   - rows 8 and 12, plus the §7.1-7.3 procedures.
+   - rows 8 and 12, plus the §7.1-7.3 procedures. These are end-to-end and go in the sdd package.
 6. **Docs and pins:**
    - sdd SPEC §12, the SDD-INV-56 text and §14's M2 entry condition;
-   - regenerate the route-matrix and connector-reality pins;
+   - pins;
    - a non-author implementation review.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
