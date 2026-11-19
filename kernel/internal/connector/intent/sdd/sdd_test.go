@@ -774,10 +774,12 @@ func collisionNames(t *testing.T) []string {
 }
 
 // dataState writes, under testProfile, one unit per state-local cause that profile can carry:
-// hostile()'s set plus the record-id collision pair.
+// hostile()'s set plus the record-id collision pair, beside one clean change (fresh-data) that no
+// clean state carries.
 func dataState(t *testing.T, s *synth) []string {
 	s.write(ProfilePath, testProfile)
 	hostile(s)
+	s.write("openspec/changes/fresh-data/specs/core/spec.md", addedDelta("Fresh", "The system SHALL be fresh."))
 	want := append([]string(nil), hostileSkips...)
 	for _, n := range collisionNames(t) {
 		s.write("openspec/changes/"+n+"/specs/core/spec.md", addedDelta("Do", "The system SHALL do."))
@@ -786,13 +788,15 @@ func dataState(t *testing.T, s *synth) []string {
 	return want
 }
 
-// narrowState writes the two coverage causes, which need a profile narrower than testProfile.
+// narrowState writes the two coverage causes, which need a profile narrower than testProfile, and
+// gives the covered change good a statement no other state carries.
 func narrowState(s *synth) []string {
 	p := profileWith(`[ { "pattern": "openspec/**", "owner": "team-fixture" } ]`,
 		`[ { "pattern": "openspec/changes/good/**", "owner": "team-fixture" }, { "pattern": "openspec/changes/sponsorless/**", "owner": "team-fixture" } ]`)
 	s.write(ProfilePath, strings.Replace(p, `"pattern": "openspec/changes/**", "sponsor"`, `"pattern": "openspec/changes/good/**", "sponsor"`, 1))
 	s.write("openspec/changes/ownerless/specs/core/spec.md", addedDelta("Owner", "O."))
 	s.write("openspec/changes/sponsorless/specs/core/spec.md", addedDelta("Sponsor", "S."))
+	s.write("openspec/changes/good/specs/core/spec.md", addedDelta("Good", "The system SHALL be narrow."))
 	return []string{"requirement openspec/changes/ownerless/specs/core/spec.md|owner-uncovered", "change sponsorless|sponsor-uncovered"}
 }
 
@@ -840,17 +844,37 @@ func TestHistoricalFailClosedIsRecoverable(t *testing.T) {
 			}
 			if v.fixed {
 				s.write(ProfilePath, testProfile)
-				for _, d := range append([]string{"nul-one", "bad-utf", "rename-only", "bang", "dup", "reused", "a", "archive", "linked", "huge", "ownerless", "sponsorless"}, collisionNames(t)...) {
+				for _, d := range append([]string{"nul-one", "bad-utf", "rename-only", "bang", "dup", "reused", "a", "archive", "linked", "huge", "ownerless", "sponsorless", "fresh-data"}, collisionNames(t)...) {
 					s.remove("openspec/changes/" + d)
 				}
+				s.write("openspec/changes/good/specs/core/spec.md", addedDelta("Good", "The system SHALL be good."))
 				s.commit("fixed")
 			}
 			if v.where == "tip" {
 				s.git("branch", "stale", bad)
 			}
-			revs, skips := syncAll(t, s.provider())
-			if _, ok := revs[ciKind+"openspec/changes/good"]; !ok {
-				t.Fatalf("clean change not emitted: %v", revs)
+			p := s.provider()
+			all, err := p.Revisions(context.Background())
+			if err != nil {
+				t.Fatalf("Revisions: %v", err)
+			}
+			skips := map[string]bool{}
+			for _, sk := range p.Skipped() {
+				skips[sk.Unit+"|"+sk.Cause] = true
+			}
+			// "Every other unit emitted" (round lowfix F2): each of these exists ONLY in a state
+			// that also carries Skips, so dropping a defect state's clean revisions fails here.
+			fresh, narrow := false, false
+			for _, r := range all {
+				switch {
+				case r.Kind == core.KindChangeIntent && r.ArtifactPath == "openspec/changes/fresh-data":
+					fresh = true
+				case r.Kind == core.KindRequirement && r.ArtifactPath == "openspec/changes/good/specs/core/spec.md" && strings.Contains(string(r.Payload), "SHALL be narrow."):
+					narrow = true
+				}
+			}
+			if !fresh || !narrow {
+				t.Fatalf("a defect state's clean units were not emitted: fresh-data=%v narrow good=%v", fresh, narrow)
 			}
 			for _, w := range want {
 				if !skips[w] {

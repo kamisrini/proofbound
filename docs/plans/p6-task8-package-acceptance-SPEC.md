@@ -87,8 +87,13 @@ under the same bar.
 
 - Reviewed commit: `77cc6ba57aa1d6e42ee1bf02401a4f55d6a6173e`; production package tree object
   `066f8b01d873986fc645d4e402a13739408ce55f` (`git rev-parse <commit>:kernel/internal/connector/intent/sdd`;
-  production `.go` byte-identical to the reviewed tree — later commits add only
-  `mutation_kill_test.go` and `survivors_test.go`).
+  that tree object binds the package as reviewed. What stays bound afterwards is the production
+  source: every non-`_test.go` `.go` file is byte-identical to the reviewed tree, which
+  `git diff --quiet 77cc6ba HEAD -- 'kernel/internal/connector/intent/sdd/*.go' ':(exclude)kernel/internal/connector/intent/sdd/*_test.go'`
+  confirms. The package tree object itself moves whenever tests, the SPEC or `testdata/` change.
+  Those changes are not listed here, since a list would go stale with the next test commit; see
+  `git log 77cc6ba.. -- kernel/internal/connector/intent/sdd` (corrected per
+  `r2-m1-lowfix-recheck-20261118` F3)).
 - Calibrated mutation evidence (`MUTANT_TEST_TIMEOUT=4m scripts/mutants.sh
   internal/connector/intent/sdd`; the suite's honest run exceeds the 1-minute default bound): 252
   candidates, 248 killed, 0 invalid, 4 survived. Calibration controls behaved (neutral=survived,
