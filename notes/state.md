@@ -6,23 +6,34 @@ As of: 2026-11-18
 
 ## Resume — 2026-11-18
 
-**Now: R2 M3, binding tenant commits to `intent.sdd`.** The owner picked it on 2026-11-18 and is away
-for about an hour, with "continue building".
-- **SPEC draft 1** is committed in `5ab7059`: `docs/plans/R2-sdd-m3-git-binding-spec-draft1.md`. It
-  answers sdd SPEC §14's five entry conditions.
-- **Key finding:** a git event carrying an `sdd` ref, appended before its change-intent revision,
-  fails every projection rebuild permanently. Rebuilds run in sequence order, and the commit is checked
-  against `change_intents_view`. So decision D3 makes `sync git` ledger the `sdd` revisions first.
-- **Owner decisions pending:**
-  - D1: the trailer token. Recommended: `sdd:<name>`.
-  - D2: per-commit claim skips.
-  - D3: the ordering above.
-- **Non-author review:** round 1 (`r2-m3-spec-review-round1-20261118`) is running.
+**Now: R2 M3, binding tenant commits to `intent.sdd`.** The owner picked it on 2026-11-18. This is
+SPEC work only; no code yet.
 
-**Exact next action:** when the round-1 verdict arrives, commit it verbatim and regenerate
-p6-artifact-integrity. Then answer its findings in draft 2 and bring D1-D3 and the CI wording to the
-owner. **No M3 code before** the SPEC passes review and the owner approves the CI (Law 6, governed
-paths).
+| Draft | Commit | Review round | Commit | Result |
+|---|---|---|---|---|
+| draft 1 | `5ab7059` | round 1 | `82a92ec` | NEEDS_WORK (1 HIGH, 7 MED, 3 LOW) |
+| draft 2 | `722240b` | round 2 | `1489027` | NEEDS_WORK (4 MED, 5 LOW) |
+| draft 3 | `36012cf` | round 3 | — | running (`r2-m3-spec-review-round3-20261118`) |
+
+**Design as of draft 3:**
+- **Ledger check:** an `sdd` ref binds only when its exact revision is already ledgered. Otherwise the
+  claim is skipped, and recovery is `sync intent sdd` then `sync git`.
+- **Skips are per commit and all-or-nothing:** a commit with a skipped claim binds no refs at all.
+- **Malformed values:** an `sdd:` value with any case of the prefix that fails the grammar is a
+  `malformed` skip, never a sync failure.
+- **Bindings stay insert-only (monotone).**
+- **This repository's trailer gate is unchanged.**
+
+**Owner decisions pending:**
+- D1: the token. Recommended: `sdd:<name>`.
+- D2: per-commit, all-or-nothing skips.
+- D3': the ledger check.
+- D4: the records/specdir ordering hazard. Recommended: file a deferral and fix it later with the same
+  mechanism.
+
+**Exact next action:** when the round-3 verdict arrives, commit it verbatim and regenerate
+p6-artifact-integrity. If it is NEEDS_WORK, write draft 4. If it is ACCEPTABLE, bring D1-D4 and the CI
+wording to the owner. No M3 code before both.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
 re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
