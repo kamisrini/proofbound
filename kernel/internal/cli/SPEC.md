@@ -24,7 +24,10 @@ artifact-path last segment (`<name>` or `YYYY-MM-DD-<name>`) all check, else the
 only if it is in `L`. Every tenant outcome is a `*ClaimUnboundError` (`unknown-change`,
 `archived-earlier`, `no-change-intent`, `unmappable:<cause>`, `not-ledgered`). `sync git` and
 `sync all` print `claim-skip <cause> <value> at <commit>` after their counts line, the value through
-`printableUnit`; `verify` prints none. The contract is the M3 SPEC
+`printableUnit`; `verify` prints none. The reviews connector receives a store-backed `LedgerView`
+(one empty-filter ledger pass, lazily, decoding git payloads as `connectorgit.Commit`); `sync reviews`
+and `sync all` print `held <cause> <path>` and `refused <cause> <path>` lines after their counts line,
+before returning any reviews error, and a refusal fails the command. The contract is the M3 SPEC
 (`docs/plans/R2-sdd-m3-git-binding-spec-draft5.md`, as amended by drafts 6-8).
 
 `proofbound twin replay [--through <seq>] [--candidate <file>]` runs `twin.ReplayIsolated` in a
@@ -82,3 +85,5 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-12 | A `--candidate` file injects exactly one counterfactual event and yields a verdict with a vera.replay.v1 proof whose candidate snapshot reflects the change | twin_replay_test.go::TestTwinReplayCounterfactualVerdict |
 | CLI-INV-13 | An `sdd` claim binds only an accepted revision that is in `L`; the resolver's anti-spoofing checks and skip-cause mapping are exact. Also proven end to end (claim-skip line, rebuild, binding) by the sdd package's `TestM3ClaimBindsOnlyALedgeredRevision` | sdd_claims_test.go::TestSDDResolverChecksAndCauses |
 | CLI-INV-14 | A history without an `sdd` value neither constructs the `sdd` provider nor reads `L`; one or more `sdd` values do each once per sync | sdd_claims_test.go::TestSDDClaimWorkIsLazy |
+| CLI-INV-15 | The store-backed reviews `LedgerView` sees every provider's commit claims and intent requirements (imported historical events included) and every reviews identity by payload schema, and reads the ledger lazily, at most once per sync and never for a sync without a v2 or requirement-review artifact. Also proven by TestStoreLedgerViewReadsLazilyOnce | ledger_view_test.go::TestStoreLedgerViewSeesEveryProvider |
+| CLI-INV-16 | `sync reviews` and `sync all` print their counts line, then held and refused lines, before returning any reviews error; holds alone exit 0 and a refusal fails the command | ledger_view_test.go::TestSyncReviewsPrintsHoldsAndFailsOnRefusal |

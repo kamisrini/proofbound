@@ -5,8 +5,9 @@
 The reviews connector reads only artifacts supplied by an injected
 `CommittedReader`. It does not inspect the working tree, open a database, or
 modify verdict files. Each valid schema-bearing artifact emits one `review.verdict` event via
-the normal store appender. The ledger's `(source, native_id, content_sha)` key
-makes unchanged ingestion idempotent and changed content a revision.
+the normal store appender, unless it is held or refused (R-INV-13). The ledger's
+`(source, native_id, content_sha)` key makes unchanged ingestion idempotent and changed content a
+revision.
 
 The verdict directory also contains documentary adjudications and reviewed exhibits committed under
 `VD-verdicts-are-artifacts-rl0rab`. A valid UTF-8 Markdown file whose first line is neither `---` nor
@@ -80,7 +81,8 @@ Requirement reviews use the same strict compact-JSON front matter. The exact ord
 and `CONTRADICTORY`. Every obligation in the bound requirement revision appears exactly once.
 
 The connector performs syntactic validation. Projection validation rejects a dangling or wrong
-revision digest, an absent obligation, and equality between `declared_reviewer` and the bound
+revision digest (a first revision whose requirement is not yet ledgered is held by the connector
+instead, and a later one is refused: R-INV-13), an absent obligation, and equality between `declared_reviewer` and the bound
 requirement's `declared_owner`. Independence is declared, not authenticated. Reviews emit
 `requirement.reviewed`; their native ID is `review_id`. Their result is a derived soft cap for all
 chains, and is a hard self-hosting acceptance condition only for Proofbound's own P5 chain.
@@ -100,7 +102,19 @@ type CommittedReader interface {
 type Appender interface {
     Append(context.Context, core.Event) (store.Record, bool, error)
 }
-type Deps struct { Reader CommittedReader; IDs *core.IDGenerator; Logger *slog.Logger; Now func() time.Time }
+type LedgerView interface {
+    Ledgered(ctx context.Context, schema, nativeID string) (bool, error)
+    CommitClaimed(ctx context.Context, sha, provider, recordID, digest string) (bool, error)
+    RequirementLedgered(ctx context.Context, source core.Source, recordID, digest string) (bool, error)
+}
+type Hold struct { Path, Cause string }
+var ErrRevisionRefused error
+type Deps struct { Reader CommittedReader; IDs *core.IDGenerator; Logger *slog.Logger; Now func() time.Time; Ledger LedgerView }
+type Result struct {
+    Listed, Appended, Existing, Malformed, Documentary int
+    Cursor                                             json.RawMessage
+    Held, Refused                                      []Hold
+}
 type Connector struct { /* unexported */ }
 func New(*Deps) (*Connector, error)
 func (c *Connector) Sync(context.Context, Appender) (Result, error)
@@ -121,12 +135,14 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
    native ID is `verdict_id`, payload is the validated verdict, and version is
    `reviews/1`.
 4. **R-INV-4 — Idempotent and revision-safe:** unchanged content is absorbed by
-   the appender; changed content with the same verdict ID produces a new event.
+   the appender; changed content with the same verdict ID produces a new event once its order-only
+   prerequisites are ledgered; until then it is refused (R-INV-13).
 5. **R-INV-5 — Determinism and preservation:** artifacts are processed by path,
    bytes are never changed, and an error stops later processing with explicit
-   progress in `Result`.
-6. **R-INV-6 — Dependency safety:** nil dependencies, typed-nil appenders, and
-   nil clocks are rejected at construction or sync.
+   progress in `Result`. A refusal (R-INV-13) does not stop processing; it fails the sync after the
+   remaining artifacts.
+6. **R-INV-6 — Dependency safety:** nil dependencies (including a nil or typed-nil `Ledger`),
+   typed-nil appenders, and nil clocks are rejected at construction or sync.
 7. **R-INV-7 — Binding:** event payload retains both the committed artifact path
    and artifact SHA; the reader path must equal front matter `artifact_path`.
 8. **R-INV-8 — Documentary artifacts are not wire verdicts:** valid plain Markdown is counted and
@@ -137,9 +153,25 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 10. **R-INV-10 — V2 aggregation is honest:** exact references and every targeted obligation are
     present; `ACCEPTABLE` cannot coexist with a non-satisfied outcome.
 11. **R-INV-11 — Evidence is bounded:** every evidence event exists before the verdict and authored
-    evidence cannot grade itself; dangling or future evidence fails projection.
+    evidence cannot grade itself; dangling or future evidence fails projection. The hold (R-INV-13)
+    deliberately does not consult evidence, so this stays true.
 12. **R-INV-12 — Requirement review binds exactly:** wrong revision digests, unknown outcomes,
     absent obligations, and equal declared author/reviewer identities fail closed.
+13. **R-INV-13 — Review artifacts never precede what they cite.** APPENDED 2026-11-19 (R2 M3,
+    `CI-sdd-warranty-m3-xaqocp`, `VD-sdd-m3-git-binding-2026-11-19` D5/D6). An artifact's identity
+    is `(schema, native id)`. v1 verdicts are never checked. For a v2 verdict or requirement review:
+    - **duplicate identity** among this sync's listed artifacts refuses every one of them
+      (`duplicate-identity`), whatever the path order;
+    - otherwise its order-only prerequisites are checked in this order: `CommitClaimed` for its exact
+      claim (v2 only, `claim-not-ledgered`), then `RequirementLedgered` for every requirement
+      (`requirement-not-ledgered`). Evidence is never consulted;
+    - prerequisites present: appended, whatever its revision;
+    - missing on a **first** revision (identity not `Ledgered`): **held**, reported in
+      `Result.Held`, not appended, not malformed, not in the cursor, and the sync succeeds;
+    - missing on a **later** revision: **refused**, reported in `Result.Refused`, not appended, not in
+      the cursor; the remaining artifacts are processed, then `Sync` returns an error wrapping
+      `ErrRevisionRefused` that names every refusal. A malformed artifact after a refusal still stops
+      the sync at once, and its error is joined with the refusal error.
 
 ## Proving table
 
@@ -157,3 +189,4 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 | R-INV-10 | V2 exact targets and aggregate status fail closed | reviews_test.go::TestObligationVerdictAggregation |
 | R-INV-11 | Evidence exists, precedes verdict, and does not self-grade | reviews_test.go::TestObligationVerdictEvidenceValidation |
 | R-INV-12 | Requirement reviews bind revision, obligations, and independent identity | reviews_test.go::TestRequirementReviewValidation |
+| R-INV-13 | First revisions wait for their order-only prerequisites; later revisions and duplicate identities are refused loudly. Also proven by TestRefuseLaterRevisionsLoudly, TestDuplicateIdentitiesAreRefusedInEitherOrder, TestRefusalJoinsALaterMalformedError and TestHoldConsultsTheViewOnlyForV2AndReviews | hold_test.go::TestHoldFirstRevisionsUntilPrerequisitesAreLedgered |

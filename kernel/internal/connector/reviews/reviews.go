@@ -15,6 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
@@ -53,21 +54,46 @@ type Verdict struct {
 	ArtifactSHA    string    `json:"artifact_sha"`
 }
 
+// LedgerView answers the order-only prerequisite questions the hold asks (R-INV-13). The CLI
+// implements it over the store; it never reads tenant bytes.
+type LedgerView interface {
+	// Ledgered reports whether a reviews event of this payload schema and native id is ledgered.
+	Ledgered(ctx context.Context, schema, nativeID string) (bool, error)
+	// CommitClaimed reports whether a ledgered git commit event for sha carries exactly this ref.
+	CommitClaimed(ctx context.Context, sha, provider, recordID, digest string) (bool, error)
+	// RequirementLedgered reports whether this exact requirement revision is ledgered.
+	RequirementLedgered(ctx context.Context, source core.Source, recordID, digest string) (bool, error)
+}
+
+// Hold reports one artifact that was not appended (R-INV-13), with its cause.
+type Hold struct {
+	Path  string
+	Cause string
+}
+
+// ErrRevisionRefused is wrapped by the error Sync returns after processing every artifact when at
+// least one was refused (R-INV-13).
+var ErrRevisionRefused = errors.New("review artifact revision refused")
+
 type Deps struct {
 	Reader CommittedReader
 	IDs    *core.IDGenerator
 	Logger *slog.Logger
 	Now    func() time.Time
+	Ledger LedgerView
 }
 type Connector struct {
 	reader CommittedReader
 	ids    *core.IDGenerator
 	logger *slog.Logger
 	now    func() time.Time
+	ledger LedgerView
 }
+
 type Result struct {
 	Listed, Appended, Existing, Malformed, Documentary int
 	Cursor                                             json.RawMessage
+	Held, Refused                                      []Hold
 }
 
 func New(d *Deps) (*Connector, error) {
@@ -83,11 +109,14 @@ func New(d *Deps) (*Connector, error) {
 	if d.Logger == nil {
 		return nil, errors.New("reviews connector: Logger is required")
 	}
+	if d.Ledger == nil || isNil(d.Ledger) {
+		return nil, errors.New("reviews connector: Ledger is required")
+	}
 	now := d.Now
 	if now == nil {
 		now = time.Now
 	}
-	return &Connector{reader: d.Reader, ids: d.IDs, logger: d.Logger, now: now}, nil
+	return &Connector{reader: d.Reader, ids: d.IDs, logger: d.Logger, now: now, ledger: d.Ledger}, nil
 }
 
 func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error) {
@@ -95,7 +124,7 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	if c == nil {
 		return out, errors.New("reviews connector: connector is not initialized")
 	}
-	if c.reader == nil || c.ids == nil || c.now == nil {
+	if c.reader == nil || c.ids == nil || c.now == nil || c.ledger == nil {
 		return out, errors.New("reviews connector: connector is not initialized")
 	}
 	if appender == nil || isNil(appender) {
@@ -108,12 +137,17 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	sort.Slice(items, func(i, j int) bool { return items[i].Path < items[j].Path })
 	out.Listed = len(items)
 	valid := make([]string, 0, len(items))
+	duplicates := duplicateIdentities(items)
+	// fail returns err joined with the refusal error when anything was refused (R-INV-13).
+	fail := func(err error) (Result, error) {
+		out.Cursor = cursor(valid)
+		return out, errors.Join(err, refusedError(out.Refused))
+	}
 	for _, item := range items {
 		candidate, err := wireCandidate(item.Path, item.Bytes)
 		if err != nil {
 			out.Malformed++
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: %w", item.Path, err))
 		}
 		if !candidate {
 			out.Documentary++
@@ -123,11 +157,12 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 		schema, err := artifactSchema(item.Bytes)
 		if err != nil {
 			out.Malformed++
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: %w", item.Path, err))
 		}
 		var value any
 		var nativeID string
+		var verdict *ObligationVerdict
+		var review *RequirementReview
 		kind := core.KindReviewVerdict
 		switch schema {
 		case "vera.verdict.v1":
@@ -145,6 +180,7 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 			} else {
 				value = v
 				nativeID = v.VerdictID
+				verdict = &v
 			}
 		case "proofbound.requirement-review.v1":
 			v, parseErr := ParseRequirementReview(item.Path, item.Bytes)
@@ -154,30 +190,45 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 				value = v
 				nativeID = v.ReviewID
 				kind = core.KindRequirementReview
+				review = &v
 			}
 		default:
 			err = fmt.Errorf("unknown review schema %q", schema)
 		}
 		if err != nil {
 			out.Malformed++
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: %w", item.Path, err))
+		}
+		if verdict != nil || review != nil {
+			cause, err := c.holdCause(ctx, schema, nativeID, verdict, review, duplicates)
+			if err != nil {
+				return fail(fmt.Errorf("reviews connector: %s: ledger view: %w", item.Path, err))
+			}
+			if cause != "" {
+				refused, err := c.isRevision(ctx, schema, nativeID, cause)
+				if err != nil {
+					return fail(fmt.Errorf("reviews connector: %s: ledger view: %w", item.Path, err))
+				}
+				if refused {
+					out.Refused = append(out.Refused, Hold{Path: item.Path, Cause: cause})
+				} else {
+					out.Held = append(out.Held, Hold{Path: item.Path, Cause: cause})
+				}
+				continue
+			}
 		}
 		valid = append(valid, item.Path)
 		payload, err := json.Marshal(value)
 		if err != nil {
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: marshal: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: marshal: %w", item.Path, err))
 		}
 		e, err := c.ids.NewEvent(core.NewEventParams{Source: core.SourceReviews, NativeID: nativeID, Kind: kind, OccurredAt: c.now(), Payload: payload, ConnectorVersion: Version})
 		if err != nil {
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: event: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: event: %w", item.Path, err))
 		}
 		_, inserted, err := appender.Append(ctx, e)
 		if err != nil {
-			out.Cursor = cursor(valid)
-			return out, fmt.Errorf("reviews connector: %s: append: %w", item.Path, err)
+			return fail(fmt.Errorf("reviews connector: %s: append: %w", item.Path, err))
 		}
 		if inserted {
 			out.Appended++
@@ -186,7 +237,97 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 		}
 	}
 	out.Cursor = cursor(valid)
-	return out, nil
+	return out, refusedError(out.Refused)
+}
+
+// identityKey is an artifact's identity for the hold: its payload schema and native id (R-INV-13).
+func identityKey(schema, nativeID string) string { return schema + "\x00" + nativeID }
+
+// duplicateIdentities returns the v2-verdict and requirement-review identities that more than one
+// listed artifact carries. Artifacts that do not parse are ignored here; the main loop reaches them
+// at their own position and fails as before (R-INV-5).
+func duplicateIdentities(items []Artifact) map[string]bool {
+	count := map[string]int{}
+	for _, item := range items {
+		if candidate, err := wireCandidate(item.Path, item.Bytes); err != nil || !candidate {
+			continue
+		}
+		schema, err := artifactSchema(item.Bytes)
+		if err != nil {
+			continue
+		}
+		switch schema {
+		case "proofbound.obligation-verdict.v2":
+			if v, err := ParseObligationVerdict(item.Path, item.Bytes); err == nil {
+				count[identityKey(schema, v.VerdictID)]++
+			}
+		case "proofbound.requirement-review.v1":
+			if v, err := ParseRequirementReview(item.Path, item.Bytes); err == nil {
+				count[identityKey(schema, v.ReviewID)]++
+			}
+		}
+	}
+	dup := map[string]bool{}
+	for key, n := range count {
+		if n > 1 {
+			dup[key] = true
+		}
+	}
+	return dup
+}
+
+// holdCause returns "" when the artifact may be appended, or the cause it is held or refused for:
+// duplicate-identity first, then the order-only prerequisites in the order R-INV-13 lists them.
+// Evidence is never consulted.
+func (c *Connector) holdCause(ctx context.Context, schema, nativeID string, verdict *ObligationVerdict, review *RequirementReview, duplicates map[string]bool) (string, error) {
+	if duplicates[identityKey(schema, nativeID)] {
+		return "duplicate-identity", nil
+	}
+	requirements := []connectorintent.Reference{}
+	if verdict != nil {
+		provider := strings.TrimPrefix(verdict.ChangeIntent.Source, "intent.")
+		claimed, err := c.ledger.CommitClaimed(ctx, verdict.ReviewedCommit, provider, verdict.ChangeIntent.RecordID, verdict.ChangeIntent.ArtifactSHA256)
+		if err != nil {
+			return "", err
+		}
+		if !claimed {
+			return "claim-not-ledgered", nil
+		}
+		requirements = verdict.Requirements
+	} else {
+		requirements = append(requirements, review.Requirement)
+	}
+	for _, ref := range requirements {
+		ok, err := c.ledger.RequirementLedgered(ctx, core.Source(ref.Source), ref.RecordID, ref.ArtifactSHA256)
+		if err != nil {
+			return "", err
+		}
+		if !ok {
+			return "requirement-not-ledgered", nil
+		}
+	}
+	return "", nil
+}
+
+// isRevision reports whether a not-appended artifact is refused rather than held: a duplicate
+// identity is always refused; otherwise it is refused when its identity is already ledgered.
+func (c *Connector) isRevision(ctx context.Context, schema, nativeID, cause string) (bool, error) {
+	if cause == "duplicate-identity" {
+		return true, nil
+	}
+	return c.ledger.Ledgered(ctx, schema, nativeID)
+}
+
+// refusedError lists every refused artifact, or is nil when none was refused.
+func refusedError(refused []Hold) error {
+	if len(refused) == 0 {
+		return nil
+	}
+	parts := make([]string, 0, len(refused))
+	for _, h := range refused {
+		parts = append(parts, h.Cause+" "+h.Path)
+	}
+	return fmt.Errorf("reviews connector: %w: %s", ErrRevisionRefused, strings.Join(parts, "; "))
 }
 
 func artifactSchema(data []byte) (string, error) {

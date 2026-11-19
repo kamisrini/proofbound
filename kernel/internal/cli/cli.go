@@ -430,7 +430,10 @@ func repositoryGitEnv() []string {
 	return env
 }
 
-type reviewsResult struct{ Listed, Appended, Existing, Malformed, Documentary int }
+type reviewsResult struct {
+	Listed, Appended, Existing, Malformed, Documentary int
+	Held, Refused                                      []connectorreviews.Hold
+}
 
 type committedIntentReader struct{ root string }
 
@@ -569,7 +572,7 @@ func writeSkips(output io.Writer, result connectorintent.Result) error {
 }
 
 func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, ids *core.IDGenerator) (reviewsResult, error) {
-	connector, err := connectorreviews.New(&connectorreviews.Deps{Reader: committedVerdictReader{root: root}, IDs: ids, Logger: logger()})
+	connector, err := connectorreviews.New(&connectorreviews.Deps{Reader: committedVerdictReader{root: root}, IDs: ids, Logger: logger(), Ledger: &storeLedgerView{ledger: ledger}})
 	if err != nil {
 		return reviewsResult{}, err
 	}
@@ -579,7 +582,110 @@ func syncReviewsOnStore(ctx context.Context, root string, ledger *store.Store, i
 	}
 	result, syncErr := connector.Sync(ctx, run)
 	finishErr := run.Finish(ctx, result.Cursor, syncErr)
-	return reviewsResult{result.Listed, result.Appended, result.Existing, result.Malformed, result.Documentary}, errors.Join(syncErr, finishErr)
+	return reviewsResult{result.Listed, result.Appended, result.Existing, result.Malformed, result.Documentary, result.Held, result.Refused}, errors.Join(syncErr, finishErr)
+}
+
+// ledgerViewSets are what one pass over the ledger tells the reviews hold (M3 SPEC draft 8 §4.6).
+type ledgerViewSets struct {
+	identities   map[string]bool // payload schema \x00 native id, of every reviews event
+	claims       map[string]bool // sha \x00 provider \x00 record id \x00 digest, of every git ref
+	requirements map[string]bool // source \x00 requirement id \x00 digest, of every intent requirement
+}
+
+// readLedgerView is one ReadEvents pass with an empty filter. It is a variable so a test can count
+// passes (row 12). An undecodable git payload, or a reviews payload without a schema, fails it: the
+// ledger is then unprojectable anyway, and failing is fail-closed.
+var readLedgerView = func(ctx context.Context, ledger *store.Store) (*ledgerViewSets, error) {
+	sets := &ledgerViewSets{identities: map[string]bool{}, claims: map[string]bool{}, requirements: map[string]bool{}}
+	err := ledger.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
+		e := record.Event
+		switch {
+		case e.Source == core.SourceReviews:
+			var probe struct {
+				Schema string `json:"schema"`
+			}
+			if err := json.Unmarshal(e.Payload, &probe); err != nil || probe.Schema == "" {
+				return fmt.Errorf("ledgered reviews event seq %d has no schema", record.Seq)
+			}
+			sets.identities[probe.Schema+"\x00"+e.NativeID] = true
+		case e.Source == core.SourceGit && e.Kind == core.KindCommitRecorded:
+			var commit connectorgit.Commit
+			if err := json.Unmarshal(e.Payload, &commit); err != nil {
+				return fmt.Errorf("ledgered git event seq %d: %w", record.Seq, err)
+			}
+			for _, ref := range commit.IntentRefs {
+				sets.claims[commit.SHA+"\x00"+ref.Provider+"\x00"+ref.RecordID+"\x00"+ref.ArtifactSHA256] = true
+			}
+		case e.Kind == core.KindRequirement && strings.HasPrefix(string(e.Source), "intent."):
+			var requirement struct {
+				RequirementID  string `json:"requirement_id"`
+				ArtifactSHA256 string `json:"artifact_sha256"`
+			}
+			if err := json.Unmarshal(e.Payload, &requirement); err != nil {
+				return fmt.Errorf("ledgered requirement seq %d: %w", record.Seq, err)
+			}
+			sets.requirements[string(e.Source)+"\x00"+requirement.RequirementID+"\x00"+requirement.ArtifactSHA256] = true
+		}
+		return nil
+	})
+	return sets, err
+}
+
+// storeLedgerView answers the reviews hold from the store, reading the ledger lazily (at most once
+// per sync, and never for a sync whose artifacts are all v1 or documentary).
+type storeLedgerView struct {
+	ledger *store.Store
+	sets   *ledgerViewSets
+}
+
+func (v *storeLedgerView) load(ctx context.Context) (*ledgerViewSets, error) {
+	if v.sets == nil {
+		sets, err := readLedgerView(ctx, v.ledger)
+		if err != nil {
+			return nil, err
+		}
+		v.sets = sets
+	}
+	return v.sets, nil
+}
+
+func (v *storeLedgerView) Ledgered(ctx context.Context, schema, nativeID string) (bool, error) {
+	sets, err := v.load(ctx)
+	if err != nil {
+		return false, err
+	}
+	return sets.identities[schema+"\x00"+nativeID], nil
+}
+
+func (v *storeLedgerView) CommitClaimed(ctx context.Context, sha, provider, recordID, digest string) (bool, error) {
+	sets, err := v.load(ctx)
+	if err != nil {
+		return false, err
+	}
+	return sets.claims[sha+"\x00"+provider+"\x00"+recordID+"\x00"+digest], nil
+}
+
+func (v *storeLedgerView) RequirementLedgered(ctx context.Context, source core.Source, recordID, digest string) (bool, error) {
+	sets, err := v.load(ctx)
+	if err != nil {
+		return false, err
+	}
+	return sets.requirements[string(source)+"\x00"+recordID+"\x00"+digest], nil
+}
+
+// printHolds prints the reviews hold's held and refused lines, after a counts line (M3 §4.6).
+func printHolds(output io.Writer, result reviewsResult) error {
+	for _, group := range []struct {
+		word  string
+		holds []connectorreviews.Hold
+	}{{"held", result.Held}, {"refused", result.Refused}} {
+		for _, h := range group.holds {
+			if _, err := fmt.Fprintf(output, "%s %s %s\n", group.word, h.Cause, printableUnit(h.Path)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 type githubResult struct{ Listed, Appended, Existing int }
@@ -670,12 +776,12 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			return err
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
-		result, err := syncReviewsOnStore(ctx, root, ledger, ids)
-		if err != nil {
-			return err
+		result, syncErr := syncReviewsOnStore(ctx, root, ledger, ids)
+		// Counts, held and refused lines are printed before ANY error is returned (M3 draft 8 §4.6).
+		if _, err := fmt.Fprintf(output, "listed=%d appended=%d existing=%d malformed=%d documentary=%d\n", result.Listed, result.Appended, result.Existing, result.Malformed, result.Documentary); err != nil {
+			return errors.Join(syncErr, err)
 		}
-		_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d malformed=%d documentary=%d\n", result.Listed, result.Appended, result.Existing, result.Malformed, result.Documentary)
-		return err
+		return errors.Join(syncErr, printHolds(output, result))
 	case commandSyncGitHub:
 		ids, err := newIDs()
 		if err != nil {
@@ -803,14 +909,16 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		reviewsResult, err := syncReviewsOnStore(ctx, root, ledger, ids)
-		if err != nil {
-			return err
-		}
+		reviewsResult, syncErr := syncReviewsOnStore(ctx, root, ledger, ids)
+		// Reviews is the last step; its counts, claim-skip, held and refused lines are printed before
+		// its error is returned (M3 draft 8 §4.6).
 		if _, err = fmt.Fprintf(output, "intent appended=%d git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", intentResult.Appended, gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended); err != nil {
-			return err
+			return errors.Join(syncErr, err)
 		}
-		return printClaimSkips(output, gitResult.ClaimSkips)
+		if err := printClaimSkips(output, gitResult.ClaimSkips); err != nil {
+			return errors.Join(syncErr, err)
+		}
+		return errors.Join(syncErr, printHolds(output, reviewsResult))
 	case commandVerify:
 		ids, err := newIDs()
 		if err != nil {

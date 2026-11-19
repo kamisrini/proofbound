@@ -66,7 +66,7 @@ func ids(t *testing.T) *core.IDGenerator {
 }
 func connector(t *testing.T, r CommittedReader) *Connector {
 	t.Helper()
-	c, err := New(&Deps{Reader: r, IDs: ids(t), Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Now: func() time.Time { return time.Unix(200, 0).UTC() }})
+	c, err := New(&Deps{Reader: r, IDs: ids(t), Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Now: func() time.Time { return time.Unix(200, 0).UTC() }, Ledger: admitAll{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -604,7 +604,7 @@ func TestLegacyValidationClosedRegistriesAndPaths(t *testing.T) {
 func TestNewRequiresDependencies(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	r := &reader{}
-	for name, d := range map[string]*Deps{"nil": nil, "reader": {IDs: ids(t), Logger: log}, "ids": {Reader: r, Logger: log}, "logger": {Reader: r, IDs: ids(t)}} {
+	for name, d := range map[string]*Deps{"nil": nil, "reader": {IDs: ids(t), Logger: log, Ledger: admitAll{}}, "ids": {Reader: r, Logger: log, Ledger: admitAll{}}, "logger": {Reader: r, IDs: ids(t), Ledger: admitAll{}}, "ledger": {Reader: r, IDs: ids(t), Logger: log}} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := New(d); err == nil {
 				t.Fatal("invalid dependencies accepted")
@@ -616,8 +616,12 @@ func TestNewRequiresDependencies(t *testing.T) {
 func TestNewRejectsTypedNilReaderAndSyncRejectsInvalidState(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	var nilReader *reader
-	if _, err := New(&Deps{Reader: nilReader, IDs: ids(t), Logger: log}); err == nil {
+	if _, err := New(&Deps{Reader: nilReader, IDs: ids(t), Logger: log, Ledger: admitAll{}}); err == nil {
 		t.Fatal("typed-nil reader accepted")
+	}
+	var nilLedger *admitAllPtr
+	if _, err := New(&Deps{Reader: &reader{}, IDs: ids(t), Logger: log, Ledger: nilLedger}); err == nil {
+		t.Fatal("typed-nil ledger accepted")
 	}
 	valid := connector(t, &reader{})
 	for name, c := range map[string]*Connector{
@@ -625,6 +629,7 @@ func TestNewRejectsTypedNilReaderAndSyncRejectsInvalidState(t *testing.T) {
 		"reader": {ids: valid.ids, now: valid.now},
 		"ids":    {reader: valid.reader, now: valid.now},
 		"now":    {reader: valid.reader, ids: valid.ids},
+		"ledger": {reader: valid.reader, ids: valid.ids, now: valid.now},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := c.Sync(context.Background(), &appender{}); err == nil {
@@ -636,7 +641,7 @@ func TestNewRejectsTypedNilReaderAndSyncRejectsInvalidState(t *testing.T) {
 	if _, err := valid.Sync(context.Background(), nilAppender); err == nil {
 		t.Fatal("typed-nil appender accepted")
 	}
-	c, err := New(&Deps{Reader: &reader{}, IDs: ids(t), Logger: log})
+	c, err := New(&Deps{Reader: &reader{}, IDs: ids(t), Logger: log, Ledger: admitAll{}})
 	if err != nil || c.now == nil {
 		t.Fatalf("default clock not installed: %v", err)
 	}
