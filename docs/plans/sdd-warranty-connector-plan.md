@@ -158,8 +158,9 @@ readable output, under the review budget (`VD-review-ceremony-tiers-v2b6kp`, ame
    and what the readiness gate says.
 2. **M4 — drift.** The same report flags every warranty whose spec revision was superseded after it
    was verified.
-3. **Spec Kit** (M2's Spec Kit mapping and M5 merged; both were Spec Kit). The same demo on a real
-   Spec Kit repository.
+3. **Spec Kit** (M2's Spec Kit mapping and M5 merged; both were Spec Kit). Built 2026-11-19
+   (`docs/plans/R2-speckit-spec.md`): the same flow (`init speckit`, claims, review, gate, drift),
+   proven on fixtures and end to end. No public Spec Kit project was at hand for a real-repo run.
 4. **R2 acceptance** (the rest of M6): the owner runs the demos and accepts Release 2.
 
 **Dependencies (original):** `M0 → M1 → M2 → M3 → M4`; `M5` needs M3; `M6` needs M4+M5. M4 is where the

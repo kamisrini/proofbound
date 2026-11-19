@@ -350,9 +350,9 @@ func TestRecordIDsAreDeterministic(t *testing.T) {
 		case "obligation":
 			got, err = obligationID(v.Section, v.Name)
 		case "change-intent":
-			got, err = changeIntentID(v.Name)
+			got, err = changeIntentID(Kit, v.Name)
 		case "requirement":
-			got, err = requirementID(v.Key, v.Digest)
+			got, err = requirementID(Kit, v.Key, v.Digest)
 		default:
 			t.Fatalf("unknown vector kind %q", v.Kind)
 		}
@@ -993,15 +993,6 @@ func TestProfilePathsAreLiteral(t *testing.T) {
 		"bad owner pattern": {`"pattern": "openspec/**", "owner"`, `"pattern": ":(glob)**", "owner"`},
 	} {
 		expectProfileInvalid(t, name, profileWith(repl[0], repl[1]))
-	}
-}
-
-// TestM1IsOpenSpecOnly proves SDD-INV-64.
-func TestM1IsOpenSpecOnly(t *testing.T) {
-	root, _ := replayHistory(t, "speckit-history")
-	revs, skips := syncAll(t, newProvider(t, root))
-	if len(revs) != 0 || len(skips) != 1 || !skips["profile|profile-invalid"] {
-		t.Fatalf("revs=%d skips=%s", len(revs), fmtSkips(skips))
 	}
 }
 

@@ -33,9 +33,10 @@ var commitMsgHook string
 
 const agentsBegin = "<!-- proofbound:begin -->"
 
-// initOpenSpec writes the starter kit into root. It never overwrites a file; the .gitignore lines
-// and the AGENTS.md block are appended only when missing, so a second run changes nothing.
-func initOpenSpec(ctx context.Context, root, owner string, output io.Writer) error {
+// initKit writes the starter kit for kit ("openspec" or "speckit") into root. It never overwrites a
+// file; the .gitignore lines and the AGENTS.md block are appended only when missing, so a second run
+// changes nothing (CLI-INV-18).
+func initKit(ctx context.Context, root, kit, owner string, output io.Writer) error {
 	if strings.TrimSpace(owner) == "" {
 		owner = strings.TrimSpace(gitOutput(ctx, root, "config", "user.name"))
 	}
@@ -46,7 +47,10 @@ func initOpenSpec(ctx context.Context, root, owner string, output io.Writer) err
 	if err != nil {
 		return err
 	}
-	profile := `{
+	var profile string
+	switch kit {
+	case "openspec":
+		profile = `{
   "schema": "proofbound.sdd-profile.v1",
   "kit": "openspec",
   "requirements": { "paths": ["openspec/changes/*/specs/*/spec.md", "openspec/changes/archive/*/specs/*/spec.md"] },
@@ -55,6 +59,19 @@ func initOpenSpec(ctx context.Context, root, owner string, output io.Writer) err
   "sponsors": [ { "pattern": "openspec/changes/**", "sponsor": ` + string(quoted) + ` } ]
 }
 `
+	case "speckit":
+		profile = `{
+  "schema": "proofbound.sdd-profile.v1",
+  "kit": "speckit",
+  "requirements": { "paths": ["specs/*/spec.md"] },
+  "changes": { "mode": "feature-sibling", "root": "specs", "sibling": "tasks.md", "status": "accepted" },
+  "owners":   [ { "pattern": "specs/**", "owner": ` + string(quoted) + ` } ],
+  "sponsors": [ { "pattern": "specs/**", "sponsor": ` + string(quoted) + ` } ]
+}
+`
+	default:
+		return fmt.Errorf("init: unknown kit %q (openspec or speckit)", kit)
+	}
 	hooks := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--git-path", "hooks"))
 	if hooks == "" {
 		return errors.New("init: cannot locate the git hooks directory")

@@ -1,19 +1,21 @@
 <!-- proofbound:begin -->
 ## Proofbound: every commit says which change it implements
 
-This project uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) for specs and Proofbound to
-warrant the code against them.
+This project writes specs with a spec-driven-development kit ([OpenSpec](https://github.com/Fission-AI/OpenSpec)
+or [Spec Kit](https://github.com/github/spec-kit)) and uses Proofbound to warrant the code against them.
 
-- **End every commit message with a trailer naming the OpenSpec change it implements:**
-  `Intent: sdd:<change-name>` (the folder name under `openspec/changes/`). A commit that implements
-  no change (docs, chores, reviews) is committed with `PROOFBOUND_NO_INTENT=1 git commit ...`.
+- **End every commit message with a trailer naming the change it implements:**
+  `Intent: sdd:<name>`, where `<name>` is the folder name: the OpenSpec change under
+  `openspec/changes/`, or the Spec Kit feature under `specs/` (for example `001-export`). A commit
+  that implements no change (docs, chores, reviews) is committed with
+  `PROOFBOUND_NO_INTENT=1 git commit ...`.
 - **Never claim a change the commit does not implement.** The claim is what gets verified.
 
 ### Reviewing a commit (the reviewer is never the author of the commit)
 
 1. `proofbound sync all`, then `proofbound review draft <commit>`. This writes
    `.proofbound/drafts/<commit>/draft.json` and prints every obligation the commit claims.
-2. Read the change (`openspec/changes/<name>/`), read the commit (`git show <commit>`), run the tests.
+2. Read the change (`openspec/changes/<name>/` or `specs/<name>/`), read the commit (`git show <commit>`), run the tests.
 3. Edit `draft.json`: set `declared_reviewer` to your name (not the owner's). For each verdict
    obligation set `outcome` to `SATISFIED` only when the code and tests show it is done; otherwise
    `NOT_SATISFIED` or `INCONCLUSIVE`. For each review obligation set `outcome` to `VERIFIABLE`,

@@ -58,8 +58,8 @@ func (m *m3Tenant) write(rel, body string) {
 // the profile and must never be committed.
 func (m *m3Tenant) commit(subject string, trailers ...string) string {
 	m.t.Helper()
-	gitIn(m.t, m.root, "add", "-A", "--", sdd.ProfilePath, "openspec")
-	for _, extra := range []string{"src", "docs", "gates"} {
+	gitIn(m.t, m.root, "add", "-A", "--", sdd.ProfilePath)
+	for _, extra := range []string{"openspec", "specs", "src", "docs", "gates"} {
 		if _, err := os.Stat(filepath.Join(m.root, extra)); err == nil {
 			gitIn(m.t, m.root, "add", "-A", "--", extra)
 		}

@@ -136,16 +136,20 @@ kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-54	Only regular files are r
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-55	A path outside the SDD roots, whatever its bytes, never affects the sdd provider.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-56	`sdd` runs only when selected by name; `sync intent all` neither constructs nor walks it.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-57	The §4.2 parser agrees with OpenSpec's reader on the pinned corpus.
-kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-58	A Spec Kit id outside the canonical obligation grammar makes that record unmappable.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-58	RETIRED (2026-11-19, R2 Spec Kit): a line outside the canonical `FR|SC|NFR-<n>` obligation grammar is prose, not a near-miss id (`docs/plans/R2-speckit-spec.md` §3); replaced by INV-69.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-59	Resolve is total over tenant states: a revision or one of four sentinels; any other error comes only from the reader.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-60	`sync intent sdd` prints every Skip and exits 0.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-61	Unexpected object types at a root, the archive, or the profile path are state-level skips, never reader errors; files a unit neither parses nor carries are never a cause.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-62	RETIRED (draft 10): its literal-pathspec clause is untestable (§3); replaced by INV-67.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-63	RETIRED (draft 9): "equal outcomes" was false for Resolve, which also reads parents; replaced by INV-65.
-kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-64	M1 maps OpenSpec only; a speckit profile is profile-invalid.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-64	RETIRED (2026-11-19, R2 Spec Kit): a speckit profile is now valid; replaced by INV-69..71.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-65	The state key carries the mode and object id of the profile entry and of every root; equal keys imply equal changeOutcome and equal Skips.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-66	A regular file directly under changes.root or changes.archive is never a change, a unit, or a cause.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-67	Profile paths follow the literal grammar; a malformed path is profile-invalid, never a reader error.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-68	StateRevision answers Resolve's question without the archived-earlier refusal.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-69	Spec Kit: a feature's spec.md is one record, its sibling makes the change intent.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-70	The Spec Kit profile is strict, and the kit decides which shape is valid.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-71	Resolve on Spec Kit is total; OpenSpec ids are unchanged by the kit-aware suffix.
 kernel/internal/connector/reviews/SPEC.md	R-INV-1	Committed-only input:
 kernel/internal/connector/reviews/SPEC.md	R-INV-2	Exact schema:
 kernel/internal/connector/reviews/SPEC.md	R-INV-3	Event mapping:

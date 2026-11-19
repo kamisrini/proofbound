@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init openspec [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -126,7 +126,7 @@ func parseCommand(args []string) command {
 		return commandMigrateHistoricalEvidence
 	case len(args) >= 2 && args[0] == "twin" && args[1] == "replay":
 		return commandTwinReplay
-	case (len(args) == 2 || (len(args) == 4 && args[2] == "--owner" && args[3] != "")) && args[0] == "init" && args[1] == "openspec":
+	case (len(args) == 2 || (len(args) == 4 && args[2] == "--owner" && args[3] != "")) && args[0] == "init" && (args[1] == "openspec" || args[1] == "speckit"):
 		return commandInitOpenSpec
 	case len(args) == 3 && args[0] == "review" && args[1] == "draft" && args[2] != "":
 		return commandReviewDraft
@@ -756,7 +756,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if len(args) == 4 {
 			owner = args[3]
 		}
-		return initOpenSpec(ctx, root, owner, output)
+		return initKit(ctx, root, args[1], owner, output)
 	case commandReviewSeal:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

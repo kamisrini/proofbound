@@ -1,7 +1,7 @@
 # Proofbound — Demo Hub (Release 2, in progress)
 
 **Release 2 is the SDD Warranty Connector:** Proofbound reads the specs a spec-driven-development
-tool writes (OpenSpec today), binds each commit to the exact spec revision it claims to implement,
+tool writes ([OpenSpec](https://github.com/Fission-AI/OpenSpec) or [Spec Kit](https://github.com/github/spec-kit)), binds each commit to the exact spec revision it claims to implement,
 and refuses to vouch for work nobody has verified. This page shows it on a real project.
 
 | I want to… | Do this | Time |
@@ -52,19 +52,20 @@ intent=CI-install-skills-globally-57r52f ... state=IMPLEMENTED_UNVERIFIED ...
 
 Look up any change the same way: `proofbound report intent sdd:<change-name>`.
 
-## Use it on your own OpenSpec project
+## Use it on your own OpenSpec or Spec Kit project
 
 Build the CLI once (Release 1, [§1](../r1/DEMO.md#1-build-the-proofbound-binary)), then in your
 project's repository:
 
 ```bash
-proofbound init openspec          # once: profile, .gitignore lines, AGENTS.md block,
+proofbound init openspec          # once (or: proofbound init speckit): profile, .gitignore lines, AGENTS.md block,
                                   # a Claude Code reviewer subagent, and a commit-msg hook
 git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
 PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no change, so no trailer
 ```
 
-Then work as usual with any agent. Every commit ends with `Intent: sdd:<change-name>` (the hook
+Then work as usual with any agent. Every commit ends with `Intent: sdd:<name>`, where `<name>` is the
+OpenSpec change folder or the Spec Kit feature folder such as `001-export` (the hook
 reminds you; AGENTS.md tells your agent). To warrant a commit, a reviewer who did not write it
 (another person, or the `proofbound-reviewer` subagent in a separate session) runs:
 

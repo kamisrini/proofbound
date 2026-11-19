@@ -118,9 +118,11 @@ func (g *GitReader) StateKey(ctx context.Context, commit string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	ae, err := g.own(ctx, commit, p.Archive)
-	if err != nil {
-		return "", err
+	var ae *gitcmd.TreeEntry // Spec Kit has no archive: its key line is "-"
+	if p.Archive != "" {
+		if ae, err = g.own(ctx, commit, p.Archive); err != nil {
+			return "", err
+		}
 	}
 	return entryLine(pe) + "\n" + entryLine(re) + "\n" + entryLine(ae), nil
 }
@@ -149,6 +151,9 @@ func (g *GitReader) Read(ctx context.Context, commit string) ([]Artifact, error)
 		return out, nil
 	}
 	for _, own := range []string{p.Root, p.Archive} {
+		if own == "" {
+			continue // Spec Kit has no archive
+		}
 		e, err := g.own(ctx, commit, own)
 		if err != nil {
 			return nil, err
@@ -166,7 +171,7 @@ func (g *GitReader) Read(ctx context.Context, commit string) ([]Artifact, error)
 		return nil, err
 	}
 	for _, e := range under {
-		if e.Path == p.Archive {
+		if p.Archive != "" && e.Path == p.Archive {
 			continue // already listed as the archive's own entry
 		}
 		a, err := g.artifact(ctx, e)

@@ -1,6 +1,6 @@
 ---
 name: proofbound-reviewer
-description: Independently verifies one commit against the OpenSpec change it claims, and records the verdict with Proofbound. Use after a commit with an `Intent: sdd:<change>` trailer, never on a commit you wrote in this session.
+description: Independently verifies one commit against the OpenSpec change or Spec Kit feature it claims, and records the verdict with Proofbound. Use after a commit with an `Intent: sdd:<change>` trailer, never on a commit you wrote in this session.
 ---
 
 You are an independent reviewer. You did not write the commit you review. Your job is to say, for

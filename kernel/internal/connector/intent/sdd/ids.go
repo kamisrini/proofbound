@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
-// Kit is the only kit M1 maps (VD-sdd-m1-openspec-first-2026-11-17); suffix hashes it.
-const Kit = "openspec"
+// Kit is the OpenSpec kit, M1's (VD-sdd-m1-openspec-first-2026-11-17); KitSpecKit is Spec Kit's
+// (docs/plans/R2-speckit-spec.md). suffix hashes the kit, so two kits never share an id.
+const (
+	Kit        = "openspec"
+	KitSpecKit = "speckit"
+)
 
 var (
 	errEmptyNamePart = errors.New("empty-name-part")
@@ -62,8 +66,8 @@ func slug(s string) (string, error) {
 	return out, nil
 }
 
-func suffix(kind, key string) string {
-	sum := sha256.Sum256([]byte(Kit + "\x00" + kind + "\x00" + key))
+func suffix(kit, kind, key string) string {
+	sum := sha256.Sum256([]byte(kit + "\x00" + kind + "\x00" + key))
 	const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, 6)
 	for i := range b {
@@ -72,20 +76,20 @@ func suffix(kind, key string) string {
 	return string(b)
 }
 
-func changeIntentID(name string) (string, error) {
+func changeIntentID(kit, name string) (string, error) {
 	s, err := slug(name)
 	if err != nil {
 		return "", err
 	}
-	return "CI-" + s + "-" + suffix("change-intent", name), nil
+	return "CI-" + s + "-" + suffix(kit, "change-intent", name), nil
 }
 
-func requirementID(key, digest string) (string, error) {
+func requirementID(kit, key, digest string) (string, error) {
 	s, err := slug(key)
 	if err != nil {
 		return "", err
 	}
-	return "BR-" + s + "-" + suffix("requirement", key+"\x00"+digest), nil
+	return "BR-" + s + "-" + suffix(kit, "requirement", key+"\x00"+digest), nil
 }
 
 var secCode = map[string]string{"ADD": "ADD", "MOD": "MOD", "REM": "REM", "REN": "REN"}

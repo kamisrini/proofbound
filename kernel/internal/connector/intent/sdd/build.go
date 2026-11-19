@@ -14,24 +14,29 @@ import (
 // production and never set outside tests.
 var defectHook func(payload []byte) []byte
 
-// buildRecord builds one requirement revision (SPEC §4.2-§4.3), or sets *skip to its cause. An
-// error is a provider defect (a candidate failing ValidateRevision for an unlisted reason).
-func (p *Provider) buildRecord(key string, spec, prof Artifact, pr profile, found []entry, active bool, skip *string, rev **intent.Revision, obligations *[]string) error {
+// openspecObligations turns OpenSpec delta entries into obligations (SPEC §4.2-§4.3), or a cause.
+func openspecObligations(found []entry) ([]intent.Obligation, string) {
 	seen := map[string]bool{}
 	var obls []intent.Obligation
 	for _, e := range found {
 		id, err := obligationID(e.Sec, e.Name)
 		if err != nil {
-			*skip = "empty-name-part"
-			return nil
+			return nil, "empty-name-part"
 		}
 		if seen[id] {
-			*skip = "obligation-collision"
-			return nil
+			return nil, "obligation-collision"
 		}
 		seen[id] = true
 		obls = append(obls, intent.Obligation{ID: id, Statement: e.Statement, State: "active"})
 	}
+	return obls, ""
+}
+
+// buildRecord builds one requirement revision from its obligations (SPEC §4.2-§4.3), or sets
+// *skip to its cause. An error is a provider defect (a candidate failing ValidateRevision for an
+// unlisted reason).
+func (p *Provider) buildRecord(key string, spec, prof Artifact, pr profile, obls []intent.Obligation, active bool, skip *string, rev **intent.Revision, obligations *[]string) error {
+	obls = append([]intent.Obligation(nil), obls...)
 	sort.Slice(obls, func(i, j int) bool { return obls[i].ID < obls[j].ID })
 	owner, ok := firstMatch(pr.Owners, spec.Path)
 	if !ok {
@@ -39,7 +44,7 @@ func (p *Provider) buildRecord(key string, spec, prof Artifact, pr profile, foun
 		return nil
 	}
 	digest := manifest([]Artifact{spec, prof})
-	id, err := requirementID(key, digest)
+	id, err := requirementID(pr.Kit, key, digest)
 	if err != nil {
 		*skip = "slug-too-short"
 		return nil
@@ -92,7 +97,7 @@ func (p *Provider) buildChange(n string, entry Artifact, active bool, files []Ar
 		status = pr.ChangeStatus
 	}
 	digest := manifest(append(append([]Artifact(nil), files...), prof))
-	id, err := changeIntentID(n)
+	id, err := changeIntentID(pr.Kit, n)
 	if err != nil {
 		return nil, "slug-too-short", nil
 	}

@@ -35,7 +35,7 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	var out bytes.Buffer
-	if err := initOpenSpec(context.Background(), root, "Alice", &out); err != nil {
+	if err := initKit(context.Background(), root, "openspec", "Alice", &out); err != nil {
 		t.Fatal(err)
 	}
 	snapshot := map[string]string{}
@@ -63,7 +63,7 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 	}
 
 	out.Reset()
-	if err := initOpenSpec(context.Background(), root, "Bob", &out); err != nil {
+	if err := initKit(context.Background(), root, "openspec", "Bob", &out); err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(out.String(), "wrote ") || strings.Contains(out.String(), "appended ") {
@@ -280,5 +280,30 @@ func TestReviewSealTakesEvidenceFromTheLedger(t *testing.T) {
 		if len(o.EvidenceEventIDs) != 1 || o.EvidenceEventIDs[0] != sealEvidence {
 			t.Fatalf("obligation %s cites %v, want only the ledger's %s", o.ObligationID, o.EvidenceEventIDs, sealEvidence)
 		}
+	}
+}
+
+// CLI-INV-18 for Spec Kit: `init speckit` writes a Spec Kit profile the sdd provider accepts.
+func TestInitSpecKitWritesASpecKitProfile(t *testing.T) {
+	root := gitRepo(t)
+	var out bytes.Buffer
+	if err := initKit(context.Background(), root, "speckit", "Alice", &out); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(root, ".proofbound/sdd-profile.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var profile struct {
+		Kit     string `json:"kit"`
+		Changes struct {
+			Root, Sibling string
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(b, &profile); err != nil || profile.Kit != "speckit" || profile.Changes.Root != "specs" || profile.Changes.Sibling != "tasks.md" {
+		t.Fatalf("profile %+v %v", profile, err)
+	}
+	if err := initKit(context.Background(), root, "kiro", "Alice", &out); err == nil {
+		t.Fatal("an unknown kit was accepted")
 	}
 }

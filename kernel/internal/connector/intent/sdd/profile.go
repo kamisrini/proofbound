@@ -13,10 +13,11 @@ import (
 // ProfilePath is where a tenant commits its profile (SPEC §2.1).
 const ProfilePath = ".proofbound/sdd-profile.json"
 
-// profile is the parsed proofbound.sdd-profile.v1 (SPEC §2.1). M1 accepts only kit "openspec".
+// profile is the parsed proofbound.sdd-profile.v1 (SPEC §2.1): kit "openspec" (M1) or "speckit"
+// (docs/plans/R2-speckit-spec.md §2). Archive is "" and Sibling non-empty exactly for speckit.
 type profile struct {
-	Root, Archive, ChangeStatus string
-	Owners, Sponsors            []rule
+	Kit, Root, Archive, Sibling, ChangeStatus string
+	Owners, Sponsors                          []rule
 }
 
 type rule struct{ Pattern, Value string }
@@ -109,6 +110,7 @@ func parseProfile(raw []byte) (profile, error) {
 			Mode    *string `json:"mode"`
 			Root    *string `json:"root"`
 			Archive *string `json:"archive"`
+			Sibling *string `json:"sibling"`
 			Status  *string `json:"status"`
 		} `json:"changes"`
 		Owners []struct {
@@ -125,22 +127,43 @@ func parseProfile(raw []byte) (profile, error) {
 	if err := dec.Decode(&doc); err != nil || dec.More() {
 		return profile{}, errProfile
 	}
-	if doc.Schema == nil || *doc.Schema != "proofbound.sdd-profile.v1" || doc.Kit == nil || *doc.Kit != "openspec" ||
-		doc.Requirements == nil || doc.Changes == nil || doc.Changes.Mode == nil || *doc.Changes.Mode != "delta-sections" ||
-		doc.Changes.Root == nil || doc.Changes.Archive == nil || doc.Changes.Status == nil ||
+	if doc.Schema == nil || *doc.Schema != "proofbound.sdd-profile.v1" || doc.Kit == nil ||
+		doc.Requirements == nil || doc.Changes == nil || doc.Changes.Mode == nil ||
+		doc.Changes.Root == nil || doc.Changes.Status == nil ||
 		(*doc.Changes.Status != "proposed" && *doc.Changes.Status != "accepted") ||
 		len(doc.Owners) == 0 || len(doc.Sponsors) == 0 {
 		return profile{}, errProfile
 	}
-	root, archive := *doc.Changes.Root, *doc.Changes.Archive
-	if !literalPath(root) || !literalPath(archive) || !strings.HasPrefix(archive, root+"/") || strings.Contains(archive[len(root)+1:], "/") {
+	root := *doc.Changes.Root
+	if !literalPath(root) {
 		return profile{}, errProfile
 	}
-	want := []string{root + "/*/specs/*/spec.md", archive + "/*/specs/*/spec.md"}
-	if len(doc.Requirements.Paths) != 2 || doc.Requirements.Paths[0] != want[0] || doc.Requirements.Paths[1] != want[1] {
+	p := profile{Kit: *doc.Kit, Root: root, ChangeStatus: *doc.Changes.Status}
+	switch *doc.Kit {
+	case Kit:
+		if *doc.Changes.Mode != "delta-sections" || doc.Changes.Archive == nil || doc.Changes.Sibling != nil {
+			return profile{}, errProfile
+		}
+		archive := *doc.Changes.Archive
+		if !literalPath(archive) || !strings.HasPrefix(archive, root+"/") || strings.Contains(archive[len(root)+1:], "/") {
+			return profile{}, errProfile
+		}
+		want := []string{root + "/*/specs/*/spec.md", archive + "/*/specs/*/spec.md"}
+		if len(doc.Requirements.Paths) != 2 || doc.Requirements.Paths[0] != want[0] || doc.Requirements.Paths[1] != want[1] {
+			return profile{}, errProfile
+		}
+		p.Archive = archive
+	case KitSpecKit:
+		// One level under root, so two features can never share a key (R2-speckit-spec.md §2).
+		if *doc.Changes.Mode != "feature-sibling" || doc.Changes.Archive != nil || doc.Changes.Sibling == nil ||
+			!segmentRE.MatchString(*doc.Changes.Sibling) || *doc.Changes.Sibling == "." || *doc.Changes.Sibling == ".." ||
+			len(doc.Requirements.Paths) != 1 || doc.Requirements.Paths[0] != root+"/*/spec.md" {
+			return profile{}, errProfile
+		}
+		p.Sibling = *doc.Changes.Sibling
+	default:
 		return profile{}, errProfile
 	}
-	p := profile{Root: root, Archive: archive, ChangeStatus: *doc.Changes.Status}
 	for _, o := range doc.Owners {
 		if o.Pattern == nil || o.Owner == nil || !patternPath(*o.Pattern) || blank(*o.Owner) || strings.ContainsRune(*o.Owner, 0) {
 			return profile{}, errProfile
@@ -160,7 +183,7 @@ func parseProfile(raw []byte) (profile, error) {
 // case-insensitively, so without this "KIT" would be accepted and "kit" + "Kit" would both map.
 var profileKeys = map[string]bool{
 	"schema": true, "kit": true, "requirements": true, "paths": true, "changes": true, "mode": true,
-	"root": true, "archive": true, "status": true, "owners": true, "sponsors": true,
+	"root": true, "archive": true, "sibling": true, "status": true, "owners": true, "sponsors": true,
 	"pattern": true, "owner": true, "sponsor": true,
 }
 

@@ -117,7 +117,19 @@ revert directions, and the e2e asserts the revert appends nothing.
 
 **Re-check** `r2-m4-drift-recheck-20261119`: ACCEPTABLE, F1 closed. **M4 is accepted.**
 
-**Exact next action:** R2 step 3, Spec Kit support (short spec first, Law 11 budget); then R2 release notes and owner acceptance. No push without the owner's word.
+**Spec Kit built** (`CI-sdd-warranty-speckit-eiis5s`, spec `docs/plans/R2-speckit-spec.md`):
+- the provider gains a `speckit` profile shape and mapping path: a feature `specs/<name>/` gives one
+  requirement record from `- **FR-001**:` lines, and a change intent once `tasks.md` exists;
+- ids hash the kit, and OpenSpec ids are unchanged;
+- `proofbound init speckit`;
+- SDD-INV-58/64 retired, SDD-INV-68..71 numbered.
+- Proven by `TestSpecKitHistoryMapsExactly`, `TestSpecKitProfileIsStrict`, `TestSpecKitResolveAndIDs`
+  (three mutants killed) and `TestSpecKitEndToEnd` (init, claim, review, gate PASS, drift CURRENT,
+  then STALE on an in-place edit).
+- Spec Kit's own repo does not use its layout, so no real-repo run; its template confirms the format.
+
+**Exact next action:** one non-author code review of Spec Kit (Law 11 budget); then R2 release notes
+and owner acceptance. No push without the owner's word.
 No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 

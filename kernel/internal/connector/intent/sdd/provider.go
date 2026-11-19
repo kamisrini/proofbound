@@ -155,6 +155,9 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 		st.skips = append(st.skips, unitSkip{"profile", "profile-invalid", digestLines([]string{profLine})})
 		return st, nil
 	}
+	if pr.Kit == KitSpecKit {
+		return p.mapSpecKit(st, arts, prof, profLine, pr)
+	}
 	st.archive, st.archiveBase = pr.Archive, path.Base(pr.Archive)
 	byPath := map[string]Artifact{}
 	children := map[string][]Artifact{}
@@ -284,7 +287,12 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 					r.skip = "unpaired-rename"
 					continue
 				}
-				if err := p.buildRecord(r.key, spec, prof, pr, found, es.active != nil && ce.Path == es.active.Path, &r.skip, &r.rev, &r.obligations); err != nil {
+				obls, cause := openspecObligations(found)
+				if cause != "" {
+					r.skip = cause
+					continue
+				}
+				if err := p.buildRecord(r.key, spec, prof, pr, obls, es.active != nil && ce.Path == es.active.Path, &r.skip, &r.rev, &r.obligations); err != nil {
 					return nil, err
 				}
 			}
@@ -368,6 +376,11 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 		}
 		st.revisions = append(st.revisions, *cr.rev)
 	}
+	return finishState(st), nil
+}
+
+// finishState orders a state's skips and revisions deterministically.
+func finishState(st *stateResult) *stateResult {
 	sort.Slice(st.skips, func(i, j int) bool {
 		a, b := st.skips[i], st.skips[j]
 		return a.unit+"\x00"+a.cause+"\x00"+a.digest < b.unit+"\x00"+b.cause+"\x00"+b.digest
@@ -376,5 +389,5 @@ func (p *Provider) mapState(arts []Artifact) (*stateResult, error) {
 		a, b := st.revisions[i], st.revisions[j]
 		return string(a.Kind)+"\x00"+a.NativeID+"\x00"+a.ArtifactSHA256 < string(b.Kind)+"\x00"+b.NativeID+"\x00"+b.ArtifactSHA256
 	})
-	return st, nil
+	return st
 }
