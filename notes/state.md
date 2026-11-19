@@ -33,14 +33,27 @@ As of: 2026-11-19
   the sdd package opens the default embedded port. Every end-to-end embedded test lives in the sdd
   package; cli tests use ephemeral ports.
 
-**Next units, in order:**
-5. **End-to-end procedures** in the sdd package (`m3_cli_test.go`):
-   - §7.1, row 8: X1 PASS, X2/X3 BLOCKED, X3's verdict held;
-   - §7.2, row 5: interleavings A and B with the five-record archive;
-   - §7.3: the round-6 refusal sequence.
-6. **Docs and pins:**
-   - sdd SPEC §12, the SDD-INV-56 text and §14's M2 entry condition;
-   - a non-author implementation review.
+5. **End-to-end procedures** (`6ac05c6`) in sdd `m3_e2e_test.go`:
+   - §7.1, row 8: x1 PASS, x2/x3 BLOCKED on one ledger, and X3's verdict held;
+   - §7.2: interleavings A and B with the five-record archive;
+   - §7.3: in-place revisions refused, the rebuild green, then recovery to PASS;
+   - 7 mutants killed.
+6. **sdd SPEC M3 note** (`075a1dd`):
+   - §12 records M3 as landed and SDD-INV-56 in substance;
+   - §14 gets the M2 entry condition (monotone bindings);
+   - the draft 10 copy stays byte-identical.
+
+**Code complete.**
+- `go test ./...` is green, and golangci-lint reports 0 issues.
+- Pins are refreshed (`b3c273b`). `make check` is being re-run.
+
+**Exact next action:**
+1. Confirm `make check` is green.
+2. Dispatch the **non-author implementation review**: foundational tier, because it touches the
+   ledger-ordering semantics. It covers the M3 commits `9600441..b3c273b` against the M3 SPEC
+   (draft 5 plus drafts 6-8).
+3. Commit its verdict.
+4. M3 counts as done only once that review is ACCEPTABLE (CI acceptance boundary).
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
