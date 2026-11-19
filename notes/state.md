@@ -14,23 +14,33 @@ As of: 2026-11-19
   - D4: filed as `DEF-INTENT-GIT-ORDERING-001`;
   - D5: the reviews connector holds a v2 verdict or requirement review until its order-only
     prerequisites are ledgered.
-- **Draft 5** (`7f29f85`, `docs/plans/R2-sdd-m3-git-binding-spec-draft5.md`) answers round 4:
-  - D5 is §4.6, with M3-INV-11 new and M3-INV-5/10 restated;
-  - §7.1 gives row 8's procedure: git before reviews, verdicts written at run time, one exact-sha
-    JSON gate per commit;
-  - the two-claim kill now dies through the gate;
-  - the revisit trigger lands in the git SPEC and the sdd SPEC §14.
-- Rounds so far:
-  - round 1 (`82a92ec`): 1 HIGH, 7 MED, 3 LOW;
-  - round 2 (`1489027`): 4 MED, 5 LOW;
-  - round 3 (`bd6f95f`): 1 MED, 4 LOW;
-  - round 4 (`70b8a7e`): 2 MED, 2 LOW.
-- **Non-author round 5 over draft 5 is running.**
+- **Drafts and rounds:**
+  - Draft 5 (`7f29f85`) got round 5 (`ed805a4`): 3 MED, 3 LOW.
+  - **Draft 6** (`6a4a0df`, `docs/plans/R2-sdd-m3-git-binding-spec-draft6.md`) narrows D5's
+    implementation:
+    - the hold waits only for the claim and the requirement revisions, not evidence (evidence ids
+      are ledger-local);
+    - it applies only to an artifact's first revision;
+    - new row 12 tests the real `LedgerView` over records, specdir and sdd.
+  - Earlier rounds:
+    - round 1 (`82a92ec`): 1 HIGH, 7 MED, 3 LOW;
+    - round 2 (`1489027`): 4 MED, 5 LOW;
+    - round 3 (`bd6f95f`): 1 MED, 4 LOW;
+    - round 4 (`70b8a7e`): 2 MED, 2 LOW.
+- **Non-author round 6 over draft 6 is running.**
 
-**Exact next action:** commit the round-5 verdict (self-digest, integrity `--check` then `--write`).
-- If ACCEPTABLE: draft the M3 change intent (`CI-sdd-warranty-m3-<suffix>`) and the D1-D5 VD for
-  the owner to approve.
-- If NEEDS_WORK: write draft 6.
+**Raise to the owner (not filed):**
+1. **Malformed verdicts.** M3 review verdicts rounds 1-4 (`r2-m3-spec-review-round{1..4}`) use
+   flow-style `findings` (`- {finding_id: …}`), which the reviews v1 parser rejects. They add to
+   the red `delivery-enforce` run. Round 5 onward uses block style. Fixing 1-4 means rewriting
+   committed verdict artifacts, which is the owner's call.
+2. **Evidence portability.** A v2 verdict whose evidence id exists only on the ledger that minted
+   it fails Apply on every other ledger. This predates M3, which does not fix it (draft 6 §9).
+
+**Exact next action:** commit the round-6 verdict (block-style findings, self-digest, integrity
+`--write` then `--check`).
+- If ACCEPTABLE: draft the M3 change intent and the D1-D5 VD for the owner.
+- If NEEDS_WORK: write draft 7.
 - No M3 code before the owner approves the CI wording.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
