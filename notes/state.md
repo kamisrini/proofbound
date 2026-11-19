@@ -6,57 +6,43 @@ As of: 2026-11-19
 
 ## Resume — 2026-11-19
 
-**Now: R2 M3, binding tenant commits to `intent.sdd`.** This is SPEC work only; no code yet.
-- **Owner decisions, 2026-11-19:** D1-D5 all take the recommended option:
-  - D1: `sdd:<name>`;
-  - D2: per-commit all-or-nothing skips;
-  - D3': the ledger check on claims;
-  - D4: filed as `DEF-INTENT-GIT-ORDERING-001`;
-  - D5: the reviews connector holds a v2 verdict or requirement review until its order-only
-    prerequisites are ledgered.
-- **Drafts and rounds:**
-  - Draft 5 (`7f29f85`) got round 5 (`ed805a4`): 3 MED, 3 LOW.
-  - **Draft 6** (`6a4a0df`, `docs/plans/R2-sdd-m3-git-binding-spec-draft6.md`) narrows D5's
-    implementation:
-    - the hold waits only for the claim and the requirement revisions, not evidence (evidence ids
-      are ledger-local);
-    - it applies only to an artifact's first revision;
-    - new row 12 tests the real `LedgerView` over records, specdir and sdd.
-  - Earlier rounds:
-    - round 1 (`82a92ec`): 1 HIGH, 7 MED, 3 LOW;
-    - round 2 (`1489027`): 4 MED, 5 LOW;
-    - round 3 (`bd6f95f`): 1 MED, 4 LOW;
-    - round 4 (`70b8a7e`): 2 MED, 2 LOW.
-- **Round 6** (`dc00003`): 2 MED, 2 LOW.
-- **Owner D6, 2026-11-19 (recommended):** a later revision whose prerequisites are missing is
-  refused loudly. It is not appended, and the reviews sync fails after processing the rest.
-- **Draft 7** (`26de649`, `docs/plans/R2-sdd-m3-git-binding-spec-draft7.md`) answers round 6:
-  - D6, as new M3-INV-12;
-  - §7.3 runs the round-6 sequence;
-  - the full five-record evidence archive;
-  - identity = (schema, id), updated on append.
-- **Round 7** (`fe8d116`): **ACCEPTABLE**, 3 LOW.
-- **Draft 8** (`345aa18`, `docs/plans/R2-sdd-m3-git-binding-spec-draft8.md`) fixes the LOWs in the
-  text, which round 7 allowed without another round:
-  - duplicate identities are refused as a group;
-  - the reviews SPEC Purpose and R-INV-4 amendments are listed;
-  - the rationale is narrowed.
+**Now: R2 M3 implementation, under `CI-sdd-warranty-m3-xaqocp`** (owner-approved 2026-11-19, `260b563`).
+- **Decision record:** `VD-sdd-m3-git-binding-2026-11-19` records D1-D6.
+- **Contract:** the M3 SPEC, `docs/plans/R2-sdd-m3-git-binding-spec-draft5.md` as amended by drafts
+  6-8. Non-author round 7 found it ACCEPTABLE (`fe8d116`).
+- **Deferrals filed:** `DEF-VERDICT-STALE-OUTCOME-001` and `DEF-VERDICT-EVIDENCE-PORTABILITY-001`
+  (owner-approved), beside `DEF-INTENT-GIT-ORDERING-001`.
 
-  It proposes the CI wording in §8.
-- **M3 verdicts rounds 1-4** were reformatted to block style in `9872b2d` (owner-approved). Round 7
-  executed the reviews connector over this repo: 0 malformed artifacts.
+**Done (units, each calibrated with hand mutants):**
+1. **Git connector** (`9600441`, pin `033f5b7`):
+   - sdd claims become per-commit `ClaimSkip`s with all-or-nothing refs;
+   - git SPEC INV-29 is amended and INV-31/32 appended;
+   - 3 sdd corpus rows are added, and the oracle counts a bound ref;
+   - 9/9 mutants are killed, and the neutral control survives.
 
-**With the owner:**
-1. Approve the M3 change-intent wording (draft 8 §8).
-2. Pre-existing stale outcomes (draft 8 §9; unfiled; recommended: file a deferral).
-   `obligation_verdicts_view`'s upsert never moves `commit_sha`, a requirement-revision move leaves
-   old rows, and a byte-identical revert dedupes.
-3. Evidence portability (unfiled).
+**Next units, in order:**
+2. **Projections:** `commitPayload.validate` accepts provider `sdd` (draft 5 §4.5).
+3. **CLI resolver:**
+   - the `sdd` arm, with lazy provider construction, the lazy `L` set and the §4.2 checks;
+   - the claim-skip output;
+   - CLI SPEC CLI-INV-7/8;
+   - rows 1 (cli half), 5 and 6.
+4. **Reviews connector:**
+   - `LedgerView`, the hold, the refusal and `duplicate-identity` (draft 8 §4.6);
+   - the reviews SPEC amendments;
+   - row 11.
+5. **CLI `storeLedgerView`:**
+   - held and refused output, and a non-zero exit on refusal;
+   - rows 8 and 12, plus the §7.1-7.3 procedures.
+6. **Docs and pins:**
+   - sdd SPEC §12, the SDD-INV-56 text and §14's M2 entry condition;
+   - regenerate the route-matrix and connector-reality pins;
+   - a non-author implementation review.
 
-**Exact next action:** on the owner's approval of the CI wording, author the M3 records:
-- a BR obligation check, the CI, and the D1-D6 VD;
-- then code under `CI-sdd-warranty-m3-*`, spec-first;
-- then a non-author implementation review.
+**Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
+`Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
+
+**Immediate blockers:** pushes are held (DEF-PUSH-HOLD-20261116).
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
 re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
