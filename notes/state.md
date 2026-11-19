@@ -102,7 +102,15 @@ mid-write rollback LOW was fixed with it.
 
 **Re-check** `r2-starter-kit-recheck-20261119`: ACCEPTABLE, F1 closed. **The starter kit is accepted.**
 
-**Exact next action:** R2 step 2, M4 drift (short spec first, Law 11 budget). No push without the owner's word. Then
+**M4 drift built** (`CI-sdd-warranty-m4-dcom6f`, spec `docs/plans/R2-m4-drift-spec.md`, BR rev 0004 O-13):
+`proofbound report drift` compares a change's promise (obligation ids and statements), not digests.
+This was measured on OpenSpec's real history: every archive move changes every digest, yet 60 of 73
+promise the same thing. Proven by `TestDriftComparesPromises` and `TestDriftEndToEnd` (verify,
+reword gives STALE, re-verify gives CURRENT, archive stays CURRENT), and on the OpenSpec demo clone
+(a reworded obligation is reported as `changed` with the old and new text).
+
+**Exact next action:** one non-author code review of M4 (Law 11 budget). Then R2 step 3, Spec Kit.
+No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and

@@ -21,35 +21,7 @@ func TestStarterKitReviewFlow(t *testing.T) {
 			m.mustRun("sync", "git")
 			mustContain(t, m.mustRun("review", "draft", x), "SHALL authenticate users", "draft ")
 
-			dir := filepath.Join(m.root, ".proofbound", "drafts", x)
-			path := filepath.Join(dir, "draft.json")
-			raw, err := os.ReadFile(path)
-			if err != nil {
-				t.Fatal(err)
-			}
-			var draft map[string]any
-			if err := json.Unmarshal(raw, &draft); err != nil {
-				t.Fatal(err)
-			}
-			draft["declared_reviewer"] = "proofbound-reviewer"
-			for _, r := range draft["reviews"].([]any) {
-				for _, o := range r.(map[string]any)["obligations"].([]any) {
-					o.(map[string]any)["outcome"] = "VERIFIABLE"
-				}
-			}
-			for _, v := range draft["verdicts"].([]any) {
-				for _, o := range v.(map[string]any)["obligations"].([]any) {
-					o.(map[string]any)["outcome"] = c.outcome
-				}
-			}
-			edited, err := json.Marshal(draft)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := os.WriteFile(path, edited, 0o644); err != nil {
-				t.Fatal(err)
-			}
-			m.mustRun("review", "seal", dir)
+			m.review(x, c.outcome)
 			m.commit("review " + x[:12])
 			m.mustRun("sync", "git")
 			m.mustRun("sync", "reviews")
@@ -59,4 +31,40 @@ func TestStarterKitReviewFlow(t *testing.T) {
 			}
 		})
 	}
+}
+
+// review drafts, decides every outcome (reviews VERIFIABLE, obligations as given) as a non-owner,
+// and seals: the reviewer workflow of the starter kit, through cli.Run.
+func (m *m3Tenant) review(x, outcome string) {
+	t := m.t
+	t.Helper()
+	dir := filepath.Join(m.root, ".proofbound", "drafts", x)
+	path := filepath.Join(dir, "draft.json")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var draft map[string]any
+	if err := json.Unmarshal(raw, &draft); err != nil {
+		t.Fatal(err)
+	}
+	draft["declared_reviewer"] = "proofbound-reviewer"
+	for _, r := range draft["reviews"].([]any) {
+		for _, o := range r.(map[string]any)["obligations"].([]any) {
+			o.(map[string]any)["outcome"] = "VERIFIABLE"
+		}
+	}
+	for _, v := range draft["verdicts"].([]any) {
+		for _, o := range v.(map[string]any)["obligations"].([]any) {
+			o.(map[string]any)["outcome"] = outcome
+		}
+	}
+	edited, err := json.Marshal(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, edited, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	m.mustRun("review", "seal", dir)
 }

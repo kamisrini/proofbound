@@ -89,3 +89,22 @@ rm -rf "${TMPDIR:-/tmp}/proofbound-openspec-demo"
 ```
 
 The demo's database lives inside that directory; its server log is `OpenSpec/.proofbound/db.log`.
+
+## See drift: when a verified spec changes
+
+```bash
+proofbound sync all && proofbound report drift
+```
+
+For every change with a warranty, this prints CURRENT, or STALE when the change now promises
+something other than what was verified, listing each obligation `added`, `removed` or `changed`
+(with the old and new wording). It compares what the change promises, not file digests, so
+archiving a change or editing its tasks is not drift. A STALE warranty is CURRENT again once a
+reviewer verifies a commit against the current promise. On OpenSpec's own repository, rewording
+one obligation of a verified change gives:
+
+```
+drift change=CI-install-skills-globally-57r52f state=STALE verified_commit=c772ac085ec2 ...
+  changed O-ADD-INSTALL-THE-RUNNING-C-13EA48 "Init SHALL install skills ... scope and workflow profile. ..." -> "Init SHALL install skills ... scope, workflow profile and a pinned checksum. ..."
+summary warranted=1 current=0 stale=1
+```

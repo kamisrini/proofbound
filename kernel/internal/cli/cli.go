@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init openspec [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init openspec [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -77,6 +77,7 @@ const (
 	commandInitOpenSpec
 	commandReviewDraft
 	commandReviewSeal
+	commandReportDrift
 )
 
 func parseCommand(args []string) command {
@@ -107,6 +108,8 @@ func parseCommand(args []string) command {
 		return commandVerify
 	case len(args) == 2 && args[0] == "report" && args[1] == "week":
 		return commandReportWeek
+	case len(args) == 2 && args[0] == "report" && args[1] == "drift":
+		return commandReportDrift
 	case len(args) == 2 && args[0] == "report" && args[1] == "github":
 		return commandReportGitHub
 	case len(args) == 3 && args[0] == "report" && args[1] == "intent" && args[2] != "":
@@ -762,6 +765,13 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
 		return reviewSeal(ctx, root, args[2], fresh, output)
+	case commandReportDrift:
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return reportDrift(ctx, ledger, output)
 	case commandReviewDraft:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
