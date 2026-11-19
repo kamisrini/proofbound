@@ -60,11 +60,17 @@ As of: 2026-11-19
   - F4: the port guard also flags `Unsetenv("DATABASE_URL")` (multi-line evasion was already closed);
   - F5: the reviews SPEC R-INV-13 states the cross-root held-vs-refused limitation with a revisit trigger.
 
-**Exact next action:**
-1. Dispatch a non-author re-check of lens A's fixes (`9464e06`) and lens B's fixes (`af57109`).
-   Verdict id `r2-m3-impl-recheck-20261119`. No other port-55432 tests may run alongside it.
-2. Commit that verdict; answer anything it finds.
-3. Then run `go test ./...` and `make check` clean. M3 is done when the re-check is ACCEPTABLE.
+- **Non-author re-check** (`b9eda29`, over `eecd941`): ACCEPTABLE. All ten lens A/B findings are
+  closed (B-F5 as an accepted limitation). Two new LOWs, not yet answered:
+  - F1: residual blind spots in the default-port guard: a file-scoped `openStore` stub, the
+    historical-evidence opener, an aliased store import, and a non-literal `store.Config`;
+  - F2: held lines printed before a NON-refusal error are unpinned (mutant R2 survives).
+- **Gate:** `go test ./...` (19 ok) and `make check` both exit 0 at `b9eda29`.
+
+**M3 is accepted.** Lens B and the re-check are ACCEPTABLE, and lens A's findings are closed.
+
+**Exact next action:** the owner decides on the re-check's two LOWs: answer them now (test-only
+for F2, detector work for F1) or leave them on record. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
