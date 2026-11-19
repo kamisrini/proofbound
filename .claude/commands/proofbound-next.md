@@ -22,9 +22,12 @@ Follow the Proofbound session protocol (CLAUDE.md):
    - No actor grades its own work (Law 9): anything I authored needs a non-author verdict to count
      as accepted.
 5. Cross-reference `ROADMAP.md` for the current phase and its Definition of Done.
+6. Run `make meta-tax` and report the scaffolding percentage. Above roughly 60%, say so plainly and
+   rank product work (the milestone's runnable payoff, Law 11) above any further process work.
 
 Then give me, concisely:
-- Where we are (phase, gate state, dirty/stale flags, anything uncommitted and why).
+- Where we are (phase, gate state, dirty/stale flags, meta-tax %, anything uncommitted and why).
 - A short ranked list of what can be picked up next, each tagged **unblocked** or
   **needs-owner-authorization**, with the one real decision (if any) each carries.
-- Your single recommended next action and why.
+- Your single recommended next action and why. Prefer the action that gets the owner closest to
+  something they can run and see (Law 11).

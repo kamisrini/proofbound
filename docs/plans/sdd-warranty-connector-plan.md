@@ -150,7 +150,19 @@ change; feature-local subset, relationship fields absent (not fabricated).
 end-to-end warranty demo; verification doc; owner acceptance.
 *Deliverable:* owner acceptance of Release 2.
 
-**Dependencies:** `M0 → M1 → M2 → M3 → M4`; `M5` needs M3; `M6` needs M4+M5. M4 is where the
+**Re-sequenced 2026-11-19 (owner, Law 11 "payoff first").** M0, M1 and M3 are accepted. The rest
+runs in this order, each step ending in one command the owner runs on a real repository, with
+readable output, under the review budget (`VD-review-ceremony-tiers-v2b6kp`, amended 2026-11-19):
+1. **Real-repo demo** (M6's demo pulled forward; it also closes M2's OpenSpec deliverable): sync a
+   real public OpenSpec repository and print a report: changes, requirements, which commits bind,
+   and what the readiness gate says.
+2. **M4 — drift.** The same report flags every warranty whose spec revision was superseded after it
+   was verified.
+3. **Spec Kit** (M2's Spec Kit mapping and M5 merged; both were Spec Kit). The same demo on a real
+   Spec Kit repository.
+4. **R2 acceptance** (the rest of M6): the owner runs the demos and accepts Release 2.
+
+**Dependencies (original):** `M0 → M1 → M2 → M3 → M4`; `M5` needs M3; `M6` needs M4+M5. M4 is where the
 differentiated value lands; M5/M6 prove and package it.
 
 ## Known gotchas (compiled from this repo's lessons)

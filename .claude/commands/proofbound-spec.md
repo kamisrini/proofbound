@@ -22,6 +22,13 @@ Study an existing contract first — `kernel/internal/gates/SPEC.md` or `kernel/
    always" as a test, because in this repo an untested absolute is a defect
    (`VD-verification-asymmetry-2dyjnd`).
 
+**Keep it short (Law 11).** Aim for about 300 lines. The spec states the interface, the invariants
+and the test list; it does not pre-argue every edge case — edge cases are found and pinned in tests.
+A spec gets at most **2** non-author review rounds (`VD-review-ceremony-tiers-v2b6kp`, amended
+2026-11-19); after that, open questions go to the owner as a short list, not into another draft.
+Before writing, name the milestone's runnable payoff (the one command the owner will run on a real
+repo) and make sure the spec serves it.
+
 Numbering is permanent (Law numbers' sibling rule): `INV-<N>` ids APPEND only — never insert,
 reorder, reuse, or silently retitle. `scripts/spec-numbering-lint.sh` checks this against the
 `@generated` `docs/invariants.lock`; regenerate the lock with `make invariants-lock` ONLY on a

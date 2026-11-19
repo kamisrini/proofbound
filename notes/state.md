@@ -69,8 +69,15 @@ As of: 2026-11-19
 
 **M3 is accepted.** Lens B and the re-check are ACCEPTABLE, and lens A's findings are closed.
 
-**Exact next action:** pick the next R2 milestone with the owner (M2 Spec Kit mapping, or M4 drift
-projection). Either one starts with a SPEC and a new change intent (Law 6). No push without the owner's word.
+**Process changed 2026-11-19 (owner, `CI-review-budget-fs8f5h`):** Law 11 "Payoff first" and the
+review budget: a spec gets at most 2 review rounds, code gets 1, and LOW findings are recorded, not
+fixed. Pins now digest the staged code, so they commit WITH the change. The state-note limit is 10
+commits.
+
+**Exact next action:** R2 step 1 of the re-sequenced plan (`docs/plans/sdd-warranty-connector-plan.md`):
+the **real-repo demo**. Pick a real public OpenSpec repository, sync it, and print a readable report
+(changes, requirements, bound commits, gate result). Start with a short spec of the demo command;
+that needs the owner's go-ahead and a change intent. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.

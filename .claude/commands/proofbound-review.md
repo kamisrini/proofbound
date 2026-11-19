@@ -33,8 +33,22 @@ non-author re-verifies.
   round — mutation-adequacy · spec-truth · concurrency · build-laws — dispatched as independent
   reviewers, run EARLY, with an adjudicator that discards any finding lacking a reproducible proof.
 - **Connector / peripheral** — I/O-shaped, failures surface immediately (`internal/connector/*`,
-  `internal/projections`, `cmd/*`): one adversarial review. ESCALATE to the foundational tier the
-  moment the work touches concurrency, filesystem identity, crash safety, or the ledger's write path.
+  `internal/projections`, `internal/cli`, `cmd/*`): ONE reviewer, one adversarial pass, no mutation
+  sweep. Escalate to the foundational tier ONLY when the change alters the ledger write path in
+  `internal/store` or `internal/core`. Concurrency inside a connector is a question for the single
+  reviewer, not a reason to add lenses.
+
+## The budget (Law 11, `VD-review-ceremony-tiers-v2b6kp` amended 2026-11-19) — check it FIRST
+
+- A spec gets at most **2** review rounds; code gets **1** review. Count the milestone's existing
+  verdicts in `docs/verification/verdicts/` before dispatching. If the budget is spent, STOP and ask
+  the owner; do not dispatch.
+- **HIGH and MED findings** are fixed by the author. **LOW findings are recorded and left**: no fix,
+  no re-check, unless the owner asks.
+- A re-check, if any, covers only the MED/HIGH fixes, and its new LOWs are recorded too. It may run
+  on a cheaper model.
+- Tell the reviewer the budget in its prompt: findings must be HIGH/MED to change anything, so it
+  should spend its effort finding those, not cataloguing corners.
 
 ## What the review covers
 
@@ -46,7 +60,8 @@ Adversarially, against BOTH:
 - **The package SPEC** — every `INV-*` invariant: is it true, and does its named proving test
   actually discriminate the property, or does the fixture hold the key variable constant?
 
-Where mutation evidence is in scope, run `scripts/mutants.sh <pkg>` and **state the calibration
+Mutation evidence is in scope at the FOUNDATIONAL tier only (or when a connector reviewer names one
+specific test it doubts — then mutate that test's property, nothing more). Where it is in scope, run `scripts/mutants.sh <pkg>` and **state the calibration
 before any count is believed** (gates.md row 41): a positive control that MUST die, a neutral control
 that MUST survive, and a lethal injected-failing-test control that MUST be killed; `invalid`
 (uncompilable) mutants are never counted as kills. Undeclared survivors fail; declare any survivor in
