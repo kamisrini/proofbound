@@ -143,7 +143,8 @@ checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
      `sync intent sdd && sync all`, including the AGENTS block `init` writes.
   2. **`sync all` failed on every Spec Kit project:** the P5 `specdir` provider is also rooted at
      `specs/`. Fixed as CLI-INV-22 (omit `specdir` when HEAD's profile is Spec Kit at `specs/`).
-- All three demos and the documented own-project path were re-run clean.
+- All three demos and the documented own-project path were re-run clean. The CLI-INV-22 fix passed
+  its scoped non-author review (`r2-speckit-specdir-review-20261119`, ACCEPTABLE).
 
 **R2 release notes drafted** (`docs/releases/r2/RELEASE-NOTES.md`, suggested tag `v0.2.0`), linked from
 the README and the R2 demo hub.
