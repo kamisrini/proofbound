@@ -35,19 +35,28 @@ As of: 2026-11-19
   - §7.3 runs the round-6 sequence;
   - the full five-record evidence archive;
   - identity = (schema, id), updated on append.
-- **Non-author round 7 over draft 7 is running.**
-- **M3 verdicts rounds 1-4** were reformatted to block-style findings in `9872b2d` (owner-approved,
-  format only). All six M3 verdicts now parse.
+- **Round 7** (`fe8d116`): **ACCEPTABLE**, 3 LOW.
+- **Draft 8** (`345aa18`, `docs/plans/R2-sdd-m3-git-binding-spec-draft8.md`) fixes the LOWs in the
+  text, which round 7 allowed without another round:
+  - duplicate identities are refused as a group;
+  - the reviews SPEC Purpose and R-INV-4 amendments are listed;
+  - the rationale is narrowed.
 
-**Still with the owner, unfiled:** evidence portability. A v2 verdict whose evidence exists only on
-the ledger that minted it fails Apply elsewhere. This predates M3.
+  It proposes the CI wording in §8.
+- **M3 verdicts rounds 1-4** were reformatted to block style in `9872b2d` (owner-approved). Round 7
+  executed the reviews connector over this repo: 0 malformed artifacts.
 
-**Exact next action:** commit the round-7 verdict (block style, self-digest, integrity `--write`
-then `--check`).
-- If ACCEPTABLE: draft the M3 change intent (`CI-sdd-warranty-m3-<suffix>`) and the D1-D6 VD for
-  owner approval.
-- If NEEDS_WORK: write draft 8.
-- No M3 code before the owner approves the CI wording.
+**With the owner:**
+1. Approve the M3 change-intent wording (draft 8 §8).
+2. Pre-existing stale outcomes (draft 8 §9; unfiled; recommended: file a deferral).
+   `obligation_verdicts_view`'s upsert never moves `commit_sha`, a requirement-revision move leaves
+   old rows, and a byte-identical revert dedupes.
+3. Evidence portability (unfiled).
+
+**Exact next action:** on the owner's approval of the CI wording, author the M3 records:
+- a BR obligation check, the CI, and the D1-D6 VD;
+- then code under `CI-sdd-warranty-m3-*`, spec-first;
+- then a non-author implementation review.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
 re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
