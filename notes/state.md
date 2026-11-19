@@ -27,7 +27,17 @@ As of: 2026-11-19
     - round 2 (`1489027`): 4 MED, 5 LOW;
     - round 3 (`bd6f95f`): 1 MED, 4 LOW;
     - round 4 (`70b8a7e`): 2 MED, 2 LOW.
-- **Non-author round 6 over draft 6 is running.**
+- **Round 6** (`dc00003`): 2 MED, 2 LOW.
+  - **F1 needs owner decision D6.** A later revision of an already-ledgered review must do one
+    of three things, and each has a cost:
+    - held quietly: fail-open (round 5);
+    - appended: permanent wedge (round 6);
+    - **recommended:** not appended, and the reviews sync exits non-zero naming it. Nothing
+      wedges and nothing passes wrongly. The cost is that `sync all` stays red until
+      `sync intent sdd` and `sync git` run.
+  - **F2:** use the full five-line archive (`migration.Parse` pins five records). E = a pinned id.
+  - **F3:** identity = (schema, id), and the set is updated on append within a sync.
+  - **F4:** spell out the `change_intent` ref, outcome ordering and the x1 gate in §7.2.
 
 **Raise to the owner (not filed):**
 1. **Malformed verdicts.** M3 review verdicts rounds 1-4 (`r2-m3-spec-review-round{1..4}`) use
@@ -37,8 +47,7 @@ As of: 2026-11-19
 2. **Evidence portability.** A v2 verdict whose evidence id exists only on the ledger that minted
    it fails Apply on every other ledger. This predates M3, which does not fix it (draft 6 §9).
 
-**Exact next action:** commit the round-6 verdict (block-style findings, self-digest, integrity
-`--write` then `--check`).
+**Exact next action:** get the owner's D6 choice, then write draft 7 (round-6 F1-F4) and run round 7.
 - If ACCEPTABLE: draft the M3 change intent and the D1-D5 VD for the owner.
 - If NEEDS_WORK: write draft 7.
 - No M3 code before the owner approves the CI wording.
