@@ -4,22 +4,35 @@ verdict_id: r2-m3-spec-review-round1-20261118
 status: NEEDS_WORK
 reviewed_commit: 5ab705931dd48225764a95e7e209421a6feb9d0e
 findings:
-  - {finding_id: r2-m3-spec-review-round1-20261118-F1, severity: HIGH}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F2, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F3, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F4, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F5, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F6, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F7, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F8, severity: MED}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F9, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F10, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round1-20261118-F11, severity: LOW}
+  - finding_id: r2-m3-spec-review-round1-20261118-F1
+    severity: HIGH
+  - finding_id: r2-m3-spec-review-round1-20261118-F2
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F3
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F4
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F5
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F6
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F7
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F8
+    severity: MED
+  - finding_id: r2-m3-spec-review-round1-20261118-F9
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round1-20261118-F10
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round1-20261118-F11
+    severity: LOW
 artifact_path: docs/verification/verdicts/r2-m3-spec-review-round1-20261118.md
-artifact_sha: 1ffaca8f1dcb249b30b14451696d8fa252106ea94bb661a615ddf8274408dab2
+artifact_sha: b1126d98a2d275b7d7d631c323eb8ac9c43dece97abae2c13c446a6029ef3199
 ---
 
 # R2 M3 git-binding SPEC draft 1: non-author review, round 1
+
+**Format note (2026-11-19, owner-approved):** the front-matter `findings` list was converted from flow style (`- {finding_id: …, severity: …}`), which the reviews connector's v1 parser rejects, to block style. The ids, severities and body are unchanged; `artifact_sha` was recomputed.
 
 ## Provenance
 

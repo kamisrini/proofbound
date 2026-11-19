@@ -4,20 +4,31 @@ verdict_id: r2-m3-spec-review-round2-20261118
 status: NEEDS_WORK
 reviewed_commit: 722240b557149284190b73bfd1a7afab397ea540
 findings:
-  - {finding_id: r2-m3-spec-review-round2-20261118-F1, severity: MED}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F2, severity: MED}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F3, severity: MED}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F4, severity: MED}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F5, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F6, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F7, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F8, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round2-20261118-F9, severity: LOW}
+  - finding_id: r2-m3-spec-review-round2-20261118-F1
+    severity: MED
+  - finding_id: r2-m3-spec-review-round2-20261118-F2
+    severity: MED
+  - finding_id: r2-m3-spec-review-round2-20261118-F3
+    severity: MED
+  - finding_id: r2-m3-spec-review-round2-20261118-F4
+    severity: MED
+  - finding_id: r2-m3-spec-review-round2-20261118-F5
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round2-20261118-F6
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round2-20261118-F7
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round2-20261118-F8
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round2-20261118-F9
+    severity: LOW
 artifact_path: docs/verification/verdicts/r2-m3-spec-review-round2-20261118.md
-artifact_sha: d218718b356e9306d3c82631660a45c85c79d16d51f6bb19ede5eab620240397
+artifact_sha: 93021ebf4f4bfc62eaef64e794007429cf2865c59feb09cc6cf5066210a355d2
 ---
 
 # R2 M3 git-binding SPEC draft 2: non-author review, round 2
+
+**Format note (2026-11-19, owner-approved):** the front-matter `findings` list was converted from flow style (`- {finding_id: …, severity: …}`), which the reviews connector's v1 parser rejects, to block style. The ids, severities and body are unchanged; `artifact_sha` was recomputed.
 
 ## Provenance
 

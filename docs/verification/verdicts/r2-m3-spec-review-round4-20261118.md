@@ -4,15 +4,21 @@ verdict_id: r2-m3-spec-review-round4-20261118
 status: NEEDS_WORK
 reviewed_commit: 9c913e6047e00ccd911a25d959d77044114564f9
 findings:
-  - {finding_id: r2-m3-spec-review-round4-20261118-F1, severity: MED}
-  - {finding_id: r2-m3-spec-review-round4-20261118-F2, severity: MED}
-  - {finding_id: r2-m3-spec-review-round4-20261118-F3, severity: LOW}
-  - {finding_id: r2-m3-spec-review-round4-20261118-F4, severity: LOW}
+  - finding_id: r2-m3-spec-review-round4-20261118-F1
+    severity: MED
+  - finding_id: r2-m3-spec-review-round4-20261118-F2
+    severity: MED
+  - finding_id: r2-m3-spec-review-round4-20261118-F3
+    severity: LOW
+  - finding_id: r2-m3-spec-review-round4-20261118-F4
+    severity: LOW
 artifact_path: docs/verification/verdicts/r2-m3-spec-review-round4-20261118.md
-artifact_sha: a44d4a6e9351e5435450dbe852ae1eed07a17d47ff0b929c2ee6091664d73445
+artifact_sha: bf1156e60cf5ef2ce287ab3e3cd459c345c9bcc124576e6d2228f311e67e8a44
 ---
 
 # R2 M3 git-binding SPEC draft 4: non-author review, round 4
+
+**Format note (2026-11-19, owner-approved):** the front-matter `findings` list was converted from flow style (`- {finding_id: …, severity: …}`), which the reviews connector's v1 parser rejects, to block style. The ids, severities and body are unchanged; `artifact_sha` was recomputed.
 
 ## Provenance
 
