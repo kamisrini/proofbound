@@ -126,6 +126,11 @@ obligation exactly once, and declare a reviewer different from the revision's de
     exactly the providers `records`, `specdir` and `sdd` (sdd APPENDED 2026-11-19, R2 M3,
     `CI-sdd-warranty-m3-xaqocp`), each with a CI-grammar id and a 64-hex digest, strictly ascending.
     Widening the set is retroactively safe: it rejects nothing it accepted before.
+34. **P-INV-34 — Commit claims are monotone.** A `commit_intents_view` row, once projected, survives
+    every later event for its commit, including one that carries no refs, so an obligation verdict
+    that projected once keeps projecting on every Apply and Rebuild (APPENDED 2026-11-19, R2 M3
+    M3-INV-10, `CI-sdd-warranty-m3-xaqocp`). The accepted cross-version limitation in the git SPEC
+    rests on this.
 
 ## 5. Proving table
 
@@ -164,3 +169,4 @@ obligation exactly once, and declare a reviewer different from the revision's de
 | P-INV-31 | Missing, stale, and deployed-unverified states remain explicit | intent_review_test.go::TestIntentDeploymentStates |
 | P-INV-32 | Deployment proof and freshness fail closed | intent_review_test.go::TestIntentDeploymentProofFailsClosed |
 | P-INV-33 | Commit claim providers are exactly records, specdir and sdd | commit_provider_test.go::TestCommitClaimProvidersAreClosed |
+| P-INV-34 | A later unbound event for a bound commit keeps its claim row and its verdict projecting | monotone_binding_test.go::TestBindingsAreMonotone |

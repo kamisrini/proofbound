@@ -264,10 +264,7 @@ var newSDDClaimProvider = func(root string, now time.Time) (sddClaimProvider, er
 var readSDDLedgered = func(ctx context.Context, ledger *store.Store) (map[string]bool, error) {
 	set := map[string]bool{}
 	err := ledger.ReadEvents(ctx, store.Filter{Source: core.SourceIntentSDD, Kind: core.KindChangeIntent}, func(record store.Record) error {
-		var payload struct {
-			IntentID       string `json:"intent_id"`
-			ArtifactSHA256 string `json:"artifact_sha256"`
-		}
+		var payload connectorintent.ChangeIntent
 		if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
 			return fmt.Errorf("ledgered sdd change intent seq %d: %w", record.Seq, err)
 		}
@@ -277,11 +274,9 @@ var readSDDLedgered = func(ctx context.Context, ledger *store.Store) (map[string
 	return set, err
 }
 
-var (
-	sddIntentIDRE = regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`)
-	sddDigestRE   = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	sddDatedRE    = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}-`)
-)
+// sddDatedRE is the archive-date prefix of an archived change's directory (M3 SPEC §4.2). The id and
+// digest grammars are not repeated here: connectorintent.ValidateRevision is their home (Law 2).
+var sddDatedRE = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}-`)
 
 // commitIntentResolver resolves one Intent claim at its commit. The sdd provider and the ledger set
 // L are built lazily, on the first sdd claim, so a history without one does neither (M3-INV-6).
@@ -341,8 +336,7 @@ func (r *commitIntentResolver) resolveSDD(ctx context.Context, commitSHA, name s
 	}
 	segment := path.Base(revision.ArtifactPath)
 	if revision.Source != core.SourceIntentSDD || revision.Kind != core.KindChangeIntent ||
-		!sddIntentIDRE.MatchString(revision.NativeID) || !sddDigestRE.MatchString(revision.ArtifactSHA256) ||
-		!segmentNamesChange(segment, name) {
+		connectorintent.ValidateRevision(revision) != nil || !segmentNamesChange(segment, name) {
 		return connectorgit.IntentRef{}, fmt.Errorf("sdd resolver returned a revision that does not name change %q", name)
 	}
 	if r.ledgered == nil {
@@ -617,10 +611,7 @@ var readLedgerView = func(ctx context.Context, ledger *store.Store) (*ledgerView
 				sets.claims[commit.SHA+"\x00"+ref.Provider+"\x00"+ref.RecordID+"\x00"+ref.ArtifactSHA256] = true
 			}
 		case e.Kind == core.KindRequirement && strings.HasPrefix(string(e.Source), "intent."):
-			var requirement struct {
-				RequirementID  string `json:"requirement_id"`
-				ArtifactSHA256 string `json:"artifact_sha256"`
-			}
+			var requirement connectorintent.Requirement
 			if err := json.Unmarshal(e.Payload, &requirement); err != nil {
 				return fmt.Errorf("ledgered requirement seq %d: %w", record.Seq, err)
 			}

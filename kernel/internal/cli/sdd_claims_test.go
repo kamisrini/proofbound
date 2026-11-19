@@ -98,39 +98,90 @@ func (f fakeSDDClaims) Resolve(context.Context, string, string) (connectorintent
 	return f.rev, f.err
 }
 
+// realChangeIntent returns the genuine intent.sdd change-intent revision the sdd provider emits for
+// a one-change tenant whose change lives at dir. A genuine revision passes ValidateRevision, so each
+// spoof case below is rejected by the one check it targets, not by a malformed envelope.
+func realChangeIntent(t *testing.T, dir string) connectorintent.Revision {
+	t.Helper()
+	m := &m3Tenant{t: t, root: t.TempDir()}
+	m.git("init", "-q", "-b", "main")
+	m.write(intentsdd.ProfilePath, m3Profile)
+	m.write(dir+"/specs/core/spec.md", "## ADDED Requirements\n\n### Requirement: Login\nThe system SHALL authenticate users.\n")
+	m.commit("one change")
+	repo, err := gitcmd.New(m.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader, err := intentsdd.NewGitReader(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider, err := intentsdd.New(reader, time.Unix(1, 0).UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	revs, err := provider.Revisions(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range revs {
+		if r.Kind == core.KindChangeIntent && r.ArtifactPath == dir {
+			if err := connectorintent.ValidateRevision(r); err != nil {
+				t.Fatalf("calibration: the genuine revision at %s does not validate: %v", dir, err)
+			}
+			return r
+		}
+	}
+	t.Fatalf("no change intent at %s", dir)
+	return connectorintent.Revision{}
+}
+
+func inL(revs ...connectorintent.Revision) map[string]bool {
+	set := map[string]bool{}
+	for _, r := range revs {
+		set[r.NativeID+"\x00"+r.ArtifactSHA256] = true
+	}
+	return set
+}
+
 // M3-INV-2 (cli half) and the §4.4 cause table: each §4.2 clause rejects on its own, each sdd
-// sentinel maps to its cause, and a correct revision binds only once it is in L.
+// sentinel maps to its cause, and a genuine revision binds only once it is in L.
 func TestSDDResolverChecksAndCauses(t *testing.T) {
-	digest := strings.Repeat("d", 64)
-	good := connectorintent.Revision{Source: core.SourceIntentSDD, Kind: core.KindChangeIntent, NativeID: "CI-add-auth-xuuno2", ArtifactSHA256: digest, ArtifactPath: "openspec/changes/add-auth"}
-	ledgered := map[string]bool{"CI-add-auth-xuuno2\x00" + digest: true}
+	good := realChangeIntent(t, "openspec/changes/add-auth")
+	archived := realChangeIntent(t, "openspec/changes/archive/2026-01-01-add-auth")
 	resolve := func(rev connectorintent.Revision, err error, set map[string]bool) (connectorgit.IntentRef, error) {
 		r := &commitIntentResolver{sdd: fakeSDDClaims{rev: rev, err: err}, ledgered: set}
 		return r.Resolve(context.Background(), "abc", "sdd", "add-auth")
 	}
-	if ref, err := resolve(good, nil, ledgered); err != nil || ref != (connectorgit.IntentRef{Provider: "sdd", RecordID: "CI-add-auth-xuuno2", ArtifactSHA256: digest}) {
+	if ref, err := resolve(good, nil, inL(good)); err != nil || ref != (connectorgit.IntentRef{Provider: "sdd", RecordID: good.NativeID, ArtifactSHA256: good.ArtifactSHA256}) {
 		t.Fatalf("control: ref=%+v err=%v", ref, err)
 	}
-	archived := good
-	archived.ArtifactPath = "openspec/changes/archive/2026-01-01-add-auth"
-	if _, err := resolve(archived, nil, ledgered); err != nil {
-		t.Fatalf("a dated archive segment was refused: %v", err)
+	if _, err := resolve(archived, nil, inL(archived)); err != nil {
+		t.Fatalf("a genuine dated archive segment was refused: %v", err)
 	}
-	spoofs := map[string]func(*connectorintent.Revision){
-		"source":       func(r *connectorintent.Revision) { r.Source = core.SourceIntentRecords },
-		"kind":         func(r *connectorintent.Revision) { r.Kind = core.KindRequirement },
-		"id":           func(r *connectorintent.Revision) { r.NativeID = "add-auth" },
-		"digest":       func(r *connectorintent.Revision) { r.ArtifactSHA256 = "bad" },
-		"segment":      func(r *connectorintent.Revision) { r.ArtifactPath = "openspec/changes/add-auth-two" },
-		"undated":      func(r *connectorintent.Revision) { r.ArtifactPath = "openspec/changes/archive/x-add-auth" },
-		"undated-long": func(r *connectorintent.Revision) { r.ArtifactPath = "openspec/changes/archive/abcd-ef-gh-add-auth" },
-		"dated-other":  func(r *connectorintent.Revision) { r.ArtifactPath = "openspec/changes/archive/2026-01-01-other" },
-		"empty-path":   func(r *connectorintent.Revision) { r.ArtifactPath = "" },
-	}
-	for name, mutate := range spoofs {
+	spoofs := map[string]connectorintent.Revision{}
+	for name, mutate := range map[string]func(*connectorintent.Revision){
+		"source":     func(r *connectorintent.Revision) { r.Source = core.SourceIntentRecords },
+		"kind":       func(r *connectorintent.Revision) { r.Kind = core.KindRequirement },
+		"id":         func(r *connectorintent.Revision) { r.NativeID = "add-auth" },
+		"digest":     func(r *connectorintent.Revision) { r.ArtifactSHA256 = "bad" },
+		"empty-path": func(r *connectorintent.Revision) { r.ArtifactPath = "" },
+	} {
 		rev := good
 		mutate(&rev)
-		_, err := resolve(rev, nil, ledgered)
+		spoofs[name] = rev
+	}
+	// Genuine, valid revisions of OTHER changes: only the segment check can reject them.
+	for name, dir := range map[string]string{
+		"segment":      "openspec/changes/add-auth-two",
+		"undated":      "openspec/changes/x-add-auth",
+		"undated-long": "openspec/changes/abcd-ef-gh-add-auth",
+		"dated-other":  "openspec/changes/archive/2026-01-01-other",
+	} {
+		spoofs[name] = realChangeIntent(t, dir)
+	}
+	for name, rev := range spoofs {
+		_, err := resolve(rev, nil, inL(rev))
 		if err == nil || errors.Is(err, connectorgit.ErrClaimUnbound) {
 			t.Errorf("%s: a spoofed revision was not a sync failure: %v", name, err)
 		}
@@ -142,7 +193,7 @@ func TestSDDResolverChecksAndCauses(t *testing.T) {
 		"unmappable:slug-too-short": &intentsdd.UnmappableError{Cause: "slug-too-short"},
 	}
 	for cause, sentinel := range causes {
-		_, err := resolve(connectorintent.Revision{}, sentinel, ledgered)
+		_, err := resolve(connectorintent.Revision{}, sentinel, inL(good))
 		var unbound *connectorgit.ClaimUnboundError
 		if !errors.As(err, &unbound) || unbound.Cause != cause {
 			t.Errorf("%s: got %v", cause, err)
@@ -153,7 +204,7 @@ func TestSDDResolverChecksAndCauses(t *testing.T) {
 	if !errors.As(err, &unbound) || unbound.Cause != "not-ledgered" {
 		t.Errorf("not in L: got %v", err)
 	}
-	if _, err := resolve(connectorintent.Revision{}, errors.New("reader on fire"), ledgered); err == nil || errors.Is(err, connectorgit.ErrClaimUnbound) {
+	if _, err := resolve(connectorintent.Revision{}, errors.New("reader on fire"), inL(good)); err == nil || errors.Is(err, connectorgit.ErrClaimUnbound) {
 		t.Errorf("a reader error was read as a skip: %v", err)
 	}
 }
@@ -180,17 +231,17 @@ func (a *countingAppender) Append(_ context.Context, e core.Event) (store.Record
 // L; one sdd value (even on several claims) does each exactly once per sync. No store is opened, so
 // this test never contends for the embedded database (the end-to-end proofs live in the sdd package).
 func TestSDDClaimWorkIsLazy(t *testing.T) {
-	digest := strings.Repeat("d", 64)
+	good := realChangeIntent(t, "openspec/changes/add-auth")
 	builds, reads := 0, 0
 	oldBuild, oldRead := newSDDClaimProvider, readSDDLedgered
 	t.Cleanup(func() { newSDDClaimProvider, readSDDLedgered = oldBuild, oldRead })
 	newSDDClaimProvider = func(string, time.Time) (sddClaimProvider, error) {
 		builds++
-		return sddByName{"add-auth": {Source: core.SourceIntentSDD, Kind: core.KindChangeIntent, NativeID: "CI-add-auth-xuuno2", ArtifactSHA256: digest, ArtifactPath: "openspec/changes/add-auth"}}, nil
+		return sddByName{"add-auth": good}, nil
 	}
 	readSDDLedgered = func(context.Context, *store.Store) (map[string]bool, error) {
 		reads++
-		return map[string]bool{"CI-add-auth-xuuno2\x00" + digest: true}, nil
+		return inL(good), nil
 	}
 	ids, err := newIDs()
 	if err != nil {

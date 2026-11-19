@@ -287,4 +287,63 @@ func TestSyncReviewsPrintsHoldsAndFailsOnRefusal(t *testing.T) {
 			t.Fatalf("output lacks %q:\n%s", want, out.String())
 		}
 	}
+
+	// Draft 8 row 11, CLI half: a malformed artifact AFTER the refusals stops the sync, the error
+	// joins both, and the refused lines are still printed.
+	write(filepath.Join(dir, "zz-malformed.md"), []byte("---\nschema: vera.verdict.v1\nnot yaml\n"))
+	git("add", "-A", "docs")
+	git("commit", "-q", "-m", "a malformed artifact after the refusals")
+	out.Reset()
+	err = runCommand(ctx, commandSyncReviews, nil, tenant, "", &out)
+	if !errors.Is(err, connectorreviews.ErrRevisionRefused) || !strings.Contains(err.Error(), "zz-malformed.md") {
+		t.Fatalf("malformed after refusal: %v\n%s", err, out.String())
+	}
+	for _, want := range []string{"listed=3 ", "malformed=1 ", "refused duplicate-identity " + copyPath + "\n"} {
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("output lacks %q:\n%s", want, out.String())
+		}
+	}
+}
+
+// Draft 7 §4.6 "View errors" (row 12): a ledgered git payload that does not decode as
+// connectorgit.Commit, or a reviews payload without a schema, fails the view (fail-closed), rather
+// than being skipped — skipping a schema-less reviews event would turn a later revision of it into a
+// quietly held "first" revision.
+func TestStoreLedgerViewFailsClosedOnUndecodablePayloads(t *testing.T) {
+	ctx := context.Background()
+	for name, event := range map[string]core.NewEventParams{
+		"git payload":        {Source: core.SourceGit, NativeID: strings.Repeat("f", 40), Kind: core.KindCommitRecorded, Payload: []byte(`{"sha":1}`)},
+		"schema-less review": {Source: core.SourceReviews, NativeID: "V-no-schema", Kind: core.KindReviewVerdict, Payload: []byte(`{"verdict_id":"V-no-schema"}`)},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ledger, err := store.Open(ctx, store.Config{Root: t.TempDir(), Port: ephemeralPort(t), DatabaseURL: os.Getenv("DATABASE_URL")})
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = ledger.Close() })
+			ids, err := newIDs()
+			if err != nil {
+				t.Fatal(err)
+			}
+			run, err := ledger.BeginSync(ctx, "m3-view-errors")
+			if err != nil {
+				t.Fatal(err)
+			}
+			event.OccurredAt, event.ConnectorVersion = time.Unix(10, 0).UTC(), "m3-test/1"
+			e, err := ids.NewEvent(event)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, _, err := run.Append(ctx, e); err != nil {
+				t.Fatal(err)
+			}
+			if err := run.Finish(ctx, json.RawMessage(`[]`), nil); err != nil {
+				t.Fatal(err)
+			}
+			view := &storeLedgerView{ledger: ledger}
+			if _, err := view.Ledgered(ctx, "proofbound.obligation-verdict.v2", "x"); err == nil {
+				t.Fatal("the view skipped an undecodable payload")
+			}
+		})
+	}
 }
