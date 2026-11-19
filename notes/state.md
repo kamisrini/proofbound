@@ -6,27 +6,31 @@ As of: 2026-11-18
 
 ## Resume — 2026-11-18
 
-**R2 M1 is closed.** `sdd` is the 18th Task-8 production package (`9e97749`).
-- Option 1, the M1 reviews' remaining LOW findings, was done in `5aafb55` and `b7bf296`.
-- The non-author re-check `r2-m1-lowfix-recheck-20261118` (`8ecdcfd`) returned ACCEPTABLE with 3 LOW
-  findings.
-- Those 3 were answered in `0bb865f`:
-  - F1, INV-56: a full-repo test of `all`, plus an AST pin on `verify`'s `"all"`.
-  - F2, INV-35: clean units that only the defect states emit.
-  - F3: the Task-8 addendum now states the binding property with its check command.
-- Each fix was calibrated against the reviewer's own surviving mutant.
-- Production code is unchanged.
+**Now: R2 M3, binding tenant commits to `intent.sdd`.** The owner picked it on 2026-11-18 and is away
+for about an hour, with "continue building".
+- **SPEC draft 1** is committed in `5ab7059`: `docs/plans/R2-sdd-m3-git-binding-spec-draft1.md`. It
+  answers sdd SPEC §14's five entry conditions.
+- **Key finding:** a git event carrying an `sdd` ref, appended before its change-intent revision,
+  fails every projection rebuild permanently. Rebuilds run in sequence order, and the commit is checked
+  against `change_intents_view`. So decision D3 makes `sync git` ledger the `sdd` revisions first.
+- **Owner decisions pending:**
+  - D1: the trailer token. Recommended: `sdd:<name>`.
+  - D2: per-commit claim skips.
+  - D3: the ordering above.
+- **Non-author review:** round 1 (`r2-m3-spec-review-round1-20261118`) is running.
 
-**Exact next action:** confirm `make check` is green at HEAD. Then ask the owner:
-1. Does a short non-author re-check cover `0bb865f` (Law 9)?
-2. What comes next: M2 (Spec Kit), M3 (git-connector binding), or the projections integration-suite
-   setup failure ("ledger tables are append-only")? That failure predates M1, and the owner has not
-   decided whether to investigate it or file a deferral.
+**Exact next action:** when the round-1 verdict arrives, commit it verbatim and regenerate
+p6-artifact-integrity. Then answer its findings in draft 2 and bring D1-D3 and the CI wording to the
+owner. **No M3 code before** the SPEC passes review and the owner approves the CI (Law 6, governed
+paths).
 
-**Gotchas learned:**
-- invariant-lint resolves `file_test.go::Test` citations only inside the SPEC's own package; name
-  cross-package tests in prose.
-- invariant-table-lint takes exactly ONE citation per §9 row; put extra tests under "Also proven by".
+**M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
+re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
+`b18e672`.
+
+**Gotchas:**
+- invariant-lint resolves `file_test.go::Test` citations only inside the SPEC's own package.
+- invariant-table-lint takes exactly one citation per §9 row.
 
 **Immediate blockers:** pushes are held (DEF-PUSH-HOLD-20261116). Do not push without the owner's word.
 
