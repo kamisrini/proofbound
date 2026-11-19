@@ -24,7 +24,7 @@ existing file untouched, except the two marked appends below). Prints one line p
 
 ## 2. `proofbound review draft <commit>` and `proofbound review seal <dir>`
 
-`draft` needs the commit synced (`sync all`). For the commit's latest git event it reads every
+`draft` needs the specs and the commit synced (`sync intent sdd`, then `sync all`). For the commit's latest git event it reads every
 bound `sdd` ref (provider `sdd`); for each it reads the ledgered change intent and every target
 requirement revision. It writes one file, `.proofbound/drafts/<commit>/draft.json` (built
 2026-11-19 as one file rather than one per artifact, which is simpler for an agent to edit):
@@ -50,7 +50,8 @@ nothing.
 
 ## 3. The reviewer workflow (AGENTS.md block and subagent)
 
-1. `proofbound sync all`; `proofbound review draft <commit>`.
+1. `proofbound sync intent sdd && proofbound sync all` (`sync all` never reads specs, SDD-INV-56);
+   `proofbound review draft <commit>`.
 2. Read the change (`openspec/changes/<name>/`) and the commit (`git show <commit>`); run the tests.
 3. Decide each outcome honestly. `SATISFIED` only with evidence the code does it; otherwise
    `NOT_SATISFIED` or `INCONCLUSIVE`. Review outcomes: `VERIFIABLE`, `AMBIGUOUS`, `UNTESTABLE`,

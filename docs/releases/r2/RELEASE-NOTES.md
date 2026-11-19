@@ -21,14 +21,15 @@ and build with any agent, get a record that answers:
 Proofbound does not replace your agent or your spec tool. It reads what they leave in git, so it
 works beside any harness. It carries all of Release 1.
 
-New here? Start with the [**Release 2 demo**](DEMO.md): one command runs Proofbound on OpenSpec's own
-repository.
+New here? Start with the [**Release 2 demo hub**](DEMO.md): `bash docs/releases/r2/demo-loop.sh openspec` (or
+`speckit`) shows the whole loop (claim, verify, PASS, drift) in about two minutes, and
+`bash docs/releases/r2/demo-openspec.sh` runs Proofbound on OpenSpec's own repository.
 
 ## What's included
 
 | Capability | What it gives you | Run it |
 |---|---|---|
-| **SDD connector** (OpenSpec, Spec Kit) | Every change or feature, and every requirement in it, recorded from the project's real git history with exact content digests | `proofbound sync intent sdd` |
+| **SDD connector** (OpenSpec, Spec Kit) | Every change or feature, and every requirement in it, recorded from the project's real git history with exact content digests. Run it whenever specs change: `sync all` deliberately does not read specs | `proofbound sync intent sdd` |
 | **Commit binding** | A commit ending `Intent: sdd:<name>` binds to the exact revision of that change; a claim on a change that does not exist is reported, never silently accepted | `proofbound sync git` |
 | **Readiness gate, with reasons** | A commit is warranted only when every obligation it claims is SATISFIED and every requirement VERIFIABLE, by a reviewer who is not the spec's owner; BLOCKED says why, with counts | `proofbound gates canary` |
 | **Starter kit** | Profile, `.gitignore` lines, agent instructions (AGENTS.md), a Claude Code reviewer subagent, and a commit hook, in one command | `proofbound init {openspec\|speckit}` |
@@ -65,6 +66,12 @@ repository.
   change deltas and feature specs carry obligations.
 - **Drift is information, not a gate.** `report drift` exits 0. The readiness gate still judges a
   commit against the exact revision it claimed.
+- **`sync all` does not read specs.** Spec sync runs only when named (`sync intent sdd`), a deliberate
+  M1 choice (SDD-INV-56) so projects without a profile are unaffected. Run both.
+- **`review seal` takes the draft's folder**, not the `draft.json` file.
+- **On a Spec Kit project, Release 1's `specdir` convention is switched off.** Both are rooted at
+  `specs/`. When the committed profile says Spec Kit, `sync all` and `verify` read `specs/` only as
+  Spec Kit's.
 - **The commit hook is a convenience.** `git commit --no-verify` skips it.
 - **Low-severity review findings are recorded, not fixed** (Law 11). Each is in its milestone's
   verdict under `docs/verification/verdicts/r2-*`.

@@ -39,23 +39,31 @@ Follow-ups: tag the release, add a demo script, and run a single-dev corp pilot.
 
 ## Release 2 — the SDD Warranty Connector
 
-**The next shippable cut after the Trust Record.** One framework-agnostic connector that lets
-Proofbound **warrant the output of any spec-driven-development tool** (OpenSpec, Spec Kit, others):
-it ingests SDD artifacts as intents, binds CI check-witnesses, extends `delivery-enforce` with a
-spec→code traceability gate, and detects spec-digest drift. It **carries all of R1** — the SDD tool
-is a new *source* feeding the same Trust Record; nothing bypasses the intent → verdict →
-`delivery-enforce` path. The build plan (phases M0–M6, roles, non-goals) is
+**Built; awaiting owner acceptance** (notes: [`docs/releases/r2/RELEASE-NOTES.md`](../releases/r2/RELEASE-NOTES.md),
+demos: [`docs/releases/r2/DEMO.md`](../releases/r2/DEMO.md)). One connector lets Proofbound **warrant
+the output of spec-driven-development tools** (OpenSpec and Spec Kit). It ingests their specs as
+intents from git history, binds each tenant commit's `Intent: sdd:<name>` claim to the exact spec
+revision, applies the existing readiness gate (a non-owner SATISFIED verdict plus a VERIFIABLE review
+for every claimed obligation), and reports **promise drift**. It **carries all of R1**: the SDD tool
+is a new *source* feeding the same Trust Record, and nothing bypasses the intent → verdict → gate
+path. The build plan (re-sequenced 2026-11-19 under Law 11) is
 [`sdd-warranty-connector-plan.md`](sdd-warranty-connector-plan.md).
 
-| Item | Status | Notes |
+| Item | Status | Where |
 |---|---|---|
-| Mapping spike + package SPEC (`intent/sdd` provider: profile schema, BD/BR/CI mapping, `Resolve` seam) + intent home (`BD`/`BR-sdd-warranty-*`) | not started | M0; Law 6 spec-before-code; go/no-go on `ErrUnmappable` |
-| `intent.sdd` provider core (profile-driven parse → canonical revisions) | not started | M1; sibling of `records`/`specdir`; exact-byte digests, no normalization |
-| OpenSpec profile (reference) | not started | M2; the richest producer defines the mapping |
-| Binding + `delivery-enforce` traceability gate | not started | M3; tenant `Intent:` trailers resolve via the provider; no regression of existing enforce |
-| Spec drift projection (references bound to a superseded exact digest) | not started | M4; the differentiated payoff; projection over existing data |
-| Spec Kit subset-conformance profile | not started | M5; the agnosticism proof |
-| Self-hosting demo + acceptance | not started | M6 |
+| M0: mapping spike, provider SPEC, intent home (`BD`/`BR-sdd-warranty-*`) | ✅ accepted 2026-11-17 | `kernel/internal/connector/intent/sdd/SPEC.md`; BR rev 0003 |
+| M1: `intent.sdd` provider core, OpenSpec (`sync intent sdd`) | ✅ accepted 2026-11-18 | `CI-sdd-warranty-m1-6op6vl` |
+| M3: commit binding + readiness gate on sdd chains | ✅ accepted 2026-11-19 | `CI-sdd-warranty-m3-xaqocp`; verdicts `r2-m3-*` |
+| Real-repo demo on OpenSpec's own repository; clean output, gate reasons, lookup by name | ✅ accepted 2026-11-19 | `docs/releases/r2/demo-openspec.sh`; `r2-demo-polish-review` |
+| Starter kit + reviewer workflow (`init`, `review draft`/`seal`) | ✅ accepted 2026-11-19 | `CI-starter-kit-68z7m8`; `r2-starter-kit-*` |
+| M4: promise drift (`report drift`) | ✅ accepted 2026-11-19 | `CI-sdd-warranty-m4-*`; BR rev 0005 O-14; `r2-m4-drift-*` |
+| Spec Kit (old M2 Spec Kit mapping + M5, merged) | ✅ accepted 2026-11-19 | `CI-sdd-warranty-speckit-eiis5s`; `r2-speckit-review` |
+| Full-loop demos for both kits | ✅ 2026-11-19 | `docs/releases/r2/demo-loop.sh` |
+| Release notes + owner acceptance | ⏳ awaiting the owner | tag `v0.2.0` after acceptance (pushes held) |
+
+**Not in R2** (stated in the release notes): CI check runs as verdict evidence (the evidence is the
+reviewed commit's git event), a drift *gate* (drift is a report), Spec Kit status lines, and parsing
+OpenSpec main specs or `design.md`.
 
 ## Release 3 — the revenue organs + turnkey redistribution (everything else)
 
@@ -73,7 +81,7 @@ Release 2 scope, unchanged — only the label moved from R2 to R3 on 2026-11-16.
 | Broader connectors / event kinds; verifier identities + signing (deferred since P1) | cross-cutting | not started | under existing no-hand-authored-facts + feed rules |
 
 **Boundary rule:** **R1 records and verifies** on this repo plus one external connector, against a
-user-supplied Postgres. **R2 warrants the output of an external SDD tool** — it ingests specs +
-decisions as intents and binds/enforces/drift-checks them, but adds no new runtime organ. **R3
+user-supplied Postgres. **R2 warrants the output of an external SDD tool**: it ingests specs as intents
+and binds, gates and drift-checks them, but adds no new runtime organ. **R3
 regenerates, predicts, governs, issues portable warranties, or redistributes a database.** Each of
 those last four crosses into Release 3.

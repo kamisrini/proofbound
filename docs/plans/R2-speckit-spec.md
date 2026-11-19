@@ -79,6 +79,11 @@ state. Its change intent if it has one, `ErrNoChangeIntent` if the feature exist
 
 `proofbound init speckit` (CLI-INV-18 amended) writes the Spec Kit profile instead of OpenSpec's.
 
+**Found by the documentation walkthrough (2026-11-19), CLI-INV-22:** the P5 `specdir` provider is also
+rooted at `specs/` and rejected every Spec Kit file, so `sync all` failed on Spec Kit projects. When
+HEAD's committed profile declares Spec Kit at `specs/`, `sync intent all`, `sync all` and `verify` omit
+`specdir`.
+
 ## 6. Non-goals
 
 - Spec Kit's `plan.md`, `research.md` and `contracts/` are not parsed. They count toward the change

@@ -152,16 +152,20 @@ end-to-end warranty demo; verification doc; owner acceptance.
 
 **Re-sequenced 2026-11-19 (owner, Law 11 "payoff first").** M0, M1 and M3 are accepted. The rest
 runs in this order, each step ending in one command the owner runs on a real repository, with
-readable output, under the review budget (`VD-review-ceremony-tiers-v2b6kp`, amended 2026-11-19):
-1. **Real-repo demo** (M6's demo pulled forward; it also closes M2's OpenSpec deliverable): sync a
-   real public OpenSpec repository and print a report: changes, requirements, which commits bind,
-   and what the readiness gate says.
-2. **M4 — drift.** The same report flags every warranty whose spec revision was superseded after it
-   was verified.
-3. **Spec Kit** (M2's Spec Kit mapping and M5 merged; both were Spec Kit). Built 2026-11-19
-   (`docs/plans/R2-speckit-spec.md`): the same flow (`init speckit`, claims, review, gate, drift),
-   proven on fixtures and end to end. No public Spec Kit project was at hand for a real-repo run.
-4. **R2 acceptance** (the rest of M6): the owner runs the demos and accepts Release 2.
+readable output, under the review budget (`VD-review-ceremony-tiers-v2b6kp`, amended 2026-11-19).
+**Status 2026-11-19: steps 1-3 built and accepted; step 4 awaits the owner.**
+1. ✅ **Real-repo demo** (M6's demo pulled forward; it also closes M2's OpenSpec deliverable):
+   `docs/releases/r2/demo-openspec.sh` syncs OpenSpec's own repository and prints the claims, the
+   gates with reasons, and the warranty report. Followed by the starter kit and reviewer workflow
+   (`init`, `review draft`/`seal`, `docs/plans/R2-starter-kit-spec.md`).
+2. ✅ **M4 — drift** (`docs/plans/R2-m4-drift-spec.md`): `report drift` compares promises, not digests,
+   and reads the change at HEAD.
+3. ✅ **Spec Kit** (M2's Spec Kit mapping and M5 merged; `docs/plans/R2-speckit-spec.md`): the same flow
+   for `specs/<feature>/`, proven on fixtures and end to end. No public Spec Kit project was at hand
+   for a real-repo run. `docs/releases/r2/demo-loop.sh {openspec|speckit}` shows the whole loop for
+   both kits.
+4. ⏳ **R2 acceptance** (the rest of M6): the owner runs the demos and accepts Release 2
+   (`docs/releases/r2/RELEASE-NOTES.md`).
 
 **Dependencies (original):** `M0 → M1 → M2 → M3 → M4`; `M5` needs M3; `M6` needs M4+M5. M4 is where the
 differentiated value lands; M5/M6 prove and package it.

@@ -276,9 +276,11 @@ leads Release 3 (still spec-first).
 **Release line (redrawn 2026-11-16, VD-release-line-r2-sdd-t5j34p; supersedes VD-release-line-kwdh4v).**
 A three-release line over the phase record: **Release 1 = "the Trust Record"** (P1–P3 + P5 + P7 B1 —
 records + verifies, run against a user-supplied Postgres) — **accepted as shipped 2026-11-16**;
-**Release 2 = the SDD Warranty Connector** — warrant the output of any spec-driven-dev tool (OpenSpec
-reference, Spec Kit subset), carrying all of R1; plan in
-[sdd-warranty-connector-plan.md](docs/plans/sdd-warranty-connector-plan.md); **Release 3** = the
+**Release 2 = the SDD Warranty Connector** — warrant the output of spec-driven-dev tools (OpenSpec and
+Spec Kit), carrying all of R1; plan in
+[sdd-warranty-connector-plan.md](docs/plans/sdd-warranty-connector-plan.md) — **built 2026-11-19,
+awaiting owner acceptance** (every milestone passed one non-author review; notes and demos in
+[docs/releases/r2/](docs/releases/r2/RELEASE-NOTES.md)); **Release 3** = the
 revenue organs (#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB
 redistribution. The maintained scope split is in [RELEASE-PLAN.md](docs/plans/RELEASE-PLAN.md).
 

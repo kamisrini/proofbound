@@ -535,11 +535,38 @@ func intentProviders(root, selection string, now time.Time) ([]connectorintent.P
 	if err != nil {
 		return nil, err
 	}
+	if specKitOwnsSpecs(root) {
+		// The tenant's committed profile declares specs/ as Spec Kit's, so the P5 specdir
+		// convention (also rooted at specs/) does not apply and would reject every Spec Kit file
+		// (CLI-INV-22).
+		return []connectorintent.Provider{recordsProvider}, nil
+	}
 	specdirProvider, err := intentspecdir.New(reader, now)
 	if err != nil {
 		return nil, err
 	}
 	return []connectorintent.Provider{recordsProvider, specdirProvider}, nil
+}
+
+// specKitOwnsSpecs reports whether HEAD's committed sdd profile declares kit "speckit" with a root
+// at or overlapping specs/. It only reads one committed file; it never constructs the sdd provider
+// (SDD-INV-56). A missing or unreadable profile leaves the P5 providers exactly as before.
+func specKitOwnsSpecs(root string) bool {
+	raw := gitOutput(context.Background(), root, "show", "HEAD:"+intentsdd.ProfilePath)
+	if raw == "" {
+		return false
+	}
+	var profile struct {
+		Kit     string `json:"kit"`
+		Changes struct {
+			Root string `json:"root"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal([]byte(raw), &profile); err != nil || profile.Kit != intentsdd.KitSpecKit {
+		return false
+	}
+	r := strings.TrimSuffix(profile.Changes.Root, "/")
+	return r == "specs" || strings.HasPrefix(r, "specs/")
 }
 
 // printableUnit keeps a tenant-controlled unit name on one line: a name with a C0 or C1 control,

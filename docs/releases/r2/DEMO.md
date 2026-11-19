@@ -1,23 +1,63 @@
-# Proofbound — Demo Hub (Release 2, in progress)
+# Proofbound — Demo Hub (Release 2)
 
-**Release 2 is the SDD Warranty Connector:** Proofbound reads the specs a spec-driven-development
-tool writes ([OpenSpec](https://github.com/Fission-AI/OpenSpec) or [Spec Kit](https://github.com/github/spec-kit)), binds each commit to the exact spec revision it claims to implement,
-and refuses to vouch for work nobody has verified. This page shows it on a real project.
+**Release 2 is the SDD Warranty Connector.** Proofbound reads the specs a spec-driven-development
+tool writes ([OpenSpec](https://github.com/Fission-AI/OpenSpec) or
+[Spec Kit](https://github.com/github/spec-kit)), binds each commit to the exact spec revision it
+claims to implement, says whether anyone other than the author has verified it, and flags a
+warranty when the spec changes afterwards. It works beside any coding agent, because it reads what
+the agent and the spec tool leave in git.
 
-| I want to… | Do this | Time |
+| I want to… | Run | Time |
 |---|---|---|
-| **See Release 2 on a real OpenSpec project** | Setup below, then `bash docs/releases/r2/demo-openspec.sh` | ~4 min |
-| See what Release 2 includes and its caveats | [Release Notes](RELEASE-NOTES.md) | — |
-| See what Release 1 does (the trust record) | [Release 1 Demo Hub](../r1/DEMO.md) | ~5 min |
+| **See the whole loop on OpenSpec**: claim → verify → PASS → drift | `bash docs/releases/r2/demo-loop.sh openspec` | ~2 min |
+| **See the whole loop on Spec Kit** | `bash docs/releases/r2/demo-loop.sh speckit` | ~2 min |
+| **See it at scale on a real project**: OpenSpec's own repository, 1,059 commits | `bash docs/releases/r2/demo-openspec.sh` | ~4 min |
+| Use it on my own project | [§4](#4-use-it-on-your-own-openspec-or-spec-kit-project) | ~10 min |
+| What Release 2 includes, and its caveats | [Release Notes](RELEASE-NOTES.md) | — |
+| Release 1 (the trust record underneath) | [Release 1 Demo Hub](../r1/DEMO.md) | ~5 min |
 
-## Setup
+## 1. Setup (once)
 
-The same one-time setup as Release 1: a Linux (WSL) terminal, Git, and Go 1.26+. See
-[Release 1, §0 One-time setup](../r1/DEMO.md#0-one-time-setup). You also need network access to
-GitHub and the embedded database's port, 55432, free. You do not need to build or install anything
-first; the demo builds its own copy of the CLI.
+- A Linux or WSL terminal, Git, Go 1.26+, and `jq`. On Windows, follow
+  [Release 1, §0 One-time setup](../r1/DEMO.md#0-one-time-setup) first: use WSL from your Linux home,
+  not a `/mnt/c` path.
+- Run the demos from a clone of this repository. Each demo builds its own copy of the CLI, so
+  nothing needs installing first.
+- The embedded database uses port **55432**; it must be free (no other Proofbound command running).
+- `demo-openspec.sh` also needs network access to GitHub. The loop demos fetch nothing.
 
-## What the demo does
+## 2. The whole loop, on a tiny project (OpenSpec or Spec Kit)
+
+```bash
+bash docs/releases/r2/demo-loop.sh openspec    # works in ${TMPDIR:-/tmp}/proofbound-openspec-loop
+bash docs/releases/r2/demo-loop.sh speckit     # works in ${TMPDIR:-/tmp}/proofbound-speckit-loop
+```
+
+Both create a project, run `proofbound init <kit>`, and then:
+
+1. **Write a spec** with two obligations: an OpenSpec change `add-csv-export`, or a Spec Kit feature
+   `001-csv-export` (`- **FR-001**: …`, `- **FR-002**: …`).
+2. **Implement it, with a test,** in a commit that ends `Intent: sdd:<name>`.
+3. **Sync and report:** the claim binds to the spec's exact revision, and every obligation is
+   `UNVERIFIED`.
+4. **Review:** the demo runs the feature's test, records each outcome, and runs
+   `proofbound review seal`. The demo plays the reviewer and says so. In real use, a person or the
+   `proofbound-reviewer` agent who did not write the commit decides.
+5. **The gate says PASS**, with the counts.
+6. **The spec owner rewords one obligation.** `report drift` flags exactly that one.
+
+What you see at the end (Spec Kit; OpenSpec's is the same, with `O-ADD-HEADER-ROW`):
+
+```
+gate=ready-<commit12> state=PASS ... reason="2 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE"
+drift change=CI-001-csv-export-... state=CURRENT ...
+...
+drift change=CI-001-csv-export-... state=STALE ...
+  changed O-FR-002 "System MUST start every export with a header row." -> "System MUST start every export with a header row naming each column in lower case."
+summary warranted=1 current=0 stale=1 other=0
+```
+
+## 3. At scale: OpenSpec's own repository
 
 ```bash
 bash docs/releases/r2/demo-openspec.sh            # works in ${TMPDIR:-/tmp}/proofbound-openspec-demo
@@ -26,16 +66,12 @@ bash docs/releases/r2/demo-openspec.sh ~/pb-demo  # or a directory of your choic
 
 1. **Clones [OpenSpec](https://github.com/Fission-AI/OpenSpec)** at a pinned commit. OpenSpec is
    developed with OpenSpec, so its history holds real change proposals and specs.
-2. **Commits a Proofbound profile into every commit of the local clone.** The profile tells
-   Proofbound where OpenSpec keeps its changes and who owns them. Release 2 takes owners only from a
-   committed profile, so the demo puts it into history. (Commit IDs in the clone therefore differ
-   from upstream. Nothing is pushed.)
-3. **Reads the whole history:** about 650 spec revisions from about 1,060 commits.
-4. **Adds two demo commits:** one says `Intent: sdd:install-skills-globally` (a real active change),
-   the other claims a change that does not exist. Each gets a readiness gate.
-5. **Prints what Proofbound concludes.**
-
-## What you will see
+2. **Commits a Proofbound profile into every commit of the local clone.** Release 2 takes owners
+   only from a committed profile, so the demo puts it into history. Commit IDs in the clone differ
+   from upstream as a result. Nothing is pushed.
+3. **Reads the whole history:** about 650 spec revisions from about 1,060 commits, in about a minute.
+4. **Adds two demo commits:** one claims a real active change (`Intent: sdd:install-skills-globally`),
+   the other a change that does not exist. Each gets a readiness gate.
 
 ```
 claim-skip unknown-change sdd:no-such-change at <commit>
@@ -45,68 +81,89 @@ intent=CI-install-skills-globally-57r52f ... state=IMPLEMENTED_UNVERIFIED ...
   target=...#O-ADD-INSTALL-THE-RUNNING-C-13EA48 ... outcome=UNVERIFIED statement="Init SHALL install skills ..."
 ```
 
-- **The claimed commit binds** to the exact revision of `install-skills-globally`. The report lists
-  that change's four obligations, word for word from OpenSpec's own spec.
-- **Its gate is BLOCKED, and says why:** none of the four obligations has been verified. A commit
-  is warranted only when every obligation it claims has a SATISFIED verdict and a VERIFIABLE review.
+- **The claimed commit binds** to the exact revision of `install-skills-globally`. Its four
+  obligations come word for word from OpenSpec's own spec.
+- **Its gate is BLOCKED, and says why:** the demo commit implements nothing, so no one has verified
+  anything, and this demo does not pretend otherwise. §2 shows the path to PASS.
 - **The bogus claim is reported and BLOCKED.** A commit cannot claim a change that does not exist.
 
-Look up any change the same way: `proofbound report intent sdd:<change-name>`.
+## 4. Use it on your own OpenSpec or Spec Kit project
 
-## Use it on your own OpenSpec or Spec Kit project
-
-Build the CLI once (Release 1, [§1](../r1/DEMO.md#1-build-the-proofbound-binary)), then in your
-project's repository:
+**Build the CLI once** and put it on your PATH ([Release 1, §1](../r1/DEMO.md#1-build-the-proofbound-binary)):
 
 ```bash
-proofbound init openspec          # once (or: proofbound init speckit): profile, .gitignore lines, AGENTS.md block,
-                                  # a Claude Code reviewer subagent, and a commit-msg hook
-git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
-PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no change, so no trailer
+cd <this-repo>/kernel && CGO_ENABLED=0 go build -o "$HOME/bin/proofbound" ./cmd/proofbound
 ```
 
-Then work as usual with any agent. Every commit ends with `Intent: sdd:<name>`, where `<name>` is the
-OpenSpec change folder or the Spec Kit feature folder such as `001-export` (the hook
-reminds you; AGENTS.md tells your agent). To warrant a commit, a reviewer who did not write it
-(another person, or the `proofbound-reviewer` subagent in a separate session) runs:
+**Set up your project** (in its repository, once):
 
 ```bash
-proofbound sync all
-proofbound review draft <commit>      # prints each obligation; writes .proofbound/drafts/<commit>/draft.json
-# decide each outcome in draft.json, set declared_reviewer
-proofbound review seal .proofbound/drafts/<commit>
+proofbound init openspec            # or: proofbound init speckit
+git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
+PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no spec, so no trailer
+```
+
+`init` writes the profile (owner and sponsor = your `git config user.name`, or `--owner <name>`), two
+`.gitignore` lines, an AGENTS.md block that tells any agent the commit rule, a Claude Code reviewer
+subagent (`.claude/agents/proofbound-reviewer.md`), and a `commit-msg` hook. It never overwrites
+anything, so running it twice is safe.
+
+**Work as usual.** Sync specs with `proofbound sync intent sdd`: `sync all` deliberately leaves them out
+(only a named sync reads them), so run both. End every commit that implements a spec with `Intent: sdd:<name>`, where
+`<name>` is the folder: the OpenSpec change under `openspec/changes/`, or the Spec Kit feature under
+`specs/` (for example `001-export`). Spec Kit counts a feature once its `tasks.md` exists. Commits
+that implement no spec use `PROOFBOUND_NO_INTENT=1 git commit …`.
+
+**Warrant a commit.** Someone who did not write it (another person, or the `proofbound-reviewer`
+subagent in a separate session) runs:
+
+```bash
+proofbound sync intent sdd && proofbound sync all
+proofbound review draft <commit>                # prints every obligation; writes .proofbound/drafts/<commit>/draft.json
+# in draft.json: set declared_reviewer; set each outcome (SATISFIED / NOT_SATISFIED / INCONCLUSIVE,
+# and VERIFIABLE / AMBIGUOUS / UNTESTABLE / CONTRADICTORY for the requirement review)
+proofbound review seal .proofbound/drafts/<commit>   # the folder, not draft.json
 git add docs/verification/verdicts gates
 PROOFBOUND_NO_INTENT=1 git commit -m "review <commit>"
-proofbound sync all && proofbound gates canary
+proofbound sync all && proofbound gates canary   # reviews only need sync all
 ```
 
-The commit's `ready-<commit12>` gate says **PASS** only when every obligation is SATISFIED and every
-requirement is VERIFIABLE, by a reviewer other than the spec's owner; otherwise BLOCKED, with the
-counts. Independence is declared, not proven: the record says who claimed to verify.
+`seal` takes only the reviewer's decisions from the draft and rebuilds everything else from the
+ledger. It refuses the spec's owner as reviewer, an undecided outcome, or a draft that no longer
+matches. The commit's `ready-<commit12>` gate says **PASS** only when every obligation is SATISFIED
+and every requirement VERIFIABLE; otherwise BLOCKED, with the counts.
 
-## Cleaning up
+**Watch for drift** whenever specs change:
 
 ```bash
-rm -rf "${TMPDIR:-/tmp}/proofbound-openspec-demo"
+proofbound sync intent sdd && proofbound sync all && proofbound report drift
 ```
 
-The demo's database lives inside that directory; its server log is `OpenSpec/.proofbound/db.log`.
+Each warranted change is CURRENT, or STALE when it now promises something other than what was
+verified, with each obligation `added`, `removed` or `changed` (old and new wording). It compares
+what is promised, not files, so archiving a change or editing `tasks.md` is not drift. REMOVED,
+UNSYNCED and UNKNOWN cover a change that is gone at HEAD, not yet synced, or unreadable.
 
-## See drift: when a verified spec changes
+**Useful lookups:** `proofbound report intent sdd:<name>` shows one change's obligations and state.
+
+## 5. Command reference (Release 2)
+
+| Command | What it does |
+|---|---|
+| `proofbound init {openspec\|speckit} [--owner <name>]` | Set up a project (never overwrites) |
+| `proofbound sync intent sdd` | Record every spec revision in the project's history |
+| `proofbound sync git` | Record commits; bind `Intent: sdd:<name>` claims |
+| `proofbound sync all` | Every other sync (git, checks, sessions, reviews, records/specdir intents). It does **not** read specs: run `sync intent sdd` first whenever specs changed |
+| `proofbound report intent sdd:<name>` | One change: obligations, verification state, bound commits |
+| `proofbound review draft <commit>` / `review seal <folder>` | Record an independent review of a commit |
+| `proofbound gates canary` | Every gate's state, with its reason |
+| `proofbound report drift` | Which warranties no longer match their spec |
+
+## 6. Cleaning up
 
 ```bash
-proofbound sync all && proofbound report drift
+rm -rf "${TMPDIR:-/tmp}"/proofbound-openspec-demo "${TMPDIR:-/tmp}"/proofbound-*-loop
 ```
 
-For every change with a warranty, this prints CURRENT, or STALE when the change now promises
-something other than what was verified, listing each obligation `added`, `removed` or `changed`
-(with the old and new wording). It compares what the change promises, not file digests, so
-archiving a change or editing its tasks is not drift. A STALE warranty is CURRENT again once a
-reviewer verifies a commit against the current promise. On OpenSpec's own repository, rewording
-one obligation of a verified change gives:
-
-```
-drift change=CI-install-skills-globally-57r52f state=STALE verified_commit=c772ac085ec2 ...
-  changed O-ADD-INSTALL-THE-RUNNING-C-13EA48 "Init SHALL install skills ... scope and workflow profile. ..." -> "Init SHALL install skills ... scope, workflow profile and a pinned checksum. ..."
-summary warranted=1 current=0 stale=1
-```
+Each demo's database lives inside its own directory; the database server's log is
+`.proofbound/db.log` in the demo project.

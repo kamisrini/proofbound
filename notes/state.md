@@ -133,6 +133,18 @@ unchanged, and a 15-shape hostile probe gave no wrong record and no panic. 3 LOW
 near-miss FR line format is dropped silently; the sibling can be any segment; the init profile test
 checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
 
+**Docs audit (2026-11-19, owner request):**
+- New `docs/releases/r2/demo-loop.sh {openspec|speckit}` runs the full loop (claim, review, PASS,
+  drift) on a tiny project in about 2 minutes.
+- DEMO.md rewritten: setup, three demos, own-project steps, a command reference.
+- README, RELEASE-PLAN, ROADMAP and the R2 plan now say R2 is built and awaiting acceptance.
+- Literal walkthroughs found and fixed two things:
+  1. `sync all` does not read specs (SDD-INV-56, by design), so every instruction now says
+     `sync intent sdd && sync all`, including the AGENTS block `init` writes.
+  2. **`sync all` failed on every Spec Kit project:** the P5 `specdir` provider is also rooted at
+     `specs/`. Fixed as CLI-INV-22 (omit `specdir` when HEAD's profile is Spec Kit at `specs/`).
+- All three demos and the documented own-project path were re-run clean.
+
 **R2 release notes drafted** (`docs/releases/r2/RELEASE-NOTES.md`, suggested tag `v0.2.0`), linked from
 the README and the R2 demo hub.
 
