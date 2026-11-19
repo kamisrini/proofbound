@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -126,6 +127,13 @@ func sealDraft(outcome, reviewOutcome string) draftFile {
 	}
 }
 
+// ledgerTruth is what the ledger says about sealCommit: sealDraft with no decisions.
+func ledgerTruth(context.Context, string) (draftFile, error) {
+	d := sealDraft("", "")
+	d.DeclaredReviewer = ""
+	return d, nil
+}
+
 func writeDraft(t *testing.T, root string, d draftFile) string {
 	t.Helper()
 	dir := draftDir(root, d.Commit)
@@ -150,7 +158,7 @@ func TestReviewSealWritesAcceptedArtifacts(t *testing.T) {
 		root := t.TempDir()
 		dir := writeDraft(t, root, sealDraft(c.outcome, "VERIFIABLE"))
 		var out bytes.Buffer
-		if err := reviewSeal(root, dir, &out); err != nil {
+		if err := reviewSeal(context.Background(), root, dir, ledgerTruth, &out); err != nil {
 			t.Fatalf("%s: %v", c.outcome, err)
 		}
 		short := sealCommit[:12]
@@ -178,22 +186,47 @@ func TestReviewSealWritesAcceptedArtifacts(t *testing.T) {
 	}
 }
 
-// CLI-INV-20: seal writes nothing when any check fails.
+// CLI-INV-20: seal writes nothing when any check fails, and takes nothing but the reviewer's
+// decisions from the editable draft: every reference, digest, owner, evidence id and obligation
+// comes from the ledger (review r2-starter-kit-review-20261119 F1).
 func TestReviewSealWritesNothingOnAnyFailure(t *testing.T) {
-	for name, mutate := range map[string]func(*draftFile){
-		"undecided outcome":      func(d *draftFile) { d.Verdicts[0].Obligations[1].Outcome = "" },
-		"undecided review":       func(d *draftFile) { d.Reviews[0].Obligations[0].Outcome = "MAYBE" },
-		"blank reviewer":         func(d *draftFile) { d.DeclaredReviewer = " " },
-		"owner reviews own work": func(d *draftFile) { d.DeclaredReviewer = "alice" },
-		"satisfied, no evidence": func(d *draftFile) { d.Verdicts[0].Obligations[0].EvidenceEventIDs = nil },
-		"artifact rejected":      func(d *draftFile) { d.Verdicts[0].Obligations[0].EvidenceEventIDs = []string{"not-an-event"} },
+	badEvidence := func(ctx context.Context, sha string) (draftFile, error) {
+		d, _ := ledgerTruth(ctx, sha)
+		d.Verdicts[0].Obligations[0].EvidenceEventIDs = []string{"not-an-event"}
+		return d, nil
+	}
+	for name, c := range map[string]struct {
+		mutate func(*draftFile)
+		fresh  func(context.Context, string) (draftFile, error)
+	}{
+		"undecided outcome":      {mutate: func(d *draftFile) { d.Verdicts[0].Obligations[1].Outcome = "" }},
+		"undecided review":       {mutate: func(d *draftFile) { d.Reviews[0].Obligations[0].Outcome = "MAYBE" }},
+		"blank reviewer":         {mutate: func(d *draftFile) { d.DeclaredReviewer = " " }},
+		"owner reviews own work": {mutate: func(d *draftFile) { d.DeclaredReviewer = "alice" }},
+		"owner edited in draft":  {mutate: func(d *draftFile) { d.DeclaredReviewer, d.Reviews[0].DeclaredOwner = "alice", "someone-else" }},
+		"digest edited":          {mutate: func(d *draftFile) { d.Verdicts[0].Obligations[0].ArtifactSHA256 = strings.Repeat("c", 64) }},
+		"review digest edited":   {mutate: func(d *draftFile) { d.Reviews[0].Requirement.ArtifactSHA256 = strings.Repeat("c", 64) }},
+		"obligation removed":     {mutate: func(d *draftFile) { d.Verdicts[0].Obligations = d.Verdicts[0].Obligations[:1] }},
+		"obligation added": {mutate: func(d *draftFile) {
+			extra := d.Verdicts[0].Obligations[0]
+			extra.ObligationID = "O-Z"
+			d.Verdicts[0].Obligations = append(d.Verdicts[0].Obligations, extra)
+		}},
+		"ledger lookup fails": {fresh: func(context.Context, string) (draftFile, error) { return draftFile{}, errors.New("not in the ledger") }},
+		"artifact rejected":   {fresh: badEvidence},
 	} {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			d := sealDraft("SATISFIED", "VERIFIABLE")
-			mutate(&d)
+			if c.mutate != nil {
+				c.mutate(&d)
+			}
+			fresh := c.fresh
+			if fresh == nil {
+				fresh = ledgerTruth
+			}
 			dir := writeDraft(t, root, d)
-			if err := reviewSeal(root, dir, &bytes.Buffer{}); err == nil {
+			if err := reviewSeal(context.Background(), root, dir, fresh, &bytes.Buffer{}); err == nil {
 				t.Fatal("seal accepted a bad draft")
 			}
 			for _, sub := range []string{"docs", "gates"} {
@@ -213,7 +246,7 @@ func TestReviewSealWritesNothingOnAnyFailure(t *testing.T) {
 		if err := os.WriteFile(gate, []byte("mine"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		if err := reviewSeal(root, dir, &bytes.Buffer{}); err == nil {
+		if err := reviewSeal(context.Background(), root, dir, ledgerTruth, &bytes.Buffer{}); err == nil {
 			t.Fatal("seal overwrote an existing gate")
 		}
 		if _, err := os.Stat(filepath.Join(root, "docs")); err == nil {
@@ -223,4 +256,29 @@ func TestReviewSealWritesNothingOnAnyFailure(t *testing.T) {
 			t.Fatal("the existing gate was changed")
 		}
 	})
+}
+
+// Evidence edited in the draft is ignored: the sealed verdict cites the ledger's evidence only.
+func TestReviewSealTakesEvidenceFromTheLedger(t *testing.T) {
+	root := t.TempDir()
+	d := sealDraft("SATISFIED", "VERIFIABLE")
+	d.Verdicts[0].Obligations[0].EvidenceEventIDs = []string{"01ARZ3NDEKTSV4RRFFQ69G5FAV"}
+	dir := writeDraft(t, root, d)
+	if err := reviewSeal(context.Background(), root, dir, ledgerTruth, &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	path := "docs/verification/verdicts/OV-" + sealCommit[:12] + "-1.md"
+	data, err := os.ReadFile(filepath.Join(root, path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, err := connectorreviews.ParseObligationVerdict(path, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, o := range v.Obligations {
+		if len(o.EvidenceEventIDs) != 1 || o.EvidenceEventIDs[0] != sealEvidence {
+			t.Fatalf("obligation %s cites %v, want only the ledger's %s", o.ObligationID, o.EvidenceEventIDs, sealEvidence)
+		}
+	}
 }

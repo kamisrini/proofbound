@@ -96,7 +96,11 @@ claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
   the claimed commit's gate to PASS.
 - Usage: `docs/releases/r2/DEMO.md` "Use it on your own OpenSpec project".
 
-**Exact next action:** one non-author code review of the starter-kit commit (Law 11 budget). Then
+**Review:** `r2-starter-kit-review-20261119` (`592a52e`), NEEDS_WORK on one MED: seal trusted the
+editable draft. Fixed: seal now rebuilds all but the decisions from the ledger. 3 LOWs recorded; the
+mid-write rollback LOW was fixed with it.
+
+**Exact next action:** a scoped re-check of the MED fix (Law 11 budget). Then
 R2 step 2, M4 drift. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and

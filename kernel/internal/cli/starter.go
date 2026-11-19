@@ -68,7 +68,9 @@ func initOpenSpec(ctx context.Context, root, owner string, output io.Writer) err
 			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json"})
 		},
 		func() error { return appendBlock(output, root, "AGENTS.md", agentsBlock) },
-		func() error { return writeNew(output, root, ".claude/agents/proofbound-reviewer.md", reviewerAgent, 0o644) },
+		func() error {
+			return writeNew(output, root, ".claude/agents/proofbound-reviewer.md", reviewerAgent, 0o644)
+		},
 		func() error { return writeNew(output, hooks, "commit-msg", commitMsgHook, 0o755) },
 	}
 	for _, step := range steps {
@@ -187,7 +189,7 @@ type draftReviewObligation struct {
 }
 
 type draftVerdict struct {
-	ChangeIntent connectorintent.Reference `json:"change_intent"`
+	ChangeIntent connectorintent.Reference   `json:"change_intent"`
 	Requirements []connectorintent.Reference `json:"requirements"`
 	Obligations  []draftVerdictObligation    `json:"obligations"`
 }
@@ -219,80 +221,9 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 	if err != nil {
 		return err
 	}
-	var gitEventID string
-	var commit connectorgit.Commit
-	changeIntents := map[string]connectorintent.ChangeIntent{}
-	requirements := map[string]connectorintent.Requirement{}
-	err = ledger.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
-		e := record.Event
-		switch {
-		case e.Source == core.SourceGit && e.Kind == core.KindCommitRecorded && e.NativeID == sha:
-			commit = connectorgit.Commit{}
-			if err := json.Unmarshal(e.Payload, &commit); err != nil {
-				return fmt.Errorf("git event seq %d: %w", record.Seq, err)
-			}
-			gitEventID = e.ID.String()
-		case e.Source == core.SourceIntentSDD && e.Kind == core.KindChangeIntent:
-			var ci connectorintent.ChangeIntent
-			if err := json.Unmarshal(e.Payload, &ci); err != nil {
-				return fmt.Errorf("change intent seq %d: %w", record.Seq, err)
-			}
-			changeIntents[ci.IntentID+"\x00"+ci.ArtifactSHA256] = ci
-		case e.Kind == core.KindRequirement && strings.HasPrefix(string(e.Source), "intent."):
-			var r connectorintent.Requirement
-			if err := json.Unmarshal(e.Payload, &r); err != nil {
-				return fmt.Errorf("requirement seq %d: %w", record.Seq, err)
-			}
-			requirements[string(e.Source)+"\x00"+r.RequirementID+"\x00"+r.ArtifactSHA256] = r
-		}
-		return nil
-	})
+	draft, err := ledgerDraft(ctx, ledger, sha)
 	if err != nil {
 		return err
-	}
-	if gitEventID == "" {
-		return fmt.Errorf("commit %s is not in the ledger; run `proofbound sync all` first", sha)
-	}
-	draft := draftFile{Commit: sha, Reviews: []draftReview{}, Verdicts: []draftVerdict{}}
-	reviewed := map[string]bool{}
-	for _, ref := range commit.IntentRefs {
-		if ref.Provider != "sdd" {
-			continue
-		}
-		ci, ok := changeIntents[ref.RecordID+"\x00"+ref.ArtifactSHA256]
-		if !ok {
-			return fmt.Errorf("commit %s binds %s, which is not in the ledger", sha, ref.RecordID)
-		}
-		verdict := draftVerdict{ChangeIntent: connectorintent.Reference{RecordKind: "change_intent", Source: string(core.SourceIntentSDD), RecordID: ci.IntentID, ArtifactSHA256: ci.ArtifactSHA256, Relation: "evaluates"}}
-		for _, target := range ci.Targets {
-			key := target.Source + "\x00" + target.RecordID + "\x00" + target.ArtifactSHA256
-			requirement, ok := requirements[key]
-			if !ok {
-				return fmt.Errorf("change intent %s targets %s, which is not in the ledger", ci.IntentID, target.RecordID)
-			}
-			statements := map[string]string{}
-			for _, o := range requirement.Obligations {
-				statements[o.ID] = o.Statement
-			}
-			ref := connectorintent.Reference{RecordKind: "requirement", Source: target.Source, RecordID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, Relation: "evaluates"}
-			verdict.Requirements = append(verdict.Requirements, ref)
-			for _, id := range target.ObligationIDs {
-				verdict.Obligations = append(verdict.Obligations, draftVerdictObligation{Source: target.Source, RequirementID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, ObligationID: id, Statement: statements[id], EvidenceEventIDs: []string{gitEventID}})
-			}
-			if !reviewed[key] {
-				reviewed[key] = true
-				review := draftReview{Requirement: ref, DeclaredOwner: requirement.DeclaredOwner}
-				review.Requirement.Relation = "reviews"
-				for _, o := range requirement.Obligations {
-					review.Obligations = append(review.Obligations, draftReviewObligation{ObligationID: o.ID, Statement: o.Statement})
-				}
-				draft.Reviews = append(draft.Reviews, review)
-			}
-		}
-		draft.Verdicts = append(draft.Verdicts, verdict)
-	}
-	if len(draft.Verdicts) == 0 {
-		return fmt.Errorf("commit %s binds no OpenSpec change: does its message end with `Intent: sdd:<change-name>`, and has `proofbound sync all` run since?", sha)
 	}
 	dir := draftDir(root, sha)
 	path := filepath.Join(dir, "draft.json")
@@ -320,10 +251,93 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 	return err
 }
 
+// ledgerDraft builds a commit's undecided draft from the ledger alone: the commit's latest git event,
+// its bound sdd change intents, their target requirement revisions and owners, and the git event as
+// evidence. Seal rebuilds it too, so nothing but the reviewer's decisions comes from the editable
+// draft (review r2-starter-kit-review-20261119 F1).
+func ledgerDraft(ctx context.Context, ledger *store.Store, sha string) (draftFile, error) {
+	var gitEventID string
+	var commit connectorgit.Commit
+	changeIntents := map[string]connectorintent.ChangeIntent{}
+	requirements := map[string]connectorintent.Requirement{}
+	err := ledger.ReadEvents(ctx, store.Filter{}, func(record store.Record) error {
+		e := record.Event
+		switch {
+		case e.Source == core.SourceGit && e.Kind == core.KindCommitRecorded && e.NativeID == sha:
+			commit = connectorgit.Commit{}
+			if err := json.Unmarshal(e.Payload, &commit); err != nil {
+				return fmt.Errorf("git event seq %d: %w", record.Seq, err)
+			}
+			gitEventID = e.ID.String()
+		case e.Source == core.SourceIntentSDD && e.Kind == core.KindChangeIntent:
+			var ci connectorintent.ChangeIntent
+			if err := json.Unmarshal(e.Payload, &ci); err != nil {
+				return fmt.Errorf("change intent seq %d: %w", record.Seq, err)
+			}
+			changeIntents[ci.IntentID+"\x00"+ci.ArtifactSHA256] = ci
+		case e.Kind == core.KindRequirement && strings.HasPrefix(string(e.Source), "intent."):
+			var r connectorintent.Requirement
+			if err := json.Unmarshal(e.Payload, &r); err != nil {
+				return fmt.Errorf("requirement seq %d: %w", record.Seq, err)
+			}
+			requirements[string(e.Source)+"\x00"+r.RequirementID+"\x00"+r.ArtifactSHA256] = r
+		}
+		return nil
+	})
+	if err != nil {
+		return draftFile{}, err
+	}
+	if gitEventID == "" {
+		return draftFile{}, fmt.Errorf("commit %s is not in the ledger; run `proofbound sync all` first", sha)
+	}
+	draft := draftFile{Commit: sha, Reviews: []draftReview{}, Verdicts: []draftVerdict{}}
+	reviewed := map[string]bool{}
+	for _, ref := range commit.IntentRefs {
+		if ref.Provider != "sdd" {
+			continue
+		}
+		ci, ok := changeIntents[ref.RecordID+"\x00"+ref.ArtifactSHA256]
+		if !ok {
+			return draftFile{}, fmt.Errorf("commit %s binds %s, which is not in the ledger", sha, ref.RecordID)
+		}
+		verdict := draftVerdict{ChangeIntent: connectorintent.Reference{RecordKind: "change_intent", Source: string(core.SourceIntentSDD), RecordID: ci.IntentID, ArtifactSHA256: ci.ArtifactSHA256, Relation: "evaluates"}}
+		for _, target := range ci.Targets {
+			key := target.Source + "\x00" + target.RecordID + "\x00" + target.ArtifactSHA256
+			requirement, ok := requirements[key]
+			if !ok {
+				return draftFile{}, fmt.Errorf("change intent %s targets %s, which is not in the ledger", ci.IntentID, target.RecordID)
+			}
+			statements := map[string]string{}
+			for _, o := range requirement.Obligations {
+				statements[o.ID] = o.Statement
+			}
+			ref := connectorintent.Reference{RecordKind: "requirement", Source: target.Source, RecordID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, Relation: "evaluates"}
+			verdict.Requirements = append(verdict.Requirements, ref)
+			for _, id := range target.ObligationIDs {
+				verdict.Obligations = append(verdict.Obligations, draftVerdictObligation{Source: target.Source, RequirementID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, ObligationID: id, Statement: statements[id], EvidenceEventIDs: []string{gitEventID}})
+			}
+			if !reviewed[key] {
+				reviewed[key] = true
+				review := draftReview{Requirement: ref, DeclaredOwner: requirement.DeclaredOwner}
+				review.Requirement.Relation = "reviews"
+				for _, o := range requirement.Obligations {
+					review.Obligations = append(review.Obligations, draftReviewObligation{ObligationID: o.ID, Statement: o.Statement})
+				}
+				draft.Reviews = append(draft.Reviews, review)
+			}
+		}
+		draft.Verdicts = append(draft.Verdicts, verdict)
+	}
+	if len(draft.Verdicts) == 0 {
+		return draftFile{}, fmt.Errorf("commit %s binds no OpenSpec change: does its message end with `Intent: sdd:<change-name>`, and has `proofbound sync all` run since?", sha)
+	}
+	return draft, nil
+}
+
 // reviewSeal turns an edited draft into committed-ready review and verdict artifacts plus the
 // reviewed commit's readiness gate. It validates everything, and re-parses each artifact with the
 // reviews connector's own parser, before writing anything (CLI-INV-19, CLI-INV-20).
-func reviewSeal(root, dir string, output io.Writer) error {
+func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Context, string) (draftFile, error), output io.Writer) error {
 	if !filepath.IsAbs(dir) {
 		wd, err := workingDirectory()
 		if err != nil {
@@ -335,18 +349,29 @@ func reviewSeal(root, dir string, output io.Writer) error {
 	if err != nil {
 		return err
 	}
-	var draft draftFile
+	var edited draftFile
 	decoder := json.NewDecoder(strings.NewReader(string(raw)))
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&draft); err != nil {
+	if err := decoder.Decode(&edited); err != nil {
 		return fmt.Errorf("draft.json: %w", err)
 	}
-	reviewer := strings.TrimSpace(draft.DeclaredReviewer)
+	reviewer := strings.TrimSpace(edited.DeclaredReviewer)
 	if reviewer == "" || strings.ContainsAny(reviewer, "\n\r") {
 		return errors.New("seal: set declared_reviewer to your name (one line)")
 	}
-	if len(draft.Commit) != 40 || len(draft.Verdicts) == 0 {
-		return errors.New("seal: draft.json has no commit or no verdicts; regenerate it with `proofbound review draft`")
+	if len(edited.Commit) != 40 {
+		return errors.New("seal: draft.json has no commit; regenerate it with `proofbound review draft`")
+	}
+	// Everything but the reviewer's decisions comes from the ledger, never from the editable draft:
+	// an edited reference, digest, owner, evidence id or obligation set would otherwise produce
+	// artifacts that ledger fine and then fail projection on every later gate run (F1).
+	truth, err := fresh(ctx, edited.Commit)
+	if err != nil {
+		return fmt.Errorf("seal: %w", err)
+	}
+	draft, err := mergeDecisions(truth, edited)
+	if err != nil {
+		return err
 	}
 	short := draft.Commit[:12]
 	files := map[string][]byte{}
@@ -427,19 +452,92 @@ func reviewSeal(root, dir string, output io.Writer) error {
 	if err := add("gates/ready-"+short+".yaml", []byte(gate)); err != nil {
 		return err
 	}
+	var written []string
+	undo := func(err error) error {
+		for _, path := range written {
+			_ = os.Remove(path)
+		}
+		return err
+	}
 	for _, rel := range order {
 		path := filepath.Join(root, filepath.FromSlash(rel))
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-			return err
+			return undo(err)
 		}
-		if err := os.WriteFile(path, files[rel], 0o644); err != nil {
-			return err
+		// O_EXCL: never follow or truncate a file that appeared after the existence check.
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+		if err != nil {
+			return undo(err)
 		}
+		written = append(written, path)
+		if _, err := f.Write(files[rel]); err != nil {
+			return undo(errors.Join(err, f.Close()))
+		}
+		if err := f.Close(); err != nil {
+			return undo(err)
+		}
+	}
+	for _, rel := range order {
 		if _, err := fmt.Fprintf(output, "wrote %s\n", rel); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// mergeDecisions copies the reviewer's decisions (outcome, finding) from the edited draft onto the
+// ledger's draft. Every ledger obligation must be decided, and the edited draft may hold nothing
+// the ledger does not (an edited digest, id or extra obligation is a mismatch, not a new fact).
+func mergeDecisions(truth, edited draftFile) (draftFile, error) {
+	type decision struct{ outcome, finding string }
+	reviews := map[string]decision{}
+	for _, r := range edited.Reviews {
+		for _, o := range r.Obligations {
+			reviews[referenceSortKey(r.Requirement)+"\x00"+o.ObligationID] = decision{o.Outcome, o.Finding}
+		}
+	}
+	verdicts := map[string]decision{}
+	for _, v := range edited.Verdicts {
+		for _, o := range v.Obligations {
+			verdicts[referenceSortKey(v.ChangeIntent)+"\x00"+o.Source+"\x00"+o.RequirementID+"\x00"+o.ArtifactSHA256+"\x00"+o.ObligationID] = decision{o.Outcome, ""}
+		}
+	}
+	mismatch := func(what string) error {
+		return fmt.Errorf("seal: draft.json does not match the ledger (%s); delete the draft and run `proofbound review draft` again", what)
+	}
+	used := 0
+	for i := range truth.Reviews {
+		r := &truth.Reviews[i]
+		for j := range r.Obligations {
+			d, ok := reviews[referenceSortKey(r.Requirement)+"\x00"+r.Obligations[j].ObligationID]
+			if !ok {
+				return draftFile{}, mismatch("review of " + r.Requirement.RecordID + " " + r.Obligations[j].ObligationID + " is missing")
+			}
+			r.Obligations[j].Outcome, r.Obligations[j].Finding = d.outcome, d.finding
+			used++
+		}
+	}
+	if used != len(reviews) {
+		return draftFile{}, mismatch("the reviews hold obligations the ledger does not")
+	}
+	used = 0
+	for i := range truth.Verdicts {
+		v := &truth.Verdicts[i]
+		for j := range v.Obligations {
+			o := &v.Obligations[j]
+			d, ok := verdicts[referenceSortKey(v.ChangeIntent)+"\x00"+o.Source+"\x00"+o.RequirementID+"\x00"+o.ArtifactSHA256+"\x00"+o.ObligationID]
+			if !ok {
+				return draftFile{}, mismatch("verdict obligation " + o.RequirementID + " " + o.ObligationID + " is missing")
+			}
+			o.Outcome = d.outcome
+			used++
+		}
+	}
+	if used != len(verdicts) {
+		return draftFile{}, mismatch("the verdicts hold obligations the ledger does not")
+	}
+	truth.DeclaredReviewer = edited.DeclaredReviewer
+	return truth, nil
 }
 
 // sealArtifact renders one artifact with its self-digest and proves the reviews connector accepts it.

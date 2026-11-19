@@ -34,7 +34,10 @@ intent listing every target obligation with its statement, `outcome: ""`, and `e
 pre-filled with the commit's git event id. It refuses to replace an existing draft.
 It prints each obligation's statement. A commit with no bound sdd ref fails with a message.
 
-`seal` validates and writes the real artifacts. For each draft it requires: `declared_reviewer`
+`seal` validates and writes the real artifacts. **It takes only the reviewer's decisions (name,
+outcomes, findings) from `draft.json` and rebuilds everything else from the ledger,** refusing a
+draft that does not match it (review `r2-starter-kit-review-20261119` F1: an edited reference or
+evidence id would otherwise ledger fine and then fail projection on every later gate run). For each draft it requires: `declared_reviewer`
 non-blank and different from the requirement's declared owner; every outcome in the schema's
 closed set; evidence non-empty for `SATISFIED`. It sets the verdict `status` (`ACCEPTABLE` iff
 every outcome is `SATISFIED`, else `NEEDS_WORK`), drops the `_` helper fields, fixes ids

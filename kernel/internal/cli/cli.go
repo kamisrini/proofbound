@@ -755,7 +755,13 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		return initOpenSpec(ctx, root, owner, output)
 	case commandReviewSeal:
-		return reviewSeal(root, args[2], output)
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
+		return reviewSeal(ctx, root, args[2], fresh, output)
 	case commandReviewDraft:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
