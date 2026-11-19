@@ -267,7 +267,7 @@ func TestCommitIntentResolverReturnsResolvedRevision(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolved, err := (commitIntentResolver{records: provider}).Resolve(context.Background(), strings.TrimSpace(string(output)), "records", "CI-implement-p5-0a1b2c")
+	resolved, err := (&commitIntentResolver{records: provider}).Resolve(context.Background(), strings.TrimSpace(string(output)), "records", "CI-implement-p5-0a1b2c")
 	if err != nil {
 		t.Fatal(err)
 	}

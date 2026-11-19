@@ -16,6 +16,17 @@ It also routes `proofbound report intent <id>`, `proofbound report requirement <
 `proofbound intent check --commit <sha>` to the proof-bearing projection API without interpreting
 chain semantics in the CLI.
 
+R2 M3 (`CI-sdd-warranty-m3-xaqocp`, `VD-sdd-m3-git-binding-2026-11-19`) adds the `sdd` arm of the
+commit-claim resolver used by `sync git`, `sync all` and `verify`. The `sdd` provider and the ledger
+set `L` (every ledgered `intent.sdd` change intent's id and digest) are built lazily, on the first
+`sdd` claim. An `sdd` revision is accepted only if its source, kind, CI-grammar id, 64-hex digest and
+artifact-path last segment (`<name>` or `YYYY-MM-DD-<name>`) all check, else the sync fails. It binds
+only if it is in `L`. Every tenant outcome is a `*ClaimUnboundError` (`unknown-change`,
+`archived-earlier`, `no-change-intent`, `unmappable:<cause>`, `not-ledgered`). `sync git` and
+`sync all` print `claim-skip <cause> <value> at <commit>` after their counts line, the value through
+`printableUnit`; `verify` prints none. The contract is the M3 SPEC
+(`docs/plans/R2-sdd-m3-git-binding-spec-draft5.md`, as amended by drafts 6-8).
+
 `proofbound twin replay [--through <seq>] [--candidate <file>]` runs `twin.ReplayIsolated` in a
 throwaway embedded store, never mutating the source ledger. The baseline is the isolated projection
 of the committed prefix through the same `--through` seq (default: the latest committed seq), so the
@@ -69,3 +80,5 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-10 | Commands outside a repository fail before opening product state | cli_test.go::TestRunStopsWhenRepositoryRootIsMissing |
 | CLI-INV-11 | `twin replay` evaluates ReplayIsolated in a throwaway store against the same-prefix projection and never mutates the source ledger | twin_replay_test.go::TestTwinReplayIsolatesAndProves |
 | CLI-INV-12 | A `--candidate` file injects exactly one counterfactual event and yields a verdict with a vera.replay.v1 proof whose candidate snapshot reflects the change | twin_replay_test.go::TestTwinReplayCounterfactualVerdict |
+| CLI-INV-13 | An `sdd` claim binds only an accepted revision that is in `L`; the resolver's anti-spoofing checks and skip-cause mapping are exact. Also proven end to end (claim-skip line, rebuild, binding) by the sdd package's `TestM3ClaimBindsOnlyALedgeredRevision` | sdd_claims_test.go::TestSDDResolverChecksAndCauses |
+| CLI-INV-14 | A history without an `sdd` value neither constructs the `sdd` provider nor reads `L`; one or more `sdd` values do each once per sync | sdd_claims_test.go::TestSDDClaimWorkIsLazy |

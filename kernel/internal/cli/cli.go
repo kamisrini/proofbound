@@ -11,7 +11,9 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -225,7 +227,7 @@ func syncGit(ctx context.Context, root string, ledger *store.Store, ids *core.ID
 	if err != nil {
 		return connectorgit.Result{}, err
 	}
-	resolver := commitIntentResolver{records: recordsProvider, specdir: specdirProvider}
+	resolver := &commitIntentResolver{records: recordsProvider, specdir: specdirProvider, root: root, now: now, ledger: ledger}
 	connector, err := connectorgit.New(&connectorgit.Deps{Repo: repo, IDs: ids, Logger: logger(), Resolver: resolver})
 	if err != nil {
 		return connectorgit.Result{}, err
@@ -238,12 +240,63 @@ func syncGit(ctx context.Context, root string, ledger *store.Store, ids *core.ID
 	return result, errors.Join(syncErr, run.Finish(ctx, result.Cursor, syncErr))
 }
 
+// sddClaimProvider is the one sdd surface a claim needs; *intentsdd.Provider satisfies it.
+type sddClaimProvider interface {
+	Resolve(ctx context.Context, commit, name string) (connectorintent.Revision, error)
+}
+
+// newSDDClaimProvider builds the sdd provider for claim resolution. It is a variable so a test can
+// count constructions (R2 M3 SPEC draft 5 §7 row 6, M3-INV-6).
+var newSDDClaimProvider = func(root string, now time.Time) (sddClaimProvider, error) {
+	repo, err := gitcmd.New(root)
+	if err != nil {
+		return nil, err
+	}
+	reader, err := intentsdd.NewGitReader(repo)
+	if err != nil {
+		return nil, err
+	}
+	return intentsdd.New(reader, now)
+}
+
+// readSDDLedgered reads the set L of (change-intent id, digest) for every ledgered intent.sdd
+// change intent, keyed id + "\x00" + digest (M3 SPEC §4.3). A variable so a test can count reads.
+var readSDDLedgered = func(ctx context.Context, ledger *store.Store) (map[string]bool, error) {
+	set := map[string]bool{}
+	err := ledger.ReadEvents(ctx, store.Filter{Source: core.SourceIntentSDD, Kind: core.KindChangeIntent}, func(record store.Record) error {
+		var payload struct {
+			IntentID       string `json:"intent_id"`
+			ArtifactSHA256 string `json:"artifact_sha256"`
+		}
+		if err := json.Unmarshal(record.Event.Payload, &payload); err != nil {
+			return fmt.Errorf("ledgered sdd change intent seq %d: %w", record.Seq, err)
+		}
+		set[payload.IntentID+"\x00"+payload.ArtifactSHA256] = true
+		return nil
+	})
+	return set, err
+}
+
+var (
+	sddIntentIDRE = regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`)
+	sddDigestRE   = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	sddDatedRE    = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}-`)
+)
+
+// commitIntentResolver resolves one Intent claim at its commit. The sdd provider and the ledger set
+// L are built lazily, on the first sdd claim, so a history without one does neither (M3-INV-6).
 type commitIntentResolver struct {
 	records *intentrecords.Provider
 	specdir *intentspecdir.Provider
+	root    string
+	now     time.Time
+	ledger  *store.Store
+
+	sdd      sddClaimProvider
+	ledgered map[string]bool
 }
 
-func (r commitIntentResolver) Resolve(ctx context.Context, commitSHA, provider, recordID string) (connectorgit.IntentRef, error) {
+func (r *commitIntentResolver) Resolve(ctx context.Context, commitSHA, provider, recordID string) (connectorgit.IntentRef, error) {
 	var revision connectorintent.Revision
 	var err error
 	switch provider {
@@ -251,6 +304,8 @@ func (r commitIntentResolver) Resolve(ctx context.Context, commitSHA, provider, 
 		revision, err = r.records.Resolve(ctx, commitSHA, recordID)
 	case "specdir":
 		revision, err = r.specdir.Resolve(ctx, commitSHA, recordID)
+	case "sdd":
+		return r.resolveSDD(ctx, commitSHA, recordID)
 	default:
 		return connectorgit.IntentRef{}, fmt.Errorf("unknown intent provider %q", provider)
 	}
@@ -258,6 +313,68 @@ func (r commitIntentResolver) Resolve(ctx context.Context, commitSHA, provider, 
 		return connectorgit.IntentRef{}, err
 	}
 	return connectorgit.IntentRef{Provider: provider, RecordID: revision.NativeID, ArtifactSHA256: revision.ArtifactSHA256}, nil
+}
+
+// resolveSDD maps an sdd claim to a ref or a *ClaimUnboundError (M3 SPEC §4.2-§4.4). Tenant outcomes
+// are unbound claims; a reader failure or a revision failing the anti-spoofing checks is an error.
+func (r *commitIntentResolver) resolveSDD(ctx context.Context, commitSHA, name string) (connectorgit.IntentRef, error) {
+	if r.sdd == nil {
+		provider, err := newSDDClaimProvider(r.root, r.now)
+		if err != nil {
+			return connectorgit.IntentRef{}, err
+		}
+		r.sdd = provider
+	}
+	revision, err := r.sdd.Resolve(ctx, commitSHA, name)
+	var unmappable *intentsdd.UnmappableError
+	switch {
+	case errors.Is(err, intentsdd.ErrUnknownChange):
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "unknown-change"}
+	case errors.Is(err, intentsdd.ErrArchivedEarlier):
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "archived-earlier"}
+	case errors.Is(err, intentsdd.ErrNoChangeIntent):
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "no-change-intent"}
+	case errors.As(err, &unmappable):
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "unmappable:" + unmappable.Cause}
+	case err != nil:
+		return connectorgit.IntentRef{}, err
+	}
+	segment := path.Base(revision.ArtifactPath)
+	if revision.Source != core.SourceIntentSDD || revision.Kind != core.KindChangeIntent ||
+		!sddIntentIDRE.MatchString(revision.NativeID) || !sddDigestRE.MatchString(revision.ArtifactSHA256) ||
+		!segmentNamesChange(segment, name) {
+		return connectorgit.IntentRef{}, fmt.Errorf("sdd resolver returned a revision that does not name change %q", name)
+	}
+	if r.ledgered == nil {
+		set, err := readSDDLedgered(ctx, r.ledger)
+		if err != nil {
+			return connectorgit.IntentRef{}, err
+		}
+		r.ledgered = set
+	}
+	if !r.ledgered[revision.NativeID+"\x00"+revision.ArtifactSHA256] {
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "not-ledgered"}
+	}
+	return connectorgit.IntentRef{Provider: "sdd", RecordID: revision.NativeID, ArtifactSHA256: revision.ArtifactSHA256}, nil
+}
+
+// segmentNamesChange reports whether an artifact path's last segment names the claimed change: the
+// active `<name>`, or the archived `YYYY-MM-DD-<name>` (M3 SPEC §4.2; defence in depth only).
+func segmentNamesChange(segment, name string) bool {
+	if segment == name {
+		return true
+	}
+	return sddDatedRE.MatchString(segment) && segment[len("YYYY-MM-DD-"):] == name
+}
+
+// printClaimSkips prints one line per sdd claim that did not bind, after a counts line (M3 §4.4).
+func printClaimSkips(output io.Writer, skips []connectorgit.ClaimSkip) error {
+	for _, skip := range skips {
+		if _, err := fmt.Fprintf(output, "claim-skip %s %s at %s\n", skip.Cause, printableUnit(skip.Value), skip.Commit); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type checksResult struct{ Listed, Appended, Existing int }
@@ -671,8 +788,10 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		switch cmd {
 		case commandSyncGit:
-			_, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", gitResult.Listed, gitResult.Appended, gitResult.Existing)
-			return err
+			if _, err = fmt.Fprintf(output, "listed=%d appended=%d existing=%d\n", gitResult.Listed, gitResult.Appended, gitResult.Existing); err != nil {
+				return err
+			}
+			return printClaimSkips(output, gitResult.ClaimSkips)
 		case commandSyncAll:
 			break
 		}
@@ -688,8 +807,10 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprintf(output, "intent appended=%d git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", intentResult.Appended, gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended)
-		return err
+		if _, err = fmt.Fprintf(output, "intent appended=%d git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", intentResult.Appended, gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended); err != nil {
+			return err
+		}
+		return printClaimSkips(output, gitResult.ClaimSkips)
 	case commandVerify:
 		ids, err := newIDs()
 		if err != nil {
