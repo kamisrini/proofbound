@@ -2,46 +2,36 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-18
+As of: 2026-11-19
 
-## Resume — 2026-11-18
+## Resume — 2026-11-19
 
 **Now: R2 M3, binding tenant commits to `intent.sdd`.** This is SPEC work only; no code yet.
-- Four drafts have had four non-author rounds:
+- **Owner decisions, 2026-11-19:** D1-D5 all take the recommended option:
+  - D1: `sdd:<name>`;
+  - D2: per-commit all-or-nothing skips;
+  - D3': the ledger check on claims;
+  - D4: filed as `DEF-INTENT-GIT-ORDERING-001`;
+  - D5: the reviews connector holds a v2 verdict or requirement review until its order-only
+    prerequisites are ledgered.
+- **Draft 5** (`7f29f85`, `docs/plans/R2-sdd-m3-git-binding-spec-draft5.md`) answers round 4:
+  - D5 is §4.6, with M3-INV-11 new and M3-INV-5/10 restated;
+  - §7.1 gives row 8's procedure: git before reviews, verdicts written at run time, one exact-sha
+    JSON gate per commit;
+  - the two-claim kill now dies through the gate;
+  - the revisit trigger lands in the git SPEC and the sdd SPEC §14.
+- Rounds so far:
   - round 1 (`82a92ec`): 1 HIGH, 7 MED, 3 LOW;
   - round 2 (`1489027`): 4 MED, 5 LOW;
   - round 3 (`bd6f95f`): 1 MED, 4 LOW;
-  - round 4 (`70b8a7e`, over draft 4 `9c913e6`): 2 MED, 2 LOW.
-- The current draft is `docs/plans/R2-sdd-m3-git-binding-spec-draft4.md`.
+  - round 4 (`70b8a7e`): 2 MED, 2 LOW.
+- **Non-author round 5 over draft 5 is running.**
 
-**Design so far:**
-- **Ledger check on claims:** an `sdd` ref binds only when its exact revision is already ledgered.
-- **Skips:** per commit, all-or-nothing. A malformed `sdd:` value is skipped, never sync-fatal.
-- **Bindings:** insert-only and monotone.
-- **This repository's trailer gate:** unchanged.
-
-**Round-4 F2 needs an owner decision (D5).** The reviews connector appends a v2 verdict without checking
-that its exact commit claim is ledgered. `reduceObligationVerdict` then fails every Apply and Rebuild.
-- This hazard predates M3 for `records` too.
-- M3 makes "claim not yet bound" a normal state, so correct tenant data could wedge projections.
-- Recommended: apply the same ledger check to `sync reviews`. Hold a verdict until its claim is
-  ledgered, and pick it up on a later sync. This widens M3 into the reviews connector.
-- Alternatives:
-  - a dangling-tolerant verdict projection, which hides errors;
-  - keeping the hard failure, which the reviewer showed is reachable with correct data.
-
-**Mechanical items left for draft 5:**
-- Round-4 F1: row 8's test must run `sync git` before `sync reviews`. It must also write the verdict at
-  run time, because it needs the evidence ULIDs, the commit sha and its own digest, and commit it as
-  HEAD. It needs one exact-sha gate file per gated commit.
-- Round-4 F3: the two-claim kill lives in row 3 only.
-- Round-4 F4: §9's revisit trigger must also land in the sdd SPEC §14 and the git SPEC.
-
-**Owner decisions pending:** D1 (token), D2 (skips), D3' (the ledger check), D4 (the records/specdir
-deferral), D5 (above).
-
-**Exact next action:** get the owner's D5 choice, then write draft 5 and run round 5. No M3 code
-before an ACCEPTABLE round plus the owner's approval of D1-D5 and the CI wording.
+**Exact next action:** commit the round-5 verdict (self-digest, integrity `--check` then `--write`).
+- If ACCEPTABLE: draft the M3 change intent (`CI-sdd-warranty-m3-<suffix>`) and the D1-D5 VD for
+  the owner to approve.
+- If NEEDS_WORK: write draft 6.
+- No M3 code before the owner approves the CI wording.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
 re-check's answers were accepted, ending with the owner's verdict `r2-m1-lowfix2-owner-20261118` in
