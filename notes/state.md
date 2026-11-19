@@ -43,17 +43,22 @@ As of: 2026-11-19
    - §14 gets the M2 entry condition (monotone bindings);
    - the draft 10 copy stays byte-identical.
 
-**Code complete.**
-- `go test ./...` is green, and golangci-lint reports 0 issues.
-- Pins are refreshed (`b3c273b`). `make check` is being re-run.
+**Implementation review (non-author, foundational tier, two lenses):**
+- **Lens A, spec-truth and laws** (`ed1744d`): NEEDS_WORK, 1 MED and 4 LOW. All five are answered in
+  `9464e06`:
+  - row 10 / M3-INV-10 is proven by `TestBindingsAreMonotone` (P-INV-34);
+  - the view's error paths are tested;
+  - the CLI half of malformed-after-refusal is tested;
+  - cli uses `ValidateRevision` and the producer decoders (Law 2);
+  - the port detector is rebuilt on go/ast, with 14 in-test probes.
+- **Lens B, mutation and concurrency:** still running in a private worktree. Its tests contend for
+  the fixed embedded port, so an sdd-package run during B can fail with "could not create any TCP/IP
+  sockets". Re-run the full suite after B finishes.
 
 **Exact next action:**
-1. Confirm `make check` is green.
-2. Dispatch the **non-author implementation review**: foundational tier, because it touches the
-   ledger-ordering semantics. It covers the M3 commits `9600441..b3c273b` against the M3 SPEC
-   (draft 5 plus drafts 6-8).
-3. Commit its verdict.
-4. M3 counts as done only once that review is ACCEPTABLE (CI acceptance boundary).
+1. Commit B's verdict and answer its findings.
+2. A non-author re-check of lens A's fixes, plus any B fixes.
+3. M3 is done when both lenses are ACCEPTABLE. Then re-run `make check`.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
