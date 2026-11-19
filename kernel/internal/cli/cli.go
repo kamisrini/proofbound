@@ -849,7 +849,11 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			if err != nil {
 				return err
 			}
-			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock); err != nil {
+			reason := ""
+			if result.Reason != "" {
+				reason = " reason=" + strconv.Quote(result.Reason)
+			}
+			if _, err := fmt.Fprintf(output, "gate=%s state=%s seq=%d proof=%s would_block=%t%s\n", result.GateID, result.State, result.Seq, result.EventID, result.WouldBlock, reason); err != nil {
 				return err
 			}
 			results = append(results, result)
@@ -932,7 +936,11 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 	case commandReportGitHub:
 		return projector.ReportGitHub(ctx, ledger, time.Now(), output)
 	case commandReportIntent:
-		return projector.ReportIntent(ctx, ledger, args[2], time.Now(), output)
+		id, err := reportIntentID(ctx, root, args[2])
+		if err != nil {
+			return err
+		}
+		return projector.ReportIntent(ctx, ledger, id, time.Now(), output)
 	case commandReportRequirement:
 		return projector.ReportRequirement(ctx, ledger, args[2], output)
 	case commandIntentCheck:
@@ -965,6 +973,31 @@ func gateDefinitionsForCommand(cmd command, definitions []gates.Definition) ([]g
 		}
 	}
 	return promoted, nil
+}
+
+// reportIntentID maps `report intent sdd:<change-name>` to the change intent that name resolves
+// to at HEAD, through the same sdd provider commit claims bind through (CLI-INV-17). Any other
+// argument is already an intent id.
+func reportIntentID(ctx context.Context, root, arg string) (string, error) {
+	name, ok := strings.CutPrefix(arg, "sdd:")
+	if !ok {
+		return arg, nil
+	}
+	cmd := exec.CommandContext(ctx, "git", "-C", root, "rev-parse", "--verify", "HEAD^{commit}")
+	cmd.Env = repositoryGitEnv()
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("report intent %s: resolve HEAD: %w", arg, err)
+	}
+	provider, err := newSDDClaimProvider(root, time.Now())
+	if err != nil {
+		return "", fmt.Errorf("report intent %s: %w", arg, err)
+	}
+	revision, err := provider.Resolve(ctx, strings.TrimSpace(string(out)), name)
+	if err != nil {
+		return "", fmt.Errorf("report intent %s: no change intent at HEAD: %w", arg, err)
+	}
+	return revision.NativeID, nil
 }
 
 func resolveIntentGateHeadScope(ctx context.Context, root string, definitions []gates.Definition) error {

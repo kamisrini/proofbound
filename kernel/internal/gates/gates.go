@@ -60,6 +60,9 @@ type Result struct {
 	EventID    string
 	Seq        int64
 	WouldBlock bool
+	// Reason says why, for the intent-delivery-readiness rule (GATE-INV-16): the obligation counts
+	// behind a PASS or BLOCKED, or why there is nothing to count. Empty for every other rule.
+	Reason string
 }
 
 func LoadDir(dir string) ([]Definition, error) {
@@ -271,9 +274,15 @@ func evaluateIntentRule(ctx context.Context, s *store.Store, d Definition) (Resu
 			return result, fmt.Errorf("gate %s: projection failed without proof: %w", d.ID, err)
 		}
 		result.State, result.WouldBlock = StateBlocked, true
+		if d.Rule == "intent-delivery-readiness" {
+			result.Reason = "projection failed: " + err.Error()
+		}
 		return result, nil
 	}
 	if latest == nil {
+		if d.Rule == "intent-delivery-readiness" {
+			result.Reason = "commit not in the ledger; run sync git"
+		}
 		return result, nil
 	}
 	if d.Rule == "intent-reference-integrity" || d.Rule == "intent-verdict-integrity" {
@@ -292,6 +301,7 @@ func evaluateIntentRule(ctx context.Context, s *store.Store, d Definition) (Resu
 	} else {
 		result.State, result.WouldBlock = StateBlocked, true
 	}
+	result.Reason = readinessReason(targets, satisfied, reviewed)
 	return result, nil
 }
 
@@ -343,3 +353,11 @@ func evaluatePredicate(payload map[string]json.RawMessage, predicate Predicate) 
 // FilesystemGateDir is a small helper used by the CLI and keeps path handling
 // out of the evaluator. It is intentionally not part of the gate contract.
 func FilesystemGateDir(root string) fs.FS { return os.DirFS(filepath.Join(root, "gates")) }
+
+// readinessReason states the counts the readiness rule decided on (GATE-INV-16).
+func readinessReason(targets, satisfied, reviewed int) string {
+	if targets == 0 {
+		return "commit binds no change intent"
+	}
+	return fmt.Sprintf("%d of %d obligations verified SATISFIED; %d of %d requirement reviews VERIFIABLE", satisfied, targets, reviewed, targets)
+}

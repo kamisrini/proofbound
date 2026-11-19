@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -105,10 +106,10 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 			return nil, fmt.Errorf("%w: embedded identity: %v", ErrMigrate, err)
 		}
 		port := embeddedPort(cfg.Port)
-		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username(identity.username).Password(identity.password).Database(identity.database))
+		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Logger(serverLog(cfg.DataDir)).Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username(identity.username).Password(identity.password).Database(identity.database))
 		if err = server.Start(); err != nil {
 			_ = lock.close()
-			return nil, fmt.Errorf("%w: embedded postgres: %v", ErrMigrate, err)
+			return nil, fmt.Errorf("%w: embedded postgres (server log: %s): %v", ErrMigrate, serverLogPath(cfg.DataDir), err)
 		}
 		stopServer = func() { _ = server.Stop() }
 		cfg.DatabaseURL = fmt.Sprintf("postgres://%s:%s@127.0.0.1:%d/%s?sslmode=disable", identity.username, identity.password, port, identity.database)
@@ -573,4 +574,23 @@ func (s *Store) importRecords(ctx context.Context, records []Record) (err error)
 	}
 	err = tx.Commit(ctx)
 	return err
+}
+
+// serverLogPath is where the embedded server's own output goes (INV-52): beside the data
+// directory, like its lock, and never on the process's stdout, which belongs to the CLI's output.
+func serverLogPath(dataDir string) string { return filepath.Clean(dataDir) + ".log" }
+
+// serverLog appends each write to serverLogPath, opening the file per write so no handle outlives
+// a Store. The volume is a few lines per server start and stop.
+func serverLog(dataDir string) io.Writer { return appendFile(serverLogPath(dataDir)) }
+
+type appendFile string
+
+func (p appendFile) Write(b []byte) (int, error) {
+	f, err := os.OpenFile(string(p), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return 0, err
+	}
+	n, err := f.Write(b)
+	return n, errors.Join(err, f.Close())
 }

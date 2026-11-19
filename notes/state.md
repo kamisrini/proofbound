@@ -74,17 +74,18 @@ review budget: a spec gets at most 2 review rounds, code gets 1, and LOW finding
 fixed. Pins now digest the staged code, so they commit WITH the change. The state-note limit is 10
 commits.
 
-**R2 step 1 done: the real-repo demo** (`CI-openspec-demo-mju3te`). Run `scripts/demo-openspec.sh`
+**R2 step 1 done: the real-repo demo** (`CI-openspec-demo-mju3te`). Run `bash docs/releases/r2/demo-openspec.sh`
 (about 4 minutes). It clones `Fission-AI/OpenSpec` at a pin and commits the profile into every commit
 of the local clone (O-3 needs a committed profile). It ingests 648 spec revisions from 1,059 real
 commits, binds a demo commit to `install-skills-globally`, and shows both demo gates BLOCKED. The
 claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
 
-**Known product rough edges the demo exposed:** the embedded database prints its server log on
-stdout (the script filters it); the gate line says BLOCKED with no reason; the CLI cannot look up a
-change by name (the script hard-codes the CI id).
+**Rough edges fixed** (`CI-demo-polish-i3ew84`): the embedded server's output goes to `.proofbound/db.log`
+(store INV-52); readiness gates print `reason="..."` with their counts (GATE-INV-16);
+`report intent sdd:<change-name>` looks a change up by name (CLI-INV-17). The demo moved to
+`docs/releases/r2/` (`demo-openspec.sh` + `DEMO.md`, R1's layout) and is linked from the README.
 
-**Exact next action:** the owner runs the demo. Then R2 step 2: M4 drift, under the review budget.
+**Exact next action:** the owner runs `bash docs/releases/r2/demo-openspec.sh`; one non-author review of the fix commit is due (Law 11 budget). Then R2 step 2: M4 drift, under the review budget.
 No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and

@@ -79,3 +79,4 @@ value produces `BLOCKED`. Every non-UNKNOWN result retains event ID and seq.
 | GATE-INV-13 | CLI resolves HEAD scope before semantic evaluation | gates_integration_test.go::TestIntentDeliveryReadiness |
 | GATE-INV-14 | Enforcement selects only promoted definitions | gates_integration_test.go::TestCanaryThenEnforceRejectsBadWitness |
 | GATE-INV-15 | Current gate estate has a complete consume/ignore route table | gates_integration_test.go::TestCurrentGateEstateEventRoutes |
+| GATE-INV-16 | An `intent-delivery-readiness` result carries a `Reason`: the verified and reviewed obligation counts behind its PASS or BLOCKED, or why there was nothing to count (no bound change intent, commit not ledgered, projection failed); other rules leave it empty. The CLI prints it as `reason="..."` after `would_block`. Also proven end to end by the sdd package's `TestM3ReadinessGateOnOneLedger` | reason_test.go::TestReadinessReasonStatesTheCounts |

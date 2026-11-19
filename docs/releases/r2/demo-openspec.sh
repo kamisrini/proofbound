@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # R2 real-repo demo (Law 11 payoff): Proofbound warrants a real OpenSpec project.
 #
-#   scripts/demo-openspec.sh [workdir]      # default: ${TMPDIR:-/tmp}/proofbound-openspec-demo
+#   bash docs/releases/r2/demo-openspec.sh [workdir]   # default: ${TMPDIR:-/tmp}/proofbound-openspec-demo
+#
+# The walkthrough is docs/releases/r2/DEMO.md.
 #
 # 1. Clones Fission-AI/OpenSpec (OpenSpec is built with OpenSpec) at a pinned commit.
 # 2. Rewrites the LOCAL clone so every commit carries .proofbound/sdd-profile.json. The R2 contract
@@ -15,12 +17,11 @@
 # database's port 55432 free.
 set -euo pipefail
 
-repo=$(cd "$(dirname "$0")/.." && pwd)
+repo=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=${1:-${TMPDIR:-/tmp}/proofbound-openspec-demo}
 upstream=https://github.com/Fission-AI/OpenSpec.git
 pin=e6539de023915e36848b351ea737ca8e192e8538 # upstream main, 2026-11-19
 change=install-skills-globally               # an active change at the pin
-intent=CI-install-skills-globally-57r52f     # the sdd connector's change-intent id for it (sdd ids.go)
 marker=.proofbound-openspec-demo
 
 if [[ -e $work ]]; then
@@ -32,8 +33,7 @@ touch "$work/$marker"
 unset DATABASE_URL
 
 say() { printf '\n== %s\n' "$*"; }
-# The embedded database prints its server log on stdout; keep only Proofbound's own lines.
-pb() { "$work/proofbound" "$@" 2>/dev/null | grep -Ev 'LOG: |FATAL: |^Data page checksums|^waiting for server|^ ?done$|^server (started|stopped)$|^(selecting|creating|running|performing|syncing|fixing|initdb|The |This |You can|Success|    |$)'; }
+pb() { "$work/proofbound" "$@"; }
 
 say "building the proofbound CLI"
 (cd "$repo/kernel" && go build -o "$work/proofbound" ./cmd/proofbound)
@@ -86,7 +86,7 @@ say "readiness gate: is each demo commit warranted?"
 pb gates canary
 
 say "warranty report for the claimed change (every obligation comes from OpenSpec's own spec)"
-pb report intent "$intent"
+pb report intent "sdd:$change"
 
 cat <<EOF
 

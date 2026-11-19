@@ -212,7 +212,23 @@ func TestM3ReadinessGateOnOneLedger(t *testing.T) {
 		t.Fatalf("X1's verdict or the review was held:\n%s", out)
 	}
 	m.expectStates(map[string]string{"x1": "PASS", "x2": "BLOCKED", "x3": "BLOCKED"})
+
+	// GATE-INV-16, end to end: each readiness line says why.
+	reasons := map[string]string{}
+	for _, match := range gateReasonRE.FindAllStringSubmatch(m.mustRun("gates", "canary"), -1) {
+		reasons[match[1]] = match[2]
+	}
+	if r := reasons["x2"]; r != "commit binds no change intent" {
+		t.Fatalf("x2 reason %q", r)
+	}
+	// A PASS has every count equal and non-zero.
+	counts := regexp.MustCompile(`^([1-9]\d*) of ([1-9]\d*) obligations verified SATISFIED; ([1-9]\d*) of ([1-9]\d*) requirement reviews VERIFIABLE$`).FindStringSubmatch(reasons["x1"])
+	if counts == nil || counts[1] != counts[2] || counts[3] != counts[4] || counts[1] != counts[3] {
+		t.Fatalf("x1 reason %q", reasons["x1"])
+	}
 }
+
+var gateReasonRE = regexp.MustCompile(`(?m)^gate=(\S+) .* reason="([^"]*)"$`)
 
 // m3ArchiveTenant is §7.2's tenant: X1 claims add-auth, the five-record archive is in the working
 // tree, and X4 commits X1's verdict (evidence = the archived id) and the review, all authored

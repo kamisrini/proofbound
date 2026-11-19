@@ -191,6 +191,9 @@ proofbound report week  # identical proof IDs — the record is reproducible, no
 
 ## A note on the PostgreSQL log noise
 
+**Fixed after Release 1:** current builds send the embedded server's output to `.proofbound/db.log`, so
+Proofbound's output is clean. What follows applies to Release 1 binaries.
+
 In embedded dev-mode, PostgreSQL prints startup/shutdown lines to stdout around Proofbound's
 output. To see only Proofbound's lines:
 
