@@ -115,7 +115,9 @@ CURRENT. **Fixed** (`CI-sdd-warranty-m4-head-4ut53f`, BR rev 0005 O-14 replaces 
 change's revision at HEAD via the new `sdd.Provider.StateRevision` (SDD-INV-68). Tests cover both
 revert directions, and the e2e asserts the revert appends nothing.
 
-**Exact next action:** a scoped re-check of the HIGH fix (Law 11 budget). Then R2 step 3, Spec Kit.
+**Re-check** `r2-m4-drift-recheck-20261119`: ACCEPTABLE, F1 closed. **M4 is accepted.**
+
+**Exact next action:** R2 step 3, Spec Kit support (short spec first, Law 11 budget); then R2 release notes and owner acceptance. No push without the owner's word.
 No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 
