@@ -822,12 +822,29 @@ rebuild.
     walk, and prints every §0 count, including the 13/8 first-parent row.
   - `--pins` and `--vectors` need no git repository.
 
+**M3 landed (2026-11-19, `CI-sdd-warranty-m3-xaqocp`, `VD-sdd-m3-git-binding-2026-11-19`).** The
+contract is the M3 SPEC, `docs/plans/R2-sdd-m3-git-binding-spec-draft5.md`, as amended by drafts 6-8.
+It changed these sites:
+- the git connector: per-commit `sdd` claim skips (git SPEC INV-31/32);
+- the CLI commit-claim resolver: the `sdd` arm, with the lazy ledger set `L` (CLI-INV-13/14);
+- projection validation: provider `sdd` (P-INV-33);
+- the reviews connector's hold and refusal (R-INV-13, CLI-INV-15/16).
+
+This package's production code is unchanged.
+
+**SDD-INV-56 in substance after M3:** `sync intent all`, `sync all`'s intent step, `verify`'s intent
+step and delivery-enforce still never construct or walk `sdd` for **ingestion**. The commit-claim
+resolver of `sync git`, `sync all` and `verify` constructs the provider lazily, only when a commit
+carries an `sdd:` claim, and only calls `Resolve` at that commit. It never calls `Revisions`, so it
+never walks history to ledger `sdd` revisions. A repository without `sdd:` claims constructs nothing
+(CLI-INV-14).
+
 ## 14. Non-goals and boundaries owned elsewhere
 
 - Main-spec ingestion, folding, tombstones, and carry-over (deferred with the main-spec lifecycle).
 - Authoring or writing tenant SDD files; governance → business decisions; YAML; heuristic extraction;
   Spec Kit per-task intents; API / DB providers; more than one profile per repository; ledgering skips.
-- **M3 entry conditions:**
+- **M3 entry conditions** (all answered when M3 landed, 2026-11-19: §12's M3 note):
   1. the `sdd:` trailer token and its decision record;
   2. anti-spoofing against a native name the git connector reads from the commit tree itself,
      including the profile's `kit`;
@@ -836,6 +853,12 @@ rebuild.
      to report it per commit, or proves the trailer gate refuses it first;
   4. the M3 sites in §12;
   5. the readiness gate on `sdd` chains.
+- **M2 entry condition, added by M3:** bindings are monotone (`commit_intents_view` is insert-only),
+  so a binding made under M1's resolution rules keeps warranting its commit even if M2's rules would
+  not bind that claim. M2 must state in its own SPEC whether existing bindings stay, and ship a
+  migration if they do not. The same holds for any other change that narrows `sdd` binding (a change
+  to a `Resolve` outcome, or a stricter anti-spoofing check). This is the git SPEC's "accepted
+  limitation of R2 M3" (`VD-sdd-m3-git-binding-2026-11-19`).
 - **Recorded, not owned here:** the git connector itself (`gitcmd.Commits` → `files`) fails on any
   non-UTF-8 path anywhere in history. That is a pre-existing git-connector wedge, independent of `sdd`,
   and `sdd` does not inherit it (§3). It is raised to the owner as its own item.
