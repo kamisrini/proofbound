@@ -100,7 +100,9 @@ claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
 editable draft. Fixed: seal now rebuilds all but the decisions from the ledger. 3 LOWs recorded; the
 mid-write rollback LOW was fixed with it.
 
-**Exact next action:** a scoped re-check of the MED fix (Law 11 budget). Then
+**Re-check** `r2-starter-kit-recheck-20261119`: ACCEPTABLE, F1 closed. **The starter kit is accepted.**
+
+**Exact next action:** R2 step 2, M4 drift (short spec first, Law 11 budget). No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
