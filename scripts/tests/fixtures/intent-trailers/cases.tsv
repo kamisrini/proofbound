@@ -37,3 +37,6 @@ above-unicode-max	CI-fixture-item-acde12	fail
 utf8-surrogate	CI-fixture-item-acde12	fail
 intent-ref-beside-intent	CI-fixture-item-acde12	pass
 trailing-qualifier-junk	records:CI-fixture-item-acde12:extra	fail
+sdd-claim	sdd:add-auth	fail
+sdd-malformed	sdd:Add_auth	fail
+sdd-uppercase-prefix	SDD:add-auth	fail

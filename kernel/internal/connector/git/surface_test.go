@@ -41,7 +41,7 @@ func TestExportedSurfaceMatchesTheSpec(t *testing.T) {
 		}
 	}
 	got := sortedKeys(exports)
-	want := []string{"Appender", "Commit", "Connector", "Deps", "IntentRef", "IntentResolver", "New", "Repo", "Result", "Sync", "Version"}
+	want := []string{"Appender", "ClaimSkip", "ClaimUnboundError", "Commit", "Connector", "Deps", "ErrClaimUnbound", "Error", "IntentRef", "IntentResolver", "New", "Repo", "Result", "Sync", "Unwrap", "Version"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("exports=%v want=%v", got, want)
 	}
@@ -50,10 +50,12 @@ func TestExportedSurfaceMatchesTheSpec(t *testing.T) {
 func TestExportedStructFieldsMatchTheSpec(t *testing.T) {
 	files := packageFiles(t, ".")
 	want := map[string][]string{
-		"Commit":    {"AuthorEmail", "AuthorName", "CitedDecisions", "CommittedAt", "CommitterEmail", "CommitterName", "FilesTouched", "IntentRefs", "IntentTrailers", "SHA", "Subject"},
-		"Deps":      {"IDs", "Logger", "Repo", "Resolver"},
-		"IntentRef": {"ArtifactSHA256", "Provider", "RecordID"},
-		"Result":    {"Appended", "Cursor", "Existing", "Listed"},
+		"Commit":            {"AuthorEmail", "AuthorName", "CitedDecisions", "CommittedAt", "CommitterEmail", "CommitterName", "FilesTouched", "IntentRefs", "IntentTrailers", "SHA", "Subject"},
+		"Deps":              {"IDs", "Logger", "Repo", "Resolver"},
+		"IntentRef":         {"ArtifactSHA256", "Provider", "RecordID"},
+		"Result":            {"Appended", "ClaimSkips", "Cursor", "Existing", "Listed"},
+		"ClaimSkip":         {"Cause", "Commit", "Value"},
+		"ClaimUnboundError": {"Cause"},
 	}
 	got := make(map[string][]string)
 	for _, file := range files {

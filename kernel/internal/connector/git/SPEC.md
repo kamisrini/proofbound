@@ -119,8 +119,30 @@ type IntentRef struct {
 	ArtifactSHA256 string `json:"artifact_sha256"`
 }
 
+// IntentResolver resolves one claim at its commit. provider is "records", "specdir" or "sdd"; for
+// "sdd", recordID is the native change NAME (D1's grammar has already passed), and a tenant outcome
+// that cannot bind is reported as a *ClaimUnboundError, never as any other error (INV-31).
 type IntentResolver interface {
 	Resolve(ctx context.Context, commitSHA, provider, recordID string) (IntentRef, error)
+}
+
+// ErrClaimUnbound is what every ClaimUnboundError matches (through Unwrap).
+var ErrClaimUnbound = errors.New("intent claim is unbound")
+
+// ClaimUnboundError is a resolver's report that an sdd claim is tenant data that cannot bind. Cause
+// is one of the M3 skip causes; an empty Cause is a resolver defect and fails the sync.
+type ClaimUnboundError struct {
+	Cause string
+}
+
+func (e *ClaimUnboundError) Error() string
+func (e *ClaimUnboundError) Unwrap() error
+
+// ClaimSkip reports one sdd claim that did not bind. It is reported to the caller, never ledgered.
+type ClaimSkip struct {
+	Commit string // the commit SHA
+	Value  string // the trailer value exactly as read
+	Cause  string // malformed | a ClaimUnboundError's Cause
 }
 
 // Appender is the store surface this connector needs — declared at the consumer, and
@@ -153,6 +175,7 @@ type Result struct {
 	Appended int             // appends that INSERTED a row
 	Existing int             // appends the idempotency index absorbed
 	Cursor   json.RawMessage // the tip set, for sync_runs.cursor_json — observability only
+	ClaimSkips []ClaimSkip   // sdd claims that did not bind, in commit order (INV-31)
 }
 
 // Sync lists every reachable commit and appends one event per commit. It is idempotent: a
@@ -376,6 +399,8 @@ adversarial review, and that has been got wrong three times in this repo.
 | INV-28 | Only explicit Intent trailers create claims | connector_test.go::TestSync_OnlyExplicitIntentTrailersCreateClaims |
 | INV-29 | Claims resolve at the commit tree and hostile references fail closed | connector_test.go::TestSync_IntentReferencesBindExactRevision |
 | INV-30 | Legacy citations and deterministic v2 payload remain compatible | connector_test.go::TestPayload_IntentRefsAndLegacyCitationsArePinned |
+| INV-31 | sdd claims never fail the sync; an unbindable one is a ClaimSkip and drops every ref of its commit | sdd_claims_test.go::TestSync_SDDTenantOutcomesAreClaimSkips |
+| INV-32 | A bound sdd ref is the resolver's revision and is checked for shape | sdd_claims_test.go::TestSync_SDDSpoofedRevisionFailsSync |
 
 **INV-19 through INV-22, INV-24 and INV-25 are `gitcmd`'s and live in
 [`gitcmd/SPEC.md`](gitcmd/SPEC.md)** under that package's own numbering — the ref scope, the shallow
@@ -402,9 +427,33 @@ a behaviour with no row is one a future edit can drop with nothing noticing:
   resolved; subject/body mentions never create an `intent_refs` entry.
 - **INV-29 — Exact point-in-time binding.** Every trailer resolves against its commit SHA and stores
   the returned provider, CI id, and exact artifact digest. Missing, malformed, withdrawn,
-  ambiguous, unknown-provider, and spoofed-prefix values fail closed.
+  ambiguous, unknown-provider, and spoofed-prefix values fail closed. *Amended 2026-11-19 (R2 M3,
+  `CI-sdd-warranty-m3-xaqocp`):* "fail closed" means a whole-sync failure for `records` / `specdir` /
+  bare values, as before; an `sdd` value is governed by INV-31 instead. On a commit that also carries
+  an unbindable `sdd` claim, the `records` / `specdir` refs are dropped too (all-or-nothing, INV-31).
+  The ledger does not distinguish such a commit from an unclaimed one; neither can be warranted.
 - **INV-30 — Compatibility and determinism.** `cited_decisions` is unchanged; intent references are
   sorted and de-duplicated, empty references pin to `null`, and the wire version is `git/2`.
+- **INV-31 — `sdd` claims are tenant data (APPENDED 2026-11-19, R2 M3,
+  `VD-sdd-m3-git-binding-2026-11-19` D1/D2).** A value whose first four bytes ASCII-case-fold to
+  `sdd:` is an `sdd` claim and never fails the sync. If the WHOLE value matches
+  `^sdd:[a-z0-9][a-z0-9-]{1,99}$` it is resolved as provider `sdd` with the name after the prefix;
+  otherwise it is a `ClaimSkip` with cause `malformed` (so `SDD:x` is malformed). A
+  `*ClaimUnboundError` from the resolver is a `ClaimSkip` with its cause; any other resolver error
+  fails the sync. If ANY claim on a commit is skipped, the commit's event carries NO refs at all.
+  Skips are reported in `Result.ClaimSkips` and never ledgered.
+- **INV-32 — A bound `sdd` ref is checked for shape (APPENDED 2026-11-19, R2 M3).** The resolver's
+  ref must have provider `sdd`, a CI-grammar record id and a 64-hex digest, or the sync fails (a
+  spoof is a code defect, not tenant data). `RecordID == trailer value` cannot hold for `sdd`, whose
+  trailer names a change, not a CI id; the resolver's own checks (the CLI SPEC) carry the rest.
+
+**Accepted limitation of R2 M3 — bindings are monotone.** `commit_intents_view` is insert-only, so a
+binding made by an earlier kernel keeps warranting its commit even if a later kernel would skip that
+claim. Within one kernel version this cannot arise (the ledgered set only grows and `Resolve` is
+deterministic). **Revisit trigger:** any change that narrows `sdd` binding — M2's Spec Kit rules, a
+change to an `sdd` `Resolve` outcome, or a stricter anti-spoofing check — must state in its own SPEC
+whether existing bindings stay, and ship a migration if they do not
+(`VD-sdd-m3-git-binding-2026-11-19`).
 
 ### 5.1 Pinned vector
 

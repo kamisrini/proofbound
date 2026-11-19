@@ -3,6 +3,7 @@ package gitcmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
@@ -120,17 +121,31 @@ func TestIntentTrailers_SharedCorpus(t *testing.T) {
 	}
 }
 
-// corpusResolver resolves every well-formed claim, so a Sync failure can only come from the
-// kernel's own grammar, framing, or value rule — the properties the corpus pins.
+// corpusResolver models THIS repository, which is not an sdd tenant (R2 M3 SPEC draft 5 §5): it
+// resolves every well-formed records/specdir claim, and reports every sdd claim as unbound
+// (unknown-change). So a claim fails to bind only through the kernel's own grammar, framing, or
+// value rule — the properties the corpus pins — or because it is an sdd claim, which this
+// repository's gate also refuses.
 type corpusResolver struct{}
 
 func (corpusResolver) Resolve(_ context.Context, _ string, provider, id string) (connectorgit.IntentRef, error) {
+	if provider == "sdd" {
+		return connectorgit.IntentRef{}, &connectorgit.ClaimUnboundError{Cause: "unknown-change"}
+	}
 	return connectorgit.IntentRef{Provider: provider, RecordID: id, ArtifactSHA256: strings.Repeat("a", 64)}, nil
 }
 
-type corpusAppender struct{}
+// corpusAppender records whether any appended commit carries a bound intent ref.
+type corpusAppender struct{ bound bool }
 
-func (corpusAppender) Append(_ context.Context, e core.Event) (store.Record, bool, error) {
+func (a *corpusAppender) Append(_ context.Context, e core.Event) (store.Record, bool, error) {
+	var payload connectorgit.Commit
+	if err := json.Unmarshal(e.Payload, &payload); err != nil {
+		return store.Record{}, false, err
+	}
+	if len(payload.IntentRefs) > 0 {
+		a.bound = true
+	}
 	return store.Record{Event: e}, true, nil
 }
 
@@ -186,8 +201,11 @@ func TestIntentTrailers_SharedCorpusKernelBinds(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, syncErr := c.Sync(context.Background(), corpusAppender{})
-			binds = syncErr == nil
+			app := &corpusAppender{}
+			_, syncErr := c.Sync(context.Background(), app)
+			// "Binds" means a ref was bound, not that the sync succeeded: an sdd claim that cannot
+			// bind is a skip and the sync still succeeds (R2 M3, round-2 F2).
+			binds = syncErr == nil && app.bound
 		}
 		got := "fail"
 		if binds {
