@@ -51,14 +51,20 @@ As of: 2026-11-19
   - the CLI half of malformed-after-refusal is tested;
   - cli uses `ValidateRevision` and the producer decoders (Law 2);
   - the port detector is rebuilt on go/ast, with 14 in-test probes.
-- **Lens B, mutation and concurrency:** still running in a private worktree. Its tests contend for
-  the fixed embedded port, so an sdd-package run during B can fail with "could not create any TCP/IP
-  sockets". Re-run the full suite after B finishes.
+- **Lens B, mutation and concurrency** (`8d6dbde`): ACCEPTABLE, 5 LOW. All five are answered in
+  `af57109` (pins `75c9eac`), test-only plus one SPEC note, with every new test calibrated by hand
+  mutants:
+  - F1: fail-closed decode paths of the view and of L (C22/C39/C43/C46/C49 killed);
+  - F2: printableUnit on claim-skip values and held/refused paths, and write errors (C28/C29/C54);
+  - F3: the D1 100/101 bound and near-sdd values (sweep #39/#40, G1/G7/G8);
+  - F4: the port guard also flags `Unsetenv("DATABASE_URL")` (multi-line evasion was already closed);
+  - F5: the reviews SPEC R-INV-13 states the cross-root held-vs-refused limitation with a revisit trigger.
 
 **Exact next action:**
-1. Commit B's verdict and answer its findings.
-2. A non-author re-check of lens A's fixes, plus any B fixes.
-3. M3 is done when both lenses are ACCEPTABLE. Then re-run `make check`.
+1. Dispatch a non-author re-check of lens A's fixes (`9464e06`) and lens B's fixes (`af57109`).
+   Verdict id `r2-m3-impl-recheck-20261119`. No other port-55432 tests may run alongside it.
+2. Commit that verdict; answer anything it finds.
+3. Then run `go test ./...` and `make check` clean. M3 is done when the re-check is ACCEPTABLE.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
