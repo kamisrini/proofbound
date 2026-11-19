@@ -128,8 +128,13 @@ revert directions, and the e2e asserts the revert appends nothing.
   then STALE on an in-place edit).
 - Spec Kit's own repo does not use its layout, so no real-repo run; its template confirms the format.
 
-**Exact next action:** one non-author code review of Spec Kit (Law 11 budget); then R2 release notes
-and owner acceptance. No push without the owner's word.
+**Review** `r2-speckit-review-20261119`: ACCEPTABLE. OpenSpec ids, digests, skip order and Resolve are
+unchanged, and a 15-shape hostile probe gave no wrong record and no panic. 3 LOWs recorded, not fixed: a
+near-miss FR line format is dropped silently; the sibling can be any segment; the init profile test
+checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
+
+**Exact next action:** R2 release notes (`docs/releases/r2/RELEASE-NOTES.md`), then the owner's
+acceptance of Release 2. No push without the owner's word.
 No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 
