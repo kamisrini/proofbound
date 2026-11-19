@@ -74,10 +74,18 @@ review budget: a spec gets at most 2 review rounds, code gets 1, and LOW finding
 fixed. Pins now digest the staged code, so they commit WITH the change. The state-note limit is 10
 commits.
 
-**Exact next action:** R2 step 1 of the re-sequenced plan (`docs/plans/sdd-warranty-connector-plan.md`):
-the **real-repo demo**. Pick a real public OpenSpec repository, sync it, and print a readable report
-(changes, requirements, bound commits, gate result). Start with a short spec of the demo command;
-that needs the owner's go-ahead and a change intent. No push without the owner's word.
+**R2 step 1 done: the real-repo demo** (`CI-openspec-demo-mju3te`). Run `scripts/demo-openspec.sh`
+(about 4 minutes). It clones `Fission-AI/OpenSpec` at a pin and commits the profile into every commit
+of the local clone (O-3 needs a committed profile). It ingests 648 spec revisions from 1,059 real
+commits, binds a demo commit to `install-skills-globally`, and shows both demo gates BLOCKED. The
+claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
+
+**Known product rough edges the demo exposed:** the embedded database prints its server log on
+stdout (the script filters it); the gate line says BLOCKED with no reason; the CLI cannot look up a
+change by name (the script hard-codes the CI id).
+
+**Exact next action:** the owner runs the demo. Then R2 step 2: M4 drift, under the review budget.
+No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.
