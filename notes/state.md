@@ -85,8 +85,19 @@ claimed change shows real obligations, all UNVERIFIED. No kernel code changed.
 `report intent sdd:<change-name>` looks a change up by name (CLI-INV-17). The demo moved to
 `docs/releases/r2/` (`demo-openspec.sh` + `DEMO.md`, R1's layout) and is linked from the README.
 
-**Exact next action:** the owner runs `bash docs/releases/r2/demo-openspec.sh`; the fix commit `c9818c8` passed its one non-author review (`r2-demo-polish-review-20261119`, ACCEPTABLE, 3 LOW recorded, not fixed). Then R2 step 2: M4 drift. Then R2 step 2: M4 drift, under the review budget.
-No push without the owner's word.
+**Starter kit and reviewer workflow built** (`CI-starter-kit-68z7m8`, spec
+`docs/plans/R2-starter-kit-spec.md`):
+- `proofbound init openspec` writes a tenant's profile, `.gitignore` lines, AGENTS.md block, Claude
+  Code reviewer subagent, and commit-msg hook;
+- `proofbound review draft <commit>` / `review seal <dir>` turn a reviewer's decisions into review
+  and verdict artifacts plus that commit's readiness gate (CLI-INV-18..20).
+- Proven end to end on the embedded ledger (`TestStarterKitReviewFlow`: SATISFIED gives PASS,
+  INCONCLUSIVE gives BLOCKED), and by hand on the OpenSpec demo clone, where a sealed review turned
+  the claimed commit's gate to PASS.
+- Usage: `docs/releases/r2/DEMO.md` "Use it on your own OpenSpec project".
+
+**Exact next action:** one non-author code review of the starter-kit commit (Law 11 budget). Then
+R2 step 2, M4 drift. No push without the owner's word.
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.

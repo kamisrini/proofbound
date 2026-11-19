@@ -1,0 +1,6 @@
+#!/bin/sh
+# Installed by `proofbound init openspec`: every commit names the OpenSpec change it implements.
+[ "${PROOFBOUND_NO_INTENT:-}" = 1 ] && exit 0
+grep -qE '^Intent: ' "$1" && exit 0
+echo "proofbound: end the message with 'Intent: sdd:<change-name>', or commit with PROOFBOUND_NO_INTENT=1" >&2
+exit 1

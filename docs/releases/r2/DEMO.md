@@ -52,6 +52,36 @@ intent=CI-install-skills-globally-57r52f ... state=IMPLEMENTED_UNVERIFIED ...
 
 Look up any change the same way: `proofbound report intent sdd:<change-name>`.
 
+## Use it on your own OpenSpec project
+
+Build the CLI once (Release 1, [§1](../r1/DEMO.md#1-build-the-proofbound-binary)), then in your
+project's repository:
+
+```bash
+proofbound init openspec          # once: profile, .gitignore lines, AGENTS.md block,
+                                  # a Claude Code reviewer subagent, and a commit-msg hook
+git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
+PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no change, so no trailer
+```
+
+Then work as usual with any agent. Every commit ends with `Intent: sdd:<change-name>` (the hook
+reminds you; AGENTS.md tells your agent). To warrant a commit, a reviewer who did not write it
+(another person, or the `proofbound-reviewer` subagent in a separate session) runs:
+
+```bash
+proofbound sync all
+proofbound review draft <commit>      # prints each obligation; writes .proofbound/drafts/<commit>/draft.json
+# decide each outcome in draft.json, set declared_reviewer
+proofbound review seal .proofbound/drafts/<commit>
+git add docs/verification/verdicts gates
+PROOFBOUND_NO_INTENT=1 git commit -m "review <commit>"
+proofbound sync all && proofbound gates canary
+```
+
+The commit's `ready-<commit12>` gate says **PASS** only when every obligation is SATISFIED and every
+requirement is VERIFIABLE, by a reviewer other than the spec's owner; otherwise BLOCKED, with the
+counts. Independence is declared, not proven: the record says who claimed to verify.
+
 ## Cleaning up
 
 ```bash

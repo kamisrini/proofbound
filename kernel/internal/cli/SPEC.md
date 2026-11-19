@@ -16,6 +16,11 @@ It also routes `proofbound report intent <id>`, `proofbound report requirement <
 `proofbound intent check --commit <sha>` to the proof-bearing projection API without interpreting
 chain semantics in the CLI.
 
+The R2 starter kit (`docs/plans/R2-starter-kit-spec.md`) adds `init openspec`, which writes a tenant's
+profile, agent instructions, reviewer subagent and commit hook, and `review {draft|seal}`, which turn a
+reviewer's decisions on one commit into review and verdict artifacts plus that commit's readiness gate
+(CLI-INV-18..20).
+
 R2 M3 (`CI-sdd-warranty-m3-xaqocp`, `VD-sdd-m3-git-binding-2026-11-19`) adds the `sdd` arm of the
 commit-claim resolver used by `sync git`, `sync all` and `verify`. The `sdd` provider and the ledger
 set `L` (every ledgered `intent.sdd` change intent's id and digest) are built lazily, on the first
@@ -88,3 +93,6 @@ print usage for the live name. Runtime failures return status 1 and are prefixed
 | CLI-INV-15 | The store-backed reviews `LedgerView` sees every provider's commit claims and intent requirements (imported historical events included) and every reviews identity by payload schema, and reads the ledger lazily, at most once per sync and never for a sync without a v2 or requirement-review artifact. Also proven by TestStoreLedgerViewReadsLazilyOnce | ledger_view_test.go::TestStoreLedgerViewSeesEveryProvider |
 | CLI-INV-16 | `sync reviews` and `sync all` print their counts line, then held and refused lines, before returning any reviews error; holds alone exit 0 and a refusal fails the command | ledger_view_test.go::TestSyncReviewsPrintsHoldsAndFailsOnRefusal |
 | CLI-INV-17 | `report intent sdd:<change-name>` reports the change intent that name resolves to at HEAD through the sdd provider's `Resolve` (the same resolution commit claims bind through); a name that does not resolve fails the command with the resolver's error and reports nothing; any other argument is an intent id, unchanged | report_intent_test.go::TestReportIntentResolvesAnSDDChangeName |
+| CLI-INV-18 | `init openspec [--owner <name>]` writes the starter kit (`.proofbound/sdd-profile.json`, two `.gitignore` lines, the AGENTS.md block, `.claude/agents/proofbound-reviewer.md`, the `commit-msg` hook) without overwriting any existing file or content, and a second run changes nothing | starter_test.go::TestInitOpenSpecNeverOverwritesAndIsIdempotent |
+| CLI-INV-19 | `review seal <draft-dir>` writes requirement-review and obligation-verdict artifacts that the reviews connector's own parsers accept, with status ACCEPTABLE iff every outcome is SATISFIED, plus the reviewed commit's own readiness gate `gates/ready-<commit12>.yaml`. Also proven end to end (draft, decide, seal, commit, sync: PASS when all SATISFIED/VERIFIABLE by a non-owner, BLOCKED otherwise) by the sdd package's `TestStarterKitReviewFlow` | starter_test.go::TestReviewSealWritesAcceptedArtifacts |
+| CLI-INV-20 | `review seal` writes nothing when any check fails: an undecided or unknown outcome, a blank reviewer, the requirement's declared owner as reviewer, SATISFIED without evidence, an artifact the parser rejects, or an existing target file | starter_test.go::TestReviewSealWritesNothingOnAnyFailure |

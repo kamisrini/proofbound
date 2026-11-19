@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>]"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init openspec [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -74,6 +74,9 @@ const (
 	commandMigrateHistoricalEvidence
 	commandTwinReplay
 	commandSyncIntentSDD
+	commandInitOpenSpec
+	commandReviewDraft
+	commandReviewSeal
 )
 
 func parseCommand(args []string) command {
@@ -120,6 +123,12 @@ func parseCommand(args []string) command {
 		return commandMigrateHistoricalEvidence
 	case len(args) >= 2 && args[0] == "twin" && args[1] == "replay":
 		return commandTwinReplay
+	case (len(args) == 2 || (len(args) == 4 && args[2] == "--owner" && args[3] != "")) && args[0] == "init" && args[1] == "openspec":
+		return commandInitOpenSpec
+	case len(args) == 3 && args[0] == "review" && args[1] == "draft" && args[2] != "":
+		return commandReviewDraft
+	case len(args) == 3 && args[0] == "review" && args[1] == "seal" && args[2] != "":
+		return commandReviewSeal
 	default:
 		return commandInvalid
 	}
@@ -739,6 +748,21 @@ func syncChecks(ctx context.Context, root, databaseURL string, output io.Writer)
 
 func runCommand(ctx context.Context, cmd command, args []string, root, databaseURL string, output io.Writer) (resultErr error) {
 	switch cmd {
+	case commandInitOpenSpec:
+		owner := ""
+		if len(args) == 4 {
+			owner = args[3]
+		}
+		return initOpenSpec(ctx, root, owner, output)
+	case commandReviewSeal:
+		return reviewSeal(root, args[2], output)
+	case commandReviewDraft:
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return reviewDraft(ctx, root, ledger, args[2], output)
 	case commandSyncChecks:
 		return syncChecks(ctx, root, databaseURL, output)
 	case commandSyncSessions:
