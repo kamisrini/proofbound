@@ -122,6 +122,10 @@ obligation exactly once, and declare a reviewer different from the revision's de
     components, and deployment without complete satisfaction is `DEPLOYED_UNVERIFIED`.
 32. **P-INV-32 — Deployment proof is bounded.** Each joined deployment retains event/seq proof;
     missing proof or a future freshness timestamp fails closed.
+33. **P-INV-33 — Commit claim providers are a closed set.** A commit payload's `intent_refs` accept
+    exactly the providers `records`, `specdir` and `sdd` (sdd APPENDED 2026-11-19, R2 M3,
+    `CI-sdd-warranty-m3-xaqocp`), each with a CI-grammar id and a 64-hex digest, strictly ascending.
+    Widening the set is retroactively safe: it rejects nothing it accepted before.
 
 ## 5. Proving table
 
@@ -159,3 +163,4 @@ obligation exactly once, and declare a reviewer different from the revision's de
 | P-INV-30 | Exact commit joins preserve multiple environments and revisions | intent_review_test.go::TestIntentDeploymentJoinsExactCommit |
 | P-INV-31 | Missing, stale, and deployed-unverified states remain explicit | intent_review_test.go::TestIntentDeploymentStates |
 | P-INV-32 | Deployment proof and freshness fail closed | intent_review_test.go::TestIntentDeploymentProofFailsClosed |
+| P-INV-33 | Commit claim providers are exactly records, specdir and sdd | commit_provider_test.go::TestCommitClaimProvidersAreClosed |

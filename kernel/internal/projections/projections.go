@@ -724,7 +724,7 @@ func (v commitPayload) validate() error {
 	last := ""
 	for _, ref := range v.IntentRefs {
 		key := ref.Provider + "\x00" + ref.RecordID + "\x00" + ref.ArtifactSHA256
-		if (ref.Provider != "records" && ref.Provider != "specdir") || !regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`).MatchString(ref.RecordID) || !hexPattern.MatchString(ref.ArtifactSHA256) || key <= last {
+		if (ref.Provider != "records" && ref.Provider != "specdir" && ref.Provider != "sdd") || !regexp.MustCompile(`^CI-[a-z0-9][a-z0-9-]{1,62}-[a-z0-9]{6}$`).MatchString(ref.RecordID) || !hexPattern.MatchString(ref.ArtifactSHA256) || key <= last {
 			return errors.New("invalid intent_refs")
 		}
 		last = key
