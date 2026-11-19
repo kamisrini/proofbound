@@ -5,46 +5,71 @@ import (
 	"testing"
 )
 
-// CLI-INV-21: drift compares promises, not digests.
+// CLI-INV-21: drift compares the promise at HEAD with the verified promise, never digests and never
+// ledger order.
 func TestDriftComparesPromises(t *testing.T) {
-	verified := promise{"O-A": "The system SHALL log in.", "O-B": "The system SHALL log out."}
+	a := promise{"O-A": "The system SHALL log in.", "O-B": "The system SHALL log out."}
+	b := promise{"O-A": "The system SHALL log in with MFA.", "O-C": "The system SHALL lock out."}
 	promises := map[string]promise{
-		"CI-x\x00v1":       verified,
+		"CI-x\x00A":        a,
 		"CI-x\x00archived": {"O-A": "The system SHALL log in.", "O-B": "The system SHALL log out."},
-		"CI-x\x00edited":   {"O-A": "The system SHALL log in with MFA.", "O-C": "The system SHALL lock out."},
-		"CI-x\x00v1-again": verified,
+		"CI-x\x00B":        b,
 	}
-	w1 := warranty{verdictID: "OV-1", commit: "c1", intentID: "CI-x", digest: "v1", seq: 10}
+	onA := warranty{verdictID: "OV-A", commit: "ca", intentID: "CI-x", digest: "A", seq: 10}
+	onB := warranty{verdictID: "OV-B", commit: "cb", intentID: "CI-x", digest: "B", seq: 30}
+	aToB := []driftChange{
+		{"changed", "O-A", "The system SHALL log in.", "The system SHALL log in with MFA."},
+		{"removed", "O-B", "The system SHALL log out.", ""},
+		{"added", "O-C", "", "The system SHALL lock out."},
+	}
+	bToA := []driftChange{
+		{"changed", "O-A", "The system SHALL log in with MFA.", "The system SHALL log in."},
+		{"added", "O-B", "", "The system SHALL log out."},
+		{"removed", "O-C", "The system SHALL lock out.", ""},
+	}
 	cases := map[string]struct {
 		warranties []warranty
-		revisions  []intentRevision
-		stale      bool
+		head       headState
+		state      string
 		verdict    string
 		changes    []driftChange
 	}{
-		"only the verified revision": {[]warranty{w1}, []intentRevision{{"v1", 1}}, false, "OV-1", nil},
-		"archive move, same promise": {[]warranty{w1}, []intentRevision{{"v1", 1}, {"archived", 20}}, false, "OV-1", nil},
-		"edited promise": {[]warranty{w1}, []intentRevision{{"v1", 1}, {"edited", 20}}, true, "OV-1", []driftChange{
-			{"changed", "O-A", "The system SHALL log in.", "The system SHALL log in with MFA."},
-			{"removed", "O-B", "The system SHALL log out.", ""},
-			{"added", "O-C", "", "The system SHALL lock out."},
-		}},
-		"re-verified after the edit": {[]warranty{w1, {verdictID: "OV-2", commit: "c2", intentID: "CI-x", digest: "edited", seq: 30}}, []intentRevision{{"v1", 1}, {"edited", 20}}, false, "OV-2", nil},
-		"edit reverted":              {[]warranty{w1}, []intentRevision{{"v1", 1}, {"edited", 20}, {"v1-again", 40}}, false, "OV-1", nil},
+		"head is the verified revision":    {[]warranty{onA}, headState{digest: "A"}, "CURRENT", "OV-A", nil},
+		"archive move, same promise":       {[]warranty{onA}, headState{digest: "archived"}, "CURRENT", "OV-A", nil},
+		"edited promise":                   {[]warranty{onA}, headState{digest: "B"}, "STALE", "OV-A", aToB},
+		"re-verified after the edit":       {[]warranty{onA, onB}, headState{digest: "B"}, "CURRENT", "OV-B", nil},
+		"verified A, edited, reverted":     {[]warranty{onA}, headState{digest: "A"}, "CURRENT", "OV-A", nil},
+		"verified B only, reverted to A":   {[]warranty{onB}, headState{digest: "A"}, "STALE", "OV-B", bToA},
+		"head revision not synced":         {[]warranty{onA}, headState{digest: "C"}, "UNSYNCED", "OV-A", nil},
+		"change deleted at head":           {[]warranty{onA}, headState{state: "REMOVED"}, "REMOVED", "OV-A", nil},
+		"verified both, head back on A":    {[]warranty{onA, onB}, headState{digest: "A"}, "CURRENT", "OV-A", nil},
+		"verified both, head on unknown C": {[]warranty{onA, onB}, headState{digest: "C"}, "UNSYNCED", "OV-B", nil},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := computeDrift(c.warranties, map[string][]intentRevision{"CI-x": c.revisions}, promises)
+			got := computeDrift(c.warranties, map[string]headState{"CI-x": c.head}, promises)
 			if len(got) != 1 {
 				t.Fatalf("entries %+v", got)
 			}
 			e := got[0]
-			if e.stale != c.stale || e.verified.verdictID != c.verdict || !reflect.DeepEqual(e.changes, c.changes) {
-				t.Fatalf("got stale=%v verdict=%s changes=%+v", e.stale, e.verified.verdictID, e.changes)
+			if e.state != c.state || e.verified.verdictID != c.verdict || !reflect.DeepEqual(e.changes, c.changes) {
+				t.Fatalf("got state=%s verdict=%s changes=%+v", e.state, e.verified.verdictID, e.changes)
 			}
 		})
 	}
-	if got := computeDrift(nil, map[string][]intentRevision{"CI-x": {{"v1", 1}}}, promises); len(got) != 0 {
+	if got := computeDrift(nil, map[string]headState{"CI-x": {digest: "A"}}, promises); len(got) != 0 {
 		t.Fatalf("an unwarranted change was reported: %+v", got)
+	}
+}
+
+func TestChangeNameStripsTheArchiveDate(t *testing.T) {
+	for in, want := range map[string]string{
+		"openspec/changes/add-auth":                    "add-auth",
+		"openspec/changes/archive/2026-11-19-add-auth": "add-auth",
+		"openspec/changes/2026-11-19":                  "2026-11-19",
+	} {
+		if got := changeName(in); got != want {
+			t.Errorf("changeName(%q) = %q, want %q", in, got, want)
+		}
 	}
 }

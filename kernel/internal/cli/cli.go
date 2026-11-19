@@ -771,7 +771,7 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			return err
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
-		return reportDrift(ctx, ledger, output)
+		return reportDrift(ctx, root, ledger, output)
 	case commandReviewDraft:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

@@ -149,6 +149,7 @@ func (p *Provider) Name() string                                             // 
 func (p *Provider) Revisions(ctx context.Context) ([]intent.Revision, error) // whole history (§3)
 func (p *Provider) Skipped() []intent.Skip                                   // after Revisions (§7)
 func (p *Provider) Resolve(ctx context.Context, commit, name string) (intent.Revision, error) // §6
+func (p *Provider) StateRevision(ctx context.Context, commit, name string) (intent.Revision, error) // SDD-INV-68 (R2 M4)
 ```
 
 `intent.Skip` is `struct { Commit, Unit, Cause string; Err error }` (intent SPEC §2 amendment, §12):
@@ -672,6 +673,7 @@ neutral change that must survive**. Retired invariants have no row.
 | SDD-INV-65 | (a) A state whose profile path is a symlink to text byte-identical to a valid profile has a different key from the regular-profile state, and is `profile-invalid` while the other maps. (b) Over every fixture, two commits with equal keys have equal `changeOutcome` for every name and equal Skips. `Resolve` may differ, because it also reads parents (`branches` 07 vs 08; the cache-by-key mutant is SDD-INV-59's kill). (c) Profiles that differ only in mode (regular vs executable) have different keys, so the oid-only key cannot pass on line count alone (round-1 F8). Also proven by survivors_test.go::TestStateKeyModeOnlyDifference | sdd_test.go::TestStateKeyCarriesModes | kills: an oid-only key |
 | SDD-INV-66 | `resolve-edges` 07 carries `openspec/changes/IMPLEMENTATION_ORDER.md` and `openspec/changes/archive/README.md` (the real shape, at 1393 of 1624 OpenSpec commits). Neither is a change, unit, or Skip, and `Resolve` gives `ErrUnknownChange` for both names | sdd_test.go::TestPlainFilesAreNotChanges | kills: draft 8's "any object type" change entry |
 | SDD-INV-67 | Profiles whose root or archive is `:(glob)openspec/changes`, `:!x`, `../x`, `/x`, `openspec/changes/`, `./openspec/changes`, `openspec//changes`, or `open spec/changes`; an archive that is not a direct child of the root; and `requirements.paths` other than the exact pair (for example `openspec/changes/*/spec.md`, or a glob with no `*`) are each `profile-invalid`. `Revisions` never errors | sdd_test.go::TestProfilePathsAreLiteral | kills: a lenient grammar (a malformed path reaching git, rc 128). |
+| SDD-INV-68 | `StateRevision(commit, name)` returns exactly what `Resolve` returns, except that a change `Resolve` refuses with `ErrArchivedEarlier` yields its revision in that commit's own state (an archived path). Added 2026-11-19 for R2 M4 drift, which asks what a change promises at HEAD rather than whether a commit may claim it (review `r2-m4-drift-review-20261119` F1) | state_revision_test.go::TestStateRevisionAgreesWithResolveExceptArchivedEarlier |
 
 ## 10. Decisions this draft settles or withdraws
 

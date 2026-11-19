@@ -166,32 +166,9 @@ func (p *Provider) Revisions(ctx context.Context) ([]intent.Revision, error) {
 // Resolve maps a native change name at a commit to its outcome (SPEC §6). It reads only the
 // commit's state and its parents' archive listings (SDD-INV-33).
 func (p *Provider) Resolve(ctx context.Context, commit, name string) (intent.Revision, error) {
-	if !inDomain(name) {
-		return intent.Revision{}, ErrUnknownChange
-	}
-	arts, err := p.reader.Read(ctx, commit)
-	if err != nil {
-		return intent.Revision{}, fmt.Errorf("sdd: read %s: %w", commit, err)
-	}
-	if len(arts) == 0 {
-		return intent.Revision{}, ErrUnknownChange
-	}
-	st, err := p.mapState(arts)
+	st, cr, err := p.changeAt(ctx, commit, name)
 	if err != nil {
 		return intent.Revision{}, err
-	}
-	if st.archiveBase != "" && name == st.archiveBase {
-		return intent.Revision{}, ErrUnknownChange // §6 line 1: the name domain precedes every state rule
-	}
-	if st.stateSkip != "" {
-		return intent.Revision{}, unmappable(st.stateSkip)
-	}
-	cr, ok := st.changes[name]
-	if !ok {
-		return intent.Revision{}, ErrUnknownChange
-	}
-	if cr.skip != "" {
-		return intent.Revision{}, unmappable(cr.skip)
 	}
 	if cr.singleArchive {
 		parents, err := p.reader.Parents(ctx, commit)
@@ -214,4 +191,52 @@ func (p *Provider) Resolve(ctx context.Context, commit, name string) (intent.Rev
 		return intent.Revision{}, ErrNoChangeIntent
 	}
 	return *cr.rev, nil
+}
+
+// StateRevision returns the change intent revision a change has in the commit's own state, active
+// or archived (SDD-INV-68). Unlike Resolve it never refuses a change archived before the commit:
+// it answers what the change promises at that commit, which drift needs (R2 M4), while Resolve
+// answers whether a commit may claim it.
+func (p *Provider) StateRevision(ctx context.Context, commit, name string) (intent.Revision, error) {
+	_, cr, err := p.changeAt(ctx, commit, name)
+	if err != nil {
+		return intent.Revision{}, err
+	}
+	if cr.absent {
+		return intent.Revision{}, ErrNoChangeIntent
+	}
+	return *cr.rev, nil
+}
+
+// changeAt maps the commit's state and returns the named change's result, with Resolve's
+// state-level outcomes (SPEC §6 lines 1-3).
+func (p *Provider) changeAt(ctx context.Context, commit, name string) (*stateResult, *changeResult, error) {
+	if !inDomain(name) {
+		return nil, nil, ErrUnknownChange
+	}
+	arts, err := p.reader.Read(ctx, commit)
+	if err != nil {
+		return nil, nil, fmt.Errorf("sdd: read %s: %w", commit, err)
+	}
+	if len(arts) == 0 {
+		return nil, nil, ErrUnknownChange
+	}
+	st, err := p.mapState(arts)
+	if err != nil {
+		return nil, nil, err
+	}
+	if st.archiveBase != "" && name == st.archiveBase {
+		return nil, nil, ErrUnknownChange // §6 line 1: the name domain precedes every state rule
+	}
+	if st.stateSkip != "" {
+		return nil, nil, unmappable(st.stateSkip)
+	}
+	cr, ok := st.changes[name]
+	if !ok {
+		return nil, nil, ErrUnknownChange
+	}
+	if cr.skip != "" {
+		return nil, nil, unmappable(cr.skip)
+	}
+	return st, cr, nil
 }

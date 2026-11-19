@@ -30,7 +30,12 @@ obligations, read from `intent_targets_view` joined to `requirement_obligations_
 
 For every sdd change intent with at least one **warranty**, meaning an obligation verdict
 (projected, so already validated) whose outcomes are all `SATISFIED`:
-- **current revision** = the change intent's revision with the highest ledger seq;
+- **current revision** = the change's revision in the state at HEAD, read from the repository by
+  the sdd provider (`StateRevision`, SDD-INV-68), **never from ledger order**. A revert re-emits an
+  earlier revision's exact bytes, which the ledger dedupes, so ledger order can name a revision the
+  tree no longer has (review `r2-m4-drift-review-20261119` F1, HIGH; BR rev 0005 O-14 replaces O-13).
+  If HEAD's revision is not ledgered yet the change is **UNSYNCED**, if the change is gone at HEAD it
+  is **REMOVED**, and if it is unmappable at HEAD it is **UNKNOWN**, each with a reason;
 - **CURRENT** if any warranty's revision has the same promise as the current revision;
 - otherwise **STALE**, diffed against the latest warranty (highest seq): each obligation id is
   `added` (only in the current promise), `removed` (only in the verified one), or `changed` (same id,
@@ -42,10 +47,11 @@ drift change=<CI id> state=STALE verified_commit=<sha12> verdict=<id> verified_r
   added <obligation id> "<statement>"
   removed <obligation id> "<statement>"
 drift change=<CI id> state=CURRENT verified_commit=<sha12> verdict=<id> current_revision=<sha8>
-summary warranted=<n> current=<n> stale=<n>
+drift change=<CI id> state=REMOVED|UNSYNCED|UNKNOWN verified_commit=<sha12> verdict=<id> reason="..."
+summary warranted=<n> current=<n> stale=<n> other=<n>
 ```
 
-Changes are listed in CI-id order, obligations in id order, and statements through `printableUnit`.
+Changes are listed in CI-id order, obligations in id order, and statements Go-quoted (`strconv.Quote`), so a statement can never break a line.
 A STALE warranty clears when a new verdict (on any commit) covers a revision with the current
 promise. Exit status is 0: drift is information. The readiness gate is unchanged, since a commit
 is still warranted against the exact revision it claimed.
@@ -62,5 +68,7 @@ is still warranted against the exact revision it claimed.
 
 - Only `intent.sdd` changes. `records` and `specdir` intents are out of scope.
 - No new event, projection table or gate rule (a drift gate is a later option).
+- A warranty here is the verdict alone. The readiness gate also needs a VERIFIABLE requirement
+  review, so CURRENT means "what was verified is still what is promised", not "the gate passes".
 - Requirement-review drift is not reported. Reviews bind requirement revisions, and a reworded
   obligation already shows as `changed`.

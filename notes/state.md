@@ -109,7 +109,13 @@ promise the same thing. Proven by `TestDriftComparesPromises` and `TestDriftEndT
 reword gives STALE, re-verify gives CURRENT, archive stays CURRENT), and on the OpenSpec demo clone
 (a reworded obligation is reported as `changed` with the old and new text).
 
-**Exact next action:** one non-author code review of M4 (Law 11 budget). Then R2 step 3, Spec Kit.
+**M4 review** `r2-m4-drift-review-20261119` (`441577c`) found one HIGH: "current = highest ledger seq"
+fails after a revert, because the ledger dedupes the re-emitted bytes, so a never-verified promise read
+CURRENT. **Fixed** (`CI-sdd-warranty-m4-head-4ut53f`, BR rev 0005 O-14 replaces O-13): drift reads each
+change's revision at HEAD via the new `sdd.Provider.StateRevision` (SDD-INV-68). Tests cover both
+revert directions, and the e2e asserts the revert appends nothing.
+
+**Exact next action:** a scoped re-check of the HIGH fix (Law 11 budget). Then R2 step 3, Spec Kit.
 No push without the owner's word. Then
 R2 step 2, M4 drift. No push without the owner's word.
 

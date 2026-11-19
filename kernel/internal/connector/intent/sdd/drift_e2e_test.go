@@ -25,7 +25,7 @@ func (m *m3Tenant) drift() (state, verdict, out string) {
 // an archive move changes every digest but not the promise).
 func TestDriftEndToEnd(t *testing.T) {
 	m := newM3Tenant(t)
-	if out := m.mustRun("report", "drift"); out != "summary warranted=0 current=0 stale=0\n" {
+	if out := m.mustRun("report", "drift"); out != "summary warranted=0 current=0 stale=0 other=0\n" {
 		t.Fatalf("an unwarranted tenant reported drift:\n%s", out)
 	}
 	x := m.commit("add auth", "Intent: sdd:add-auth")
@@ -47,7 +47,7 @@ func TestDriftEndToEnd(t *testing.T) {
 	if state != "STALE" || !strings.HasPrefix(verdict, "OV-"+x[:12]) {
 		t.Fatalf("after the reword:\n%s", out)
 	}
-	mustContain(t, out, `"The system SHALL authenticate users." -> "The system SHALL authenticate users with a second factor."`, "summary warranted=1 current=0 stale=1")
+	mustContain(t, out, `"The system SHALL authenticate users." -> "The system SHALL authenticate users with a second factor."`, "summary warranted=1 current=0 stale=1 other=0")
 
 	y := m.commit("implement the second factor", "Intent: sdd:add-auth")
 	m.mustRun("sync", "git")
@@ -73,5 +73,48 @@ func TestDriftEndToEnd(t *testing.T) {
 	}
 	if state, _, out := m.drift(); state != "CURRENT" {
 		t.Fatalf("an archive move with the same promise was reported as drift:\n%s", out)
+	}
+}
+
+// The review r2-m4-drift-review-20261119 F1 scenario: A is ledgered, B is ledgered and verified,
+// then the change is reverted to A's exact bytes. The ledger dedupes A (no new revision), so ledger
+// order still says B; drift must read HEAD and report STALE, since A's promise was never verified.
+// Reverting back to B is CURRENT again.
+func TestDriftRevertToAnUnverifiedPromise(t *testing.T) {
+	m := newM3Tenant(t)
+	a := "## ADDED Requirements\n\n### Requirement: Login\nThe system SHALL authenticate users.\n"
+	b := "## ADDED Requirements\n\n### Requirement: Login\nThe system SHALL authenticate users with a second factor.\n"
+	spec := "openspec/changes/add-auth/specs/core/spec.md"
+	m.commit("propose add-auth (A)")
+	m.mustRun("sync", "intent", "sdd")
+	m.write(spec, b)
+	y := m.commit("implement add-auth (B)", "Intent: sdd:add-auth")
+	m.mustRun("sync", "intent", "sdd")
+	m.mustRun("sync", "git")
+	m.mustRun("review", "draft", y)
+	m.review(y, "SATISFIED")
+	m.commit("review y")
+	m.mustRun("sync", "git")
+	m.mustRun("sync", "reviews")
+	if state, _, out := m.drift(); state != "CURRENT" {
+		t.Fatalf("after verifying B:\n%s", out)
+	}
+
+	m.write(spec, a)
+	m.commit("revert to A")
+	if out := m.mustRun("sync", "intent", "sdd"); !strings.Contains(out, "appended=0 ") {
+		t.Fatalf("calibration: the revert must append nothing (A is deduped), or this test proves nothing:\n%s", out)
+	}
+	state, _, out := m.drift()
+	if state != "STALE" {
+		t.Fatalf("a revert to a never-verified promise was not STALE:\n%s", out)
+	}
+	mustContain(t, out, `"The system SHALL authenticate users with a second factor." -> "The system SHALL authenticate users."`)
+
+	m.write(spec, b)
+	m.commit("back to B")
+	m.mustRun("sync", "intent", "sdd")
+	if state, _, out := m.drift(); state != "CURRENT" {
+		t.Fatalf("back on the verified promise:\n%s", out)
 	}
 }
