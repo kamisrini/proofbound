@@ -48,8 +48,7 @@ As of: 2026-11-19
    it fails Apply on every other ledger. This predates M3, which does not fix it (draft 6 §9).
 
 **Exact next action:** get the owner's D6 choice, then write draft 7 (round-6 F1-F4) and run round 7.
-- If ACCEPTABLE: draft the M3 change intent and the D1-D5 VD for the owner.
-- If NEEDS_WORK: write draft 7.
+- If round 7 is ACCEPTABLE: draft the M3 change intent and the D1-D6 VD for the owner.
 - No M3 code before the owner approves the CI wording.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
