@@ -28,27 +28,25 @@ As of: 2026-11-19
     - round 3 (`bd6f95f`): 1 MED, 4 LOW;
     - round 4 (`70b8a7e`): 2 MED, 2 LOW.
 - **Round 6** (`dc00003`): 2 MED, 2 LOW.
-  - **F1 needs owner decision D6.** A later revision of an already-ledgered review must do one
-    of three things, and each has a cost:
-    - held quietly: fail-open (round 5);
-    - appended: permanent wedge (round 6);
-    - **recommended:** not appended, and the reviews sync exits non-zero naming it. Nothing
-      wedges and nothing passes wrongly. The cost is that `sync all` stays red until
-      `sync intent sdd` and `sync git` run.
-  - **F2:** use the full five-line archive (`migration.Parse` pins five records). E = a pinned id.
-  - **F3:** identity = (schema, id), and the set is updated on append within a sync.
-  - **F4:** spell out the `change_intent` ref, outcome ordering and the x1 gate in §7.2.
+- **Owner D6, 2026-11-19 (recommended):** a later revision whose prerequisites are missing is
+  refused loudly. It is not appended, and the reviews sync fails after processing the rest.
+- **Draft 7** (`26de649`, `docs/plans/R2-sdd-m3-git-binding-spec-draft7.md`) answers round 6:
+  - D6, as new M3-INV-12;
+  - §7.3 runs the round-6 sequence;
+  - the full five-record evidence archive;
+  - identity = (schema, id), updated on append.
+- **Non-author round 7 over draft 7 is running.**
+- **M3 verdicts rounds 1-4** were reformatted to block-style findings in `9872b2d` (owner-approved,
+  format only). All six M3 verdicts now parse.
 
-**Raise to the owner (not filed):**
-1. **Malformed verdicts.** M3 review verdicts rounds 1-4 (`r2-m3-spec-review-round{1..4}`) use
-   flow-style `findings` (`- {finding_id: …}`), which the reviews v1 parser rejects. They add to
-   the red `delivery-enforce` run. Round 5 onward uses block style. Fixing 1-4 means rewriting
-   committed verdict artifacts, which is the owner's call.
-2. **Evidence portability.** A v2 verdict whose evidence id exists only on the ledger that minted
-   it fails Apply on every other ledger. This predates M3, which does not fix it (draft 6 §9).
+**Still with the owner, unfiled:** evidence portability. A v2 verdict whose evidence exists only on
+the ledger that minted it fails Apply elsewhere. This predates M3.
 
-**Exact next action:** get the owner's D6 choice, then write draft 7 (round-6 F1-F4) and run round 7.
-- If round 7 is ACCEPTABLE: draft the M3 change intent and the D1-D6 VD for the owner.
+**Exact next action:** commit the round-7 verdict (block style, self-digest, integrity `--write`
+then `--check`).
+- If ACCEPTABLE: draft the M3 change intent (`CI-sdd-warranty-m3-<suffix>`) and the D1-D6 VD for
+  owner approval.
+- If NEEDS_WORK: write draft 8.
 - No M3 code before the owner approves the CI wording.
 
 **M1 is closed and accepted.** `sdd` is the 18th Task-8 package. The M1 LOW findings and the
