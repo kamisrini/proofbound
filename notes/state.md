@@ -23,14 +23,18 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   `mvp-2-pr-check-review-20261120` ACCEPTABLE, 6 LOW recorded (F1 worth the owner's eye: a mistyped
   `intent: SDD:x` claim is not listed, so such a PR reads NO CLAIMS and passes without
   `--require-claims`). The action's `${{ }}` expressions are unexercised until a real PR run.
-- **Step 3 spec drafted, uncommitted, NOT built:** `docs/plans/mvp-3-reviewer-signed-spec.md`. It needs
-  ONE owner decision first: reviewer signs at `review seal` (option A, recommended) or cosigns the
-  warranty file (B).
+- **Step 3 DONE** (`210d08d`, pin `8c7e2ef`, `CI-mvp-reviewer-sign-5tqv2c` → O-3; owner: "first A and
+  then B"): verify check 9 — every named reviewer proven by their declared key via `.sig` beside their
+  artifacts (A, written by `review seal`) or a cosignature (B, `warranty cosign`); else UNREVIEWED
+  (exit 3); identity is `KeyName`; `PROOFBOUND_KEY`. Spec rounds: r1 NEEDS_WORK (1 HIGH, 5 MED, all
+  answered) → r2 ACCEPTABLE; code review ACCEPTABLE (5 LOW); `internal/warranty` sweep 148/148 killed.
+  R3 demo shows UNREVIEWED → cosign → VALID on both kits.
 
-**Exact next action:** get the owner's step 3 decision (A/B); then mint its CI (→ O-3), one non-author
-spec round, build, calibrated `internal/warranty` mutation sweep, one code review.
+**Exact next action:** MVP step 4 (shareable proof: warranty attached to each release, README badge,
+one-page "how to verify"), under a new CI → `BR-vertical-mvp-xc31gp` O-4. Spec first (one round).
+Optional follow-up recorded, not built: `proofbound check` could also require reviewer signatures.
 
-**Gate:** GREEN at `930db9e` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
+**Gate:** GREEN at `8c7e2ef` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
 until the owner publishes.
 
 ## R2 build log — 2026-11-19
