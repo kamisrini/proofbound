@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
+const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -86,12 +86,18 @@ const (
 	commandWarrantyExport
 	commandWarrantyVerify
 	commandVersion
+	commandCheck
 )
 
 func parseCommand(args []string) command {
 	switch {
 	case len(args) == 1 && args[0] == "version":
 		return commandVersion
+	case len(args) >= 1 && args[0] == "check":
+		if _, _, _, ok := parseCheck(args); ok {
+			return commandCheck
+		}
+		return commandInvalid
 	case len(args) == 2 && args[0] == "sync" && args[1] == "git":
 		return commandSyncGit
 	case len(args) == 2 && args[0] == "sync" && args[1] == "checks":
@@ -863,6 +869,14 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		return warrantyExport(ctx, root, ledger, args[2], flagValue(args[3:], "-o"), output)
+	case commandCheck:
+		base, markdown, requireClaims, _ := parseCheck(args)
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return checkRange(ctx, root, ledger, base, markdown, requireClaims, output)
 	case commandReportDrift:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

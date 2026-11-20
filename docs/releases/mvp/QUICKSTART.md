@@ -42,7 +42,7 @@ In a repository that uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) or
 
 ```bash
 proofbound init openspec          # or: proofbound init speckit
-git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
+git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude .github
 PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"
 ```
 
@@ -55,7 +55,22 @@ with `proofbound warranty verify warranty.json --repo <clone>`.
 Step-by-step, with what each command prints: [Release 2 demo hub §4](../r2/DEMO.md#4-use-it-on-your-own-openspec-or-spec-kit-project)
 and the [warranty demo](../r3/DEMO.md).
 
-## 4. See it run first (from a clone, on Linux or WSL)
+## 4. Every pull request gets a verdict
+
+`init` also writes `proofbound.yml` in the tenant's `.github/workflows/`. On each pull request it installs Proofbound,
+runs `proofbound sync all`, then `proofbound check origin/<base>`:
+
+```
+Proofbound: NOT WARRANTED (1 of 2 claiming commits verified)
+  1f0c9e2a7b3d sdd:001-export BLOCKED  …
+  8d4e6a1c2b9f sdd:001-export PASS  2 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+```
+
+The job fails unless every commit that claims a spec is verified; a pull request that claims no spec
+passes (set the action's `require-claims: true` to change that). The same check runs locally:
+`proofbound check main`. (The action is not published yet; see the note in §1.)
+
+## 5. See it run first (from a clone, on Linux or WSL)
 
 `bash docs/releases/mvp/demo-install.sh` needs Go (to build the release archives), GNU tar, and port
 55432 free. It builds the archives for all five platforms, then times the user's part: install →

@@ -1,0 +1,13 @@
+# Proofbound pull-request check: is every commit that claims a spec verified by someone other than
+# its author? Written by `proofbound init`; edit freely. Docs: docs/releases/mvp/QUICKSTART.md in the
+# Proofbound repository. Pin `@main` to a release tag once one is published.
+name: proofbound
+on: pull_request
+jobs:
+  proofbound:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: kamisrini/proofbound@main

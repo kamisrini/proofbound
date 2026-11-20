@@ -39,7 +39,7 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	snapshot := map[string]string{}
-	for _, rel := range []string{".proofbound/sdd-profile.json", ".gitignore", "AGENTS.md", ".claude/agents/proofbound-reviewer.md", ".git/hooks/commit-msg"} {
+	for _, rel := range []string{".proofbound/sdd-profile.json", ".gitignore", "AGENTS.md", ".claude/agents/proofbound-reviewer.md", ".git/hooks/commit-msg", ".github/workflows/proofbound.yml"} {
 		b, err := os.ReadFile(filepath.Join(root, rel))
 		if err != nil {
 			t.Fatalf("%s: %v\n%s", rel, err, out.String())

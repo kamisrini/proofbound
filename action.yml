@@ -1,0 +1,35 @@
+name: Proofbound check
+description: >-
+  Reports whether every commit in a pull request that claims a spec (Intent: sdd:<name>) has been
+  verified by someone other than its author. Contract: docs/plans/mvp-2-pr-check-spec.md.
+branding:
+  icon: check-circle
+  color: green
+inputs:
+  version:
+    description: Proofbound release to install (a tag such as v0.3.0, or "latest").
+    default: latest
+  base:
+    description: The ref the pull request merges into; commits in base..HEAD are checked.
+    default: ""
+  require-claims:
+    description: When "true", a pull request with no spec-claiming commit fails instead of passing.
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Install proofbound
+      shell: bash
+      env:
+        PROOFBOUND_VERSION: ${{ inputs.version != 'latest' && inputs.version || '' }}
+        PROOFBOUND_INSTALL_DIR: ${{ runner.temp }}/proofbound-bin
+      run: |
+        sh "$GITHUB_ACTION_PATH/install.sh"
+        echo "$PROOFBOUND_INSTALL_DIR" >>"$GITHUB_PATH"
+    - name: Check the pull request
+      shell: bash
+      env:
+        PB_BASE: ${{ inputs.base }}
+        PB_DEFAULT_BASE: ${{ github.base_ref && format('origin/{0}', github.base_ref) || '' }}
+        PB_REQUIRE_CLAIMS: ${{ inputs.require-claims }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/action-check.sh"
