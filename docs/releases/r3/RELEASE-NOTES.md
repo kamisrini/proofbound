@@ -18,7 +18,9 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   [`mvp-evidence-portability`](../../plans/mvp-evidence-portability-spec.md)).
 - **Action needed:** verdicts sealed with v0.3.0 still work locally but still fail in CI. Seal them
   again with v0.3.1: remove that commit's `docs/verification/verdicts/OV-<commit12>-*` and
-  `RR-<commit12>-*` files (with their `.sig`), then `proofbound review draft <commit>` and `review seal`. A draft written by
+  `RR-<commit12>-*` files (with any `.sig`) and `gates/ready-<commit12>.yaml`, run `proofbound sync
+  all`, then `proofbound review draft <commit>` and `review seal`. Verified on the first live Action
+  run: after a re-seal the pull-request check reports WARRANTED in CI. A draft written by
   v0.3.0 is refused; run `review draft` again.
 - **Upgrade together:** v0.3.0 cannot read a verdict sealed by v0.3.1. The Action installs the
   latest release unless its `version` input is pinned; reviewers should upgrade too.

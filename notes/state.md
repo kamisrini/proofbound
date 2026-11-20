@@ -52,12 +52,26 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   PR check cannot pass in CI for any reviewed commit until this is fixed. Known issue added to the
   release notes.
 
-**Exact next action:** the owner decides whether to authorize `DEF-VERDICT-EVIDENCE-PORTABILITY-001`
-(it is OPEN, so dormant until named). Recommended fix: verdicts cite evidence by a portable identity
-(the reviewed commit's SHA / native id) instead of a ledger event id; spec first, one round each. Then
-re-run PR #1 and cut v0.3.1. Also: delete the test repo when done, or keep it for the re-test.
+- **v0.3.1 PUBLISHED 2026-11-20 — the Action now passes in CI.** Owner authorized
+  `DEF-VERDICT-EVIDENCE-PORTABILITY-001` ("go with recommendation"); fix `bddf9c0` (pin `0da19a8`,
+  `CI-mvp-evidence-portable-6dq3ve` → O-2): seal cites `evidence_refs: ["git:commit.recorded:<sha>"]`,
+  resolved on whichever ledger projects it (R-INV-14, CLI-INV-20 amended, CLI-INV-31); legacy event ids
+  keep their ledger-local meaning (re-seal). Spec `docs/plans/mvp-evidence-portability-spec.md`: r1
+  NEEDS_WORK (4 MED answered) → r2 ACCEPTABLE. Code review NEEDS_WORK (F1 MED: no test could fail on
+  resolution) fixed by the author — reducer refuses SATISFIED with no resolved evidence, e2e asserts clone
+  B's own event id; skip-resolution mutant killed; 2 LOW recorded. Row RESOLVED. Tag + release `v0.3.1`
+  (5 archives + SHA256SUMS); public install gives v0.3.1. **Live re-test:** PR #1 in
+  `kamisrini/proofbound-action-test` re-sealed with v0.3.1 → Action run installed v0.3.1 and reported
+  WARRANTED (PASS). The test repo is kept.
+- **Found, not fixed:** the integration-tagged projections harness (`go test -tags integration
+  ./internal/projections/`) fails at `testStore` with `store: ledger tables are append-only` even at
+  `98b33a7` (pre-existing; `make check` does not run integration tests).
 
-**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** the GitHub Action fails on reviewed commits in CI (DEF-VERDICT-EVIDENCE-PORTABILITY-001, dormant until the owner authorizes it).
+**Exact next action:** MVP steps 1–4 are done and live. Ask the owner what is next: the commercial step
+(outside this repo), the dormant deferrals, or the pre-existing integration-harness breakage above. Do
+not start any of them unasked.
+
+**Gate:** GREEN at `0da19a8` (clean worktree, 2026-11-20). **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
@@ -321,12 +335,11 @@ accepts, quoted paths in `intent-applicability.sh`, `mutant-apply` comment class
 
 ## Branch status
 
-`main` is **18+ commits ahead of `origin/main` (`1de1b21`), unpushed by owner instruction.** Today's
-work exists only locally and in the dated git bundle under `~/Backups/proofbound`.
+`main` == `origin/main` after this note's commit (public, `kamisrini/proofbound`); tags `v0.3.0`, `v0.3.1`.
+Local-only branch `backup/pre-scrub-20261120` must never be pushed.
 
 ## Open / deferred (`docs/deferrals.tsv`) — all dormant until the owner names them
 
-- `DEF-PUSH-HOLD-20261116` — local commits held unpushed (owner, 2026-11-16).
 - `DEF-INTENT-TRAILER-BLOCK-001` — gate: pre-push hook + round-3 LOWs.
 - `DEF-INTENT-CI-REVISION-001` — change intents cannot supersede themselves (kernel limitation).
 - `DEF-P7-REGENLOOP-001`, `DEF-P7-DP-TWINROOT-001` — unchanged.
