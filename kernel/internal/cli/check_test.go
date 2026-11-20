@@ -52,3 +52,16 @@ func TestCheckMarkdownEscapes(t *testing.T) {
 		t.Fatalf("markdown:\n%s", out)
 	}
 }
+
+// CLI-INV-26 amended: only the exact `Intent: sdd:<name>` form is a claim; every other line that looks
+// like one is reported as malformed (and makes its commit UNBOUND), never silently ignored.
+func TestClaimLinesFlagsNearMisses(t *testing.T) {
+	names, bad := claimLines("fix\n\nIntent: sdd:add-x\nintent: SDD:add-y\nIntent:sdd:add-z\nIntent: sdd:\nIntent: sdd:two words\nIntent: CI-other-abc123\nnot a claim")
+	if strings.Join(names, ",") != "sdd:add-x" {
+		t.Fatalf("names %v", names)
+	}
+	want := []string{`"intent: SDD:add-y"`, `"Intent:sdd:add-z"`, `"Intent: sdd:"`, `"Intent: sdd:two words"`}
+	if strings.Join(bad, "|") != strings.Join(want, "|") {
+		t.Fatalf("malformed %v, want %v", bad, want)
+	}
+}

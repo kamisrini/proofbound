@@ -81,6 +81,12 @@ func TestPRCheckEndToEnd(t *testing.T) {
 	mustContain(t, check(0, "HEAD"), "Proofbound: NO CLAIMS")
 	check(1, "HEAD", "--require-claims")
 
+	// A mistyped claim is not "no claims": the commit is listed UNBOUND and the PR is not warranted.
+	m.write("src/typo", "t\n")
+	m.commit("mistyped claim", "intent: SDD:001-export")
+	out = check(1, "HEAD~1")
+	mustContain(t, out, "Proofbound: NOT WARRANTED (0 of 1 claiming commits verified)", "UNBOUND", "malformed claim")
+
 	// A bad base is an error, not a verdict.
 	if code, msg := runCLI(t, m.root, "check", "no-such-ref"); code != 1 || !strings.Contains(msg, "cannot list no-such-ref..HEAD") {
 		t.Fatalf("bad base: exit %d\n%s", code, msg)

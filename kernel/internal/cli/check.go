@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
@@ -27,7 +29,7 @@ const (
 	checkUnbound  = "UNBOUND"
 )
 
-type checkLine struct{ commit, claims, state, reason string }
+type checkLine struct{ commit, claims, state, reason, malformed string }
 
 // errNotWarranted makes `check` exit 1 after it has printed its report.
 var errNotWarranted = errors.New("check: not warranted")
@@ -103,14 +105,9 @@ func classifiedRange(ctx context.Context, root string, ledger *store.Store, base
 	}
 	var lines []checkLine
 	for _, sha := range shas {
-		var names []string
-		for _, line := range strings.Split(gitOutput(ctx, root, "log", "-1", "--format=%B", sha), "\n") {
-			if v, ok := strings.CutPrefix(strings.TrimSpace(line), "Intent: sdd:"); ok {
-				names = append(names, "sdd:"+strings.TrimSpace(v))
-			}
-		}
-		if len(names) > 0 {
-			lines = append(lines, checkLine{commit: sha, claims: strings.Join(names, ",")})
+		names, malformed := claimLines(gitOutput(ctx, root, "log", "-1", "--format=%B", sha))
+		if len(names)+len(malformed) > 0 {
+			lines = append(lines, checkLine{commit: sha, claims: strings.Join(append(names, malformed...), ","), malformed: strings.Join(malformed, ", ")})
 		}
 	}
 	if len(lines) > 0 {
@@ -118,7 +115,31 @@ func classifiedRange(ctx context.Context, root string, ledger *store.Store, base
 			return nil, err
 		}
 	}
+	// A claim that does not have the exact form never counts: the commit is UNBOUND, so a typo fails
+	// the pull request instead of hiding it as NO CLAIMS (review mvp-2-pr-check-review-20261120 F1).
+	for i := range lines {
+		if lines[i].malformed != "" {
+			lines[i].state = checkUnbound
+			lines[i].reason = fmt.Sprintf("malformed claim %s; write exactly `Intent: sdd:<name>` as the message's last line", lines[i].malformed)
+		}
+	}
 	return lines, nil
+}
+
+var claimLikeRE = regexp.MustCompile(`(?i)^\s*intent\s*:\s*sdd\s*:`)
+
+// claimLines returns a message's exact `Intent: sdd:<name>` claims as `sdd:<name>`, and, quoted, every
+// other line that looks like an sdd claim (any case or spacing, an empty name).
+func claimLines(msg string) (names, malformed []string) {
+	for _, line := range strings.Split(msg, "\n") {
+		t := strings.TrimSpace(line)
+		if v, ok := strings.CutPrefix(t, "Intent: sdd:"); ok && v != "" && v == strings.TrimSpace(v) && !strings.ContainsAny(v, " \t") {
+			names = append(names, "sdd:"+v)
+		} else if claimLikeRE.MatchString(t) {
+			malformed = append(malformed, strconv.Quote(t))
+		}
+	}
+	return names, malformed
 }
 
 func commitsInRange(ctx context.Context, root, base string) ([]string, error) {
