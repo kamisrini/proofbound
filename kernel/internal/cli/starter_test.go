@@ -103,7 +103,8 @@ func TestInitHookRequiresAnIntentTrailer(t *testing.T) {
 }
 
 const sealCommit = "c772ac085ec235cbcf36535701c6109c9cb0bca2"
-const sealEvidence = "01M28TPW9C8R7ND19MNDCJ9GDG"
+
+var sealEvidence = connectorreviews.CommitEvidenceRef(sealCommit)
 
 func sealDraft(outcome, reviewOutcome string) draftFile {
 	digest := strings.Repeat("a", 64)
@@ -120,8 +121,8 @@ func sealDraft(outcome, reviewOutcome string) draftFile {
 			ChangeIntent: connectorintent.Reference{RecordKind: "change_intent", Source: "intent.sdd", RecordID: "CI-add-auth-xuuno2", ArtifactSHA256: strings.Repeat("b", 64), Relation: "evaluates"},
 			Requirements: []connectorintent.Reference{req},
 			Obligations: []draftVerdictObligation{
-				{Source: "intent.sdd", RequirementID: req.RecordID, ArtifactSHA256: digest, ObligationID: "O-B", Outcome: outcome, EvidenceEventIDs: []string{sealEvidence}},
-				{Source: "intent.sdd", RequirementID: req.RecordID, ArtifactSHA256: digest, ObligationID: "O-A", Outcome: outcome, EvidenceEventIDs: []string{sealEvidence}},
+				{Source: "intent.sdd", RequirementID: req.RecordID, ArtifactSHA256: digest, ObligationID: "O-B", Outcome: outcome, EvidenceRefs: []string{sealEvidence}},
+				{Source: "intent.sdd", RequirementID: req.RecordID, ArtifactSHA256: digest, ObligationID: "O-A", Outcome: outcome, EvidenceRefs: []string{sealEvidence}},
 			},
 		}},
 	}
@@ -192,7 +193,7 @@ func TestReviewSealWritesAcceptedArtifacts(t *testing.T) {
 func TestReviewSealWritesNothingOnAnyFailure(t *testing.T) {
 	badEvidence := func(ctx context.Context, sha string) (draftFile, error) {
 		d, _ := ledgerTruth(ctx, sha)
-		d.Verdicts[0].Obligations[0].EvidenceEventIDs = []string{"not-an-event"}
+		d.Verdicts[0].Obligations[0].EvidenceRefs = []string{"not-an-event"}
 		return d, nil
 	}
 	for name, c := range map[string]struct {
@@ -258,11 +259,12 @@ func TestReviewSealWritesNothingOnAnyFailure(t *testing.T) {
 	})
 }
 
-// Evidence edited in the draft is ignored: the sealed verdict cites the ledger's evidence only.
-func TestReviewSealTakesEvidenceFromTheLedger(t *testing.T) {
+// CLI-INV-20 (amended, portable evidence): evidence edited in the draft is ignored, and the sealed
+// verdict cites only the reviewed commit's portable reference with no ledger-local event id.
+func TestReviewSealCitesTheReviewedCommit(t *testing.T) {
 	root := t.TempDir()
 	d := sealDraft("SATISFIED", "VERIFIABLE")
-	d.Verdicts[0].Obligations[0].EvidenceEventIDs = []string{"01ARZ3NDEKTSV4RRFFQ69G5FAV"}
+	d.Verdicts[0].Obligations[0].EvidenceRefs = []string{connectorreviews.CommitEvidenceRef(strings.Repeat("e", 40))}
 	dir := writeDraft(t, root, d)
 	if err := reviewSeal(context.Background(), root, dir, ledgerTruth, &bytes.Buffer{}); err != nil {
 		t.Fatal(err)
@@ -277,8 +279,8 @@ func TestReviewSealTakesEvidenceFromTheLedger(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, o := range v.Obligations {
-		if len(o.EvidenceEventIDs) != 1 || o.EvidenceEventIDs[0] != sealEvidence {
-			t.Fatalf("obligation %s cites %v, want only the ledger's %s", o.ObligationID, o.EvidenceEventIDs, sealEvidence)
+		if len(o.EvidenceRefs) != 1 || o.EvidenceRefs[0] != sealEvidence || o.EvidenceEventIDs == nil || len(o.EvidenceEventIDs) != 0 {
+			t.Fatalf("obligation %s cites refs %v ids %v, want only %s and an empty id list", o.ObligationID, o.EvidenceRefs, o.EvidenceEventIDs, sealEvidence)
 		}
 	}
 }

@@ -60,7 +60,8 @@ object between `---` delimiters. The object has exactly these fields, in this or
 
 `change_intent` is one canonical intent `Reference`; `requirements` is a non-empty sorted list of
 exact requirement `Reference` values. Each obligation outcome contains exactly `source`,
-`requirement_id`, `artifact_sha256`, `obligation_id`, `outcome`, and `evidence_event_ids`.
+`requirement_id`, `artifact_sha256`, `obligation_id`, `outcome`, and `evidence_event_ids`, and
+optionally the portable `evidence_refs` (R-INV-14).
 Outcome is `SATISFIED`, `NOT_SATISFIED`, or `INCONCLUSIVE`. Evidence IDs are sorted unique
 canonical event IDs and may be empty only for a non-satisfied or inconclusive outcome. Every CI
 target appears exactly once and no untargeted obligation may appear. `ACCEPTABLE` requires every
@@ -172,6 +173,16 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
       the cursor; the remaining artifacts are processed, then `Sync` returns an error wrapping
       `ErrRevisionRefused` that names every refusal. A malformed artifact after a refusal still stops
       the sync at once, and its error is joined with the refusal error.
+14. **R-INV-14 — Evidence references are portable.** APPENDED 2026-11-20
+    (`CI-mvp-evidence-portable-6dq3ve`, `docs/plans/mvp-evidence-portability-spec.md`,
+    DEF-VERDICT-EVIDENCE-PORTABILITY-001). An obligation outcome may carry `evidence_refs`: absent,
+    `null`, or exactly `["git:commit.recorded:<reviewed_commit>"]`; `[]`, another commit or kind, a
+    malformed string, a duplicate or a second entry fail closed. A `SATISFIED` outcome cites at least
+    one entry across `evidence_event_ids` and `evidence_refs`. Projection resolves the reference to the
+    earliest `git` / `commit.recorded` event with that native id on the projecting ledger (R-INV-11
+    applies to it), so a verdict sealed on one ledger projects on any other. A verdict without the field
+    re-marshals with no `evidence_refs` key, so no existing ledger sees a new payload. Legacy
+    `evidence_event_ids` keep their ledger-local meaning.
 
     **Accepted limitation — held versus refused is per-reader, not linearizable.** The `Ledger` view
     is read once per sync and the ledger is append-only, so a stale view can only UNDER-report:
@@ -200,4 +211,5 @@ func ParseRequirementReview(path string, data []byte) (RequirementReview, error)
 | R-INV-10 | V2 exact targets and aggregate status fail closed | reviews_test.go::TestObligationVerdictAggregation |
 | R-INV-11 | Evidence exists, precedes verdict, and does not self-grade | reviews_test.go::TestObligationVerdictEvidenceValidation |
 | R-INV-12 | Requirement reviews bind revision, obligations, and independent identity | reviews_test.go::TestRequirementReviewValidation |
+| R-INV-14 | Evidence references are absent or exactly the reviewed commit; SATISFIED needs some evidence; legacy payloads are unchanged. Also proven end to end by sdd TestPRCheckOnAFreshLedger | reviews_test.go::TestObligationVerdictEvidenceRefs |
 | R-INV-13 | First revisions wait for their order-only prerequisites; later revisions and duplicate identities are refused loudly. Also proven by TestRefuseLaterRevisionsLoudly, TestDuplicateIdentitiesAreRefusedInEitherOrder, TestRefusalJoinsALaterMalformedError and TestHoldConsultsTheViewOnlyForV2AndReviews | hold_test.go::TestHoldFirstRevisionsUntilPrerequisitesAreLedgered |

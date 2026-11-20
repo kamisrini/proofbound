@@ -23,7 +23,14 @@ type ObligationOutcome struct {
 	ObligationID     string   `json:"obligation_id"`
 	Outcome          string   `json:"outcome"`
 	EvidenceEventIDs []string `json:"evidence_event_ids"`
+	// EvidenceRefs is the portable form (R-INV-14): absent, or exactly the reviewed commit's
+	// CommitEvidenceRef. omitempty keeps every older verdict's payload byte-identical.
+	EvidenceRefs []string `json:"evidence_refs,omitempty"`
 }
+
+// CommitEvidenceRef is the only portable evidence reference: the reviewed commit itself, which means
+// the same thing on every ledger (DEF-VERDICT-EVIDENCE-PORTABILITY-001).
+func CommitEvidenceRef(sha string) string { return "git:commit.recorded:" + sha }
 
 type ObligationVerdict struct {
 	Schema           string                      `json:"schema"`
@@ -134,7 +141,10 @@ func ParseObligationVerdict(path string, data []byte) (ObligationVerdict, error)
 		if outcome.Outcome != "SATISFIED" {
 			allSatisfied = false
 		}
-		if outcome.Outcome == "SATISFIED" && len(outcome.EvidenceEventIDs) == 0 {
+		if outcome.EvidenceRefs != nil && (len(outcome.EvidenceRefs) != 1 || outcome.EvidenceRefs[0] != CommitEvidenceRef(v.ReviewedCommit)) {
+			return v, errors.New("evidence_refs must be exactly the reviewed commit's reference")
+		}
+		if outcome.Outcome == "SATISFIED" && len(outcome.EvidenceEventIDs) == 0 && len(outcome.EvidenceRefs) == 0 {
 			return v, errors.New("satisfied outcome requires evidence")
 		}
 		previous := ""

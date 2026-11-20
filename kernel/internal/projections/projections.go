@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -531,7 +532,32 @@ func reduceObligationVerdict(ctx context.Context, tx *store.Tx, r store.Record, 
 				return fmt.Errorf("v2 verdict evidence %s is from the future", eventID)
 			}
 		}
-		evidence, _ := json.Marshal(outcome.EvidenceEventIDs)
+		// Portable evidence (R-INV-14): the reviewed commit's earliest git event on THIS ledger; the
+		// view keeps holding local event ids, so it is the sorted, de-duplicated union.
+		evidenceIDs := append([]string{}, outcome.EvidenceEventIDs...)
+		for _, ref := range outcome.EvidenceRefs {
+			if ref != connectorreviews.CommitEvidenceRef(v.ReviewedCommit) {
+				return errors.New("v2 verdict evidence reference is not the reviewed commit")
+			}
+			var evidenceSeq int64
+			var eventID string
+			if err := tx.QueryRow(ctx, `SELECT seq,event_id FROM events WHERE source=$1 AND kind=$2 AND native_id=$3 ORDER BY seq LIMIT 1`, string(core.SourceGit), string(core.KindCommitRecorded), v.ReviewedCommit).Scan(&evidenceSeq, &eventID); err != nil {
+				return fmt.Errorf("v2 verdict evidence for commit %s is dangling: %w", v.ReviewedCommit[:12], err)
+			}
+			if evidenceSeq > r.Seq {
+				return fmt.Errorf("v2 verdict evidence for commit %s is from the future", v.ReviewedCommit[:12])
+			}
+			evidenceIDs = append(evidenceIDs, eventID)
+		}
+		if len(outcome.EvidenceRefs) == 0 {
+			evidenceIDs = outcome.EvidenceEventIDs // legacy rows keep their exact view bytes
+		}
+		sort.Strings(evidenceIDs)
+		evidenceIDs = slices.Compact(evidenceIDs)
+		if outcome.Outcome == "SATISFIED" && len(evidenceIDs) == 0 {
+			return errors.New("v2 verdict satisfied outcome resolved to no evidence")
+		}
+		evidence, _ := json.Marshal(evidenceIDs)
 		if _, err := tx.Exec(ctx, `INSERT INTO obligation_verdicts_view(verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(verdict_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET outcome=EXCLUDED.outcome,evidence_event_ids=EXCLUDED.evidence_event_ids,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE obligation_verdicts_view.seq < EXCLUDED.seq`, v.VerdictID, v.ReviewedCommit, v.ChangeIntent.Source, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256, outcome.Source, outcome.RequirementID, outcome.ArtifactSHA256, outcome.ObligationID, outcome.Outcome, evidence, r.Event.ID.String(), r.Seq); err != nil {
 			return err
 		}

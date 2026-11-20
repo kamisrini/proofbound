@@ -220,13 +220,13 @@ type draftVerdict struct {
 }
 
 type draftVerdictObligation struct {
-	Source           string   `json:"source"`
-	RequirementID    string   `json:"requirement_id"`
-	ArtifactSHA256   string   `json:"artifact_sha256"`
-	ObligationID     string   `json:"obligation_id"`
-	Statement        string   `json:"statement"`
-	Outcome          string   `json:"outcome"`
-	EvidenceEventIDs []string `json:"evidence_event_ids"`
+	Source         string   `json:"source"`
+	RequirementID  string   `json:"requirement_id"`
+	ArtifactSHA256 string   `json:"artifact_sha256"`
+	ObligationID   string   `json:"obligation_id"`
+	Statement      string   `json:"statement"`
+	Outcome        string   `json:"outcome"`
+	EvidenceRefs   []string `json:"evidence_refs"`
 }
 
 func draftDir(root, sha string) string { return filepath.Join(root, ".proofbound", "drafts", sha) }
@@ -339,7 +339,7 @@ func ledgerDraft(ctx context.Context, ledger *store.Store, sha string) (draftFil
 			ref := connectorintent.Reference{RecordKind: "requirement", Source: target.Source, RecordID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, Relation: "evaluates"}
 			verdict.Requirements = append(verdict.Requirements, ref)
 			for _, id := range target.ObligationIDs {
-				verdict.Obligations = append(verdict.Obligations, draftVerdictObligation{Source: target.Source, RequirementID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, ObligationID: id, Statement: statements[id], EvidenceEventIDs: []string{gitEventID}})
+				verdict.Obligations = append(verdict.Obligations, draftVerdictObligation{Source: target.Source, RequirementID: target.RecordID, ArtifactSHA256: target.ArtifactSHA256, ObligationID: id, Statement: statements[id], EvidenceRefs: []string{connectorreviews.CommitEvidenceRef(sha)}})
 			}
 			if !reviewed[key] {
 				reviewed[key] = true
@@ -463,7 +463,7 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 		for _, o := range verdict.Obligations {
 			switch o.Outcome {
 			case "SATISFIED":
-				if len(o.EvidenceEventIDs) == 0 {
+				if len(o.EvidenceRefs) == 0 {
 					return fmt.Errorf("seal: %s obligation %s is SATISFIED with no evidence", verdict.ChangeIntent.RecordID, o.ObligationID)
 				}
 			case "NOT_SATISFIED", "INCONCLUSIVE":
@@ -471,9 +471,11 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			default:
 				return fmt.Errorf("seal: %s obligation %s has outcome %q; use SATISFIED, NOT_SATISFIED or INCONCLUSIVE", verdict.ChangeIntent.RecordID, o.ObligationID, o.Outcome)
 			}
-			evidence := append([]string{}, o.EvidenceEventIDs...)
+			// Portable evidence (CLI-INV-20 amended): the reviewed commit by its SHA, never a ledger-local
+			// event id, so the verdict projects on a fresh CI ledger.
+			evidence := append([]string{}, o.EvidenceRefs...)
 			sort.Strings(evidence)
-			obligations = append(obligations, connectorreviews.ObligationOutcome{Source: o.Source, RequirementID: o.RequirementID, ArtifactSHA256: o.ArtifactSHA256, ObligationID: o.ObligationID, Outcome: o.Outcome, EvidenceEventIDs: evidence})
+			obligations = append(obligations, connectorreviews.ObligationOutcome{Source: o.Source, RequirementID: o.RequirementID, ArtifactSHA256: o.ArtifactSHA256, ObligationID: o.ObligationID, Outcome: o.Outcome, EvidenceEventIDs: []string{}, EvidenceRefs: evidence})
 		}
 		sort.Slice(obligations, func(a, b int) bool {
 			return outcomeKey(obligations[a]) < outcomeKey(obligations[b])

@@ -1,4 +1,4 @@
-# Proofbound v0.3.0 release notes
+# Proofbound v0.3 release notes (v0.3.0, v0.3.1)
 
 **Release 3, first public cut: install it, gate pull requests, and hand over signed warranties.**
 Tag `v0.3.0` · Decisions [`VD-r3-warranty-first-s59ktv`](../../decisions/VD-r3-warranty-first-s59ktv.md)
@@ -8,6 +8,20 @@ and [`VD-vertical-mvp-first-ai3dhn`](../../decisions/VD-vertical-mvp-first-ai3dh
 **Status:** R3 slice 1 accepted by the owner 2026-11-20. MVP steps 1 to 4 built 2026-11-20, each with
 its spec and code reviewed by a non-author (Law 11 budget). Published by the owner's decision of
 2026-11-20.
+
+## v0.3.1 (patch, 2026-11-20): the pull-request check works in CI
+
+- **Fixed:** the GitHub Action failed on every reviewed commit with `v2 verdict evidence … is
+  dangling`. `review seal` now cites the reviewed commit by its SHA (`evidence_refs:
+  ["git:commit.recorded:<sha>"]`), which every machine resolves, instead of an event id that existed
+  only in the reviewer's local database (`DEF-VERDICT-EVIDENCE-PORTABILITY-001`, spec
+  [`mvp-evidence-portability`](../../plans/mvp-evidence-portability-spec.md)).
+- **Action needed:** verdicts sealed with v0.3.0 still work locally but still fail in CI. Seal them
+  again with v0.3.1: remove that commit's `docs/verification/verdicts/OV-<commit12>-*` and
+  `RR-<commit12>-*` files (with their `.sig`), then `proofbound review draft <commit>` and `review seal`. A draft written by
+  v0.3.0 is refused; run `review draft` again.
+- **Upgrade together:** v0.3.0 cannot read a verdict sealed by v0.3.1. The Action installs the
+  latest release unless its `version` input is pinned; reviewers should upgrade too.
 
 ## Install
 
@@ -37,13 +51,13 @@ checks the archive against `SHA256SUMS` and never uses `sudo`. Quickstart:
 - Reviewer and owner names are compared by key name: `Alice` and `alice` are one person.
 - `proofbound check` lists a mistyped claim (for example `intent: SDD:x`) as UNBOUND instead of ignoring it.
 
-## Known issue
+## Known issue (v0.3.0 only; fixed in v0.3.1)
 
 - **The GitHub Action fails on reviewed commits in CI.** A sealed verdict cites its evidence by an
   event id that exists only in the reviewer's local database, so `proofbound sync all` on a fresh CI
   runner stops with `v2 verdict evidence … is dangling` (`DEF-VERDICT-EVIDENCE-PORTABILITY-001`, found
   by the first live Action run, 2026-11-20). `proofbound check` and warranties work locally, and
-  `warranty verify` is unaffected (it needs no database). A fix is planned for the next release.
+  `warranty verify` is unaffected (it needs no database). Fixed in v0.3.1 (above).
 
 ## Caveats
 

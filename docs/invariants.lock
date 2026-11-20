@@ -164,6 +164,7 @@ kernel/internal/connector/reviews/SPEC.md	R-INV-10	V2 aggregation is honest:
 kernel/internal/connector/reviews/SPEC.md	R-INV-11	Evidence is bounded:
 kernel/internal/connector/reviews/SPEC.md	R-INV-12	Requirement review binds exactly:
 kernel/internal/connector/reviews/SPEC.md	R-INV-13	Review artifacts never precede what they cite.
+kernel/internal/connector/reviews/SPEC.md	R-INV-14	Evidence references are portable.
 kernel/internal/core/SPEC.md	INV-1	Order and whitespace independence.
 kernel/internal/core/SPEC.md	INV-2	Idempotence.
 kernel/internal/core/SPEC.md	INV-3	Unicode fidelity.

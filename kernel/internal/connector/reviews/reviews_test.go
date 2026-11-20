@@ -646,3 +646,49 @@ func TestNewRejectsTypedNilReaderAndSyncRejectsInvalidState(t *testing.T) {
 		t.Fatalf("default clock not installed: %v", err)
 	}
 }
+
+// R-INV-14: evidence_refs is absent/null or exactly the reviewed commit's reference; a SATISFIED
+// outcome may cite it instead of a ledger-local id; a verdict without it re-marshals with no
+// evidence_refs key, so no existing ledger sees a new payload.
+func TestObligationVerdictEvidenceRefs(t *testing.T) {
+	a := readFixture(t, "obligation-verdict-v2-valid.md", "docs/verification/verdicts/p5-obligation-verdict-round1.md")
+	const old = `"evidence_event_ids":["01ARZ3NDEKTSV4RRFFQ69G5FAV"]}`
+	ref := `"git:commit.recorded:0123456789abcdef0123456789abcdef01234567"`
+	for name, c := range map[string]struct {
+		repl string
+		ok   bool
+	}{
+		"ref only":          {`"evidence_event_ids":[],"evidence_refs":[` + ref + `]}`, true},
+		"ref and id":        {`"evidence_event_ids":["01ARZ3NDEKTSV4RRFFQ69G5FAV"],"evidence_refs":[` + ref + `]}`, true},
+		"null refs":         {`"evidence_event_ids":["01ARZ3NDEKTSV4RRFFQ69G5FAV"],"evidence_refs":null}`, true},
+		"null refs no ids":  {`"evidence_event_ids":[],"evidence_refs":null}`, false},
+		"empty refs":        {`"evidence_event_ids":["01ARZ3NDEKTSV4RRFFQ69G5FAV"],"evidence_refs":[]}`, false},
+		"another commit":    {`"evidence_event_ids":[],"evidence_refs":["git:commit.recorded:` + strings.Repeat("a", 40) + `"]}`, false},
+		"another kind":      {`"evidence_event_ids":[],"evidence_refs":["git:check.run:0123456789abcdef0123456789abcdef01234567"]}`, false},
+		"malformed":         {`"evidence_event_ids":[],"evidence_refs":["0123456789abcdef0123456789abcdef01234567"]}`, false},
+		"duplicate":         {`"evidence_event_ids":[],"evidence_refs":[` + ref + `,` + ref + `]}`, false},
+		"neither satisfied": {`"evidence_event_ids":[]}`, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			b := mutateJSONArtifact(t, a, old, c.repl)
+			if string(b.Bytes) == string(a.Bytes) {
+				t.Fatal("mutation did not apply")
+			}
+			_, err := ParseObligationVerdict(b.Path, b.Bytes)
+			if (err == nil) != c.ok {
+				t.Fatalf("ok=%v, err=%v", c.ok, err)
+			}
+		})
+	}
+	v, err := ParseObligationVerdict(a.Path, a.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(payload), "evidence_refs") {
+		t.Fatalf("a legacy verdict's payload changed: %s", payload)
+	}
+}
