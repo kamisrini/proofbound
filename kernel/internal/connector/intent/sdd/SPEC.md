@@ -30,7 +30,8 @@ Requirement: `BR-sdd-warranty-i9miv7` (revision proposed in §11).
 
 **Owner decisions in force (2026-11-17).**
 - `sync intent all` does **not** include `sdd`; the provider runs only when selected by name (§12,
-  SDD-INV-56).
+  SDD-INV-56). **Amended 2026-11-19 (owner, `CI-r2-polish-wkudnk`):** `sync all` also runs it when
+  HEAD commits the profile, since a project that commits one has opted in (CLI-INV-23).
 - The replay helper is committed (`4c8c838`), as an M1 precondition.
 - **`VD-sdd-m1-openspec-first-2026-11-17`:**
   - **M1 maps OpenSpec only.** Spec Kit moves to M2, still within R2's subset. Its rules are parked,
@@ -616,7 +617,7 @@ keeps the reason, and it is re-issued under a new number.**
 53. **SDD-INV-53 — Every payload string is valid UTF-8 without U+0000, and every statement is non-blank; a violation skips its unit.**
 54. **SDD-INV-54 — Only regular files are read under SDD roots; a symlink or gitlink a unit reads makes that unit unmappable.**
 55. **SDD-INV-55 — A path outside the SDD roots, whatever its bytes, never affects the sdd provider.**
-56. **SDD-INV-56 — `sdd` runs only when selected by name; `sync intent all` neither constructs nor walks it.**
+56. **SDD-INV-56 — `sdd` runs only when selected by name, or by `sync all` when HEAD commits the profile; `sync intent all` neither constructs nor walks it.**
 57. **SDD-INV-57 — The §4.2 parser agrees with OpenSpec's reader on the pinned corpus.**
 58. **SDD-INV-58 — RETIRED (2026-11-19, R2 Spec Kit): a line outside the canonical `FR|SC|NFR-<n>` obligation grammar is prose, not a near-miss id (`docs/plans/R2-speckit-spec.md` §3); replaced by INV-69.**
 59. **SDD-INV-59 — Resolve is total over tenant states: a revision or one of four sentinels; any other error comes only from the reader.**
@@ -841,7 +842,9 @@ It changed these sites:
 This package's production code is unchanged.
 
 **SDD-INV-56 in substance after M3:** `sync intent all`, `sync all`'s intent step, `verify`'s intent
-step and delivery-enforce still never construct or walk `sdd` for **ingestion**. The commit-claim
+step and delivery-enforce still never construct or walk `sdd` for **ingestion**. **Amended
+2026-11-19 (`CI-r2-polish-wkudnk`, CLI-INV-23):** `sync all` (and so delivery-enforce) also runs the
+named `sdd` sync as a separate step when HEAD commits the profile; without one, nothing changes. The commit-claim
 resolver of `sync git`, `sync all` and `verify` constructs the provider lazily, only when a commit
 carries an `sdd:` claim, and only calls `Resolve` at that commit. It never calls `Revisions`, so it
 never walks history to ledger `sdd` revisions. A repository without `sdd:` claims constructs nothing

@@ -54,3 +54,34 @@ func TestSpecKitProfileRetiresSpecdirFromTheIntentSet(t *testing.T) {
 		})
 	}
 }
+
+// CLI-INV-23 (unit half): `sync all` runs the sdd sync only when HEAD commits the profile; a profile
+// that is only in the working tree, or absent, leaves `sync all` as before. The end-to-end half is
+// the sdd package's TestSpecKitEndToEnd, which runs `sync all` alone.
+func TestSyncAllReadsSpecsOnlyWithACommittedProfile(t *testing.T) {
+	root := gitRepo(t)
+	run := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.name=t", "-c", "user.email=t@example.invalid"}, args...)...).CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	run("commit", "-q", "--allow-empty", "-m", "x")
+	if hasSDDProfile(root) {
+		t.Fatal("no profile, yet sync all would read specs")
+	}
+	if err := os.MkdirAll(filepath.Join(root, ".proofbound"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".proofbound", "sdd-profile.json"), []byte(`{}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if hasSDDProfile(root) {
+		t.Fatal("an uncommitted profile made sync all read specs")
+	}
+	run("add", "-A")
+	run("commit", "-q", "-m", "profile")
+	if !hasSDDProfile(root) {
+		t.Fatal("a committed profile did not make sync all read specs")
+	}
+}

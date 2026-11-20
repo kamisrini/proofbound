@@ -30,11 +30,11 @@ New here? Start with the [**Release 2 demo hub**](DEMO.md): `bash docs/releases/
 
 | Capability | What it gives you | Run it |
 |---|---|---|
-| **SDD connector** (OpenSpec, Spec Kit) | Every change or feature, and every requirement in it, recorded from the project's real git history with exact content digests. Run it whenever specs change: `sync all` deliberately does not read specs | `proofbound sync intent sdd` |
+| **SDD connector** (OpenSpec, Spec Kit) | Every change or feature, and every requirement in it, recorded from the project's real git history with exact content digests. `sync all` runs it once the profile is committed | `proofbound sync all` (or `sync intent sdd` alone) |
 | **Commit binding** | A commit ending `Intent: sdd:<name>` binds to the exact revision of that change; a claim on a change that does not exist is reported, never silently accepted | `proofbound sync git` |
 | **Readiness gate, with reasons** | A commit is warranted only when every obligation it claims is SATISFIED and every requirement VERIFIABLE, by a reviewer who is not the spec's owner; BLOCKED says why, with counts | `proofbound gates canary` |
 | **Starter kit** | Profile, `.gitignore` lines, agent instructions (AGENTS.md), a Claude Code reviewer subagent, and a commit hook, in one command | `proofbound init {openspec\|speckit}` |
-| **Reviewer workflow** | Draft every obligation a commit claims, decide each one, seal: writes the review and verdict artifacts and the commit's own gate; everything but the decisions comes from the ledger | `proofbound review draft <commit>` · `review seal <dir>` |
+| **Reviewer workflow** | Draft every obligation a commit claims, decide each one, seal: writes the review and verdict artifacts and the commit's own gate; everything but the decisions comes from the ledger | `proofbound review draft <commit>` · `review seal <dir or draft.json>` |
 | **Drift** | Flags every warranty whose spec now promises something else, obligation by obligation, with the old and new wording; ignores archive moves and non-promise edits | `proofbound report drift` |
 | **Lookup by name** | Report a change by its folder name instead of an internal id | `proofbound report intent sdd:<name>` |
 | **Clean output** | The embedded database's server log goes to `.proofbound/db.log`, not your terminal | — |
@@ -67,9 +67,11 @@ New here? Start with the [**Release 2 demo hub**](DEMO.md): `bash docs/releases/
   change deltas and feature specs carry obligations.
 - **Drift is information, not a gate.** `report drift` exits 0. The readiness gate still judges a
   commit against the exact revision it claimed.
-- **`sync all` does not read specs.** Spec sync runs only when named (`sync intent sdd`), a deliberate
-  M1 choice (SDD-INV-56) so projects without a profile are unaffected. Run both.
-- **`review seal` takes the draft's folder**, not the `draft.json` file.
+- **`sync all` reads specs only when the profile is committed.** A project without
+  `.proofbound/sdd-profile.json` in HEAD syncs exactly as in Release 1; `sync intent all` and
+  `verify` never read specs.
+  The spec read walks the whole history on every run: about a minute and a half on OpenSpec's
+  1,059 commits, under a second on a small project.
 - **On a Spec Kit project, Release 1's `specdir` convention is switched off.** Both are rooted at
   `specs/`. When the committed profile says Spec Kit, `sync all` and `verify` read `specs/` only as
   Spec Kit's.

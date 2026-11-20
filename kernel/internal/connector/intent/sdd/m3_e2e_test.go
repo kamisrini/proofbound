@@ -250,16 +250,18 @@ func m3ArchiveTenant(t *testing.T) (*m3Tenant, string) {
 	return m, x1
 }
 
-// §7.2 interleaving A (row 5, M3-INV-5): `sync all` first holds both artifacts and the rebuild
+// §7.2 interleaving A (row 5, M3-INV-5): git then reviews, before any spec sync, holds both artifacts and the rebuild
 // stays green; recovery appends them and the gate passes. Then §7.3 (M3-INV-12) continues on the
 // same ledger: in-place revisions whose prerequisites are missing are refused loudly, the rebuild
 // stays green, and recovery appends them.
 func TestM3InterleavingAThenRefusal(t *testing.T) {
 	m, x1 := m3ArchiveTenant(t)
 	mustContain(t, m.mustRun("migrate", "historical-evidence"), "imported=5")
-	out := m.mustRun("sync", "all")
+	// `sync all` reads the committed profile's specs itself (CLI-INV-23), so the pre-spec-sync
+	// interleaving is driven step by step.
+	mustContain(t, m.mustRun("sync", "git"), "claim-skip not-ledgered sdd:add-auth at "+x1)
+	out := m.mustRun("sync", "reviews")
 	mustContain(t, out,
-		"claim-skip not-ledgered sdd:add-auth at "+x1,
 		"held claim-not-ledgered "+m3VerdictDir+"OV-m3-x1.md",
 		"held requirement-not-ledgered "+m3VerdictDir+"RR-m3-x.md")
 	m.mustRun("rebuild")
@@ -283,12 +285,12 @@ func TestM3InterleavingAThenRefusal(t *testing.T) {
 	m.writeVerdict("OV-m3-x1", x5, archivedEvidence, refs)
 	m.commit("revise in place")
 	m.writeGate("x5", x5)
-	code, out := runCLI(t, m.root, "sync", "all")
+	mustContain(t, m.mustRun("sync", "git"), "claim-skip not-ledgered sdd:add-auth at "+x5)
+	code, out := runCLI(t, m.root, "sync", "reviews")
 	if code == 0 {
-		t.Fatalf("a refused revision did not fail sync all:\n%s", out)
+		t.Fatalf("a refused revision did not fail sync reviews:\n%s", out)
 	}
 	mustContain(t, out,
-		"claim-skip not-ledgered sdd:add-auth at "+x5,
 		"refused requirement-not-ledgered "+m3VerdictDir+"RR-m3-x.md",
 		"refused claim-not-ledgered "+m3VerdictDir+"OV-m3-x1.md")
 	m.mustRun("rebuild")

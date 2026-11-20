@@ -548,6 +548,12 @@ func intentProviders(root, selection string, now time.Time) ([]connectorintent.P
 	return []connectorintent.Provider{recordsProvider, specdirProvider}, nil
 }
 
+// hasSDDProfile reports whether HEAD commits the sdd profile. It reads one committed path and
+// never constructs the sdd provider.
+func hasSDDProfile(root string) bool {
+	return gitOutput(context.Background(), root, "rev-parse", "--verify", "--quiet", "HEAD:"+intentsdd.ProfilePath) != ""
+}
+
 // specKitOwnsSpecs reports whether HEAD's committed sdd profile declares kit "speckit" with a root
 // at or overlapping specs/. It only reads one committed file; it never constructs the sdd provider
 // (SDD-INV-56). A missing or unreadable profile leaves the P5 providers exactly as before.
@@ -944,15 +950,37 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 			return err
 		}
 		var intentResult connectorintent.Result
+		var sddErr error
 		if cmd == commandSyncAll {
 			intentResult, err = syncIntentOnStore(ctx, root, "all", ledger, ids)
 			if err != nil {
 				return err
 			}
+			// A project that committed an sdd profile opted in to spec sync, so `sync all` reads
+			// its specs too (CLI-INV-23); without one, nothing sdd is constructed (SDD-INV-56).
+			// A failing spec sync never stops the other steps: they run, and `sync all` then fails
+			// with the spec sync's error joined to theirs (CLI-INV-23).
+			if hasSDDProfile(root) {
+				sddResult, err := syncIntentOnStore(ctx, root, "sdd", ledger, ids)
+				if err != nil {
+					sddErr = fmt.Errorf("sync intent sdd: %w", err)
+					if _, err := fmt.Fprintf(output, "sdd error=%q\n", sddErr.Error()); err != nil {
+						return errors.Join(sddErr, err)
+					}
+				} else {
+					if _, err = fmt.Fprintf(output, "sdd listed=%d appended=%d existing=%d\n", sddResult.Listed, sddResult.Appended, sddResult.Existing); err != nil {
+						return err
+					}
+					if err := writeSkips(output, sddResult); err != nil {
+						return err
+					}
+					intentResult.Appended += sddResult.Appended
+				}
+			}
 		}
 		gitResult, err := syncGit(ctx, root, ledger, ids)
 		if err != nil {
-			return err
+			return errors.Join(sddErr, err)
 		}
 		switch cmd {
 		case commandSyncGit:
@@ -965,13 +993,14 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		checksResult, err := syncChecksOnStore(ctx, root, ledger, ids)
 		if err != nil {
-			return err
+			return errors.Join(sddErr, err)
 		}
 		sessionsResult, err := syncSessionsOnStore(ctx, root, ledger, ids)
 		if err != nil {
-			return err
+			return errors.Join(sddErr, err)
 		}
 		reviewsResult, syncErr := syncReviewsOnStore(ctx, root, ledger, ids)
+		syncErr = errors.Join(sddErr, syncErr)
 		// Reviews is the last step; its counts, claim-skip, held and refused lines are printed before
 		// its error is returned (M3 draft 8 §4.6).
 		if _, err = fmt.Fprintf(output, "intent appended=%d git appended=%d checks appended=%d sessions appended=%d reviews appended=%d\n", intentResult.Appended, gitResult.Appended, checksResult.Appended, sessionsResult.Appended, reviewsResult.Appended); err != nil {

@@ -307,3 +307,23 @@ func TestInitSpecKitWritesASpecKitProfile(t *testing.T) {
 		t.Fatal("an unknown kit was accepted")
 	}
 }
+
+// CLI-INV-24: seal accepts the draft.json path `review draft` prints, as well as its folder, and
+// seals exactly what the folder form seals.
+func TestReviewSealAcceptsTheDraftFile(t *testing.T) {
+	root := t.TempDir()
+	dir := writeDraft(t, root, sealDraft("SATISFIED", "VERIFIABLE"))
+	if err := reviewSeal(context.Background(), root, filepath.Join(dir, "draft.json"), ledgerTruth, &bytes.Buffer{}); err != nil {
+		t.Fatalf("seal draft.json: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "gates", "ready-"+sealCommit[:12]+".yaml")); err != nil {
+		t.Fatalf("seal draft.json wrote no gate: %v", err)
+	}
+	other := filepath.Join(dir, "notes.json")
+	if err := os.WriteFile(other, []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := reviewSeal(context.Background(), t.TempDir(), other, ledgerTruth, &bytes.Buffer{}); err == nil {
+		t.Fatal("seal accepted a file that is not draft.json")
+	}
+}

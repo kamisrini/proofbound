@@ -346,7 +346,7 @@ func ledgerDraft(ctx context.Context, ledger *store.Store, sha string) (draftFil
 		draft.Verdicts = append(draft.Verdicts, verdict)
 	}
 	if len(draft.Verdicts) == 0 {
-		return draftFile{}, fmt.Errorf("commit %s binds no OpenSpec change: does its message end with `Intent: sdd:<change-name>`, and has `proofbound sync all` run since?", sha)
+		return draftFile{}, fmt.Errorf("commit %s binds no spec change: does its message end with `Intent: sdd:<name>`, and has `proofbound sync all` run since?", sha)
 	}
 	return draft, nil
 }
@@ -361,6 +361,10 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 		dir = filepath.Join(wd, dir)
+	}
+	// `review draft` prints the draft.json path, so seal accepts it as well as its folder (CLI-INV-24).
+	if info, err := os.Stat(dir); err == nil && !info.IsDir() && filepath.Base(dir) == "draft.json" {
+		dir = filepath.Dir(dir)
 	}
 	raw, err := os.ReadFile(filepath.Join(dir, "draft.json"))
 	if err != nil {

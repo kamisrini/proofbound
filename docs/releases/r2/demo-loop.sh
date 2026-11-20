@@ -110,9 +110,8 @@ git commit -qm "implement CSV export" -m "Intent: sdd:$name"
 commit=$(git rev-parse HEAD)
 echo "commit $commit"
 
-say "sync: the spec's history, then the commits"
-pb sync intent sdd
-pb sync git
+say "sync all: the spec's history (the profile is committed), then the commits"
+pb sync all
 
 say "the claim is bound; every obligation is UNVERIFIED"
 pb report intent "sdd:$name"
@@ -126,11 +125,10 @@ jq '.declared_reviewer = "demo-reviewer"
     | .reviews[].obligations[].outcome = "VERIFIABLE"
     | .verdicts[].obligations[].outcome = "SATISFIED"' "$draft" >"$draft.tmp" && mv "$draft.tmp" "$draft"
 echo "-- outcomes recorded: every obligation SATISFIED, every requirement VERIFIABLE, by demo-reviewer"
-pb review seal "$(dirname "$draft")"
+pb review seal "$draft"
 git add docs/verification/verdicts gates
 PROOFBOUND_NO_INTENT=1 git commit -qm "review $commit"
-pb sync git
-pb sync reviews
+pb sync all
 
 say "the readiness gate for the reviewed commit"
 pb gates canary
@@ -142,7 +140,7 @@ say "the spec owner rewords one obligation"
 reword
 git add -A "${spec%%/*}"
 PROOFBOUND_NO_INTENT=1 git commit -qm "spec: reword the header-row obligation"
-pb sync intent sdd
+pb sync all
 pb report drift
 
 cat <<EOF

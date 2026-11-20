@@ -6,16 +6,19 @@ As of: 2026-11-19
 
 ## Resume — 2026-11-19
 
-**Release 2 is accepted** (owner, 2026-11-19: "accepted"). Notes, README, ROADMAP and RELEASE-PLAN
-say so. Not tagged, not pushed.
+**Release 2 is accepted** (owner, 2026-11-19). Before tagging, the owner asked for the two polish
+fixes; both are built under `CI-r2-polish-wkudnk`:
+- `sync all` also reads specs when HEAD commits `.proofbound/sdd-profile.json` (CLI-INV-23,
+  SDD-INV-56 amended); a failing spec step no longer stops the other steps (review F1, MED, fixed);
+- `review seal` accepts the `draft.json` path as well as its folder (CLI-INV-24).
+Non-author review `r2-polish-review-20261119`: NEEDS_WORK, one MED, fixed; 3 LOWs recorded. Both loop
+demos and the OpenSpec demo re-ran clean. `sync all` on OpenSpec's 1,059 commits takes ~1.5 min
+(noted in the release notes).
 
-**Exact next action:** wait for the owner. Two follow-ups are theirs to call:
-- tag `v0.2.0` and push (pushes are held, DEF-PUSH-HOLD-20261116);
-- pick the next work (Release 3 per `ROADMAP.md`, or the two offered R2 polish options: `sync all`
-  also syncing specs when a profile exists, which reverses SDD-INV-56; `review seal` accepting the
-  `draft.json` path). Use `/proofbound-next`.
+**Exact next action:** tag `v0.2.0` on the polish commit (the owner said "then tag"). Pushing still
+waits for the owner's explicit word (DEF-PUSH-HOLD-20261116).
 
-**Immediate blockers:** none beyond the push hold. Do not push or tag without the owner's word.
+**Immediate blockers:** none beyond the push hold.
 
 ## R2 build log — 2026-11-19
 

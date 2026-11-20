@@ -13,7 +13,7 @@ or [Spec Kit](https://github.com/github/spec-kit)) and uses Proofbound to warran
 
 ### Reviewing a commit (the reviewer is never the author of the commit)
 
-1. `proofbound sync intent sdd && proofbound sync all` (`sync all` does not read specs), then
+1. `proofbound sync all` (it reads the specs too, because the profile is committed), then
    `proofbound review draft <commit>`. This writes
    `.proofbound/drafts/<commit>/draft.json` and prints every obligation the commit claims.
 2. Read the change (`openspec/changes/<name>/` or `specs/<name>/`), read the commit (`git show <commit>`), run the tests.

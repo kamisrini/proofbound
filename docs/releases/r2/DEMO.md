@@ -108,8 +108,8 @@ PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no spec, so
 subagent (`.claude/agents/proofbound-reviewer.md`), and a `commit-msg` hook. It never overwrites
 anything, so running it twice is safe.
 
-**Work as usual.** Sync specs with `proofbound sync intent sdd`: `sync all` deliberately leaves them out
-(only a named sync reads them), so run both. End every commit that implements a spec with `Intent: sdd:<name>`, where
+**Work as usual.** `proofbound sync all` records everything, specs included, because the profile is
+committed. End every commit that implements a spec with `Intent: sdd:<name>`, where
 `<name>` is the folder: the OpenSpec change under `openspec/changes/`, or the Spec Kit feature under
 `specs/` (for example `001-export`). Spec Kit counts a feature once its `tasks.md` exists. Commits
 that implement no spec use `PROOFBOUND_NO_INTENT=1 git commit …`.
@@ -118,14 +118,14 @@ that implement no spec use `PROOFBOUND_NO_INTENT=1 git commit …`.
 subagent in a separate session) runs:
 
 ```bash
-proofbound sync intent sdd && proofbound sync all
+proofbound sync all
 proofbound review draft <commit>                # prints every obligation; writes .proofbound/drafts/<commit>/draft.json
 # in draft.json: set declared_reviewer; set each outcome (SATISFIED / NOT_SATISFIED / INCONCLUSIVE,
 # and VERIFIABLE / AMBIGUOUS / UNTESTABLE / CONTRADICTORY for the requirement review)
-proofbound review seal .proofbound/drafts/<commit>   # the folder, not draft.json
+proofbound review seal .proofbound/drafts/<commit>   # the folder, or its draft.json
 git add docs/verification/verdicts gates
 PROOFBOUND_NO_INTENT=1 git commit -m "review <commit>"
-proofbound sync all && proofbound gates canary   # reviews only need sync all
+proofbound sync all && proofbound gates canary
 ```
 
 `seal` takes only the reviewer's decisions from the draft and rebuilds everything else from the
@@ -136,7 +136,7 @@ and every requirement VERIFIABLE; otherwise BLOCKED, with the counts.
 **Watch for drift** whenever specs change:
 
 ```bash
-proofbound sync intent sdd && proofbound sync all && proofbound report drift
+proofbound sync all && proofbound report drift
 ```
 
 Each warranted change is CURRENT, or STALE when it now promises something other than what was
@@ -151,11 +151,11 @@ UNSYNCED and UNKNOWN cover a change that is gone at HEAD, not yet synced, or unr
 | Command | What it does |
 |---|---|
 | `proofbound init {openspec\|speckit} [--owner <name>]` | Set up a project (never overwrites) |
-| `proofbound sync intent sdd` | Record every spec revision in the project's history |
+| `proofbound sync intent sdd` | Record every spec revision in the project's history (only this step) |
 | `proofbound sync git` | Record commits; bind `Intent: sdd:<name>` claims |
-| `proofbound sync all` | Every other sync (git, checks, sessions, reviews, records/specdir intents). It does **not** read specs: run `sync intent sdd` first whenever specs changed |
+| `proofbound sync all` | Every sync: specs (when the profile is committed), git, checks, sessions, reviews, records/specdir intents |
 | `proofbound report intent sdd:<name>` | One change: obligations, verification state, bound commits |
-| `proofbound review draft <commit>` / `review seal <folder>` | Record an independent review of a commit |
+| `proofbound review draft <commit>` / `review seal <folder or draft.json>` | Record an independent review of a commit |
 | `proofbound gates canary` | Every gate's state, with its reason |
 | `proofbound report drift` | Which warranties no longer match their spec |
 

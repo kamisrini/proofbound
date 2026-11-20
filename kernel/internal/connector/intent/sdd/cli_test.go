@@ -123,3 +123,19 @@ func TestSyncIntentSDDQuotesHostileUnits(t *testing.T) {
 		t.Fatalf("hostile unit not quoted:\n%s", out)
 	}
 }
+
+// CLI-INV-23 (failure half, review r2-polish-review F1): when the committed profile opts in but the
+// spec sync fails (here, a shallow clone), `sync all` prints `sdd error=...`, goes on to the next
+// steps instead of returning (on a shallow clone the git step then fails too, and both errors are
+// joined), and exits non-zero. The old early return printed no `sdd error=` line.
+func TestSyncAllSurvivesAFailingSpecSync(t *testing.T) {
+	source, _ := tenant(t, "fenced")
+	gitIn(t, source, "commit", "-q", "--allow-empty", "-m", "second")
+	clone := filepath.Join(t.TempDir(), "clone")
+	gitIn(t, filepath.Dir(clone), "clone", "-q", "--depth=1", "file://"+filepath.ToSlash(source), clone)
+	code, out := runCLI(t, clone, "sync", "all")
+	if code == 0 || !strings.Contains(out, `sdd error="sync intent sdd: `) || !strings.Contains(out, "incomplete") {
+		t.Fatalf("sync all hid a failing spec sync: exit %d:\n%s", code, out)
+	}
+	t.Logf("sync all on a shallow opted-in clone:\n%s", out)
+}

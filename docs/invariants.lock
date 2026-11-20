@@ -134,7 +134,7 @@ kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-52	A sync containing intent
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-53	Every payload string is valid UTF-8 without U+0000, and every statement is non-blank; a violation skips its unit.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-54	Only regular files are read under SDD roots; a symlink or gitlink a unit reads makes that unit unmappable.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-55	A path outside the SDD roots, whatever its bytes, never affects the sdd provider.
-kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-56	`sdd` runs only when selected by name; `sync intent all` neither constructs nor walks it.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-56	`sdd` runs only when selected by name, or by `sync all` when HEAD commits the profile; `sync intent all` neither constructs nor walks it.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-57	The §4.2 parser agrees with OpenSpec's reader on the pinned corpus.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-58	RETIRED (2026-11-19, R2 Spec Kit): a line outside the canonical `FR|SC|NFR-<n>` obligation grammar is prose, not a near-miss id (`docs/plans/R2-speckit-spec.md` §3); replaced by INV-69.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-59	Resolve is total over tenant states: a revision or one of four sentinels; any other error comes only from the reader.
