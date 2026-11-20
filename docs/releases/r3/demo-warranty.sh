@@ -9,10 +9,12 @@
 #      public half, which is how the repository declares the key;
 #   2. exports a signed warranty for the PASS commit;
 #   3. verifies it without the repository: UNVERIFIED (a signature alone proves nothing);
-#   4. verifies it against a fresh clone, with no database: VALID;
-#   5. tampers with one obligation in the file: INVALID;
-#   6. pins the wrong key fingerprint: INVALID;
-#   7. tries to export with a key the repository never declared: refused.
+#   4. verifies it against the repository: UNREVIEWED (the reviewer has not signed);
+#   5. the reviewer declares their own key and cosigns the warranty (MVP step 3, option B);
+#   6. verifies it against a fresh clone, with no database: VALID, naming the reviewer;
+#   7. tampers with one obligation in the file: INVALID;
+#   8. pins the wrong key fingerprint: INVALID;
+#   9. tries to export with a key the repository never declared: refused.
 # Needs git, go, jq and the embedded database's port 55432. Nothing is fetched or pushed.
 set -euo pipefail
 
@@ -45,18 +47,28 @@ jq '{commit: .body.commit, change: .body.change_name, obligations: [.body.requir
 say "3. verify without the repository: the signature alone proves nothing"
 pb warranty verify "$work/warranty.json" || echo "(exit $?)"
 
-say "4. verify against a fresh clone, anywhere, with no database"
+say "4. against the repository it is UNREVIEWED: the reviewer named in it has not signed yet"
+pb warranty verify "$work/warranty.json" --repo . || echo "(exit $?)"
+
+say "5. the reviewer, with their own key, declares it and cosigns the warranty (MVP step 3, option B)"
+PROOFBOUND_KEY="$work/reviewer-key" pb keys init --name demo-reviewer
+git add .proofbound/keys
+PROOFBOUND_NO_INTENT=1 git commit -qm "declare the reviewer's key"
+PROOFBOUND_KEY="$work/reviewer-key" pb warranty cosign "$work/warranty.json"
+echo "(option A instead: with that key declared before \`review seal\`, the seal signs each review file)"
+
+say "6. verify against a fresh clone, anywhere, with no database"
 git clone -q "$work/project" "$work/clone"
 (cd "$work" && ./proofbound warranty verify warranty.json --repo clone)
 
-say "5. tamper with one obligation in the file"
+say "7. tamper with one obligation in the file"
 sed 's/System MUST\|The system SHALL/The system MAY/' "$work/warranty.json" >"$work/tampered.json"
 pb warranty verify "$work/tampered.json" --repo "$work/clone" || echo "(exit $?)"
 
-say "6. pin a different key fingerprint"
+say "8. pin a different key fingerprint"
 pb warranty verify "$work/warranty.json" --repo "$work/clone" --trust-key 0000000000000000 || echo "(exit $?)"
 
-say "7. export with a key the repository never declared"
+say "9. export with a key the repository never declared"
 XDG_CONFIG_HOME="$work/other-config" pb keys init --name intruder
 rm .proofbound/keys/intruder.pub
 XDG_CONFIG_HOME="$work/other-config" pb warranty export "$commit" -o "$work/forged.json" || echo "(refused, exit $?)"
@@ -68,6 +80,8 @@ cat <<MSG
 - Anyone with that file and a clone of the repository (from a source they trust) can check it with
   no database: the promises are re-read from git at that commit, the review files must be committed
   byte for byte, and the signing key must be one the repository declares.
+- VALID also needs the reviewer's own declared key: until they sign (cosign, or at review seal) the
+  answer is UNREVIEWED.
 - Without the repository the answer is UNVERIFIED, never VALID. Any edit, a wrong key, or an
   undeclared key is INVALID or refused.
 Workdir: $work (delete it when done).

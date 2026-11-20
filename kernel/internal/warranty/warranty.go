@@ -25,16 +25,16 @@ const Schema = "proofbound.warranty.v1"
 // Body is everything the signature covers. Issuer, IssuedAt and RepositoryHint are signed but
 // informational: nothing in a repository can confirm them.
 type Body struct {
-	Schema         string                       `json:"schema"`
-	Commit         string                       `json:"commit"`
-	ChangeName     string                       `json:"change_name"`
-	IssuedAt       string                       `json:"issued_at"`
-	Issuer         string                       `json:"issuer"`
-	RepositoryHint string                       `json:"repository_hint"`
-	ChangeIntent   connectorintent.ChangeIntent `json:"change_intent"`
+	Schema         string                        `json:"schema"`
+	Commit         string                        `json:"commit"`
+	ChangeName     string                        `json:"change_name"`
+	IssuedAt       string                        `json:"issued_at"`
+	Issuer         string                        `json:"issuer"`
+	RepositoryHint string                        `json:"repository_hint"`
+	ChangeIntent   connectorintent.ChangeIntent  `json:"change_intent"`
 	Requirements   []connectorintent.Requirement `json:"requirements"`
-	Reviews        []reviews.RequirementReview  `json:"reviews"`
-	Verdicts       []reviews.ObligationVerdict  `json:"verdicts"`
+	Reviews        []reviews.RequirementReview   `json:"reviews"`
+	Verdicts       []reviews.ObligationVerdict   `json:"verdicts"`
 }
 
 // Signature is the ed25519 public key and signature, both hex.
@@ -43,11 +43,53 @@ type Signature struct {
 	Sig string `json:"sig"`
 }
 
-// File is a parsed warranty: its body and the exact canonical bytes the signature covers.
+// File is a parsed warranty: its body, the exporter's signature, any reviewer cosignatures (option
+// B, sorted by key), and the exact canonical bytes the signatures cover.
 type File struct {
-	Body      Body
-	Signature Signature
-	canonical []byte
+	Body         Body
+	Signature    Signature
+	Cosignatures []Signature
+	canonical    []byte
+}
+
+// outerFile is the on-disk shape; cosignatures is omitted when there are none, so a file without
+// them is byte-for-byte the slice 1 format.
+type outerFile struct {
+	Body         json.RawMessage `json:"body"`
+	Signature    Signature       `json:"signature"`
+	Cosignatures []Signature     `json:"cosignatures,omitempty"`
+}
+
+func marshalFile(canonical []byte, sig Signature, cosigs []Signature) ([]byte, error) {
+	out, err := json.MarshalIndent(outerFile{canonical, sig, cosigs}, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(out, '\n'), nil
+}
+
+var hexRE = regexp.MustCompile(`^[0-9a-f]+$`)
+
+const maxCosignatures = 16
+
+// validCosignatures enforces W-INV-11: exact hex sizes, sorted by key, no duplicates, and present only
+// when non-empty (an explicit empty list is not the canonical form).
+func validCosignatures(cosigs []Signature, present bool) error {
+	if present && len(cosigs) == 0 {
+		return errors.New("empty cosignatures")
+	}
+	if len(cosigs) > maxCosignatures {
+		return fmt.Errorf("more than %d cosignatures", maxCosignatures)
+	}
+	for i, c := range cosigs {
+		if len(c.Key) != 2*ed25519.PublicKeySize || len(c.Sig) != 2*ed25519.SignatureSize || !hexRE.MatchString(c.Key) || !hexRE.MatchString(c.Sig) {
+			return errors.New("cosignature is not hex ed25519")
+		}
+		if i > 0 && cosigs[i-1].Key >= c.Key {
+			return errors.New("cosignatures are not sorted and unique by key")
+		}
+	}
+	return nil
 }
 
 var commitRE = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -80,15 +122,7 @@ func Sign(body Body, key ed25519.PrivateKey) ([]byte, error) {
 	if !ok {
 		return nil, errors.New("warranty: key is not ed25519")
 	}
-	file := struct {
-		Body      json.RawMessage `json:"body"`
-		Signature Signature       `json:"signature"`
-	}{canonical, Signature{Key: hex.EncodeToString(pub), Sig: hex.EncodeToString(ed25519.Sign(key, signedBytes(canonical)))}}
-	out, err := json.MarshalIndent(file, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	return append(out, '\n'), nil
+	return marshalFile(canonical, Signature{Key: hex.EncodeToString(pub), Sig: hex.EncodeToString(ed25519.Sign(key, signedBytes(canonical)))}, nil)
 }
 
 func strictDecode(raw []byte, v any) error {
@@ -109,11 +143,16 @@ func Parse(data []byte) (File, error) {
 	if _, err := core.Canonicalize(data); err != nil {
 		return File{}, fmt.Errorf("malformed: %w", err)
 	}
-	var outer struct {
-		Body      json.RawMessage `json:"body"`
-		Signature Signature       `json:"signature"`
-	}
+	var outer outerFile
 	if err := strictDecode(data, &outer); err != nil {
+		return File{}, fmt.Errorf("malformed: %w", err)
+	}
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal(data, &keys); err != nil {
+		return File{}, fmt.Errorf("malformed: %w", err)
+	}
+	_, present := keys["cosignatures"]
+	if err := validCosignatures(outer.Cosignatures, present); err != nil {
 		return File{}, fmt.Errorf("malformed: %w", err)
 	}
 	var f File
@@ -131,7 +170,7 @@ func Parse(data []byte) (File, error) {
 	if f.Body.Schema != Schema {
 		return File{}, fmt.Errorf("malformed: schema %q", f.Body.Schema)
 	}
-	f.Signature, f.canonical = outer.Signature, canonical
+	f.Signature, f.Cosignatures, f.canonical = outer.Signature, outer.Cosignatures, canonical
 	return f, nil
 }
 
@@ -183,6 +222,24 @@ func CheckRule(b Body) error {
 			obligations[k][o.ID] = true
 		}
 	}
+	// Identity is KeyName (W-INV-3 amended, MVP step 3): no empty key name, no reviewer whose key
+	// name is an owner's, and one spelling per key name.
+	for _, owner := range owners {
+		if KeyName(owner) == "" {
+			return fmt.Errorf("owner %q has no usable key name", owner)
+		}
+	}
+	spelling := map[string]string{}
+	for _, name := range reviewersOf(b) {
+		k := KeyName(name)
+		if k == "" {
+			return fmt.Errorf("reviewer %q has no usable key name", name)
+		}
+		if other, ok := spelling[k]; ok {
+			return fmt.Errorf("reviewers %q and %q are one key name", other, name)
+		}
+		spelling[k] = name
+	}
 	targeted := map[string]bool{}
 	for _, t := range ci.Targets {
 		k := key(t.RecordID, t.ArtifactSHA256)
@@ -215,7 +272,7 @@ func CheckRule(b Body) error {
 			if !ok {
 				return fmt.Errorf("verdict %s cites untargeted requirement %s", v.VerdictID, o.RequirementID)
 			}
-			if v.DeclaredReviewer == owner {
+			if v.DeclaredReviewer == owner || KeyName(v.DeclaredReviewer) == KeyName(owner) {
 				return fmt.Errorf("verdict %s reviewer %q is the declared owner", v.VerdictID, owner)
 			}
 			if o.Outcome == "SATISFIED" {
@@ -229,7 +286,7 @@ func CheckRule(b Body) error {
 		if !ok {
 			return fmt.Errorf("review %s cites untargeted requirement %s", r.ReviewID, r.Requirement.RecordID)
 		}
-		if r.DeclaredReviewer == owner {
+		if r.DeclaredReviewer == owner || KeyName(r.DeclaredReviewer) == KeyName(owner) {
 			return fmt.Errorf("review %s reviewer %q is the declared owner", r.ReviewID, owner)
 		}
 		for _, o := range r.Outcomes {

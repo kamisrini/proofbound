@@ -39,3 +39,9 @@ install docs must say so and offer `DATABASE_URL`.
 
 **Revisit when:** the first external users report back (re-rank by what they asked for), or a step
 turns out to need the gated embedded-database redistribution decision after all.
+
+**Amended 2026-11-20:** step 3's reviewer proof takes both forms, built in this order by the owner's
+choice ("first A and then B"): A, the reviewer signs each review and verdict artifact at `review seal`
+(a committed `.sig` beside it); B, the reviewer cosigns the exported warranty file. Either proves a
+reviewer; a warranty with an unproven reviewer verifies UNREVIEWED (exit 2), never VALID. Contract:
+[mvp-3-reviewer-signed-spec.md](../plans/mvp-3-reviewer-signed-spec.md).

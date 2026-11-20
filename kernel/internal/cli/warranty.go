@@ -2,13 +2,13 @@ package cli
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,15 +21,13 @@ import (
 	pbwarranty "github.com/kamisrini/proofbound/kernel/internal/warranty"
 )
 
-var keyNameRE = regexp.MustCompile(`[^a-z0-9-]+`)
-
 // keysInit creates the signing key outside any work tree and writes its public half to
 // .proofbound/keys/<name>.pub for the owner to commit (warranty SPEC §3).
 func keysInit(ctx context.Context, root, name string, output io.Writer) error {
 	if name == "" {
 		name = gitOutput(ctx, root, "config", "user.name")
 	}
-	name = strings.Trim(keyNameRE.ReplaceAllString(strings.ToLower(strings.TrimSpace(name)), "-"), "-")
+	name = pbwarranty.KeyName(name)
 	if name == "" {
 		return errors.New("keys init: no name; pass --name <name>")
 	}
@@ -228,7 +226,12 @@ func warrantyExport(ctx context.Context, root string, ledger *store.Store, arg, 
 	if err != nil {
 		return err
 	}
-	if err := pbwarranty.Verify(ctx, parsed, root, ""); err != nil {
+	// W-INV-2 amended: VALID or UNREVIEWED (a reviewer can still cosign it); never anything else.
+	if err := pbwarranty.Verify(ctx, parsed, root, ""); errors.Is(err, pbwarranty.ErrUnreviewed) {
+		if _, werr := fmt.Fprintf(output, "warning: %v; it will verify UNREVIEWED until the reviewer runs `proofbound warranty cosign`\n", err); werr != nil {
+			return werr
+		}
+	} else if err != nil {
 		return fmt.Errorf("warranty: would not verify against this repository: %v", err)
 	}
 	if out == "" {
@@ -260,7 +263,7 @@ func countTargets(b pbwarranty.Body) int {
 }
 
 // warrantyVerify prints exactly one verdict line and returns its exit code: 0 VALID, 2 UNVERIFIED
-// (no --repo), 1 INVALID (warranty SPEC §1).
+// (no --repo), 3 UNREVIEWED (a named reviewer has not signed), 1 INVALID (warranty SPEC §1).
 func warrantyVerify(ctx context.Context, file, repo, trustKey string, output io.Writer) int {
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -276,15 +279,127 @@ func warrantyVerify(ctx context.Context, file, repo, trustKey string, output io.
 	if pub, err := f.PublicKey(); err == nil {
 		fpr = pbwarranty.Fingerprint(pub)
 	}
-	switch err := pbwarranty.Verify(ctx, f, repo, trustKey); {
+	switch proven, err := pbwarranty.VerifyReport(ctx, f, repo, trustKey); {
 	case err == nil:
-		fmt.Fprintf(output, "VALID key=%s commit=%s change=sdd:%s obligations=%d\n", fpr, f.Body.Commit, f.Body.ChangeName, countTargets(f.Body))
+		names := make([]string, 0, len(proven))
+		for _, p := range proven {
+			names = append(names, p.Name+":"+p.Fingerprint)
+		}
+		fmt.Fprintf(output, "VALID key=%s commit=%s change=sdd:%s obligations=%d reviewers=%s\n", fpr, f.Body.Commit, f.Body.ChangeName, countTargets(f.Body), strings.Join(names, ","))
 		return 0
 	case errors.Is(err, pbwarranty.ErrUnverified):
 		fmt.Fprintf(output, "UNVERIFIED key=%s: %v\n", fpr, err)
 		return 2
+	case errors.Is(err, pbwarranty.ErrUnreviewed):
+		fmt.Fprintf(output, "UNREVIEWED key=%s: %v\n", fpr, err)
+		return 3
 	default:
 		fmt.Fprintf(output, "INVALID: %v\n", err)
 		return 1
 	}
+}
+
+// warrantyCosign adds the local key's cosignature to a warranty (option B, CLI-INV-27): the file must
+// verify VALID or UNREVIEWED against this repository, the key must be the declared key of a reviewer
+// the body names, and the result must still verify VALID or UNREVIEWED; it never writes a partial file.
+func warrantyCosign(ctx context.Context, root, file, out string, output io.Writer) error {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("cosign: %w", err)
+	}
+	f, err := pbwarranty.Parse(data)
+	if err != nil {
+		return fmt.Errorf("cosign: %w", err)
+	}
+	if err := pbwarranty.Verify(ctx, f, root, ""); err != nil && !errors.Is(err, pbwarranty.ErrUnreviewed) {
+		return fmt.Errorf("cosign: the warranty does not verify against this repository: %v", err)
+	}
+	keyPath, err := pbwarranty.KeyPath()
+	if err != nil {
+		return err
+	}
+	key, err := pbwarranty.LoadKey(keyPath)
+	if err != nil {
+		return err
+	}
+	pub := key.Public().(ed25519.PublicKey)
+	reviewer := ""
+	for _, name := range bodyReviewers(f.Body) {
+		declared, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(pbwarranty.KeysDir), pbwarranty.KeyName(name)+".pub"))
+		if err == nil && string(declared) == pbwarranty.PubLine(pub) {
+			reviewer = name
+		}
+	}
+	if reviewer == "" {
+		return fmt.Errorf("cosign: key %s is not the declared key of a reviewer of this warranty (%s)", pbwarranty.Fingerprint(pub), strings.Join(bodyReviewers(f.Body), ", "))
+	}
+	signed, err := pbwarranty.Cosign(data, key)
+	if err != nil {
+		return err
+	}
+	again, err := pbwarranty.Parse(signed)
+	if err != nil {
+		return err
+	}
+	result := "VALID"
+	if err := pbwarranty.Verify(ctx, again, root, ""); errors.Is(err, pbwarranty.ErrUnreviewed) {
+		result = "UNREVIEWED (another reviewer has not signed)"
+	} else if err != nil {
+		return fmt.Errorf("cosign: the cosigned warranty would not verify: %v", err)
+	}
+	if out == "" {
+		out = file
+		tmp, err := os.CreateTemp(filepath.Dir(file), ".warranty-cosign-*")
+		if err != nil {
+			return err
+		}
+		if _, err := tmp.Write(signed); err != nil {
+			tmp.Close()
+			os.Remove(tmp.Name())
+			return err
+		}
+		if err := tmp.Close(); err != nil {
+			os.Remove(tmp.Name())
+			return err
+		}
+		if err := os.Rename(tmp.Name(), file); err != nil {
+			os.Remove(tmp.Name())
+			return err
+		}
+	} else if err := writeExclusive(out, signed); err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(output, "cosigned %s reviewer=%s key=%s now=%s\n", out, reviewer, pbwarranty.Fingerprint(pub), result)
+	return err
+}
+
+func bodyReviewers(b pbwarranty.Body) []string {
+	seen := map[string]bool{}
+	var names []string
+	for _, r := range b.Reviews {
+		if !seen[r.DeclaredReviewer] {
+			seen[r.DeclaredReviewer] = true
+			names = append(names, r.DeclaredReviewer)
+		}
+	}
+	for _, v := range b.Verdicts {
+		if !seen[v.DeclaredReviewer] {
+			seen[v.DeclaredReviewer] = true
+			names = append(names, v.DeclaredReviewer)
+		}
+	}
+	return names
+}
+
+func writeExclusive(path string, data []byte) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		f.Close()
+		os.Remove(path)
+		return err
+	}
+	return f.Close()
 }

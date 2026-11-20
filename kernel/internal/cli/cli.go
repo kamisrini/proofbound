@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
+const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -87,6 +87,7 @@ const (
 	commandWarrantyVerify
 	commandVersion
 	commandCheck
+	commandWarrantyCosign
 )
 
 func parseCommand(args []string) command {
@@ -152,6 +153,8 @@ func parseCommand(args []string) command {
 		return commandKeysInit
 	case args0(args, "warranty", "export") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
 		return commandWarrantyExport
+	case args0(args, "warranty", "cosign") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
+		return commandWarrantyCosign
 	case args0(args, "warranty", "verify") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "--repo", "--trust-key"):
 		return commandWarrantyVerify
 	default:
@@ -869,6 +872,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		return warrantyExport(ctx, root, ledger, args[2], flagValue(args[3:], "-o"), output)
+	case commandWarrantyCosign:
+		return warrantyCosign(ctx, root, args[2], flagValue(args[3:], "-o"), output)
 	case commandCheck:
 		base, markdown, requireClaims, _ := parseCheck(args)
 		ledger, err := openStore(ctx, root, databaseURL)

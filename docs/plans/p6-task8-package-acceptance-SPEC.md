@@ -132,3 +132,12 @@ under the same bar.
 - **Committed non-author verdict:**
   [`r3-warranty-code-review-20261119.md`](../verification/verdicts/r3-warranty-code-review-20261119.md),
   ACCEPTABLE (8 LOW recorded).
+- **MVP step 3 extension (2026-11-20, `CI-mvp-reviewer-sign-5tqv2c`):** reviewer proof (W-INV-9..12,
+  W-INV-1..3 amended; `reviewer.go`), contract `docs/plans/mvp-3-reviewer-signed-spec.md` draft 3
+  (spec rounds `mvp-3-spec-review-round1-20261120` NEEDS_WORK → `…-round2-20261120` ACCEPTABLE).
+  Re-swept: first 157 candidates / 8 survived (exactness clauses of the `.sig` line, the declared-key
+  line and the regular-file check), closed by `TestArtifactSignatureLineIsExact` and
+  `TestDeclaredKeyAndSigFileShapes` plus two redundant clauses removed (`declaredKey` format checks
+  subsumed by the exact `PubLine` comparison; the `.sig` length check subsumed by `ed25519.Verify`).
+  Final: **148 candidates, 148 killed, 0 invalid, 0 survived**; calibration neutral survived, invalid
+  invalid, lethal killed. Code review `mvp-3-code-review-20261120` ACCEPTABLE (5 LOW recorded).

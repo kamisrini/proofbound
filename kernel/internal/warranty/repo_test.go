@@ -29,11 +29,12 @@ const profile = `{
 `
 
 type fixture struct {
-	t      *testing.T
-	root   string
-	commit string
-	body   Body
-	key    ed25519.PrivateKey
+	t        *testing.T
+	root     string
+	commit   string
+	body     Body
+	key      ed25519.PrivateKey // the exporter's
+	reviewer ed25519.PrivateKey // "reviewer", declared at KeysDir/reviewer.pub; signs every artifact (A)
 }
 
 func (x *fixture) git(args ...string) string {
@@ -74,7 +75,7 @@ func artifact(t *testing.T, build func(digest string) any) string {
 // newFixture builds a Spec Kit project whose commit is claimed, reviewed by a non-owner, and whose
 // key is declared at HEAD, with a signed body that Verify accepts against it.
 func newFixture(t *testing.T) *fixture {
-	x := &fixture{t: t, root: t.TempDir(), key: testKey(t)}
+	x := &fixture{t: t, root: t.TempDir(), key: testKey(t), reviewer: ed25519.NewKeyFromSeed(append(make([]byte, 31), 7))}
 	x.git("init", "-q", "-b", "main")
 	x.write(".proofbound/sdd-profile.json", profile)
 	x.write("specs/001-x/spec.md", "# X\n\n- **FR-001**: System MUST do A.\n- **FR-002**: System MUST do B.\n")
@@ -128,6 +129,14 @@ func newFixture(t *testing.T) *fixture {
 			Requirements: []connectorintent.Reference{r}, Obligations: outcomes, Findings: []reviews.Finding{}, ArtifactPath: ovPath, ArtifactSHA256: d}
 	}))
 	x.write(KeysDir+"/owner.pub", PubLine(x.key.Public().(ed25519.PublicKey)))
+	x.write(KeysDir+"/reviewer.pub", PubLine(x.reviewer.Public().(ed25519.PublicKey)))
+	for _, rel := range []string{rrPath, ovPath} {
+		data, err := os.ReadFile(filepath.Join(x.root, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		x.write(rel+".sig", SignArtifact(data, x.reviewer))
+	}
 	x.git("add", "-A")
 	x.git("commit", "-qm", "review and key")
 

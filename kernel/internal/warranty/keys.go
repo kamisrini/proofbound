@@ -12,8 +12,12 @@ import (
 	"strings"
 )
 
-// KeyPath is where the signing key lives: ${XDG_CONFIG_HOME:-$HOME/.config}/proofbound/signing-key.
+// KeyPath is where the signing key lives: $PROOFBOUND_KEY verbatim when set (a second identity on one
+// machine, MVP step 3), else ${XDG_CONFIG_HOME:-$HOME/.config}/proofbound/signing-key.
 func KeyPath() (string, error) {
+	if p := os.Getenv("PROOFBOUND_KEY"); p != "" {
+		return p, nil
+	}
 	base := os.Getenv("XDG_CONFIG_HOME")
 	if base == "" {
 		home, err := os.UserHomeDir()

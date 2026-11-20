@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"crypto/ed25519"
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -18,6 +19,7 @@ import (
 	connectorreviews "github.com/kamisrini/proofbound/kernel/internal/connector/reviews"
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
+	pbwarranty "github.com/kamisrini/proofbound/kernel/internal/warranty"
 )
 
 // The R2 starter kit and reviewer workflow (docs/plans/R2-starter-kit-spec.md, CLI-INV-18..20).
@@ -400,6 +402,10 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	if err != nil {
 		return err
 	}
+	signer, err := reviewSigner(root, reviewer)
+	if err != nil {
+		return err
+	}
 	short := draft.Commit[:12]
 	files := map[string][]byte{}
 	var order []string
@@ -414,8 +420,16 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 		order = append(order, rel)
 		return nil
 	}
+	// MVP step 3, option A: each sealed artifact gets a `.sig` by the reviewer's declared key, written
+	// in the same all-or-nothing batch (CLI-INV-19/20 amended).
+	addSig := func(path string, data []byte) error {
+		if signer == nil {
+			return nil
+		}
+		return add(path+".sig", []byte(pbwarranty.SignArtifact(data, signer)))
+	}
 	for i, review := range draft.Reviews {
-		if reviewer == review.DeclaredOwner {
+		if reviewer == review.DeclaredOwner || pbwarranty.KeyName(reviewer) == pbwarranty.KeyName(review.DeclaredOwner) {
 			return fmt.Errorf("seal: the reviewer %q is the declared owner of %s; a different reviewer must review it", reviewer, review.Requirement.RecordID)
 		}
 		outcomes := []connectorreviews.RequirementReviewOutcome{}
@@ -437,6 +451,9 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 		if err := add(path, data); err != nil {
+			return err
+		}
+		if err := addSig(path, data); err != nil {
 			return err
 		}
 	}
@@ -474,6 +491,9 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 		if err := add(path, data); err != nil {
 			return err
 		}
+		if err := addSig(path, data); err != nil {
+			return err
+		}
 	}
 	gate := fmt.Sprintf(`{"schema":"proofbound.gate.v1","id":"ready-%s","description":"readiness of commit %s","expires":"2099-01-01","mode":"canary","rule":"intent-delivery-readiness","scope_commit":"%s"}`+"\n", short, short, draft.Commit)
 	if err := add("gates/ready-"+short+".yaml", []byte(gate)); err != nil {
@@ -509,7 +529,51 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 	}
-	return nil
+	keyFile := pbwarranty.KeysDir + "/" + pbwarranty.KeyName(reviewer) + ".pub"
+	if signer == nil {
+		_, err = fmt.Fprintf(output, "unsigned: no key declared for %s (%s); warranties for this commit will verify UNREVIEWED until the reviewer cosigns\n", reviewer, keyFile)
+	} else {
+		_, err = fmt.Fprintf(output, "signed as %s (key %s); commit %s with the review if it is not committed yet\n", reviewer, pbwarranty.Fingerprint(signer.Public().(ed25519.PublicKey)), keyFile)
+	}
+	return err
+}
+
+// reviewSigner decides how `review seal` signs (mvp-3 spec §3): nil when no key is declared for the
+// reviewer in the working tree; the local key when it is exactly the declared one; an error (nothing
+// written) for an unusable name, a declaration that is not an exact key line, or a declared key this
+// machine does not hold.
+func reviewSigner(root, reviewer string) (ed25519.PrivateKey, error) {
+	name := pbwarranty.KeyName(reviewer)
+	if name == "" {
+		return nil, fmt.Errorf("seal: reviewer %q has no usable key name; use letters, digits or '-'", reviewer)
+	}
+	pubPath := filepath.Join(root, filepath.FromSlash(pbwarranty.KeysDir), name+".pub")
+	info, err := os.Lstat(pubPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("seal: %s is not a regular file", pubPath)
+	}
+	declared, err := os.ReadFile(pubPath)
+	if err != nil {
+		return nil, err
+	}
+	keyPath, err := pbwarranty.KeyPath()
+	if err != nil {
+		return nil, err
+	}
+	key, err := pbwarranty.LoadKey(keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("seal: a key is declared for %s but this machine cannot use one: %v", reviewer, err)
+	}
+	if pbwarranty.PubLine(key.Public().(ed25519.PublicKey)) != string(declared) {
+		return nil, fmt.Errorf("seal: this machine's key is not the key declared for %s in %s (set PROOFBOUND_KEY to %s's key)", reviewer, pubPath, reviewer)
+	}
+	return key, nil
 }
 
 // mergeDecisions copies the reviewer's decisions (outcome, finding) from the edited draft onto the

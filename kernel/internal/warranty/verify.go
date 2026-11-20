@@ -29,7 +29,35 @@ var ErrUnverified = errors.New("signature only; pass --repo to check the claims"
 // Verify runs SPEC §5 on a parsed file. Without a repository it stops after the file-only checks and
 // returns ErrUnverified. trustKey, when set, pins the signing key's fingerprint.
 func Verify(ctx context.Context, f File, repo, trustKey string) error {
+	_, err := VerifyReport(ctx, f, repo, trustKey)
+	return err
+}
+
+// VerifyReport is Verify that also returns the reviewers check 9 proved (W-INV-9).
+func VerifyReport(ctx context.Context, f File, repo, trustKey string) ([]ProvenReviewer, error) {
+	if err := f.verifyThrough8(ctx, repo, trustKey); err != nil {
+		return nil, err
+	}
+	r, err := gitcmd.New(repo)
+	if err != nil {
+		return nil, err
+	}
+	head, err := git(repo, "rev-parse", "--verify", "HEAD^{commit}")
+	if err != nil {
+		return nil, errors.New("clone has no HEAD commit")
+	}
+	pub, err := f.PublicKey()
+	if err != nil {
+		return nil, err
+	}
+	return reviewersProven(ctx, r, head, f, pub)
+}
+
+func (f File) verifyThrough8(ctx context.Context, repo, trustKey string) error {
 	if err := f.CheckSignature(); err != nil {
+		return err
+	}
+	if err := f.checkCosignatures(); err != nil {
 		return err
 	}
 	if err := CheckRule(f.Body); err != nil {
