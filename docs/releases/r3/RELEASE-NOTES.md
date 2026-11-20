@@ -37,6 +37,14 @@ checks the archive against `SHA256SUMS` and never uses `sudo`. Quickstart:
 - Reviewer and owner names are compared by key name: `Alice` and `alice` are one person.
 - `proofbound check` lists a mistyped claim (for example `intent: SDD:x`) as UNBOUND instead of ignoring it.
 
+## Known issue
+
+- **The GitHub Action fails on reviewed commits in CI.** A sealed verdict cites its evidence by an
+  event id that exists only in the reviewer's local database, so `proofbound sync all` on a fresh CI
+  runner stops with `v2 verdict evidence … is dangling` (`DEF-VERDICT-EVIDENCE-PORTABILITY-001`, found
+  by the first live Action run, 2026-11-20). `proofbound check` and warranties work locally, and
+  `warranty verify` is unaffected (it needs no database). A fix is planned for the next release.
+
 ## Caveats
 
 - The repository is the trust anchor: anyone who can commit to it can declare a key. Clone from a

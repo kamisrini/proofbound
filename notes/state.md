@@ -41,14 +41,23 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
 
 - **Claim-typo fix** (`043afd7`, `CI-mvp-claim-typo-r4n8xk`): a mistyped `Intent:` claim now fails
   `proofbound check` (UNBOUND) instead of reading as NO CLAIMS. Review ACCEPTABLE (3 LOW).
-- **Publishing v0.3.0** (owner: "go with the recommendations", 2026-11-20): push hold lifted
-  (`DEF-PUSH-HOLD-20261116` RESOLVED), release notes `docs/releases/r3/RELEASE-NOTES.md`.
+- **v0.3.0 PUBLISHED 2026-11-20:** main pushed (`b783b61`), tag `v0.3.0`, GitHub release with 5
+  archives + SHA256SUMS; `curl …/install.sh | sh` from GitHub installs v0.3.0 (verified). Before the push
+  the owner had commercial material kept private: 25 unpushed commits were rewritten (filter-branch) to
+  drop it; old history on local branch `backup/pre-scrub-20261120` (never push it); the material lives in
+  `~/projects/proofbound-commercial/` (local git, never pushed).
+- **Live Action test FAILED (real finding):** private throwaway repo `kamisrini/proofbound-action-test`
+  PR #1. Install step worked; `proofbound sync all` on the runner failed: `v2 verdict evidence … is
+  dangling` — `DEF-VERDICT-EVIDENCE-PORTABILITY-001` (verdict evidence = per-ledger random event id). The
+  PR check cannot pass in CI for any reviewed commit until this is fixed. Known issue added to the
+  release notes.
 
-**Exact next action:** finish publishing: push main, tag `v0.3.0`, `scripts/release-build.sh v0.3.0`,
-`gh release create` with the archives + SHA256SUMS, check `install.sh` from GitHub, then a throwaway
-repository + pull request to exercise the Action. Step 5 continues outside this repository.
+**Exact next action:** the owner decides whether to authorize `DEF-VERDICT-EVIDENCE-PORTABILITY-001`
+(it is OPEN, so dormant until named). Recommended fix: verdicts cite evidence by a portable identity
+(the reviewed commit's SHA / native id) instead of a ledger event id; spec first, one round each. Then
+re-run PR #1 and cut v0.3.1. Also: delete the test repo when done, or keep it for the re-test.
 
-**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** none recorded; publishing in progress.
+**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** the GitHub Action fails on reviewed commits in CI (DEF-VERDICT-EVIDENCE-PORTABILITY-001, dormant until the owner authorizes it).
 
 ## R2 build log — 2026-11-19
 
