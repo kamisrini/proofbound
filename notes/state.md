@@ -15,8 +15,12 @@ Non-author review `r2-polish-review-20261119`: NEEDS_WORK, one MED, fixed; 3 LOW
 demos and the OpenSpec demo re-ran clean. `sync all` on OpenSpec's 1,059 commits takes ~1.5 min
 (noted in the release notes).
 
-**Exact next action:** tag `v0.2.0` on the polish commit (the owner said "then tag"). Pushing still
-waits for the owner's explicit word (DEF-PUSH-HOLD-20261116).
+**Tagged and pushed** (owner: "push", 2026-11-19): `main` at `7312003` and tag `v0.2.0` are on
+origin. The push hold (DEF-PUSH-HOLD-20261116) stays in force for later pushes: each needs the
+owner's word.
+
+**Exact next action:** wait for the owner to pick the next work (Release 3 per `ROADMAP.md`); run
+`/proofbound-next`.
 
 **Immediate blockers:** none beyond the push hold.
 
