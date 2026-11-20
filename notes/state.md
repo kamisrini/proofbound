@@ -30,11 +30,16 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   answered) → r2 ACCEPTABLE; code review ACCEPTABLE (5 LOW); `internal/warranty` sweep 148/148 killed.
   R3 demo shows UNREVIEWED → cosign → VALID on both kits.
 
-**Exact next action:** MVP step 4 (shareable proof: warranty attached to each release, README badge,
-one-page "how to verify"), under a new CI → `BR-vertical-mvp-xc31gp` O-4. Spec first (one round).
-Optional follow-up recorded, not built: `proofbound check` could also require reviewer signatures.
+- **Step 4 DONE, locally** (`66ffd36`, pin `95b5589`, `CI-mvp-share-proof-w7c4na` → O-4; owner: "build
+  it locally for now"): `proofbound warranty bundle <base> [-o dir]` writes signed warranty files plus
+  `VERIFY.md` / `index.json` (both say unsigned; fingerprint out of band) and `badge.svg`; exit 0/3/1
+  (CLI-INV-28..30). Demo `docs/releases/mvp/demo-share.sh`. Spec r1 NEEDS_WORK (3 MED) → r2 ACCEPTABLE;
+  code review ACCEPTABLE (4 LOW). Nothing published.
 
-**Gate:** GREEN at `8c7e2ef` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
+**Exact next action:** MVP step 5 (the commercial step) — outside this repository; ask the owner how to
+proceed.
+
+**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
 until the owner publishes.
 
 ## R2 build log — 2026-11-19
