@@ -21,6 +21,10 @@ to tag a release for slice 1 alone is the owner's call; not tagged.
 
 **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116); `a902be5` onward is unpushed.
 
+**EOD 2026-11-20:** `make check` GREEN on `8cad395` (a first run exited 1 with its log lost when the
+session scratchpad was deleted; cause unknown, rerun green — log gate runs to `notes/tmp/`).
+Deferrals check PASS (15 rows, 8 open); nothing newly deferred.
+
 ## R2 build log — 2026-11-19
 
 **Now: R2 M3 implementation, under `CI-sdd-warranty-m3-xaqocp`** (owner-approved 2026-11-19, `260b563`).
