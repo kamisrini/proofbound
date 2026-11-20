@@ -150,6 +150,7 @@ kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-68	StateRevision answers Re
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-69	Spec Kit: a feature's spec.md is one record, its sibling makes the change intent.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-70	The Spec Kit profile is strict, and the kit decides which shape is valid.
 kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-71	Resolve on Spec Kit is total; OpenSpec ids are unchanged by the kit-aware suffix.
+kernel/internal/connector/intent/sdd/SPEC.md	SDD-INV-72	StateRecords returns StateRevision's change intent plus exactly its targeted requirement revisions, byte-identical to the ledgered ones.
 kernel/internal/connector/reviews/SPEC.md	R-INV-1	Committed-only input:
 kernel/internal/connector/reviews/SPEC.md	R-INV-2	Exact schema:
 kernel/internal/connector/reviews/SPEC.md	R-INV-3	Event mapping:

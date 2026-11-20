@@ -633,6 +633,7 @@ keeps the reason, and it is re-issued under a new number.**
 69. **SDD-INV-69 — Spec Kit: a feature's spec.md is one record, its sibling makes the change intent.**
 70. **SDD-INV-70 — The Spec Kit profile is strict, and the kit decides which shape is valid.**
 71. **SDD-INV-71 — Resolve on Spec Kit is total; OpenSpec ids are unchanged by the kit-aware suffix.**
+72. **SDD-INV-72 — StateRecords returns StateRevision's change intent plus exactly its targeted requirement revisions, byte-identical to the ledgered ones.**
 
 Each proving test names **the wrong implementation it kills**. Where it matters, it also names **a
 neutral change that must survive**. Retired invariants have no row.
@@ -681,6 +682,7 @@ neutral change that must survive**. Retired invariants have no row.
 | SDD-INV-69 | `speckit-history`: step 01 maps one requirement (`O-FR-001`, `O-FR-002`, `O-SC-001`) and no change intent (no `tasks.md`); step 02 adds the feature's change intent targeting all three; step 03 (FR-001 edited in place) maps a new requirement id and a new change-intent revision whose obligations differ only in `O-FR-001`'s statement; fenced example lines are never obligations; no Skip in the history | speckit_test.go::TestSpecKitHistoryMapsExactly | kills: OpenSpec rules applied to Spec Kit, a change intent without the sibling, fenced lines read as obligations |
 | SDD-INV-70 | A speckit profile with wrong `requirements.paths`, a non-literal `root`, a `sibling` with a slash, an `archive` key, mode `delta-sections`, or no `sibling` is `profile-invalid`; an openspec profile with a `sibling` key is too | speckit_test.go::TestSpecKitProfileIsStrict | kills: a kit-agnostic parser that accepts either shape for either kit |
 | SDD-INV-71 | Spec Kit Resolve: a planned feature gives its revision, a feature without `tasks.md` gives `ErrNoChangeIntent`, a missing one `ErrUnknownChange`; `ErrArchivedEarlier` never arises; Spec Kit and OpenSpec ids for the same name differ, and every pinned OpenSpec id vector is unchanged | speckit_test.go::TestSpecKitResolveAndIDs | kills: a suffix that ignores the kit, or one that changes OpenSpec ids |
+| SDD-INV-72 | `StateRecords(commit, name)` (R3 slice 1, `CI-warranty-slice1-7t4iok`) has StateRevision's outcome and change-intent bytes on every fixture row, and returns exactly the requirement revisions its targets name, each byte-identical to the revision a full `Revisions` walk emits for that (id, digest); mapping, ids and digests are unchanged. It lets a warranty verifier re-derive a change's promise from git alone | state_records_test.go::TestStateRecordsMatchesTheLedgeredRevisions | kills: a requirement taken from another state, or a missing target |
 
 ## 10. Decisions this draft settles or withdraws
 

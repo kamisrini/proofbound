@@ -82,7 +82,7 @@ func initKit(ctx context.Context, root, kit, owner string, output io.Writer) err
 	steps := []func() error{
 		func() error { return writeNew(output, root, ".proofbound/sdd-profile.json", profile, 0o644) },
 		func() error {
-			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json"})
+			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json", "!.proofbound/keys/"})
 		},
 		func() error { return appendBlock(output, root, "AGENTS.md", agentsBlock) },
 		func() error {

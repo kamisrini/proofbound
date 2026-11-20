@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>}"
+const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -78,6 +78,9 @@ const (
 	commandReviewDraft
 	commandReviewSeal
 	commandReportDrift
+	commandKeysInit
+	commandWarrantyExport
+	commandWarrantyVerify
 )
 
 func parseCommand(args []string) command {
@@ -132,9 +135,46 @@ func parseCommand(args []string) command {
 		return commandReviewDraft
 	case len(args) == 3 && args[0] == "review" && args[1] == "seal" && args[2] != "":
 		return commandReviewSeal
+	case args0(args, "keys", "init") && flagsOK(args[2:], "--name"):
+		return commandKeysInit
+	case args0(args, "warranty", "export") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
+		return commandWarrantyExport
+	case args0(args, "warranty", "verify") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "--repo", "--trust-key"):
+		return commandWarrantyVerify
 	default:
 		return commandInvalid
 	}
+}
+
+func args0(args []string, a, b string) bool { return len(args) >= 2 && args[0] == a && args[1] == b }
+
+// flagsOK accepts zero or more `<flag> <value>` pairs, each flag at most once and from allowed.
+func flagsOK(rest []string, allowed ...string) bool {
+	if len(rest)%2 != 0 {
+		return false
+	}
+	seen := map[string]bool{}
+	for i := 0; i < len(rest); i += 2 {
+		ok := false
+		for _, a := range allowed {
+			ok = ok || rest[i] == a
+		}
+		if !ok || seen[rest[i]] || rest[i+1] == "" {
+			return false
+		}
+		seen[rest[i]] = true
+	}
+	return true
+}
+
+// flagValue returns the value of flag in rest (validated by flagsOK), or "".
+func flagValue(rest []string, flag string) string {
+	for i := 0; i+1 < len(rest); i += 2 {
+		if rest[i] == flag {
+			return rest[i+1]
+		}
+	}
+	return ""
 }
 
 func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
@@ -142,6 +182,10 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if cmd == commandInvalid {
 		fmt.Fprintln(stderr, usage)
 		return 2
+	}
+	if cmd == commandWarrantyVerify {
+		// A verifier may be anywhere: no repository root, no database (W-INV-7).
+		return warrantyVerify(ctx, args[2], flagValue(args[3:], "--repo"), flagValue(args[3:], "--trust-key"), stdout)
 	}
 	root, err := repositoryRoot()
 	if err == nil {
@@ -798,6 +842,15 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
 		return reviewSeal(ctx, root, args[2], fresh, output)
+	case commandKeysInit:
+		return keysInit(ctx, root, flagValue(args[2:], "--name"), output)
+	case commandWarrantyExport:
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return warrantyExport(ctx, root, ledger, args[2], flagValue(args[3:], "-o"), output)
 	case commandReportDrift:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

@@ -8,7 +8,7 @@ package acceptance bar: calibrated mutation evidence plus a non-author verdict. 
 capability and does not reinterpret older verdicts as current acceptance.
 
 The production package set is every package returned by `go list ./internal/...` that contains at
-least one non-test `.go` file. At the current inventory this is 18 packages. `internal/specfirst`
+least one non-test `.go` file. At the current inventory this is 19 packages. `internal/specfirst`
 is returned by `go list` but contains only `SPEC.md` and `_test.go`; it is explicitly classified as
 `not-in-production-package-set` and receives no mutation requirement.
 
@@ -18,6 +18,9 @@ this SPEC.
 
 The 18th package, `internal/connector/intent/sdd`, landed as R2 M1 (OpenSpec `intent.sdd` provider)
 and is accepted under this same bar on 2026-11-18 — see its addendum at the end of this SPEC.
+
+The 19th package, `internal/warranty`, landed as R3 slice 1 (the portable signed warranty) and is
+accepted under this same bar on 2026-11-19 — see its addendum at the end of this SPEC.
 
 ## Frozen package evidence
 
@@ -46,7 +49,7 @@ missing package, or missing exact non-author verdict keeps the package row open.
 
 ## Acceptance
 
-Task 8 closes only after the final code-changing commit is frozen and all 18 production rows have
+Task 8 closes only after the final code-changing commit is frozen and all 19 production rows have
 calibrated mutation results, zero undeclared survivors, exact tree-object bindings, and committed
 non-author verdict coverage. Then, and only then, the C3 census rows may cite the packet and the
 final package acceptance sweep may proceed to the Task 9 consolidation round.
@@ -106,3 +109,26 @@ under the same bar.
   (`NEEDS_WORK`, findings fixed) and
   [`r2-m1-recheck-round1-20261118.md`](../verification/verdicts/r2-m1-recheck-round1-20261118.md)
   — `ACCEPTABLE`, binding the reviewed commit above.
+
+## Addendum — 19th production package `internal/warranty` (accepted 2026-11-19)
+
+This package is R3 slice 1, the portable signed warranty. It is governed by change intent
+`CI-warranty-slice1-7t4iok`, with scope set by `VD-r3-warranty-first-s59ktv`, and it is accepted here
+under the same bar.
+
+- **Contract:** `kernel/internal/warranty/SPEC.md` (W-INV-1..8), from
+  `docs/plans/R3-warranty-export-spec.md` draft 2, which was ACCEPTABLE at spec round 2
+  (`r3-warranty-spec-recheck-20261119`).
+- **Calibrated mutation evidence** (`scripts/mutants.sh internal/warranty`): 86 candidates, 86
+  killed, 0 invalid, 0 survived. The calibration controls behaved: neutral survived, invalid was
+  invalid, lethal was killed.
+  - The first sweep's 11 survivors were gaps between branches. They are closed in `repo_test.go`
+    (`TestKeyDeclarationIsExact`) and `warranty_test.go` (`TestParseAndSignatureRefuseNearMisses`,
+    `TestKeyPathAndLoadAreExact`).
+  - One survivor came from a doc comment containing `repo == ""`. The comment was reworded; this is
+    the only production-source change after the code review.
+  - The repository checks are now proven inside the package (`TestVerifyAgainstARepository`), not
+    only by the sdd e2e test.
+- **Committed non-author verdict:**
+  [`r3-warranty-code-review-20261119.md`](../verification/verdicts/r3-warranty-code-review-20261119.md),
+  ACCEPTABLE (8 LOW recorded).

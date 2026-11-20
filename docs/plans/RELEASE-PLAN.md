@@ -72,6 +72,7 @@ Release 2 scope, unchanged — only the label moved from R2 to R3 on 2026-11-16.
 
 | Item | Vision step | Status | Notes |
 |---|---|---|---|
+| **Portable signed warranty, slice 1** (`warranty export` / `verify`) | #5 | built 2026-11-19; awaiting owner acceptance | first R3 slice by owner choice (`VD-r3-warranty-first-s59ktv`); `CI-warranty-slice1-7t4iok`; demo `docs/releases/r3/demo-warranty.sh` |
 | **Witnessed regeneration — FULL loop** (step 3 regenerator / step 4 candidate verification) | #2b | gate-only slice CI-complete; full loop not started | reopens the §5.1 regenerator-boundary decision; `DEF-P7-REGENLOOP-001` |
 | **Living Twin as a product** — prediction ledger, public Brier calibration, differential-verdict surface | #3 | primitives exist (`ReplayIsolated`, `Calibrate`); product surface not started | snapshot provider skipped (Gate 1) — needs owner un-skip |
 | **Governor v1** — policy envelopes, scoped credentials, human decision inbox | #4 | not started | new capability; needs owner scope + change intent |

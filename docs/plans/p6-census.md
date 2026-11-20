@@ -2,8 +2,8 @@
 # P6 debt census
 
 Generation input commit: `13503c7c96bad63ce1b95405ee8a83f09ccdab5a`.
-Counts: total=341 open=0 closed=341 unclassified=0.
-Categories: C1=35 C2=44 C3=19 C4=13 C5=60 C6=149 C7=16 C8=5.
+Counts: total=342 open=0 closed=342 unclassified=0.
+Categories: C1=35 C2=44 C3=20 C4=13 C5=60 C6=149 C7=16 C8=5.
 
 | row_id | category | subject | observation | probe | state | disposition | decision | evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -105,6 +105,7 @@ Categories: C1=35 C2=44 C3=19 C4=13 C5=60 C6=149 C7=16 C8=5.
 | C3-017 | C3 | package-test-only:internal/specfirst | `go list ./internal/...` includes a test-only package that must be explicitly excluded from the production acceptance set. | path:kernel/internal/specfirst/SPEC.md | closed | close-in-P6 | — | docs/plans/p6-task8-package-acceptance-SPEC.md |
 | C3-018 | C3 | package:internal/twin/manifest | The authorized P7 non-runtime manifest package is outside the frozen P6 production-package acceptance universe and requires its own independent review. | path:kernel/internal/twin/manifest/SPEC.md | closed | defer-to-P7 | docs/decisions/VD-p7-nonruntime-manifest-2026-10-26.md | docs/intent/records/change-intents/CI-p7-nonruntime-manifest-1a2b3c/0001.md,docs/plans/P7-next-nonruntime-slice-proposal-draft1.md,kernel/internal/twin/manifest/SPEC.md |
 | C3-019 | C3 | package:internal/connector/intent/sdd | R2 M1 production package (intent.sdd provider) needs a SPEC, calibrated proofs, and non-author acceptance; its acceptance is the R2 M1 foundational-tier review, not P6 Task 8. | artifact:docs/intent/records/change-intents/CI-sdd-warranty-m1-6op6vl/0001.md | closed | close-in-P6 | — | docs/intent/records/change-intents/CI-sdd-warranty-m1-6op6vl/0001.md,docs/plans/R2-sdd-provider-spec-draft10.md |
+| C3-020 | C3 | package:internal/warranty | R3 slice 1 production package (portable signed warranty) needs a SPEC, calibrated proofs, and non-author acceptance; its acceptance is the R3 slice 1 code review, not P6 Task 8. | artifact:docs/intent/records/change-intents/CI-warranty-slice1-7t4iok/0001.md | closed | close-in-P6 | — | docs/intent/records/change-intents/CI-warranty-slice1-7t4iok/0001.md,docs/plans/R3-warranty-export-spec.md |
 | C4-001 | C4 | connector:checks | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
 | C4-002 | C4 | connector:git | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |
 | C4-003 | C4 | connector:git/gitcmd | Production connector surface needs current live, synthetic, or none classification with exact evidence. | artifact:docs/verification/p6-connector-reality.md | closed | close-in-P6 | — | docs/verification/p6-connector-reality.md |

@@ -2,6 +2,7 @@ package sdd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -211,6 +212,39 @@ func (p *Provider) StateRevision(ctx context.Context, commit, name string) (inte
 		return intent.Revision{}, ErrNoChangeIntent
 	}
 	return *cr.rev, nil
+}
+
+// StateRecords returns what StateRevision returns plus the requirement revisions, from the same
+// mapped state, that the change intent's targets name by (record id, digest) (SDD-INV-72). It reads
+// git only, so a warranty verifier can re-derive a change's promise without any ledger (R3 slice 1).
+func (p *Provider) StateRecords(ctx context.Context, commit, name string) (intent.Revision, []intent.Revision, error) {
+	st, cr, err := p.changeAt(ctx, commit, name)
+	if err != nil {
+		return intent.Revision{}, nil, err
+	}
+	if cr.absent {
+		return intent.Revision{}, nil, ErrNoChangeIntent
+	}
+	var ci intent.ChangeIntent
+	if err := json.Unmarshal(cr.rev.Payload, &ci); err != nil {
+		return intent.Revision{}, nil, fmt.Errorf("sdd: change intent payload: %w", err)
+	}
+	want := map[string]string{}
+	for _, t := range ci.Targets {
+		want[t.RecordID] = t.ArtifactSHA256
+	}
+	var reqs []intent.Revision
+	for _, rev := range st.revisions {
+		if rev.Kind == core.KindRequirement && want[rev.NativeID] == rev.ArtifactSHA256 {
+			reqs = append(reqs, rev)
+			delete(want, rev.NativeID)
+		}
+	}
+	if len(want) != 0 {
+		return intent.Revision{}, nil, fmt.Errorf("sdd: change %s targets a requirement absent from its state", name)
+	}
+	sort.Slice(reqs, func(i, j int) bool { return reqs[i].NativeID < reqs[j].NativeID })
+	return *cr.rev, reqs, nil
 }
 
 // changeAt maps the commit's state and returns the named change's result, with Resolve's

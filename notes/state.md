@@ -6,23 +6,22 @@ As of: 2026-11-19
 
 ## Resume — 2026-11-19
 
-**Release 2 is accepted** (owner, 2026-11-19). Before tagging, the owner asked for the two polish
-fixes; both are built under `CI-r2-polish-wkudnk`:
-- `sync all` also reads specs when HEAD commits `.proofbound/sdd-profile.json` (CLI-INV-23,
-  SDD-INV-56 amended); a failing spec step no longer stops the other steps (review F1, MED, fixed);
-- `review seal` accepts the `draft.json` path as well as its folder (CLI-INV-24).
-Non-author review `r2-polish-review-20261119`: NEEDS_WORK, one MED, fixed; 3 LOWs recorded. Both loop
-demos and the OpenSpec demo re-ran clean. `sync all` on OpenSpec's 1,059 commits takes ~1.5 min
-(noted in the release notes).
+**R3 slice 1, the portable signed warranty, is built and awaiting the owner's acceptance.**
+- Under `CI-warranty-slice1-7t4iok` → `BR-portable-warranty-oeffoe` O-1..O-5, decision
+  `VD-r3-warranty-first-s59ktv`; the owner said "go" (D1-D3 as recommended).
+- Spec `docs/plans/R3-warranty-export-spec.md`: round 1 NEEDS_WORK (3 HIGH, 4 MED, all answered),
+  round 2 ACCEPTABLE (3 LOW). Code review `r3-warranty-code-review-20261119`: ACCEPTABLE, 8 LOW
+  recorded, not fixed (Law 11).
+- `internal/warranty` (W-INV-1..8; 19th Task-8 package, mutation sweep 86/86 killed), `sdd.StateRecords` (SDD-INV-72), CLI `keys init`,
+  `warranty export`, `warranty verify`. 4 hand mutants killed; `TestWarrantyEndToEnd` green.
+- Demo `docs/releases/r3/demo-warranty.sh {openspec|speckit}` runs clean on both kits; page
+  `docs/releases/r3/DEMO.md`.
 
-**Tagged and pushed** (owner: "push", 2026-11-19): `main` at `7312003` and tag `v0.2.0` are on
-origin. The push hold (DEF-PUSH-HOLD-20261116) stays in force for later pushes: each needs the
-owner's word.
+**Exact next action:** the owner runs the demo and accepts (or not). Worth offering: LOWs F1 (rule
+requires >0 obligations), F2 (key path check fails open on git errors) and F8 (demo tamper step
+asserts nothing) are each a few lines; Law 11 leaves them to the owner.
 
-**Exact next action:** wait for the owner to pick the next work (Release 3 per `ROADMAP.md`); run
-`/proofbound-next`.
-
-**Immediate blockers:** none beyond the push hold.
+**Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116); `a902be5` onward is unpushed.
 
 ## R2 build log — 2026-11-19
 
