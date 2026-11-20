@@ -25,6 +25,7 @@
 - [VD-p7-readiness-manifest-2026-10-17: case/evidence manifest shape](VD-p7-readiness-manifest-2026-10-17.md) — ACCEPTED FOR DOCUMENTARY PLANNING — round-1 non-author review on 2026-10-19; (2026-10-17)
 - [VD-p7-replay-lock-companion-api-boundary-2026-10-23: VD-p7-replay-lock-companion-api-boundary-2026-10-23](VD-p7-replay-lock-companion-api-boundary-2026-10-23.md) — OWNER-ACCEPTED DOCUMENTARY RECOMMENDATION; not an accepted live API decision. (undated)
 - [VD-p7-snapshot-provider-skip-2026-10-01: retain the conditional snapshot-provider skip](VD-p7-snapshot-provider-skip-2026-10-01.md) — Accepted (2026-10-01)
+- [VD-r3-warranty-first-s59ktv: Release 3 starts with a portable signed warranty, ahead of witnessed regeneration](VD-r3-warranty-first-s59ktv.md) — Accepted (2026-11-19)
 - [VD-release-line-kwdh4v: Release 1 is the Trust Record; the revenue organs are Release 2](VD-release-line-kwdh4v.md) — Superseded by VD-release-line-r2-sdd-t5j34p (2026-11-10)
 - [VD-release-line-r2-sdd-t5j34p: Release 1 is shipped; Release 2 is the SDD Warranty Connector; the revenue organs are Release 3](VD-release-line-r2-sdd-t5j34p.md) — Accepted (2026-11-16)
 - [VD-repo-structure-55mzvd: the repo root is the mono-home; vision docs stay at root](VD-repo-structure-55mzvd.md) — Accepted (2026-08-07)
