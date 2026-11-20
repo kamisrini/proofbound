@@ -53,26 +53,9 @@ func parseCheck(args []string) (base string, markdown, requireClaims, ok bool) {
 // checkRange reports, for every commit in base..HEAD that claims an sdd change, whether its
 // readiness gate is PASS, using only reads: git, the gate files at HEAD, and the ledger (CHK-1..3).
 func checkRange(ctx context.Context, root string, ledger *store.Store, base string, markdown, requireClaims bool, output io.Writer) error {
-	shas, err := commitsInRange(ctx, root, base)
+	lines, err := classifiedRange(ctx, root, ledger, base)
 	if err != nil {
 		return err
-	}
-	var lines []checkLine
-	for _, sha := range shas {
-		var names []string
-		for _, line := range strings.Split(gitOutput(ctx, root, "log", "-1", "--format=%B", sha), "\n") {
-			if v, ok := strings.CutPrefix(strings.TrimSpace(line), "Intent: sdd:"); ok {
-				names = append(names, "sdd:"+strings.TrimSpace(v))
-			}
-		}
-		if len(names) > 0 {
-			lines = append(lines, checkLine{commit: sha, claims: strings.Join(names, ",")})
-		}
-	}
-	if len(lines) > 0 {
-		if err := classifyClaims(ctx, root, ledger, lines); err != nil {
-			return err
-		}
 	}
 	passed := 0
 	for _, l := range lines {
@@ -110,6 +93,32 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 		return errNotWarranted
 	}
 	return nil
+}
+
+// classifiedRange is every claiming commit in base..HEAD with its CLI-INV-26 state, oldest first.
+func classifiedRange(ctx context.Context, root string, ledger *store.Store, base string) ([]checkLine, error) {
+	shas, err := commitsInRange(ctx, root, base)
+	if err != nil {
+		return nil, err
+	}
+	var lines []checkLine
+	for _, sha := range shas {
+		var names []string
+		for _, line := range strings.Split(gitOutput(ctx, root, "log", "-1", "--format=%B", sha), "\n") {
+			if v, ok := strings.CutPrefix(strings.TrimSpace(line), "Intent: sdd:"); ok {
+				names = append(names, "sdd:"+strings.TrimSpace(v))
+			}
+		}
+		if len(names) > 0 {
+			lines = append(lines, checkLine{commit: sha, claims: strings.Join(names, ",")})
+		}
+	}
+	if len(lines) > 0 {
+		if err := classifyClaims(ctx, root, ledger, lines); err != nil {
+			return nil, err
+		}
+	}
+	return lines, nil
 }
 
 func commitsInRange(ctx context.Context, root, base string) ([]string, error) {
@@ -211,9 +220,7 @@ func writeCheckPlain(w io.Writer, headline string, lines []checkLine, drift stri
 }
 
 func writeCheckMarkdown(w io.Writer, headline string, lines []checkLine, drift string) error {
-	cell := func(s string) string {
-		return strings.NewReplacer("|", `\|`, "\n", " ", "`", "'").Replace(printableUnit(s))
-	}
+	cell := mdCell
 	var b strings.Builder
 	b.WriteString("### " + headline + "\n\n")
 	if len(lines) > 0 {
@@ -227,4 +234,10 @@ func writeCheckMarkdown(w io.Writer, headline string, lines []checkLine, drift s
 	}
 	_, err := io.WriteString(w, b.String())
 	return err
+}
+
+// mdCell escapes untrusted text (commit messages, gate reasons, artifact fields) for one Markdown table
+// cell: no pipe, newline or backtick can break the table or open a code span (CLI-INV-26, CLI-INV-28).
+func mdCell(s string) string {
+	return strings.NewReplacer("|", `\|`, "\n", " ", "`", "'").Replace(printableUnit(s))
 }

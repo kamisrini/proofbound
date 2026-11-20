@@ -70,7 +70,19 @@ The job fails unless every commit that claims a spec is verified; a pull request
 passes (set the action's `require-claims: true` to change that). The same check runs locally:
 `proofbound check main`. (The action is not published yet; see the note in §1.)
 
-## 5. See it run first (from a clone, on Linux or WSL)
+## 5. Attach the proof to a release
+
+```bash
+proofbound warranty bundle <previous-release-tag> -o dist/warranties
+```
+
+writes one signed `warranty-<commit>.json` per verified commit since that tag, plus `VERIFY.md` (a page
+telling a buyer how to check each file themselves), `index.json` and `badge.svg`
+(`![proofbound](dist/warranties/badge.svg)` in a README). The page, index and badge are unsigned
+conveniences and say so; the warranty files are the proof. Exit 3 means the bundle was written but some
+claiming commit is not VALID. Try it locally: `bash docs/releases/mvp/demo-share.sh`.
+
+## 6. See it run first (from a clone, on Linux or WSL)
 
 `bash docs/releases/mvp/demo-install.sh` needs Go (to build the release archives), GNU tar, and port
 55432 free. It builds the archives for all five platforms, then times the user's part: install →

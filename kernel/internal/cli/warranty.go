@@ -179,60 +179,18 @@ func warrantyExport(ctx context.Context, root string, ledger *store.Store, arg, 
 	if err != nil {
 		return err
 	}
-	gateID := "ready-" + sha[:12]
-	definitions, err := gates.LoadDir(filepath.Join(root, "gates"))
+	data, body, _, unreviewed, err := buildWarranty(ctx, root, ledger, sha)
 	if err != nil {
 		return err
 	}
-	var gate *gates.Definition
-	for i := range definitions {
-		if definitions[i].ID == gateID && definitions[i].Rule == "intent-delivery-readiness" && definitions[i].ScopeCommit == sha {
-			gate = &definitions[i]
+	if unreviewed != nil {
+		if _, werr := fmt.Fprintf(output, "warning: %v; it will verify UNREVIEWED until the reviewer runs `proofbound warranty cosign`\n", unreviewed); werr != nil {
+			return werr
 		}
-	}
-	if gate == nil {
-		return fmt.Errorf("warranty: no readiness gate gates/%s.yaml; review and seal the commit first", gateID)
-	}
-	result, err := gates.Evaluate(ctx, ledger, *gate)
-	if err != nil {
-		return err
-	}
-	if result.State != gates.StatePass {
-		return fmt.Errorf("warranty: gate %s is %s (%s); only a PASS commit can be warranted", gateID, result.State, result.Reason)
-	}
-	body, err := warrantyBody(ctx, ledger, sha)
-	if err != nil {
-		return err
-	}
-	if body.ChangeName, err = claimedChange(ctx, root, sha); err != nil {
-		return err
-	}
-	body.IssuedAt = time.Now().UTC().Format(time.RFC3339)
-	body.Issuer = strings.TrimSpace(gitOutput(ctx, root, "config", "user.name"))
-	body.RepositoryHint = strings.TrimSpace(gitOutput(ctx, root, "remote", "get-url", "origin"))
-	keyPath, err := pbwarranty.KeyPath()
-	if err != nil {
-		return err
-	}
-	key, err := pbwarranty.LoadKey(keyPath)
-	if err != nil {
-		return err
-	}
-	data, err := pbwarranty.Sign(body, key)
-	if err != nil {
-		return err
 	}
 	parsed, err := pbwarranty.Parse(data)
 	if err != nil {
 		return err
-	}
-	// W-INV-2 amended: VALID or UNREVIEWED (a reviewer can still cosign it); never anything else.
-	if err := pbwarranty.Verify(ctx, parsed, root, ""); errors.Is(err, pbwarranty.ErrUnreviewed) {
-		if _, werr := fmt.Fprintf(output, "warning: %v; it will verify UNREVIEWED until the reviewer runs `proofbound warranty cosign`\n", err); werr != nil {
-			return werr
-		}
-	} else if err != nil {
-		return fmt.Errorf("warranty: would not verify against this repository: %v", err)
 	}
 	if out == "" {
 		out = "warranty-" + sha[:12] + ".json"
@@ -252,6 +210,68 @@ func warrantyExport(ctx context.Context, root string, ledger *store.Store, arg, 
 	pub, _ := parsed.PublicKey()
 	_, err = fmt.Fprintf(output, "warranty %s commit=%s change=sdd:%s key=%s obligations=%d\n", out, sha, body.ChangeName, pbwarranty.Fingerprint(pub), countTargets(body))
 	return err
+}
+
+// buildWarranty signs and self-verifies the warranty of a PASS commit (W-INV-2 amended): it returns the
+// file bytes, the body, the proven reviewers, and a non-nil unreviewed error when the result is
+// UNREVIEWED; any other failure is err, and nothing is returned to write.
+func buildWarranty(ctx context.Context, root string, ledger *store.Store, sha string) ([]byte, pbwarranty.Body, []pbwarranty.ProvenReviewer, error, error) {
+	var none pbwarranty.Body
+	gateID := "ready-" + sha[:12]
+	definitions, err := gates.LoadDir(filepath.Join(root, "gates"))
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	var gate *gates.Definition
+	for i := range definitions {
+		if definitions[i].ID == gateID && definitions[i].Rule == "intent-delivery-readiness" && definitions[i].ScopeCommit == sha {
+			gate = &definitions[i]
+		}
+	}
+	if gate == nil {
+		return nil, none, nil, nil, fmt.Errorf("warranty: no readiness gate gates/%s.yaml; review and seal the commit first", gateID)
+	}
+	result, err := gates.Evaluate(ctx, ledger, *gate)
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	if result.State != gates.StatePass {
+		return nil, none, nil, nil, fmt.Errorf("warranty: gate %s is %s (%s); only a PASS commit can be warranted", gateID, result.State, result.Reason)
+	}
+	body, err := warrantyBody(ctx, ledger, sha)
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	if body.ChangeName, err = claimedChange(ctx, root, sha); err != nil {
+		return nil, none, nil, nil, err
+	}
+	body.IssuedAt = time.Now().UTC().Format(time.RFC3339)
+	body.Issuer = strings.TrimSpace(gitOutput(ctx, root, "config", "user.name"))
+	body.RepositoryHint = strings.TrimSpace(gitOutput(ctx, root, "remote", "get-url", "origin"))
+	keyPath, err := pbwarranty.KeyPath()
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	key, err := pbwarranty.LoadKey(keyPath)
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	data, err := pbwarranty.Sign(body, key)
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	parsed, err := pbwarranty.Parse(data)
+	if err != nil {
+		return nil, none, nil, nil, err
+	}
+	proven, err := pbwarranty.VerifyReport(ctx, parsed, root, "")
+	if errors.Is(err, pbwarranty.ErrUnreviewed) {
+		return data, body, proven, err, nil
+	}
+	if err != nil {
+		return nil, none, nil, nil, fmt.Errorf("warranty: would not verify against this repository: %v", err)
+	}
+	return data, body, proven, nil, nil
 }
 
 func countTargets(b pbwarranty.Body) int {

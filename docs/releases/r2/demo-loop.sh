@@ -14,6 +14,7 @@
 # The demo plays the reviewer in step 5, and says so. In real use, a person or the
 # proofbound-reviewer agent who did not write the commit makes those decisions.
 # PROOFBOUND_BIN=<path> uses that binary instead of building one (docs/releases/mvp/demo-install.sh).
+# DEMO_REVIEWER_KEY=<path> gives the reviewer their own declared key, so `review seal` signs (MVP step 3).
 # Needs git, go and jq; nothing is fetched or pushed. Needs the embedded database's port 55432 free.
 set -euo pipefail
 
@@ -131,7 +132,14 @@ jq '.declared_reviewer = "demo-reviewer"
     | .reviews[].obligations[].outcome = "VERIFIABLE"
     | .verdicts[].obligations[].outcome = "SATISFIED"' "$draft" >"$draft.tmp" && mv "$draft.tmp" "$draft"
 echo "-- outcomes recorded: every obligation SATISFIED, every requirement VERIFIABLE, by demo-reviewer"
-pb review seal "$draft"
+if [[ -n ${DEMO_REVIEWER_KEY:-} ]]; then
+  # MVP step 3, option A: the reviewer has their own key, declared in the repository, so seal signs.
+  PROOFBOUND_KEY=$DEMO_REVIEWER_KEY pb keys init --name demo-reviewer
+  PROOFBOUND_KEY=$DEMO_REVIEWER_KEY pb review seal "$draft"
+  git add .proofbound/keys
+else
+  pb review seal "$draft"
+fi
 git add docs/verification/verdicts gates
 PROOFBOUND_NO_INTENT=1 git commit -qm "review $commit"
 pb sync all

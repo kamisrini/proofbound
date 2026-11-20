@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>]"
+const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -88,6 +88,7 @@ const (
 	commandVersion
 	commandCheck
 	commandWarrantyCosign
+	commandWarrantyBundle
 )
 
 func parseCommand(args []string) command {
@@ -153,6 +154,8 @@ func parseCommand(args []string) command {
 		return commandKeysInit
 	case args0(args, "warranty", "export") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
 		return commandWarrantyExport
+	case args0(args, "warranty", "bundle") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
+		return commandWarrantyBundle
 	case args0(args, "warranty", "cosign") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "-o"):
 		return commandWarrantyCosign
 	case args0(args, "warranty", "verify") && len(args) >= 3 && args[2] != "" && !strings.HasPrefix(args[2], "-") && flagsOK(args[3:], "--repo", "--trust-key"):
@@ -216,6 +219,11 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 			defer cancel()
 		}
 		err = runCommand(ctx, cmd, args, root, os.Getenv("DATABASE_URL"), stdout)
+	}
+	if errors.Is(err, errBundleIncomplete) {
+		// Written, but some claiming commit is not VALID (mvp-4 spec §2.6): exit 3, not 1.
+		fmt.Fprintf(stderr, "proofbound: %v\n", err)
+		return 3
 	}
 	if err != nil {
 		if isVerificationCommand(cmd) && errors.Is(err, context.DeadlineExceeded) {
@@ -874,6 +882,13 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return warrantyExport(ctx, root, ledger, args[2], flagValue(args[3:], "-o"), output)
 	case commandWarrantyCosign:
 		return warrantyCosign(ctx, root, args[2], flagValue(args[3:], "-o"), output)
+	case commandWarrantyBundle:
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return warrantyBundle(ctx, root, ledger, args[2], flagValue(args[3:], "-o"), output)
 	case commandCheck:
 		base, markdown, requireClaims, _ := parseCheck(args)
 		ledger, err := openStore(ctx, root, databaseURL)
