@@ -67,7 +67,7 @@ clean-clone proof of this release is recorded in
 **What Release 1 does not do yet:** it does not regenerate failing code, predict outcomes, govern
 actions with policy envelopes, issue portable signed warranties, or redistribute a bundled database —
 those are **Release 3**, and none of them is built yet. **Release 2**, the SDD Warranty Connector, is
-built and awaiting acceptance: it warrants the output of spec-driven-development tools (OpenSpec and
+built and accepted (2026-11-19): it warrants the output of spec-driven-development tools (OpenSpec and
 Spec Kit) by binding each commit to the exact spec revision it claims, recording independent
 verification, and flagging drift when a verified spec changes.
 
@@ -84,7 +84,7 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
 - [`docs/releases/r1/DEMO.md`](docs/releases/r1/DEMO.md) — a copy-paste 5-minute demo.
 - [`docs/releases/r1/RELEASE-NOTES.md`](docs/releases/r1/RELEASE-NOTES.md) — what Release 1
   includes, its limitations, and what is deferred to later releases.
-- [`docs/releases/r2/DEMO.md`](docs/releases/r2/DEMO.md) — Release 2 (awaiting acceptance): the whole
+- [`docs/releases/r2/DEMO.md`](docs/releases/r2/DEMO.md) — Release 2 (accepted 2026-11-19): the whole
   warranty loop on OpenSpec or Spec Kit in about two minutes, OpenSpec's own repository at scale, and
   how to use it on your project. What it includes and its caveats:
   [`RELEASE-NOTES.md`](docs/releases/r2/RELEASE-NOTES.md).

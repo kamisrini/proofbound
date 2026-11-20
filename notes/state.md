@@ -6,6 +6,19 @@ As of: 2026-11-19
 
 ## Resume — 2026-11-19
 
+**Release 2 is accepted** (owner, 2026-11-19: "accepted"). Notes, README, ROADMAP and RELEASE-PLAN
+say so. Not tagged, not pushed.
+
+**Exact next action:** wait for the owner. Two follow-ups are theirs to call:
+- tag `v0.2.0` and push (pushes are held, DEF-PUSH-HOLD-20261116);
+- pick the next work (Release 3 per `ROADMAP.md`, or the two offered R2 polish options: `sync all`
+  also syncing specs when a profile exists, which reverses SDD-INV-56; `review seal` accepting the
+  `draft.json` path). Use `/proofbound-next`.
+
+**Immediate blockers:** none beyond the push hold. Do not push or tag without the owner's word.
+
+## R2 build log — 2026-11-19
+
 **Now: R2 M3 implementation, under `CI-sdd-warranty-m3-xaqocp`** (owner-approved 2026-11-19, `260b563`).
 - **Decision record:** `VD-sdd-m3-git-binding-2026-11-19` records D1-D6.
 - **Contract:** the M3 SPEC, `docs/plans/R2-sdd-m3-git-binding-spec-draft5.md` as amended by drafts
@@ -137,7 +150,7 @@ checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
 - New `docs/releases/r2/demo-loop.sh {openspec|speckit}` runs the full loop (claim, review, PASS,
   drift) on a tiny project in about 2 minutes.
 - DEMO.md rewritten: setup, three demos, own-project steps, a command reference.
-- README, RELEASE-PLAN, ROADMAP and the R2 plan now say R2 is built and awaiting acceptance.
+- README, RELEASE-PLAN, ROADMAP and the R2 plan say R2 is built (accepted later the same day).
 - Literal walkthroughs found and fixed two things:
   1. `sync all` does not read specs (SDD-INV-56, by design), so every instruction now says
      `sync intent sdd && sync all`, including the AGENTS block `init` writes.
@@ -149,11 +162,7 @@ checks JSON only (the e2e covers acceptance). **Spec Kit is accepted.**
 **R2 release notes drafted** (`docs/releases/r2/RELEASE-NOTES.md`, suggested tag `v0.2.0`), linked from
 the README and the R2 demo hub.
 
-**Exact next action:** the owner's acceptance of Release 2: the owner reads the notes and runs
-`bash docs/releases/r2/demo-openspec.sh`. On acceptance, mark the notes accepted; the tag and push
-wait for the owner's word (pushes are held, DEF-PUSH-HOLD-20261116).
-No push without the owner's word. Then
-R2 step 2, M4 drift. No push without the owner's word.
+**Owner accepted Release 2 (2026-11-19).**
 
 **Commit trailers:** every M3 commit carries `Authorized-By: Srinivas Kamisetty` and
 `Intent: CI-sdd-warranty-m3-xaqocp`, adjacent to `Co-Authored-By`.

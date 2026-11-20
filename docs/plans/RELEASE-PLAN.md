@@ -39,7 +39,7 @@ Follow-ups: tag the release, add a demo script, and run a single-dev corp pilot.
 
 ## Release 2 — the SDD Warranty Connector
 
-**Built; awaiting owner acceptance** (notes: [`docs/releases/r2/RELEASE-NOTES.md`](../releases/r2/RELEASE-NOTES.md),
+**Built; accepted by the owner 2026-11-19** (notes: [`docs/releases/r2/RELEASE-NOTES.md`](../releases/r2/RELEASE-NOTES.md),
 demos: [`docs/releases/r2/DEMO.md`](../releases/r2/DEMO.md)). One connector lets Proofbound **warrant
 the output of spec-driven-development tools** (OpenSpec and Spec Kit). It ingests their specs as
 intents from git history, binds each tenant commit's `Intent: sdd:<name>` claim to the exact spec
@@ -59,7 +59,7 @@ path. The build plan (re-sequenced 2026-11-19 under Law 11) is
 | M4: promise drift (`report drift`) | ✅ accepted 2026-11-19 | `CI-sdd-warranty-m4-*`; BR rev 0005 O-14; `r2-m4-drift-*` |
 | Spec Kit (old M2 Spec Kit mapping + M5, merged) | ✅ accepted 2026-11-19 | `CI-sdd-warranty-speckit-eiis5s`; `r2-speckit-review` |
 | Full-loop demos for both kits | ✅ 2026-11-19 | `docs/releases/r2/demo-loop.sh` |
-| Release notes + owner acceptance | ⏳ awaiting the owner | tag `v0.2.0` after acceptance (pushes held) |
+| Release notes + owner acceptance | ✅ accepted 2026-11-19 | tag `v0.2.0` and push wait for the owner's word (pushes held) |
 
 **Not in R2** (stated in the release notes): CI check runs as verdict evidence (the evidence is the
 reviewed commit's git event), a drift *gate* (drift is a report), Spec Kit status lines, and parsing

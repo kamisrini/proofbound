@@ -3,8 +3,9 @@
 **Release 2 — "the SDD Warranty Connector"**
 Suggested tag: `v0.2.0` · Line decided in [`VD-release-line-r2-sdd-t5j34p`](../../decisions/VD-release-line-r2-sdd-t5j34p.md) · Scope tracked in [`plans/RELEASE-PLAN.md`](../../plans/RELEASE-PLAN.md) · Plan: [`sdd-warranty-connector-plan.md`](../../plans/sdd-warranty-connector-plan.md)
 
-**Status: awaiting owner acceptance.** Every milestone below passed one independent (non-author)
-review under the Law 11 review budget. Release 2 is accepted when the owner says so.
+**Status: accepted by the owner, 2026-11-19.** Every milestone below passed one independent
+(non-author) review under the Law 11 review budget. The `v0.2.0` tag and push wait for the owner's
+word (pushes are held).
 
 ---
 
@@ -90,7 +91,7 @@ Then, in your OpenSpec or Spec Kit project: `proofbound init openspec` (or `init
 
 ## Tagging this release
 
-After the owner accepts Release 2:
+Release 2 is accepted; when the owner says to tag and push:
 
 ```bash
 git tag -a v0.2.0 -m "Release 2 — the SDD Warranty Connector"
