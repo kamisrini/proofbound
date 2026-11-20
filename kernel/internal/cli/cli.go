@@ -38,9 +38,13 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
+const usage = "usage: proofbound version | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>]"
 
 const verifyTimeout = 15 * time.Minute
+
+// Version is stamped at release build time with -ldflags "-X …/internal/cli.Version=<v>"
+// (scripts/release-build.sh); a plain go build reports "dev" (CLI-INV-25).
+var Version = "dev"
 
 var workingDirectory = os.Getwd
 
@@ -81,10 +85,13 @@ const (
 	commandKeysInit
 	commandWarrantyExport
 	commandWarrantyVerify
+	commandVersion
 )
 
 func parseCommand(args []string) command {
 	switch {
+	case len(args) == 1 && args[0] == "version":
+		return commandVersion
 	case len(args) == 2 && args[0] == "sync" && args[1] == "git":
 		return commandSyncGit
 	case len(args) == 2 && args[0] == "sync" && args[1] == "checks":
@@ -182,6 +189,11 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if cmd == commandInvalid {
 		fmt.Fprintln(stderr, usage)
 		return 2
+	}
+	if cmd == commandVersion {
+		// Runs anywhere: no repository root, no store, no network (CLI-INV-25).
+		fmt.Fprintf(stdout, "proofbound %s\n", Version)
+		return 0
 	}
 	if cmd == commandWarrantyVerify {
 		// A verifier may be anywhere: no repository root, no database (W-INV-7).

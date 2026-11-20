@@ -13,6 +13,7 @@
 #   6. rewords one obligation in the spec: `report drift` flags exactly that obligation.
 # The demo plays the reviewer in step 5, and says so. In real use, a person or the
 # proofbound-reviewer agent who did not write the commit makes those decisions.
+# PROOFBOUND_BIN=<path> uses that binary instead of building one (docs/releases/mvp/demo-install.sh).
 # Needs git, go and jq; nothing is fetched or pushed. Needs the embedded database's port 55432 free.
 set -euo pipefail
 
@@ -34,8 +35,13 @@ unset DATABASE_URL
 say() { printf '\n== %s\n' "$*"; }
 pb() { "$work/proofbound" "$@"; }
 
-say "building the proofbound CLI"
-(cd "$repo/kernel" && go build -o "$work/proofbound" ./cmd/proofbound)
+if [[ -n ${PROOFBOUND_BIN:-} ]]; then
+  say "using the installed proofbound CLI ($PROOFBOUND_BIN)"
+  cp "$PROOFBOUND_BIN" "$work/proofbound"
+else
+  say "building the proofbound CLI"
+  (cd "$repo/kernel" && go build -o "$work/proofbound" ./cmd/proofbound)
+fi
 
 project="$work/project"
 mkdir -p "$project"

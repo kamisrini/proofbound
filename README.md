@@ -93,7 +93,16 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
   export a warranted commit as one signed file that anyone can verify against a clone, with no
   database.
 
-## Quick start
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh
+```
+
+Then follow the [quickstart](docs/releases/mvp/QUICKSTART.md) to your first warranty. (Releases are
+not published yet; the quickstart shows how to try the same install from a clone.)
+
+## Quick start (from source)
 
 ### Prerequisites
 

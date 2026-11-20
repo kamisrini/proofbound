@@ -37,4 +37,5 @@
 - [VD-stack-go-fid9mi: Go all the way — kernel, CLI, connectors](VD-stack-go-fid9mi.md) — Accepted (2026-08-07)
 - [VD-verdicts-are-artifacts-rl0rab: a verification verdict is committed to the repo on receipt, verbatim](VD-verdicts-are-artifacts-rl0rab.md) — Accepted (2026-08-14)
 - [VD-verification-asymmetry-2dyjnd: finding defects converges; fixing them does not — mechanism is the only lever that has moved either](VD-verification-asymmetry-2dyjnd.md) — Accepted (2026-08-14)
+- [VD-vertical-mvp-first-ai3dhn: Finish one vertical MVP path before deepening any organ](VD-vertical-mvp-first-ai3dhn.md) — Accepted (2026-11-20)
 - [VD-vision-pass-rulings-90zdiw: four north-star rulings, taken on delegated authority](VD-vision-pass-rulings-90zdiw.md) — Accepted (2026-08-11)
