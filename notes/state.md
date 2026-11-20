@@ -30,7 +30,7 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
 **Exact next action:** get the owner's step 3 decision (A/B); then mint its CI (→ O-3), one non-author
 spec round, build, calibrated `internal/warranty` mutation sweep, one code review.
 
-**Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
+**Gate:** GREEN at `930db9e` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
 until the owner publishes.
 
 ## R2 build log — 2026-11-19
