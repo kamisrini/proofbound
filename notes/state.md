@@ -6,24 +6,26 @@ As of: 2026-11-20
 
 ## Resume — 2026-11-20
 
-**R3 slice 1, the portable signed warranty, is owner-accepted (2026-11-20).**
-- Under `CI-warranty-slice1-7t4iok` → `BR-portable-warranty-oeffoe` O-1..O-5, decision
-  `VD-r3-warranty-first-s59ktv`. Built in `e1c1d7a`; spec `docs/plans/R3-warranty-export-spec.md`
-  (2 rounds, ACCEPTABLE); code review `r3-warranty-code-review-20261119` ACCEPTABLE.
-- The owner re-checked via `docs/releases/r3/demo-warranty.sh openspec` (exit 0 after the reboot:
-  UNVERIFIED / VALID / INVALID x2 / refused) and accepted **without** the optional LOW fixes.
-  The 8 LOWs (incl. F1 >0 obligations, F2 key path check fails open on git errors, F8 demo tamper
-  step asserts nothing) stay recorded in the review, not fixed (Law 11); reopen only if the owner asks.
+**Vertical MVP is under way (`VD-vertical-mvp-first-ai3dhn`, owner "go" 2026-11-20): five steps in
+order — 1 installable, 2 PR check, 3 reviewer-signed warranty, 4 shareable proof, 5 commercial (kept private).
+Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbacah` →
+`BR-vertical-mvp-xc31gp` O-1..O-5 (one per step).
 
-**Exact next action:** run `/proofbound-next` with the owner to pick the next R3 organ (RELEASE-PLAN:
-#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine, embedded-DB redistribution). Whether
-to tag a release for slice 1 alone is the owner's call; not tagged.
+- **R3 slice 1** (portable signed warranty) owner-accepted 2026-11-20 without the optional LOW fixes.
+- **Step 1 DONE** (`a1794af`, pin refresh `a0ffc04`, `CI-mvp-install-k99zpl` → O-1): spec
+  `docs/plans/mvp-1-install-spec.md`; `scripts/release-build.sh`, `install.sh`, `proofbound version`
+  (CLI-INV-25), `docs/releases/mvp/{QUICKSTART.md,demo-install.sh}`. Install → first PASS 27 s
+  (cold DB cache 23 s for the loop). Review `mvp-1-install-review-20261120` ACCEPTABLE; F1/F2 MED fixed;
+  F4-F8 LOW recorded. Nothing published (pushes held).
+- **Step 2 spec drafted, uncommitted:** `docs/plans/mvp-2-pr-check-spec.md` (`proofbound check <base>`
+  + composite `action.yml` + `init` writes the workflow). Default chosen: PRs with no claims pass.
 
-**Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116); `a902be5` onward is unpushed.
+**Exact next action:** build step 2 per its spec under a new CI targeting `BR-vertical-mvp-xc31gp`
+O-2; then one non-author combined review; then step 3 (reviewer-signed warranty: VALID requires a
+non-owner reviewer signature, per the VD).
 
-**EOD 2026-11-20:** `make check` GREEN on `8cad395` (a first run exited 1 with its log lost when the
-session scratchpad was deleted; cause unknown, rerun green — log gate runs to `notes/tmp/`).
-Deferrals check PASS (15 rows, 8 open); nothing newly deferred.
+**Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
+until the owner publishes.
 
 ## R2 build log — 2026-11-19
 
