@@ -36,11 +36,19 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   (CLI-INV-28..30). Demo `docs/releases/mvp/demo-share.sh`. Spec r1 NEEDS_WORK (3 MED) → r2 ACCEPTABLE;
   code review ACCEPTABLE (4 LOW). Nothing published.
 
-**Exact next action:** MVP step 5 (the commercial step) — outside this repository; ask the owner how to
-proceed.
+- **Step 5 (commercial):** drafts exist, kept OUTSIDE this public repository by the owner's decision
+  (2026-11-20: commercial material and contact details stay private); not tracked here.
 
-**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
-until the owner publishes.
+- **Claim-typo fix** (`043afd7`, `CI-mvp-claim-typo-r4n8xk`): a mistyped `Intent:` claim now fails
+  `proofbound check` (UNBOUND) instead of reading as NO CLAIMS. Review ACCEPTABLE (3 LOW).
+- **Publishing v0.3.0** (owner: "go with the recommendations", 2026-11-20): push hold lifted
+  (`DEF-PUSH-HOLD-20261116` RESOLVED), release notes `docs/releases/r3/RELEASE-NOTES.md`.
+
+**Exact next action:** finish publishing: push main, tag `v0.3.0`, `scripts/release-build.sh v0.3.0`,
+`gh release create` with the archives + SHA256SUMS, check `install.sh` from GitHub, then a throwaway
+repository + pull request to exercise the Action. Step 5 continues outside this repository.
+
+**Gate:** GREEN at `95b5589` (clean worktree, 2026-11-20). **Immediate blockers:** none recorded; publishing in progress.
 
 ## R2 build log — 2026-11-19
 
