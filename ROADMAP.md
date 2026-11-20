@@ -282,7 +282,7 @@ Spec Kit), carrying all of R1; plan in
 2026-11-19** (every milestone passed one non-author review; notes and demos in
 [docs/releases/r2/](docs/releases/r2/RELEASE-NOTES.md)); **Release 3** = the
 revenue organs, starting with slice 1 of the Trust Engine, the portable signed warranty (built
-2026-11-19, awaiting acceptance; `VD-r3-warranty-first-s59ktv`, [docs/releases/r3/](docs/releases/r3/DEMO.md)), (#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB
+2026-11-19, owner-accepted 2026-11-20, LOWs recorded not fixed; `VD-r3-warranty-first-s59ktv`, [docs/releases/r3/](docs/releases/r3/DEMO.md)), (#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine) plus embedded-DB
 redistribution. The maintained scope split is in [RELEASE-PLAN.md](docs/plans/RELEASE-PLAN.md).
 
 **Standing rules across all phases:** meta-tax within budget (docs/gates.md) · no new primitive without a feed · no hand-authored fact rows · Go ≥1.26 + golangci-lint installed at P1 start (VD-stack-go-fid9mi).

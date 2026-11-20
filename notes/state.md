@@ -2,24 +2,22 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-19
+As of: 2026-11-20
 
-## Resume — 2026-11-19
+## Resume — 2026-11-20
 
-**R3 slice 1, the portable signed warranty, is built and awaiting the owner's acceptance.**
+**R3 slice 1, the portable signed warranty, is owner-accepted (2026-11-20).**
 - Under `CI-warranty-slice1-7t4iok` → `BR-portable-warranty-oeffoe` O-1..O-5, decision
-  `VD-r3-warranty-first-s59ktv`; the owner said "go" (D1-D3 as recommended).
-- Spec `docs/plans/R3-warranty-export-spec.md`: round 1 NEEDS_WORK (3 HIGH, 4 MED, all answered),
-  round 2 ACCEPTABLE (3 LOW). Code review `r3-warranty-code-review-20261119`: ACCEPTABLE, 8 LOW
-  recorded, not fixed (Law 11).
-- `internal/warranty` (W-INV-1..8; 19th Task-8 package, mutation sweep 86/86 killed), `sdd.StateRecords` (SDD-INV-72), CLI `keys init`,
-  `warranty export`, `warranty verify`. 4 hand mutants killed; `TestWarrantyEndToEnd` green.
-- Demo `docs/releases/r3/demo-warranty.sh {openspec|speckit}` runs clean on both kits; page
-  `docs/releases/r3/DEMO.md`.
+  `VD-r3-warranty-first-s59ktv`. Built in `e1c1d7a`; spec `docs/plans/R3-warranty-export-spec.md`
+  (2 rounds, ACCEPTABLE); code review `r3-warranty-code-review-20261119` ACCEPTABLE.
+- The owner re-checked via `docs/releases/r3/demo-warranty.sh openspec` (exit 0 after the reboot:
+  UNVERIFIED / VALID / INVALID x2 / refused) and accepted **without** the optional LOW fixes.
+  The 8 LOWs (incl. F1 >0 obligations, F2 key path check fails open on git errors, F8 demo tamper
+  step asserts nothing) stay recorded in the review, not fixed (Law 11); reopen only if the owner asks.
 
-**Exact next action:** the owner runs the demo and accepts (or not). Worth offering: LOWs F1 (rule
-requires >0 obligations), F2 (key path check fails open on git errors) and F8 (demo tamper step
-asserts nothing) are each a few lines; Law 11 leaves them to the owner.
+**Exact next action:** run `/proofbound-next` with the owner to pick the next R3 organ (RELEASE-PLAN:
+#2b full loop, #3 Twin product, #4 Governor, #5 Trust Engine, embedded-DB redistribution). Whether
+to tag a release for slice 1 alone is the owner's call; not tagged.
 
 **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116); `a902be5` onward is unpushed.
 
