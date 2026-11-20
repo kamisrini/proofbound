@@ -17,12 +17,18 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   (CLI-INV-25), `docs/releases/mvp/{QUICKSTART.md,demo-install.sh}`. Install → first PASS 27 s
   (cold DB cache 23 s for the loop). Review `mvp-1-install-review-20261120` ACCEPTABLE; F1/F2 MED fixed;
   F4-F8 LOW recorded. Nothing published (pushes held).
-- **Step 2 spec drafted, uncommitted:** `docs/plans/mvp-2-pr-check-spec.md` (`proofbound check <base>`
-  + composite `action.yml` + `init` writes the workflow). Default chosen: PRs with no claims pass.
+- **Step 2 DONE** (`e9a0d48`, pin refresh `e0b3121`, `CI-mvp-pr-check-8hq2rm` → O-2): `proofbound
+  check <base> [--markdown] [--require-claims]` (CLI-INV-26), `action.yml` + `scripts/action-check.sh`,
+  `init` writes the tenant workflow (CLI-INV-18 amended), QUICKSTART §4. Review
+  `mvp-2-pr-check-review-20261120` ACCEPTABLE, 6 LOW recorded (F1 worth the owner's eye: a mistyped
+  `intent: SDD:x` claim is not listed, so such a PR reads NO CLAIMS and passes without
+  `--require-claims`). The action's `${{ }}` expressions are unexercised until a real PR run.
+- **Step 3 spec drafted, uncommitted, NOT built:** `docs/plans/mvp-3-reviewer-signed-spec.md`. It needs
+  ONE owner decision first: reviewer signs at `review seal` (option A, recommended) or cosigns the
+  warranty file (B).
 
-**Exact next action:** build step 2 per its spec under a new CI targeting `BR-vertical-mvp-xc31gp`
-O-2; then one non-author combined review; then step 3 (reviewer-signed warranty: VALID requires a
-non-owner reviewer signature, per the VD).
+**Exact next action:** get the owner's step 3 decision (A/B); then mint its CI (→ O-3), one non-author
+spec round, build, calibrated `internal/warranty` mutation sweep, one code review.
 
 **Immediate blockers:** pushes held (DEF-PUSH-HOLD-20261116), so no GitHub release or live Action test
 until the owner publishes.
