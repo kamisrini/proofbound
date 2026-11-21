@@ -329,3 +329,52 @@ func TestReviewSealAcceptsTheDraftFile(t *testing.T) {
 		t.Fatal("seal accepted a file that is not draft.json")
 	}
 }
+
+// CLI-INV-32: the reviewer agent's front matter is strict YAML, so editors and agent loaders that
+// parse it strictly accept it. Each line is `key: value` where the value is either a double-quoted
+// string (checked as JSON, a subset of YAML double-quoted scalars) or a plain scalar with nothing a
+// strict parser reads as structure: no ": " or " #" inside, no leading indicator character.
+func TestInitReviewerAgentFrontMatterIsStrictYAML(t *testing.T) {
+	root := gitRepo(t)
+	var out bytes.Buffer
+	if err := initKit(context.Background(), root, "speckit", "Alice", &out); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(root, ".claude/agents/proofbound-reviewer.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(string(b), "\n")
+	if lines[0] != "---" {
+		t.Fatalf("no front matter: %q", lines[0])
+	}
+	keys := map[string]string{}
+	closed := false
+	for _, line := range lines[1:] {
+		if line == "---" {
+			closed = true
+			break
+		}
+		key, value, ok := strings.Cut(line, ": ")
+		if !ok || key == "" || strings.ContainsAny(key, " \"'") {
+			t.Fatalf("front-matter line is not `key: value`: %q", line)
+		}
+		if strings.HasPrefix(value, `"`) {
+			var s string
+			if err := json.Unmarshal([]byte(value), &s); err != nil {
+				t.Fatalf("%s: quoted value does not parse: %v", key, err)
+			}
+			value = s
+		} else if strings.Contains(value, ": ") || strings.Contains(value, " #") || strings.HasSuffix(value, ":") ||
+			strings.ContainsAny(value[:1], "-?:,[]{}#&*!|>'%@`\"") {
+			t.Fatalf("%s: plain value a strict YAML parser rejects or misreads; quote it: %q", key, value)
+		}
+		keys[key] = value
+	}
+	if !closed {
+		t.Fatal("front matter is not closed")
+	}
+	if keys["name"] != "proofbound-reviewer" || !strings.Contains(keys["description"], "`Intent: sdd:<change>`") {
+		t.Fatalf("front matter lost its content: %+v", keys)
+	}
+}
