@@ -66,8 +66,8 @@ clean-clone proof of this release is recorded in
 
 **What Release 1 does not do yet:** it does not regenerate failing code, predict outcomes, govern
 actions with policy envelopes, issue portable signed warranties, or redistribute a bundled database —
-those are **Release 3**. Its first slice, the portable signed warranty, is built and awaiting
-acceptance ([`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md)). **Release 2**, the SDD Warranty Connector, is
+those are **Release 3**. Its first slice, the portable signed warranty, is accepted and published as
+v0.3.0 / v0.3.1 ([`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md)). **Release 2**, the SDD Warranty Connector, is
 built and accepted (2026-11-19): it warrants the output of spec-driven-development tools (OpenSpec and
 Spec Kit) by binding each commit to the exact spec revision it claims, recording independent
 verification, and flagging drift when a verified spec changes.
@@ -77,7 +77,10 @@ verification, and flagging drift when a verified spec changes.
 verdict-schema cleanup that lets `proofbound verify` run on a fresh clone. The maintained scope and
 status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
 
-**New to Proofbound? Start here:**
+**New to Proofbound? Start here:** [`docs/releases/r3/README.md`](docs/releases/r3/README.md), one page
+with install, the quickstart, every command and demo, and links to the earlier releases.
+
+Earlier releases' pages, for history:
 
 - [`docs/releases/r1/USER-GUIDE.md`](docs/releases/r1/USER-GUIDE.md) — step-by-step, with a sample
   app you build from scratch, and how to run Proofbound on your own project (including a single-dev
@@ -89,7 +92,7 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
   warranty loop on OpenSpec or Spec Kit in about two minutes, OpenSpec's own repository at scale, and
   how to use it on your project. What it includes and its caveats:
   [`RELEASE-NOTES.md`](docs/releases/r2/RELEASE-NOTES.md).
-- [`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md) — Release 3, slice 1 (awaiting acceptance):
+- [`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md) — Release 3, slice 1 (accepted 2026-11-20):
   export a warranted commit as one signed file that anyone can verify against a clone, with no
   database.
 
@@ -99,8 +102,8 @@ status view is [`docs/plans/RELEASE-PLAN.md`](docs/plans/RELEASE-PLAN.md).
 curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh
 ```
 
-Then follow the [quickstart](docs/releases/mvp/QUICKSTART.md) to your first warranty. (Releases are
-not published yet; the quickstart shows how to try the same install from a clone.)
+Then follow the [quickstart](docs/releases/mvp/QUICKSTART.md) to your first warranty. Current release:
+[v0.3.1](https://github.com/kamisrini/proofbound/releases/tag/v0.3.1).
 
 ## Quick start (from source)
 
