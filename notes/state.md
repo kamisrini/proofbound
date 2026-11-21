@@ -67,11 +67,16 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   ./internal/projections/`) fails at `testStore` with `store: ledger tables are append-only` even at
   `98b33a7` (pre-existing; `make check` does not run integration tests).
 
+- **R3 docs consolidated** (`25e8e9a`, owner 2026-11-20): `docs/releases/r3/README.md` is the one front
+  door (nothing moved); `docs/releases/r3/tour.sh` + `DEMO.md` walk every v0.3.1 feature in 12 chapters
+  with real output and why each matters. Found: `report week` fails on tenants with v2 verdicts
+  (`DEF-REPORT-WEEK-V2-001`, OPEN, dormant). Gate GREEN at `25e8e9a`.
+
 **Exact next action:** MVP step 5 (the commercial step) is in progress, tracked outside this
 repository (owner, 2026-11-20: "go with commercial step"). Nothing in this repository is needed for it
 right now; ask the owner before starting other work.
 
-**Gate:** GREEN at `0da19a8` (clean worktree, 2026-11-20). **Immediate blockers:** none.
+**Gate:** GREEN at `25e8e9a` (clean worktree, 2026-11-20). **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
