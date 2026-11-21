@@ -67,9 +67,9 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   ./internal/projections/`) fails at `testStore` with `store: ledger tables are append-only` even at
   `98b33a7` (pre-existing; `make check` does not run integration tests).
 
-**Exact next action:** MVP steps 1–4 are done and live. Ask the owner what is next: the commercial step
-(outside this repo), the dormant deferrals, or the pre-existing integration-harness breakage above. Do
-not start any of them unasked.
+**Exact next action:** MVP step 5 (the commercial step) is in progress, tracked outside this
+repository (owner, 2026-11-20: "go with commercial step"). Nothing in this repository is needed for it
+right now; ask the owner before starting other work.
 
 **Gate:** GREEN at `0da19a8` (clean worktree, 2026-11-20). **Immediate blockers:** none.
 
