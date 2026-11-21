@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-20
+As of: 2026-11-21
 
-## Resume — 2026-11-20
+## Resume — 2026-11-21
 
 **Vertical MVP is under way (`VD-vertical-mvp-first-ai3dhn`, owner "go" 2026-11-20): five steps in
 order — 1 installable, 2 PR check, 3 reviewer-signed warranty, 4 shareable proof, 5 commercial (kept private).
@@ -72,11 +72,20 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   with real output and why each matters. Found: `report week` fails on tenants with v2 verdicts
   (`DEF-REPORT-WEEK-V2-001`, OPEN, dormant). Gate GREEN at `25e8e9a`.
 
+- **Owner trying the R3 README (2026-11-21), findings so far:** (1) FIXED `986bf32` (pin `190c102`,
+  `CI-mvp-reviewer-frontmatter-05p936` → O-1; owner: "fix it now"): the `init`-written reviewer agent's
+  front matter was invalid YAML (unquoted `Intent: sdd:` in `description`; VS Code preview rejected it);
+  now quoted, CLI-INV-32. Review `mvp-1-reviewer-frontmatter-review-20261121` ACCEPTABLE, 2 LOW. Not
+  released: users get it only with a v0.3.2 (needs the owner's OK to publish). (2) QUICKSTART §1/§4
+  still say "Not published yet". (3) QUICKSTART assumes an existing OpenSpec/Spec Kit repo; nothing for
+  an empty folder. (4) `install.sh` does not warn when an older `proofbound` earlier on PATH shadows
+  the new one. (2)-(4) not fixed. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
+
 **Exact next action:** MVP step 5 (the commercial step) is in progress, tracked outside this
 repository (owner, 2026-11-20: "go with commercial step"). Nothing in this repository is needed for it
 right now; ask the owner before starting other work.
 
-**Gate:** GREEN at `25e8e9a` (clean worktree, 2026-11-20). **Immediate blockers:** none.
+**Gate:** GREEN at `190c102` (2026-11-21; untracked `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/` from 2026-11-19 are the owner's to keep or drop). **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
