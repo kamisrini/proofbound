@@ -45,6 +45,7 @@ jq, Go to build the CLI (the loop demo accepts `PROOFBOUND_BIN=<installed binary
 | Demo | Shows | Run |
 |---|---|---|
 | **The full tour (start here)** | Every feature in order on one Spec Kit project, explained chapter by chapter with why each matters, in [DEMO.md](DEMO.md) | `bash docs/releases/r3/tour.sh` |
+| **By hand, step by step** | The same tour, but you type every command, with what each step does and its business value, in [DEMO-MANUAL.md](DEMO-MANUAL.md) | follow [DEMO-MANUAL.md](DEMO-MANUAL.md) (about 20–30 minutes) |
 | Install like a stranger | Builds the release archives, installs from them with `install.sh`, and times install → first gate PASS (Linux or WSL) | `bash docs/releases/mvp/demo-install.sh` |
 | The warranty loop | Spec → claiming commit → independent review → gate PASS → drift when the spec changes (OpenSpec or Spec Kit) | `bash docs/releases/r2/demo-loop.sh speckit` |
 | Portable signed warranty | Export a warranty, verify it on a fresh clone, UNREVIEWED until the reviewer signs, then VALID | `bash docs/releases/r3/demo-warranty.sh speckit` |

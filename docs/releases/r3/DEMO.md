@@ -6,7 +6,8 @@ repository.** It works with OpenSpec and GitHub Spec Kit, beside any coding agen
 your machine and in your CI.
 
 This page walks through every feature on one small project, using the real output of
-[`tour.sh`](tour.sh). New here? [Start here](README.md) has install and the quickstart.
+[`tour.sh`](tour.sh). To type every step yourself instead, follow [DEMO-MANUAL.md](DEMO-MANUAL.md).
+New here? [Start here](README.md) has install and the quickstart.
 
 ## Why it matters
 
