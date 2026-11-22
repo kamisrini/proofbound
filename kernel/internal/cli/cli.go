@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -91,6 +91,7 @@ const (
 	commandWarrantyBundle
 	commandTask
 	commandHook
+	commandUI
 )
 
 func parseCommand(args []string) command {
@@ -105,6 +106,11 @@ func parseCommand(args []string) command {
 	case len(args) >= 1 && args[0] == "hook":
 		if _, _, _, ok := parseHook(args); ok {
 			return commandHook
+		}
+		return commandInvalid
+	case len(args) >= 1 && args[0] == "ui":
+		if _, ok := parseUI(args); ok {
+			return commandUI
 		}
 		return commandInvalid
 	case len(args) >= 1 && args[0] == "check":
@@ -891,6 +897,8 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return reviewSeal(ctx, root, args[2], fresh, output)
 	case commandKeysInit:
 		return keysInit(ctx, root, flagValue(args[2:], "--name"), output)
+	case commandUI:
+		return runUI(ctx, root, databaseURL, args, output)
 	case commandTask:
 		sub, name, _ := parseTask(args)
 		return runTask(root, sub, name, output)

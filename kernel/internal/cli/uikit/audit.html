@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proofbound Audit room</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body data-base="{{.Report.Base}}">
+<header class="top">
+  <span class="brand">proofbound</span>
+  <nav aria-label="Workspaces"><a class="here" href="/audit" aria-current="page">Audit room</a></nav>
+  <span class="who">{{if .Actor.Name}}You: <code>{{.Actor.Name}}</code> · key {{.Actor.Fingerprint}} · signs on this machine{{else}}Read-only on this machine{{end}}</span>
+</header>
+
+<main>
+<section class="head">
+  <div class="lead">
+    <h1>{{.Report.Headline}}</h1>
+    <p class="sub">Every answer is computed from this repository and its record, not reported by the team. Open any control to see the commits behind it.</p>
+  </div>
+  <form class="scope" method="get" action="/audit">
+    <label for="base">Since</label>
+    <input id="base" name="base" list="tags" value="{{.BaseRef}}" autocomplete="off">
+    <datalist id="tags">{{range .Tags}}<option value="{{.}}"></option>{{end}}</datalist>
+    <button type="submit">Apply</button>
+    <span class="range">{{short .Report.Base}}..{{short .Report.Head}} · {{.Report.Counts.Total}} commits</span>
+  </form>
+</section>
+
+{{if .SyncError}}<p class="warn" role="status">The record could not be fully refreshed, so some answers may be out of date: {{.SyncError}}</p>{{end}}
+{{if .Actor.Problem}}<p class="note" role="status">To record outcomes or countersign: {{.Actor.Problem}}</p>{{end}}
+
+<section class="pop" aria-labelledby="pop">
+  <h2 id="pop">Every commit accounted for · {{.Report.Counts.Total}}</h2>
+  {{if le .Report.Counts.Total 400}}<div class="bar" role="img" aria-label="{{.Report.Counts.Claimed}} claimed, {{.Report.Counts.Housekeeping}} specs, docs and records only, {{.Report.Counts.Uncovered}} uncovered">{{range .Report.Commits}}<span class="seg {{.Class}}" title="{{short .Commit}} {{.Subject}}"></span>{{end}}</div>{{end}}
+  <p class="legend"><span class="k claimed">{{.Report.Counts.Claimed}}</span> claimed a spec · <span class="k housekeeping">{{.Report.Counts.Housekeeping}}</span> changed only specs, docs and records · <span class="k uncovered">{{.Report.Counts.Uncovered}}</span> changed code with no claim</p>
+</section>
+
+<div class="cols">
+<section class="controls" aria-labelledby="ctl">
+  <div class="row">
+    <h2 id="ctl">Controls</h2>
+    <button type="button" class="pill" data-filter="all" aria-pressed="true">All</button>
+    <button type="button" class="pill" data-filter="exc" aria-pressed="false">Exceptions only</button>
+  </div>
+  {{range .Report.Controls}}
+  <details class="control state-{{lower .State}}" data-state="{{.State}}">
+    <summary>
+      <span class="cid">{{.ID}}</span>
+      <span class="q">{{.Question}}</span>
+      <span class="a">{{.State}}</span>
+      <span class="count">{{.Count}}</span>
+    </summary>
+    <div class="body">
+      <p>{{.Basis}}</p>
+      {{if .Evidence}}<ul class="evidence">{{range .Evidence}}<li>{{if .Commit}}<code>{{short .Commit}}</code> {{end}}{{.Text}}</li>{{end}}</ul>{{end}}
+      <p class="cmd">Same answer from a terminal: <code>{{.Command}}</code></p>
+    </div>
+  </details>
+  {{end}}
+</section>
+
+<aside>
+<section class="exceptions" aria-labelledby="exc">
+  <h2 id="exc">{{len .Report.Exceptions}} exception(s)</h2>
+  {{if not .Report.Exceptions}}<p class="sub">Nothing to close.</p>{{end}}
+  {{range .Report.Exceptions}}
+  <article class="exception" data-id="{{.ID}}">
+    <span class="kind">{{.Kind}} · {{.Control}}</span>
+    <p><code>{{short .Commit}}</code> {{.Text}}</p>
+    {{if .Outcome}}
+      {{if .Outcome.Verified}}
+      <p class="closed">{{.Outcome.Outcome}}{{if .Outcome.FixedBy}} by <code>{{short .Outcome.FixedBy}}</code>{{end}}, signed by <code>{{.Outcome.By}}</code> at {{.Outcome.At}}: “{{.Outcome.Reason}}”</p>
+      <p class="sub">A signed statement in <code>{{.Outcome.Path}}</code>; its signature was checked by proofbound on this machine.</p>
+      {{else}}
+      <p class="bad">The outcome in <code>{{.Outcome.Path}}</code> {{.Outcome.Problem}}. It closes nothing.</p>
+      {{end}}
+    {{else}}
+    <button type="button" class="act start" data-act="open"{{if $.Actor.Problem}} disabled{{end}}>Record an outcome</button>
+    <form class="outcome" hidden>
+      <fieldset>
+        <legend>What happened to it?</legend>
+        <label><input type="radio" name="outcome" value="accepted"> Accepted risk</label>
+        <label><input type="radio" name="outcome" value="fixed"> Fixed in a later commit</label>
+        <label><input type="radio" name="outcome" value="reverted"> Reverted</label>
+      </fieldset>
+      <label class="fix" hidden>Commit that fixed it <input name="fixed_by" autocomplete="off" placeholder="commit id"></label>
+      <label>Reason, in your words <input name="reason" maxlength="500" autocomplete="off" required></label>
+      <div class="buttons">
+        <button type="submit">Review what will be written</button>
+        <button type="button" class="link" data-act="cancel">Cancel</button>
+      </div>
+    </form>
+    <div class="preview" hidden>
+      <p>This exact record will be signed with your key and committed. Nothing is written until you confirm.</p>
+      <pre></pre>
+      <div class="buttons">
+        <button type="button" class="sign" data-act="sign">Sign and record</button>
+        <button type="button" class="link" data-act="back">Change it</button>
+      </div>
+    </div>
+    <p class="msg" role="status"></p>
+    {{end}}
+  </article>
+  {{end}}
+</section>
+
+<section class="transcript" aria-labelledby="tr">
+  <h2 id="tr">Transcript</h2>
+  <p class="sub">Each control, its answer, its evidence and the exceptions with their outcomes, as JSON another auditor can compare with their own run.</p>
+  <div class="buttons">
+    <a class="button" href="/transcript?base={{.Report.Base}}">Download JSON</a>
+    <button type="button" data-act="print">Print or save as PDF</button>
+  </div>
+  {{range .Attestations}}
+    {{if .Verified}}
+    <p class="closed">Countersigned by <code>{{.By}}</code> at {{.At}} over the transcript of {{short .Base}}..{{short .Head}}: “{{.Headline}}”{{if .Moved}} ({{.Moved}} commit(s) since, {{.RecordsOnly}} of them only Proofbound records){{end}}.</p>
+    {{else}}
+    <p class="bad"><code>{{.Path}}</code> {{.Problem}}.</p>
+    {{end}}
+  {{end}}
+  <div class="attest">
+    <button type="button" class="act" data-act="attest"{{if .Actor.Problem}} disabled{{end}}>Countersign this transcript</button>
+    <div class="preview" hidden>
+      <pre></pre>
+      <div class="buttons">
+        <button type="button" class="sign" data-act="attest-sign">Sign and record</button>
+        <button type="button" class="link" data-act="attest-back">Cancel</button>
+      </div>
+    </div>
+    <p class="msg" role="status"></p>
+  </div>
+</section>
+
+<section class="limits" aria-labelledby="lim">
+  <h2 id="lim">What this room cannot see yet</h2>
+  <p>Whether every line of a claimed commit stays inside its spec: a reviewer reads the diff, but nothing here checks it line by line yet.</p>
+  <p>Anything an agent did outside the repository: commands, secrets, network calls, deploys.</p>
+  <p class="sub">Stated so that no answer above reads as more than it is.</p>
+</section>
+</aside>
+</div>
+</main>
+</body>
+</html>
+{{define "error"}}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Proofbound Audit room</title><link rel="stylesheet" href="/static/app.css"></head>
+<body><main><section class="head"><div class="lead"><h1>The Audit room could not answer</h1><p class="sub">{{.Message}}</p><p><a href="/audit">Try again</a></p></div></section></main></body></html>{{end}}

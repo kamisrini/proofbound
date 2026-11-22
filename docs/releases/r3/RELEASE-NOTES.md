@@ -1,4 +1,4 @@
-# Proofbound v0.3 release notes (v0.3.0, v0.3.1, v0.3.2)
+# Proofbound v0.3 release notes (v0.3.0 to v0.3.3)
 
 **Release 3, first public cut: install it, gate pull requests, and hand over signed warranties.**
 Tag `v0.3.0` · Decisions [`VD-r3-warranty-first-s59ktv`](../../decisions/VD-r3-warranty-first-s59ktv.md)
@@ -8,6 +8,39 @@ and [`VD-vertical-mvp-first-ai3dhn`](../../decisions/VD-vertical-mvp-first-ai3dh
 **Status:** R3 slice 1 accepted by the owner 2026-11-20. MVP steps 1 to 4 built 2026-11-20, each with
 its spec and code reviewed by a non-author (Law 11 budget). Published by the owner's decision of
 2026-11-20.
+
+## v0.3.3 (unreleased): the Audit room, for compliance and auditors
+
+- **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
+  Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
+  since the last tag). It answers seven controls, each with the commits behind its answer and the
+  terminal command that gives the same answer:
+  1. Every commit that claims a spec passed its readiness gate.
+  2. No commit changed code without claiming a spec.
+  3. Every passing claim carries a warranty that verifies.
+  4. Promises that changed after they were verified are disclosed.
+  5. Every commit in the range is accounted for.
+  6. Changes to who may sign (declared keys, the sdd profile), to the check's workflow, or to an
+     existing gate are listed for review.
+  7. Each claimed spec existed before the code that claims it.
+- **Close exceptions without a terminal.** For each exception, choose accepted risk, fixed in a later
+  commit, or reverted, and give a reason. The page shows the exact record first; "Sign and record"
+  signs it with your own key on your machine and commits it under `.proofbound/outcomes/`. Only a key
+  declared before the range began can sign for it, and nobody can close an exception on their own
+  commit.
+- **Countersign the transcript.** Download the audit as JSON, print it or save it as PDF, and sign it
+  as the auditor: the attestation is committed under `.proofbound/attestations/`.
+- **Safe by construction:** the link the command prints is the only way in (a strict cookie, never
+  written into the page); other web pages cannot read or act, and another local program cannot
+  without that link; the server holds the ledger only for the seconds it takes to answer, and a
+  second request while one runs is told the ledger is busy.
+- **Decision and contract:** [`VD-audit-room-ui-q2v6x3`](../../decisions/VD-audit-room-ui-q2v6x3.md),
+  [U1 spec](../../plans/ui-u1-audit-room-spec.md) (CLI-INV-37..41), reviewed by a non-author twice
+  (spec and code; every HIGH and MED finding fixed).
+- **Not yet:** the other workspaces (developer, reviewer, spec owner, agents), the time rail,
+  in-browser signature checks, and opening an evidence bundle without a clone. The Audit room says on
+  the page what it cannot see: whether every line of a claimed commit stays inside its spec, and
+  anything an agent did outside the repository.
 
 ## v0.3.2 (2026-11-22): unclaimed code fails the check; agents get the claim added for them
 
