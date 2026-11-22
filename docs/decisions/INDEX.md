@@ -2,6 +2,7 @@
 # Decision Index
 
 - [VD-agent-standing-authorization-5ouz7q: owner grants a standing authorization for a product push](VD-agent-standing-authorization-5ouz7q.md) — Accepted (2026-10-31)
+- [VD-audit-room-ui-q2v6x3: A local UI, Audit room first, signed acts without a terminal](VD-audit-room-ui-q2v6x3.md) — Accepted (2026-11-22)
 - [VD-build-laws-c76aki: the build process runs under VERA's own laws (dogfood scaffolding)](VD-build-laws-c76aki.md) — Accepted (2026-08-07)
 - [VD-commit-is-durability-6p29qf: committing is durability, not acceptance — never withhold a commit pending a verdict](VD-commit-is-durability-6p29qf.md) — Accepted (2026-08-09)
 - [VD-fix-discipline-0e0tnz: four rules for FIXING, derived from nine review rounds on one package](VD-fix-discipline-0e0tnz.md) — Accepted (2026-08-11)
