@@ -1,6 +1,9 @@
 #!/bin/sh
-# Installed by `proofbound init openspec`: every commit names the OpenSpec change it implements.
-[ "${PROOFBOUND_NO_INTENT:-}" = 1 ] && exit 0
-grep -qE '^Intent: ' "$1" && exit 0
-echo "proofbound: end the message with 'Intent: sdd:<change-name>', or commit with PROOFBOUND_NO_INTENT=1" >&2
-exit 1
+# Installed by `proofbound init`: a commit that changes code must claim the spec change it implements.
+# `proofbound task start <change>` makes the prepare-commit-msg hook add the claim for you.
+command -v proofbound >/dev/null 2>&1 || { echo "proofbound: not on PATH; install it (the commit-msg hook needs it)" >&2; exit 1; }
+proofbound hook commit-msg "$1"
+rc=$?
+# Exit 2 is a usage error: a proofbound older than this hook, which has no `hook` command.
+[ "$rc" -eq 2 ] && echo "proofbound: $(command -v proofbound) is too old for this hook; install the latest release" >&2
+exit "$rc"

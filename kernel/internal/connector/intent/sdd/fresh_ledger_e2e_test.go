@@ -23,7 +23,7 @@ func TestPRCheckOnAFreshLedger(t *testing.T) {
 	gitIn(t, a.root, "init", "-q", "-b", "main")
 	gitIn(t, a.root, "config", "user.name", "owner-a")
 	a.mustRun("init", "speckit")
-	if err := os.Remove(filepath.Join(a.root, ".git", "hooks", "commit-msg")); err != nil {
+	if err := removeHooks(a.root); err != nil {
 		t.Fatal(err)
 	}
 	a.write("specs/001-export/spec.md", "# Feature: Export\n\n- **FR-001**: System MUST export reports as CSV.\n")

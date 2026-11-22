@@ -43,10 +43,13 @@ In a repository that uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) or
 ```bash
 proofbound init openspec          # or: proofbound init speckit
 git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude .github
-PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"
+git commit -m "add proofbound"
 ```
 
-Then end each commit that implements a spec with `Intent: sdd:<change-or-feature-name>`, have
+Before an agent writes code for a change, run `proofbound task start <change-or-feature-name>`:
+every commit that changes code then ends with `Intent: sdd:<name>` without anyone typing it, and a
+code commit with no claim is refused (`proofbound task stop` when the change is done). Commits that
+only touch specs, docs, `gates/`, review records or Markdown need no claim. Then have
 someone who is not the author review it (`proofbound review draft <commit>`, decide, `review seal`),
 and run `proofbound sync all`. The commit's gate turns **PASS** when every obligation is verified.
 `proofbound warranty export <commit>` then writes a signed `warranty.json` that anyone can check
@@ -66,8 +69,12 @@ Proofbound: NOT WARRANTED (1 of 2 claiming commits verified)
   8d4e6a1c2b9f sdd:001-export PASS  2 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 ```
 
-The job fails unless every commit that claims a spec is verified; a pull request that claims no spec
-passes (set the action's `require-claims: true` to change that). The same check runs locally:
+The job fails unless every commit that claims a spec is verified, and it fails on any commit that
+claims no spec but changes code (listed as `UNCOVERED`). Commits that only touch specs, `gates/`,
+`.proofbound/`, `docs/`, Markdown files, `.gitignore` or the Proofbound workflow need no claim. A pull
+request with no claims and no uncovered commit passes (set the action's `require-claims: true` to
+change that). Make the `proofbound` job a required status check in the branch protection rules, or a
+red check can still be merged. The same check runs locally:
 `proofbound check main`. (The action is not published yet; see the note in §1.)
 
 ## 5. Attach the proof to a release

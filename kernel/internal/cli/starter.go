@@ -33,6 +33,9 @@ var reviewerAgent string
 //go:embed starterkit/commit-msg
 var commitMsgHook string
 
+//go:embed starterkit/prepare-commit-msg
+var prepareCommitMsgHook string
+
 //go:embed starterkit/proofbound.yml
 var prCheckWorkflow string
 
@@ -94,6 +97,7 @@ func initKit(ctx context.Context, root, kit, owner string, output io.Writer) err
 			return writeNew(output, root, ".claude/agents/proofbound-reviewer.md", reviewerAgent, 0o644)
 		},
 		func() error { return writeNew(output, hooks, "commit-msg", commitMsgHook, 0o755) },
+		func() error { return writeNew(output, hooks, "prepare-commit-msg", prepareCommitMsgHook, 0o755) },
 		func() error {
 			return writeNew(output, root, ".github/workflows/proofbound.yml", prCheckWorkflow, 0o644)
 		},

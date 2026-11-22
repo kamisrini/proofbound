@@ -163,3 +163,13 @@ func TestM3ClaimBindsOnlyALedgeredRevision(t *testing.T) {
 		t.Fatalf("the projected claim row is missing:\n%s", out)
 	}
 }
+
+// removeHooks drops both hooks `init` installs, so test commits need no proofbound on PATH.
+func removeHooks(root string) error {
+	for _, hook := range []string{"commit-msg", "prepare-commit-msg"} {
+		if err := os.Remove(filepath.Join(root, ".git", "hooks", hook)); err != nil {
+			return err
+		}
+	}
+	return nil
+}

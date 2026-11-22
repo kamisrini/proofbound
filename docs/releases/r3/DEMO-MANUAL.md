@@ -33,8 +33,8 @@ run `export PATH="$HOME/.local/bin:$PATH"; hash -r`.
 touched.
 
 ```bash
-mkdir -p "$HOME/proofbound-manual-demo/shop"
-cd "$HOME/proofbound-manual-demo/shop"
+mkdir -p "$HOME/projects/proofbound-manual-demo/shop"
+cd "$HOME/projects/proofbound-manual-demo/shop"
 git init -q -b main
 git config user.name spec-owner
 git config user.email spec-owner@example.invalid
@@ -53,7 +53,7 @@ first run they are empty, and they fill in as you go.
 off.
 
 ```bash
-export W="$HOME/proofbound-manual-demo"
+export W="$HOME/projects/proofbound-manual-demo"
 export XDG_CONFIG_HOME="$W/config"
 unset DATABASE_URL
 cd "$W/shop"
@@ -614,7 +614,7 @@ reusing steps 7–10: `proofbound review draft <its commit>` (from `git log --on
 ## Clean up
 
 ```bash
-cd ~ && rm -rf "$HOME/proofbound-manual-demo"
+cd ~ && rm -rf "$HOME/projects/proofbound-manual-demo"
 ```
 
 Close the terminal too, so `XDG_CONFIG_HOME` goes back to normal.

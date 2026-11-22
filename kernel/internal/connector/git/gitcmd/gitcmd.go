@@ -277,6 +277,10 @@ func (r *Repo) readCommit(ctx context.Context, sha string) (connectorgit.Commit,
 
 var trailerLineRE = regexp.MustCompile(`^([A-Za-z0-9-]+): (.+)$`)
 
+// IntentTrailers is the Intent trailer grammar the connector binds by, for callers that must agree
+// with it exactly (the commit-msg hook, CLI-INV-36).
+func IntentTrailers(body string) []string { return intentTrailers(body) }
+
 func intentTrailers(body string) []string {
 	lines := strings.Split(strings.TrimRight(body, "\n"), "\n")
 	if len(lines) < 3 {

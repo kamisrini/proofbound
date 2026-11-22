@@ -39,7 +39,7 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	snapshot := map[string]string{}
-	for _, rel := range []string{".proofbound/sdd-profile.json", ".gitignore", "AGENTS.md", ".claude/agents/proofbound-reviewer.md", ".git/hooks/commit-msg", ".github/workflows/proofbound.yml"} {
+	for _, rel := range []string{".proofbound/sdd-profile.json", ".gitignore", "AGENTS.md", ".claude/agents/proofbound-reviewer.md", ".git/hooks/commit-msg", ".git/hooks/prepare-commit-msg", ".github/workflows/proofbound.yml"} {
 		b, err := os.ReadFile(filepath.Join(root, rel))
 		if err != nil {
 			t.Fatalf("%s: %v\n%s", rel, err, out.String())
@@ -76,29 +76,17 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 	}
 }
 
-// The commit-msg hook rejects a message without an Intent trailer unless explicitly opted out.
-func TestInitHookRequiresAnIntentTrailer(t *testing.T) {
-	hook := filepath.Join(t.TempDir(), "commit-msg")
-	if err := os.WriteFile(hook, []byte(commitMsgHook), 0o755); err != nil {
-		t.Fatal(err)
+// Both hook scripts only hand over to `proofbound hook` (CLI-INV-35/36 live in Go, one home); the
+// commit-msg script fails closed when proofbound is missing, prepare-commit-msg never blocks.
+func TestInitHookScriptsDelegate(t *testing.T) {
+	if !strings.Contains(commitMsgHook, "proofbound hook commit-msg \"$1\"") || !strings.Contains(commitMsgHook, "exit 1") || !strings.Contains(commitMsgHook, "too old") {
+		t.Fatalf("commit-msg hook:\n%s", commitMsgHook)
 	}
-	msg := filepath.Join(t.TempDir(), "msg")
-	run := func(text string, env ...string) error {
-		if err := os.WriteFile(msg, []byte(text), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		cmd := exec.Command("sh", hook, msg)
-		cmd.Env = append(os.Environ(), env...)
-		return cmd.Run()
+	if !strings.Contains(prepareCommitMsgHook, "proofbound hook prepare-commit-msg \"$@\"") || !strings.HasSuffix(strings.TrimSpace(prepareCommitMsgHook), "exit 0") {
+		t.Fatalf("prepare-commit-msg hook:\n%s", prepareCommitMsgHook)
 	}
-	if run("work\n\nIntent: sdd:add-auth\n") != nil {
-		t.Fatal("a trailer was rejected")
-	}
-	if run("work\n") == nil {
-		t.Fatal("a missing trailer was accepted")
-	}
-	if run("work\n", "PROOFBOUND_NO_INTENT=1") != nil {
-		t.Fatal("the opt-out was rejected")
+	if strings.Contains(commitMsgHook+prepareCommitMsgHook, "PROOFBOUND_NO_INTENT") {
+		t.Fatal("a hook still honours the retired opt-out")
 	}
 }
 

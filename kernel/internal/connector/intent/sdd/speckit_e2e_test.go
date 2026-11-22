@@ -1,8 +1,6 @@
 package sdd_test
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -15,7 +13,7 @@ func TestSpecKitEndToEnd(t *testing.T) {
 	gitIn(t, m.root, "init", "-q", "-b", "main")
 	gitIn(t, m.root, "config", "user.name", "owner-a")
 	mustContain(t, m.mustRun("init", "speckit"), "wrote ")
-	if err := os.Remove(filepath.Join(m.root, ".git", "hooks", "commit-msg")); err != nil {
+	if err := removeHooks(m.root); err != nil {
 		t.Fatal(err)
 	}
 	m.write("specs/001-export/spec.md", "# Feature: Export\n\n- **FR-001**: System MUST export reports as CSV.\n- **SC-001**: An export of 10k rows completes in under 2 seconds.\n")

@@ -27,6 +27,9 @@ const (
 	checkBlocked  = "BLOCKED"
 	checkNoReview = "NO REVIEW"
 	checkUnbound  = "UNBOUND"
+	// checkUncovered is a commit that claims no spec but changes a path outside housekeepingPath
+	// (CLI-INV-33): it makes the pull request NOT WARRANTED whatever the claiming commits say.
+	checkUncovered = "UNCOVERED"
 )
 
 type checkLine struct{ commit, claims, state, reason, malformed string }
@@ -59,6 +62,10 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 	if err != nil {
 		return err
 	}
+	uncovered, err := uncoveredCommits(ctx, root, base, lines)
+	if err != nil {
+		return err
+	}
 	passed := 0
 	for _, l := range lines {
 		if l.state == checkPass {
@@ -68,6 +75,10 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 	var headline string
 	warranted := false
 	switch {
+	case len(uncovered) > 0 && len(lines) == 0:
+		headline = fmt.Sprintf("Proofbound: NOT WARRANTED (no commit claims a spec; %s)", uncoveredPhrase(len(uncovered)))
+	case len(uncovered) > 0:
+		headline = fmt.Sprintf("Proofbound: NOT WARRANTED (%d of %d claiming commits verified; %s)", passed, len(lines), uncoveredPhrase(len(uncovered)))
 	case len(lines) == 0:
 		headline = fmt.Sprintf("Proofbound: NO CLAIMS (no commit in %s..HEAD claims a spec)", base)
 		warranted = !requireClaims
@@ -77,8 +88,10 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 	default:
 		headline = fmt.Sprintf("Proofbound: NOT WARRANTED (%d of %d claiming commits verified)", passed, len(lines))
 	}
+	claimed := len(lines)
+	lines = append(lines, uncovered...)
 	var drift bytes.Buffer
-	if len(lines) > 0 {
+	if claimed > 0 {
 		if err := reportDrift(ctx, root, ledger, &drift); err != nil {
 			return err
 		}
@@ -140,6 +153,80 @@ func claimLines(msg string) (names, malformed []string) {
 		}
 	}
 	return names, malformed
+}
+
+func uncoveredPhrase(n int) string {
+	if n == 1 {
+		return "1 commit changes code without claiming a spec"
+	}
+	return fmt.Sprintf("%d commits change code without claiming a spec", n)
+}
+
+// uncoveredCommits is every commit in base..HEAD that claims no spec (no claim and no claim-like
+// line, so not in claims) yet changes a path that housekeepingPath does not exempt, oldest first
+// (CLI-INV-33). A commit's paths are its combined diff against all its parents (`--cc`), so a clean
+// merge changes nothing of its own; renames count as a delete plus an add, so both paths are judged.
+func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine) ([]checkLine, error) {
+	shas, err := commitsInRange(ctx, root, base)
+	if err != nil {
+		return nil, err
+	}
+	claiming := map[string]bool{}
+	for _, l := range claims {
+		claiming[l.commit] = true
+	}
+	var out []checkLine
+	for _, sha := range shas {
+		if claiming[sha] {
+			continue
+		}
+		cmd := exec.CommandContext(ctx, "git", "-C", root, "diff-tree", "-r", "--cc", "--no-commit-id", "--name-only", "--no-renames", "--root", "-z", sha, "--")
+		cmd.Env = repositoryGitEnv()
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		raw, err := cmd.Output()
+		if err != nil {
+			return nil, fmt.Errorf("check: cannot list the paths of %s: %s", sha, strings.TrimSpace(stderr.String()))
+		}
+		var code []string
+		for _, p := range strings.Split(string(raw), "\x00") {
+			if p != "" && !housekeepingPath(p) {
+				code = append(code, p)
+			}
+		}
+		if len(code) == 0 {
+			continue
+		}
+		shown := code
+		if len(shown) > 3 {
+			shown = shown[:3]
+		}
+		reason := "claims no spec but changes " + strings.Join(shown, ", ")
+		if len(code) > len(shown) {
+			reason += fmt.Sprintf(" (+%d more)", len(code)-len(shown))
+		}
+		reason += "; run `proofbound task start <change>` before committing code, or end the message with `Intent: sdd:<change>`"
+		out = append(out, checkLine{commit: sha, claims: "-", state: checkUncovered, reason: reason})
+	}
+	return out, nil
+}
+
+// housekeepingPath reports whether a commit may change path without claiming a spec (CLI-INV-33): the
+// specs themselves, gates, Proofbound's own files and review records, documentation, and the files
+// `init` writes. Everything else is code. The pull-request workflow is exempt because the check cannot
+// guard its own workflow: GitHub runs the copy on the pull request's branch.
+func housekeepingPath(path string) bool {
+	for _, dir := range []string{"openspec/", "specs/", "gates/", ".proofbound/", "docs/"} {
+		if strings.HasPrefix(path, dir) {
+			return true
+		}
+	}
+	switch path {
+	case ".gitignore", ".github/workflows/proofbound.yml":
+		return true
+	}
+	lower := strings.ToLower(path)
+	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
 }
 
 func commitsInRange(ctx context.Context, root, base string) ([]string, error) {

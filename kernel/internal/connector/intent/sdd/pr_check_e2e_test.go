@@ -9,15 +9,16 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/store"
 )
 
-// MVP step 2 end to end (CLI-INV-26, CHK-1..3): `proofbound check <base>` gives every claiming
-// commit in base..HEAD one state — NO REVIEW, PASS, BLOCKED, UNBOUND — and the headline and exit
-// code follow from them; it appends no ledger event and writes no file.
+// MVP step 2 end to end (CLI-INV-26, CLI-INV-33, CHK-1..3): `proofbound check <base>` gives every
+// claiming commit in base..HEAD one state — NO REVIEW, PASS, BLOCKED, UNBOUND — and lists every
+// commit that claims no spec but changes code as UNCOVERED; the headline and exit code follow from
+// them; it appends no ledger event and writes no file.
 func TestPRCheckEndToEnd(t *testing.T) {
 	m := &m3Tenant{t: t, root: t.TempDir()}
 	gitIn(t, m.root, "init", "-q", "-b", "main")
 	gitIn(t, m.root, "config", "user.name", "owner-a")
 	m.mustRun("init", "speckit")
-	if err := os.Remove(filepath.Join(m.root, ".git", "hooks", "commit-msg")); err != nil {
+	if err := removeHooks(m.root); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(m.root, ".github", "workflows", "proofbound.yml")); err != nil {
@@ -30,9 +31,6 @@ func TestPRCheckEndToEnd(t *testing.T) {
 	z := m.commit("first attempt", "Intent: sdd:001-export")
 	m.write("src/x", "x\n")
 	x := m.commit("second attempt", "Intent: sdd:001-export")
-	m.write("src/plain", "p\n")
-	m.commit("unrelated")
-
 	check := func(want int, args ...string) string {
 		t.Helper()
 		code, out := runCLI(t, m.root, append([]string{"check"}, args...)...)
@@ -43,15 +41,15 @@ func TestPRCheckEndToEnd(t *testing.T) {
 	}
 	line := func(sha, state string) string { return "  " + sha[:12] + " sdd:001-export " + state + "  " }
 
-	// Before any sync: both claims are UNBOUND (not in the ledger); the unrelated commit is not listed.
+	// Before any sync: both claims are UNBOUND (not in the ledger).
 	out := check(1, base)
 	mustContain(t, out, "Proofbound: NOT WARRANTED (0 of 2 claiming commits verified)", line(z, "UNBOUND"), line(x, "UNBOUND"), "run `proofbound sync all`")
 
 	m.mustRun("sync", "all")
 	out = check(1, base)
 	mustContain(t, out, "NOT WARRANTED (0 of 2", line(z, "NO REVIEW"), line(x, "NO REVIEW"), "review draft "+x[:12])
-	if strings.Count(out, "sdd:001-export") != 2 {
-		t.Fatalf("a non-claiming commit was listed:\n%s", out)
+	if strings.Count(out, "sdd:001-export") != 2 || strings.Contains(out, "UNCOVERED") {
+		t.Fatalf("a claim was listed twice, or a housekeeping commit as UNCOVERED:\n%s", out)
 	}
 
 	m.mustRun("review", "draft", z)
@@ -73,13 +71,27 @@ func TestPRCheckEndToEnd(t *testing.T) {
 		t.Fatalf("check wrote something: events %d -> %d", before, after)
 	}
 
-	// Range z..HEAD holds only x among the claims: WARRANTED, exit 0, and Markdown for the summary.
+	// Range z..HEAD holds only x among the claims, plus the unclaimed "reviews" commit, which touches
+	// only docs/ and gates/: WARRANTED, exit 0, and Markdown for the summary.
 	mustContain(t, check(0, z), "Proofbound: WARRANTED (1 of 1 claiming commits verified)", line(x, "PASS"))
 	mustContain(t, check(0, z, "--markdown"), "### Proofbound: WARRANTED", "| `"+x[:12]+"` | `sdd:001-export` | **PASS** |")
 
-	// No claims in range: passes, unless --require-claims.
+	// No claims in range: passes, unless --require-claims; a docs-only unclaimed commit changes nothing.
 	mustContain(t, check(0, "HEAD"), "Proofbound: NO CLAIMS")
 	check(1, "HEAD", "--require-claims")
+	m.write("docs/notes.md", "n\n")
+	m.commit("notes")
+	mustContain(t, check(0, "HEAD~1"), "Proofbound: NO CLAIMS")
+
+	// The mixed pull request: a reviewed claim plus an unclaimed commit that changes code is NOT
+	// WARRANTED, and the unclaimed commit is named with the path it changed (CLI-INV-33).
+	m.write("src/plain", "p\n")
+	plain := m.commit("unrelated")
+	out = check(1, z)
+	mustContain(t, out, "Proofbound: NOT WARRANTED (1 of 1 claiming commits verified; 1 commit changes code without claiming a spec)",
+		line(x, "PASS"), "  "+plain[:12]+" - UNCOVERED  claims no spec but changes src/plain")
+	mustContain(t, check(1, z, "--markdown"), "| `"+plain[:12]+"` | `-` | **UNCOVERED** |")
+	mustContain(t, check(1, "HEAD~1"), "Proofbound: NOT WARRANTED (no commit claims a spec; 1 commit changes code without claiming a spec)")
 
 	// A mistyped claim is not "no claims": the commit is listed UNBOUND and the PR is not warranted.
 	m.write("src/typo", "t\n")

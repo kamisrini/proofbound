@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -89,12 +89,24 @@ const (
 	commandCheck
 	commandWarrantyCosign
 	commandWarrantyBundle
+	commandTask
+	commandHook
 )
 
 func parseCommand(args []string) command {
 	switch {
 	case len(args) == 1 && args[0] == "version":
 		return commandVersion
+	case len(args) >= 1 && args[0] == "task":
+		if _, _, ok := parseTask(args); ok {
+			return commandTask
+		}
+		return commandInvalid
+	case len(args) >= 1 && args[0] == "hook":
+		if _, _, _, ok := parseHook(args); ok {
+			return commandHook
+		}
+		return commandInvalid
 	case len(args) >= 1 && args[0] == "check":
 		if _, _, _, ok := parseCheck(args); ok {
 			return commandCheck
@@ -212,7 +224,13 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return warrantyVerify(ctx, args[2], flagValue(args[3:], "--repo"), flagValue(args[3:], "--trust-key"), stdout)
 	}
 	root, err := repositoryRoot()
-	if err == nil {
+	if err == nil && cmd == commandHook {
+		// The git hooks `init` installs: no store, messages to stderr, exit 1 refuses the commit.
+		hook, file, source, _ := parseHook(args)
+		if err = runHook(ctx, root, hook, file, source, stderr); errors.Is(err, errHookBlock) {
+			return 1
+		}
+	} else if err == nil {
 		if isVerificationCommand(cmd) {
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, verifyTimeout)
@@ -873,6 +891,9 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return reviewSeal(ctx, root, args[2], fresh, output)
 	case commandKeysInit:
 		return keysInit(ctx, root, flagValue(args[2:], "--name"), output)
+	case commandTask:
+		sub, name, _ := parseTask(args)
+		return runTask(root, sub, name, output)
 	case commandWarrantyExport:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

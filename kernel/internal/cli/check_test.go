@@ -65,3 +65,20 @@ func TestClaimLinesFlagsNearMisses(t *testing.T) {
 		t.Fatalf("malformed %v, want %v", bad, want)
 	}
 }
+
+// CLI-INV-33: only specs, gates, Proofbound's own files, docs and init's files are housekeeping.
+func TestHousekeepingPath(t *testing.T) {
+	for _, p := range []string{"openspec/changes/x/tasks.md", "specs/001-export/plan.md", "specs/001-export/contracts/api.yaml",
+		"gates/ready-abc.yaml", ".proofbound/keys/alice.pub", "docs/verification/verdicts/v.md.sig", "README.md", "src/NOTES.MD",
+		"AGENTS.md", ".claude/agents/proofbound-reviewer.md", ".gitignore", ".github/workflows/proofbound.yml"} {
+		if !housekeepingPath(p) {
+			t.Errorf("%s should be housekeeping", p)
+		}
+	}
+	for _, p := range []string{"src/main.go", "main.go", "Makefile", ".github/workflows/ci.yml", "documentation/x.go",
+		"specsx/a.go", "src/docs/a.go", "scripts/run.sh", "go.mod", "README.md.go"} {
+		if housekeepingPath(p) {
+			t.Errorf("%s should be code", p)
+		}
+	}
+}

@@ -4,12 +4,15 @@
 This project writes specs with a spec-driven-development kit ([OpenSpec](https://github.com/Fission-AI/OpenSpec)
 or [Spec Kit](https://github.com/github/spec-kit)) and uses Proofbound to warrant the code against them.
 
-- **End every commit message with a trailer naming the change it implements:**
-  `Intent: sdd:<name>`, where `<name>` is the folder name: the OpenSpec change under
-  `openspec/changes/`, or the Spec Kit feature under `specs/` (for example `001-export`). A commit
-  that implements no change (docs, chores, reviews) is committed with
-  `PROOFBOUND_NO_INTENT=1 git commit ...`.
-- **Never claim a change the commit does not implement.** The claim is what gets verified.
+- **Before writing code for a change, run `proofbound task start <name>`**, where `<name>` is the
+  folder name: the OpenSpec change under `openspec/changes/`, or the Spec Kit feature under `specs/`
+  (for example `001-export`). Write the spec first; `task start` refuses a change that has no folder.
+  While the task is active, every commit that changes code gets `Intent: sdd:<name>` added for you.
+  Run `proofbound task stop` when the change is done, and `proofbound task` to see the active one.
+- **A commit that changes code without claiming a change is refused** here, and fails the pull-request
+  check. Commits that only touch specs, docs, `gates/`, review records or Markdown need no claim.
+- **Never claim a change the commit does not implement.** The claim is what gets verified. One change
+  per task: stop and start a task before working on another change.
 
 ### Reviewing a commit (the reviewer is never the author of the commit)
 
@@ -23,7 +26,7 @@ or [Spec Kit](https://github.com/github/spec-kit)) and uses Proofbound to warran
    `AMBIGUOUS`, `UNTESTABLE` or `CONTRADICTORY`, with a one-line `finding` when it is not
    `VERIFIABLE`.
 4. `proofbound review seal .proofbound/drafts/<commit>`, then commit the written files with
-   `PROOFBOUND_NO_INTENT=1 git commit -m "review <commit>"`.
+   `git commit -m "review <commit>"` (review records need no claim, so an active task does not stamp it).
 5. `proofbound sync all && proofbound gates canary`: the commit's `ready-<commit12>` gate says PASS
    or BLOCKED, with its reason.
 <!-- proofbound:end -->

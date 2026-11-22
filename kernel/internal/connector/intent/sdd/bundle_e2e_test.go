@@ -22,7 +22,7 @@ func TestWarrantyBundleEndToEnd(t *testing.T) {
 	gitIn(t, m.root, "init", "-q", "-b", "main")
 	gitIn(t, m.root, "config", "user.name", "owner-a")
 	m.mustRun("init", "speckit")
-	if err := os.Remove(filepath.Join(m.root, ".git", "hooks", "commit-msg")); err != nil {
+	if err := removeHooks(m.root); err != nil {
 		t.Fatal(err)
 	}
 	m.write("specs/001-export/spec.md", "# Feature: Export\n\n- **FR-001**: System MUST export reports as CSV.\n")

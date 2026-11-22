@@ -1,0 +1,9 @@
+#!/bin/sh
+# Installed by `proofbound init`: with an active `proofbound task`, a commit that changes code gets
+# `Intent: sdd:<change>` added to its message. Never blocks a commit: the commit-msg hook is the check.
+command -v proofbound >/dev/null 2>&1 || exit 0
+out=$(proofbound hook prepare-commit-msg "$@" 2>&1)
+rc=$?
+# Exit 2 is a usage error from an older proofbound; the commit-msg hook reports that one.
+[ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || printf '%s\n' "$out" >&2
+exit 0
