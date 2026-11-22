@@ -2,9 +2,26 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-21
+As of: 2026-11-22
 
-## Resume — 2026-11-21
+## Resume — 2026-11-22
+
+- **Owner's two priorities built** (`d8e0714`, owner 2026-11-22 "lets do both one after other"):
+  (1) `proofbound check` fails on UNCOVERED commits, i.e. unclaimed commits that change code
+  (`CI-mvp-uncovered-code-581081`, CLI-INV-33; `DEF-CHECK-UNCLAIMED-CODE-001` RESOLVED); (2)
+  `proofbound task start|stop` + init-installed prepare-commit-msg/commit-msg hooks stamp and require
+  the claim; `PROOFBOUND_NO_INTENT` retired (`CI-mvp-agent-intent-3k7q2w`, CLI-INV-34..36). Review
+  `mvp-uncovered-and-agent-intent-review-20261122` NEEDS_WORK (F1 HIGH, F2-F4 MED) all fixed by the
+  author, F5-F7 LOW recorded; calibration mutant killed. Gate GREEN at `d8e0714`. Not released:
+  ships with v0.3.2 (or v0.4.0, since check now fails PRs that passed before). Demo scripts still
+  set the retired env var (harmless; owner: demos not to be fixed).
+- **Also 2026-11-22:** gap deferrals `DEF-NO-INTENT-SELF-WAIVER-001`, `DEF-CLAIMED-CODE-SCOPE-001`,
+  `DEF-AGENT-NATIVE-INTENT-001` (minimal slice now built; rest open); `DEF-P7-REGENLOOP-001` now
+  requires an off-by-default opt-in flag for token-spending steps; landing page (private repo) gained
+  a problem section with five measurable metrics (uncommitted there); DEMO-MANUAL demo folder moved
+  under `~/projects`.
+
+## Earlier — 2026-11-21
 
 **Vertical MVP is under way (`VD-vertical-mvp-first-ai3dhn`, owner "go" 2026-11-20): five steps in
 order — 1 installable, 2 PR check, 3 reviewer-signed warranty, 4 shareable proof, 5 commercial (kept private).
@@ -84,15 +101,15 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   the new one. (2)-(4) not fixed: `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
   `DEF-INSTALL-PATH-SHADOW-001`. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
 
-**Exact next action:** the owner is trying `docs/releases/r3/DEMO-MANUAL.md` by hand. Wait for their
-findings; when they say the trial is done (or ask), fix the trial findings `DEF-QUICKSTART-STALE-001`,
-`DEF-QUICKSTART-EMPTY-REPO-001`, `DEF-INSTALL-PATH-SHADOW-001` plus anything new, then push and cut
-v0.3.2 (`DEF-RELEASE-V032-001`; owner 2026-11-21: "lets wait to push later"). MVP step 5 (commercial)
-continues outside this repository. Ask before starting other work.
+**Exact next action:** the owner is still trying `docs/releases/r3/DEMO-MANUAL.md` by hand and adding
+gaps as deferrals. When they say the trial is done, fix the trial findings (`DEF-QUICKSTART-STALE-001`
+§1 part, `DEF-QUICKSTART-EMPTY-REPO-001`, `DEF-INSTALL-PATH-SHADOW-001`) plus anything new, then with
+their OK push and cut the release (`DEF-RELEASE-V032-001`; owner to choose v0.3.2 vs v0.4.0, since the
+check is stricter), and update landing card 05 to "fails the PR". Ask before starting other work.
 
-**Gate:** GREEN at `190c102` (2026-11-21); EOD gate result is recorded in the journal. main is 4+ commits
-ahead of origin, unpushed by the owner's choice. Untracked `docs/plans/P5-intent-provenance-plan.md` and
-`kernel/cmd/p6dbprobe/` (2026-11-19) are the owner's to keep or drop. **Immediate blockers:** none.
+**Gate:** GREEN at `d8e0714` (2026-11-22). main is 7+ commits ahead of origin, unpushed by the
+owner's choice. Untracked `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/`
+are the owner's to keep or drop. **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
