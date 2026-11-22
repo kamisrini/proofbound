@@ -1,7 +1,8 @@
 # Plan: the Proofbound UI (local first, hosted later)
 
-**Status:** DRAFT for the owner, 2026-11-22. Planning and design only: nothing here is built or
-authorized to build. Owner direction: "lets go with 2 and then 3 later. plan and design. remember we
+**Status:** APPROVED direction, 2026-11-22 (owner: "go ahead lets do these"; section 8 decisions
+1 to 3 made). Planning and design only: nothing is built; U0 (decision record, obligation, change
+intent) comes before any code. Owner direction: "lets go with 2 and then 3 later. plan and design. remember we
 are visionaries ... We dont want UI that is 2026, but rather 2030 UI."
 **Scope:** option 2, a local UI served by the `proofbound` binary (`proofbound ui`), designed so the
 hosted, multi-repository UI (option 3) is the same product in a different place, not a rewrite.
@@ -106,7 +107,7 @@ and the Audit room says so on screen: it never implies an agent stayed out of pr
 **One decision this raises:** the review bench is only useful if a reviewer can record an outcome per
 promise. That writes the local draft (`.proofbound/drafts/<commit>/draft.json`), which is not the
 ledger; sealing and signing stay in the CLI (`review seal`), because private keys stay local. That is
-the one exception to "read-only v1" (section 8, decision 2).
+the one exception to "read-only v1" (section 8, decision 2, decided).
 
 ## 3. What v1 shows (only data Proofbound records today)
 
@@ -201,13 +202,13 @@ designed as the inbox's first, honest version, and the time rail as the twin's.
 Each step: a spec section first (Law 6, a `SPEC.md` for a new `internal/ui` package), one spec review,
 one code review (Law 11), tests that derive from the spec, `make check` green.
 
-## 8. Decisions the owner should make before U0
+## 8. Decisions the owner made before U0
 
-1. **Release.** v0.3.2 is published, so the UI ships as the next release (v0.3.3). Re-cutting v0.3.2
-   is possible but not recommended.
-2. **Read-only, except the review bench's local draft** (recommended): the bench records a
+1. **Release.** DECIDED 2026-11-22: the UI ships as the next release (v0.3.3); v0.3.2 stays as
+   published.
+2. **Read-only, except the review bench's local draft.** DECIDED 2026-11-22: the bench records a
    reviewer's outcomes in `.proofbound/drafts/`, never the ledger; sealing and signing stay in the CLI
-   because private keys stay local. Or fully read-only (the reviewer edits `draft.json` by hand).
+   because private keys stay local.
 3. **Order of workspaces:** DECIDED 2026-11-22: compliance and auditors are the primary customer,
    so the Audit room is U1 (section 7).
 4. **Ask (natural-language query):** confirm it stays behind an off-by-default flag, and out of v1.
