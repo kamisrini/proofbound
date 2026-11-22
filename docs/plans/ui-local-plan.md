@@ -5,7 +5,10 @@ authorized to build. Owner direction: "lets go with 2 and then 3 later. plan and
 are visionaries ... We dont want UI that is 2026, but rather 2030 UI."
 **Scope:** option 2, a local UI served by the `proofbound` binary (`proofbound ui`), designed so the
 hosted, multi-repository UI (option 3) is the same product in a different place, not a rewrite.
-**Visual design:** the private canvas "Proofbound Ledger UI concept" (two screens), linked from the
+**Primary customer** (owner, 2026-11-22): compliance and auditors, "who want to keep track of agents
+doing what they are supposed to, nothing outside the authorized perimeter". The Audit room is
+therefore built first (section 7), and section 2 says what of the perimeter v1 can and cannot show.
+**Visual design:** the private canvas "Proofbound Ledger UI concept" (one screen per workspace), linked from the
 owner's session; this page is the text of record.
 
 ## 1. What a 2030 UI is (from the vision, not from today's dashboards)
@@ -44,7 +47,7 @@ with, and shows nothing that does not help answer it.
 | 1 | **Developer running coding agents** | Directs agents, merges their work | "What do my agents' changes need from me before they can merge?" | **Now**: attention items with minutes and the exact command; agents at work and the task each holds; promises at risk on the branch | local |
 | 2 | **Reviewer** (a person, or a reviewer agent in another session) | Independently checks a change against its promises | "What is waiting for someone who did not write it, and exactly what am I checking?" | **Review bench**: a queue of changes this person is eligible to review (never their own); one promise at a time beside the code that claims to keep it; an outcome per promise | local |
 | 3 | **Spec owner** | Decides what should be true | "Which of my promises hold, which drifted when I changed the words, and which did reviewers find unclear?" | **Promise map**: every promise they own, its state, drift, and the requirement-review findings (AMBIGUOUS, UNTESTABLE, CONTRADICTORY) that say which words to fix | local |
-| 4 | **Compliance and auditors** (internal compliance, external auditors, a customer's security reviewer) | Establish, for a period or a release, that the controls held, without trusting the team | "For this release or period, did every change follow the rules, and can I check that myself?" | **Audit room**: pick a release or date range; each control is a question with an answer, a count, its exceptions and the events behind it; reproduce it from a clone; export a transcript | local first (on a clone, offline), then hosted |
+| 4 | **Compliance and auditors** (primary customer) (internal compliance, external auditors, a customer's security reviewer) | Establish, for a period or a release, that the controls held, without trusting the team | "For this release or period, did every change follow the rules, and can I check that myself?" | **Audit room**: pick a release or date range; each control is a question with an answer, a count, its exceptions and the events behind it; reproduce it from a clone; export a transcript | local first (on a clone, offline), then hosted |
 | 5 | **Coding agents** | Write the code, claim the spec, ask what is next | "For my task, what is unproven and what is the next command?" | **Agent surface**: no pixels; the JSON twin of every workspace plus a task-shaped endpoint (`/agent/next?task=sdd:<change>`) returning open promises, their state and the next command; a tool server (MCP) later | local |
 
 **What each workspace never shows:** the developer is not shown other people's review queues; the
@@ -62,6 +65,43 @@ evidence; the agent gets no prose it has to interpret, only typed states and com
 The transcript the auditor exports lists each control, its answer, its exceptions and the event
 numbers, so another auditor can re-run it and get the same result (vision-2028: "audit = a query +
 cryptographic transcript"). An auditor countersignature is reserved for later.
+
+### The authorized perimeter: what the Audit room can show, and when
+
+The controls above prove **authorization**: each change claimed a spec and someone else reviewed it.
+The primary customer asks the harder question, **did the agent stay inside what was authorized?**
+Three tiers, by what data they need.
+
+**Tier 1, in the first Audit room (from data the ledger and git already hold):**
+
+| View | The auditor's question | What it shows |
+|---|---|---|
+| **Every commit accounted for** | "Is this every change, or the ones you chose to show me?" | Each commit in the range classed as claimed and reviewed, claimed and unreviewed, housekeeping only (specs, docs, records), or UNCOVERED, with the counts summing to the range. Whether the ledger can also flag a rewritten history (a commit it ingested that is no longer reachable) is a spec question for U1. |
+| **Changes to the rules themselves** | "Did an agent move its own fence?" | Every commit in the range that touches the rule surface: `specs/` (the wording of the authorization), `.proofbound/` (keys, records), `gates/`, and the CI workflow that runs the check. CLI-INV-33 deliberately exempts these paths from UNCOVERED, so today they are never an exception; here each one is listed with its author and whether it went through a reviewed claim, and one without independent review is an exception. |
+| **Who did what** | "Did anyone grade their own work?" | A grid per change: author, reviewer, spec owner. Any change where two of the three are the same identity is flagged (Law 9 made visible). |
+| **Authorized before acted** | "Was the permission there before the work?" | For each claiming commit, whether the bound spec revision existed, worded as reviewed, in a commit before the code. A spec written in the same commit as its code, or reworded after it, is authorization filled in after the fact and is listed. The exact rule is a spec question for U1. |
+
+These four become controls 7 to 10 in the transcript, each with its answer, exceptions, event numbers
+and the command to re-run it. Their re-run commands on the canvas (`proofbound audit rules|roles|order <base>`)
+are proposed names, not existing commands; U1's spec settles them.
+
+**Tier 1, later in the Audit room (same data, less urgent):** a **reproducible sample** (the auditor
+tests N changes in depth; the sample is drawn from the range's hash, so a second auditor gets the
+same N); **since my last visit** (bookmark an event number, see which control answers moved); and a
+**framework mapping** in the transcript (SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Articles 12 and 14),
+worded "maps to", never "certifies", and checked by a compliance professional before it ships.
+
+**Tier 2, the literal "nothing outside the perimeter" (needs kernel work first):**
+- **Perimeter per change:** a spec declares the code it covers, and a hunk outside it is OUT OF SCOPE
+  even when the commit claims the spec correctly. Depends on `DEF-CLAIMED-CODE-SCOPE-001` and option 1
+  of `DEF-AGENT-NATIVE-INTENT-001`. Recommended as the next kernel milestone after the UI.
+- **Exceptions with a disposition:** each exception gets a signed outcome from a person (risk
+  accepted, fixed in commit X, reverted), or is pre-approved as a signed waiver from someone other
+  than the author (`DEF-NO-INTENT-SELF-WAIVER-001`). "1 exception" becomes a closed loop.
+
+**Tier 3, actions outside git (vision, later):** an agent-session record (commands run, secrets
+touched, network calls, deploys). Until it exists Proofbound sees only what lands in the repository,
+and the Audit room says so on screen: it never implies an agent stayed out of production.
 
 **One decision this raises:** the review bench is only useful if a reviewer can record an outcome per
 promise. That writes the local draft (`.proofbound/drafts/<commit>/draft.json`), which is not the
@@ -153,9 +193,9 @@ designed as the inbox's first, honest version, and the time rail as the twin's.
 | Step | Delivers | The command |
 |---|---|---|
 | U0 | A decision record: the UI direction above, stack (stdlib + embedded vanilla JS), local-only and read-only, the lock strategy; a requirement obligation and change intent | — |
-| U1 | `proofbound ui`: the **Now** workspace (developer) and the **Agent surface** (JSON twin + `/agent/next`), Proof chain, live refresh, browser signature check | `proofbound ui --open` on the tour's `shop` project |
-| U2 | **Review bench** (reviewer, writes the local draft only) and **Promise map** (spec owner) | review a promise in the bench, then `proofbound review seal` |
-| U3 | **Audit room** (compliance and auditors): controls, exceptions, time rail and as-of replay, transcript export | open the audit room for the tour's release range |
+| U1 | `proofbound ui` with the **Audit room** (primary customer): release or range scope, controls 1 to 10 (section 2, including the four perimeter views), exceptions, transcript export, Proof chain, browser signature check, the JSON twin of each | `proofbound ui --open` on the tour's `shop` project, open its release range |
+| U2 | The **Now** workspace (developer) and the **Agent surface** (`/agent/next`), live refresh | `proofbound ui --open` while an agent holds a `task start` |
+| U3 | **Review bench** (reviewer, writes the local draft only), **Promise map** (spec owner), time rail and as-of replay | review a promise in the bench, then `proofbound review seal` |
 | U4 | Tour chapter and DEMO-MANUAL step per workspace; release | next release |
 
 Each step: a spec section first (Law 6, a `SPEC.md` for a new `internal/ui` package), one spec review,
@@ -168,8 +208,8 @@ one code review (Law 11), tests that derive from the spec, `make check` green.
 2. **Read-only, except the review bench's local draft** (recommended): the bench records a
    reviewer's outcomes in `.proofbound/drafts/`, never the ledger; sealing and signing stay in the CLI
    because private keys stay local. Or fully read-only (the reviewer edits `draft.json` by hand).
-3. **Order of workspaces:** developer + agents first (U1), reviewer + spec owner (U2), audit room
-   (U3), as recommended; or the audit room earlier, if compliance is what design partners pay for.
+3. **Order of workspaces:** DECIDED 2026-11-22: compliance and auditors are the primary customer,
+   so the Audit room is U1 (section 7).
 4. **Ask (natural-language query):** confirm it stays behind an off-by-default flag, and out of v1.
 
 ## 9. Risks
@@ -177,6 +217,10 @@ one code review (Law 11), tests that derive from the spec, `make check` green.
 - **Scope gravity.** A UI invites width (settings, filters, charts). The test for every element:
   does it spend attention only where a person is needed, and does it carry its proof? If not, it is
   2026 furniture.
+- **Overclaiming the perimeter.** Tier 1 shows authorization and its paper trail, not that every
+  line stayed in scope (Tier 2) or that the agent did nothing outside git (Tier 3). The Audit room
+  must state both limits on screen; a compliance product that overstates its coverage is worse than
+  none.
 - **Lock contention** (section 4) is the one technical unknown; the spec must settle it first.
 - **Browser Ed25519** is in current Chrome, Firefox and Safari; older browsers fall back to "reported
   by the ledger, not verified here", labelled as such.
