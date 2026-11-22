@@ -67,7 +67,7 @@ clean-clone proof of this release is recorded in
 **What Release 1 does not do yet:** it does not regenerate failing code, predict outcomes, govern
 actions with policy envelopes, issue portable signed warranties, or redistribute a bundled database —
 those are **Release 3**. Its first slice, the portable signed warranty, is accepted and published as
-v0.3.0 / v0.3.1 ([`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md)). **Release 2**, the SDD Warranty Connector, is
+v0.3.0 to v0.3.2 ([`docs/releases/r3/DEMO.md`](docs/releases/r3/DEMO.md)). **Release 2**, the SDD Warranty Connector, is
 built and accepted (2026-11-19): it warrants the output of spec-driven-development tools (OpenSpec and
 Spec Kit) by binding each commit to the exact spec revision it claims, recording independent
 verification, and flagging drift when a verified spec changes.
@@ -103,7 +103,7 @@ curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.s
 ```
 
 Then follow the [quickstart](docs/releases/mvp/QUICKSTART.md) to your first warranty. Current release:
-[v0.3.1](https://github.com/kamisrini/proofbound/releases/tag/v0.3.1).
+[v0.3.2](https://github.com/kamisrini/proofbound/releases/tag/v0.3.2).
 
 ## Quick start (from source)
 

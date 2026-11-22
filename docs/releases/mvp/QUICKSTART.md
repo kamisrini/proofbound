@@ -19,9 +19,9 @@ proofbound version
   [releases page](https://github.com/kamisrini/proofbound/releases) and run `tar -xzf` on it, or use
   WSL and the command above.
 
-> **Not published yet.** No public release exists until the maintainer publishes one. To try the
-> exact install path today, from a clone: `bash docs/releases/mvp/demo-install.sh` builds the
-> archives locally, installs from them, and runs the loop below with the installed binary.
+If an older `proofbound` comes earlier on your PATH, the installer warns and names it. To try the
+install path from a clone without the network, `bash docs/releases/mvp/demo-install.sh` builds the
+archives locally, installs from them, and runs the loop below with the installed binary.
 
 ## 2. The database (nothing to set up)
 
@@ -38,7 +38,9 @@ export DATABASE_URL=postgres://user:pass@host:5432/proofbound
 ## 3. First warranty in your project
 
 In a repository that uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) or
-[Spec Kit](https://github.com/github/spec-kit):
+[Spec Kit](https://github.com/github/spec-kit). Starting from an empty folder instead? Follow
+[DEMO-MANUAL.md](../r3/DEMO-MANUAL.md) steps 0 to 3: it creates the repository and its first spec
+by hand.
 
 ```bash
 proofbound init openspec          # or: proofbound init speckit
@@ -75,7 +77,7 @@ claims no spec but changes code (listed as `UNCOVERED`). Commits that only touch
 request with no claims and no uncovered commit passes (set the action's `require-claims: true` to
 change that). Make the `proofbound` job a required status check in the branch protection rules, or a
 red check can still be merged. The same check runs locally:
-`proofbound check main`. (The action is not published yet; see the note in §1.)
+`proofbound check main`.
 
 ## 5. Attach the proof to a release
 

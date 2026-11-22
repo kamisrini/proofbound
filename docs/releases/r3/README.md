@@ -1,4 +1,4 @@
-# Proofbound — start here (current release: v0.3.1)
+# Proofbound — start here (current release: v0.3.2)
 
 Proofbound tells you, for each commit that claims to implement a spec, whether someone other than its
 author has checked every promise in that spec. It gives you a signed warranty file that anyone can
@@ -12,12 +12,12 @@ not need them to use Proofbound.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh
-proofbound version   # proofbound v0.3.1
+proofbound version   # proofbound v0.3.2
 ```
 
 The script checks the archive against `SHA256SUMS` and never uses `sudo`. Windows: download
 `proofbound_windows_amd64.tar.gz` from the
-[v0.3.1 release](https://github.com/kamisrini/proofbound/releases/tag/v0.3.1).
+[v0.3.2 release](https://github.com/kamisrini/proofbound/releases/tag/v0.3.2).
 
 ## 2. Use it on your repository
 
@@ -56,12 +56,12 @@ Walkthroughs: [the full tour](DEMO.md), and the [R2 demo](../r2/DEMO.md) for the
 
 ## 5. What changed, and known limits
 
-- [v0.3 release notes](RELEASE-NOTES.md): v0.3.0 and the v0.3.1 fix (the pull-request check now passes in
-  CI), behaviour changes, and caveats. Read the caveats before relying on a warranty.
+- [v0.3 release notes](RELEASE-NOTES.md): v0.3.0, the v0.3.1 fix (the pull-request check passes in
+  CI) and v0.3.2 (unclaimed code fails the check; `proofbound task`), behaviour changes, and caveats. Read the caveats before relying on a warranty.
 
 ## History: earlier releases
 
-These pages describe earlier releases. Everything they shipped is still in v0.3.1.
+These pages describe earlier releases. Everything they shipped is still in v0.3.2.
 
 | Release | What it added | Pages |
 |---|---|---|

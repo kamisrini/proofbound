@@ -1,4 +1,4 @@
-# Proofbound v0.3 release notes (v0.3.0, v0.3.1)
+# Proofbound v0.3 release notes (v0.3.0, v0.3.1, v0.3.2)
 
 **Release 3, first public cut: install it, gate pull requests, and hand over signed warranties.**
 Tag `v0.3.0` · Decisions [`VD-r3-warranty-first-s59ktv`](../../decisions/VD-r3-warranty-first-s59ktv.md)
@@ -8,6 +8,27 @@ and [`VD-vertical-mvp-first-ai3dhn`](../../decisions/VD-vertical-mvp-first-ai3dh
 **Status:** R3 slice 1 accepted by the owner 2026-11-20. MVP steps 1 to 4 built 2026-11-20, each with
 its spec and code reviewed by a non-author (Law 11 budget). Published by the owner's decision of
 2026-11-20.
+
+## v0.3.2 (2026-11-22): unclaimed code fails the check; agents get the claim added for them
+
+- **Stricter pull-request check (behaviour change).** `proofbound check` now lists every commit that
+  claims no spec but changes code as `UNCOVERED`, and the pull request is **NOT WARRANTED**. Before,
+  such commits were ignored, so one reviewed commit plus an unclaimed code commit read WARRANTED.
+  Commits that only touch specs, `gates/`, `.proofbound/`, `docs/`, Markdown, `.gitignore` or the
+  Proofbound workflow still need no claim. **Some pull requests that passed on v0.3.1 will fail.**
+  Make the check a required status check, or a red check can still be merged.
+- **`proofbound task start <change>`.** Run it once before writing code for a change: every commit
+  that changes code then ends with `Intent: sdd:<change>` without anyone typing it. `proofbound task`
+  shows the active task, `proofbound task stop` clears it. The change's spec folder must exist first.
+- **New hooks from `init`.** `prepare-commit-msg` adds the claim; `commit-msg` refuses a code commit
+  with no claim, a mistyped claim, or a claim outside the message's final trailer block (put it on the last line, after a blank line). `PROOFBOUND_NO_INTENT=1`
+  is retired: housekeeping commits need no claim, and code commits cannot opt out.
+- **Action needed for repositories set up before v0.3.2:** `init` never replaces an existing hook, so
+  remove `.git/hooks/commit-msg` and run `proofbound init openspec` (or `speckit`) again to get both
+  new hooks. The old hook still works, but keeps the retired opt-out.
+- **Fixed:** the reviewer agent `init` writes has valid YAML front matter (it was rejected by VS Code
+  and strict parsers). `install.sh` now warns when an older `proofbound` earlier on PATH would run
+  instead of the new one. The quickstart points to a from-scratch path for an empty folder.
 
 ## v0.3.1 (patch, 2026-11-20): the pull-request check works in CI
 

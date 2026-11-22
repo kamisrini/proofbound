@@ -50,4 +50,13 @@ make_release "$tmp/newer" v1.1.0
 run_install "$tmp/newer" "$tmp/d4" >/dev/null
 [[ $("$tmp/d4/proofbound" version) == "proofbound v1.1.0" ]]
 [[ -z $(find "$tmp/d4" -name '.proofbound.tmp.*') ]]
+
+# INST-3: an older proofbound earlier on PATH is named in a warning; none when the install comes first.
+mkdir "$tmp/old"
+printf '#!/bin/sh\necho "proofbound v0.0.1"\n' >"$tmp/old/proofbound"
+chmod 0755 "$tmp/old/proofbound"
+run_install "$tmp/newer" "$tmp/d4" PATH="$tmp/old:$tmp/d4:$PATH" >"$tmp/out"
+grep -q "warning: $tmp/old/proofbound comes first on your PATH and will run instead (proofbound v0.0.1)" "$tmp/out"
+run_install "$tmp/newer" "$tmp/d4" PATH="$tmp/d4:$tmp/old:$PATH" >"$tmp/out"
+if grep -q "warning:" "$tmp/out"; then echo "install.test: a warning with the install first on PATH" >&2; exit 1; fi
 echo "install.test: ok"

@@ -14,11 +14,11 @@ own key. The demo keeps their private keys in separate files so you can see that
 
 ## Before you start
 
-You need Proofbound v0.3.1 on your PATH, plus `git` and `jq`. Port 55432 must be free (Proofbound
+You need Proofbound v0.3.2 on your PATH, plus `git` and `jq`. Port 55432 must be free (Proofbound
 starts a private database there for each command and stops it afterwards).
 
 ```bash
-proofbound version    # proofbound v0.3.1
+proofbound version    # proofbound v0.3.2
 ```
 
 If that says `command not found`, install it with the one-line command in the [README](README.md), then
@@ -102,10 +102,12 @@ AGENTS.md
 | `.gitignore` | Keeps Proofbound's local database and drafts out of git, but lets the profile and public keys in |
 | `AGENTS.md` | Tells any coding agent (Claude, Copilot, Cursor…) the commit rule in step 3 |
 | `.claude/agents/proofbound-reviewer.md` | A ready-made reviewer agent for Claude Code |
-| `.git/hooks/commit-msg` | Refuses a commit that does not say which spec it implements (next step shows it) |
+| `.git/hooks/commit-msg` | Refuses a commit that changes code but does not say which spec it implements (next step shows it) |
+| `.git/hooks/prepare-commit-msg` | Adds the claim for you while a `proofbound task` is active (step 3 shows the manual way) |
 | `.github/workflows/proofbound.yml` | The pull-request check, for when this project is on GitHub |
 
-`PROOFBOUND_NO_INTENT=1` says "this commit implements no spec". `base` remembers this commit: later,
+This commit changes no code (only Proofbound's own files and Markdown), so it needs no claim; the
+`PROOFBOUND_NO_INTENT=1` prefix here and below is left over from v0.3.1 and does nothing now. `base` remembers this commit: later,
 the pull-request check compares everything after it, as if it were the base of a pull request.
 
 **Business value.** Adoption is one command in an existing repository: no server to host, no account,
@@ -113,20 +115,26 @@ nothing to buy before you see it work.
 
 ## Step 1b — See the commit rule fire
 
-**What you're doing.** Trying to commit without saying which spec the commit implements.
+**What you're doing.** Trying to commit a code file without saying which spec it implements, then
+taking the file back out.
 
 ```bash
-git commit --allow-empty -q -m "try a commit with no claim"
+echo 'echo hello' > hello.sh && git add hello.sh
+git commit -q -m "try a commit with no claim"
+git rm -q --cached hello.sh && rm hello.sh
 ```
 
 **What you should see** (and no commit is made):
 
 ```text
-proofbound: end the message with 'Intent: sdd:<change-name>', or commit with PROOFBOUND_NO_INTENT=1
+proofbound: this commit changes code (hello.sh) but claims no spec.
+  Run `proofbound task start <change>` and commit again: the claim is added for you.
+  Specs, docs, gates, review records and Markdown need no claim.
 ```
 
-**What just happened.** The hook `init` installed blocks commits that make no statement. Every commit
-either claims a spec (`Intent: sdd:<name>`) or says explicitly that it implements none.
+**What just happened.** The hook `init` installed blocks a commit that changes code without claiming
+a spec. Commits that only touch specs, docs, review records or Markdown pass without a claim. An agent
+runs `proofbound task start <change>` once, and every code commit after that gets the claim added.
 
 **Business value.** Nobody, human or agent, can quietly skip the question "which promise does this code
 keep?". Silence is never mistaken for a claim.

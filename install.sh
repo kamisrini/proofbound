@@ -68,6 +68,12 @@ mv -f "$dest/.proofbound.tmp.$$" "$dest/proofbound"
 
 echo "installed $("$dest/proofbound" version) to $dest/proofbound"
 case ":$PATH:" in
-  *":$dest:"*) ;;
+  *":$dest:"*)
+    # An older proofbound earlier on PATH would run instead of this one (DEF-INSTALL-PATH-SHADOW-001).
+    found=$(command -v proofbound 2>/dev/null || true)
+    if [ -n "$found" ] && [ "$found" != "$dest/proofbound" ]; then
+      echo "warning: $found comes first on your PATH and will run instead ($("$found" version 2>/dev/null || echo "unknown version")); remove it or put $dest earlier on PATH"
+    fi
+    ;;
   *) echo "note: $dest is not on your PATH; add it, e.g.  export PATH=\"$dest:\$PATH\"" ;;
 esac
