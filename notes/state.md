@@ -72,6 +72,8 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   with real output and why each matters. Found: `report week` fails on tenants with v2 verdicts
   (`DEF-REPORT-WEEK-V2-001`, OPEN, dormant). Gate GREEN at `25e8e9a`.
 
+- **DEMO-MANUAL.md** (`de53647`, owner 2026-11-21): the tour typed by hand, 14 steps with business value;
+  all 20 bash blocks run from the page against v0.3.1.
 - **Owner trying the R3 README (2026-11-21), findings so far:** (1) FIXED `986bf32` (pin `190c102`,
   `CI-mvp-reviewer-frontmatter-05p936` → O-1; owner: "fix it now"): the `init`-written reviewer agent's
   front matter was invalid YAML (unquoted `Intent: sdd:` in `description`; VS Code preview rejected it);
@@ -79,13 +81,18 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   released: users get it only with a v0.3.2 (needs the owner's OK to publish). (2) QUICKSTART §1/§4
   still say "Not published yet". (3) QUICKSTART assumes an existing OpenSpec/Spec Kit repo; nothing for
   an empty folder. (4) `install.sh` does not warn when an older `proofbound` earlier on PATH shadows
-  the new one. (2)-(4) not fixed. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
+  the new one. (2)-(4) not fixed: `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
+  `DEF-INSTALL-PATH-SHADOW-001`. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
 
-**Exact next action:** MVP step 5 (the commercial step) is in progress, tracked outside this
-repository (owner, 2026-11-20: "go with commercial step"). Nothing in this repository is needed for it
-right now; ask the owner before starting other work.
+**Exact next action:** the owner is trying `docs/releases/r3/DEMO-MANUAL.md` by hand. Wait for their
+findings; when they say the trial is done (or ask), fix the trial findings `DEF-QUICKSTART-STALE-001`,
+`DEF-QUICKSTART-EMPTY-REPO-001`, `DEF-INSTALL-PATH-SHADOW-001` plus anything new, then push and cut
+v0.3.2 (`DEF-RELEASE-V032-001`; owner 2026-11-21: "lets wait to push later"). MVP step 5 (commercial)
+continues outside this repository. Ask before starting other work.
 
-**Gate:** GREEN at `190c102` (2026-11-21; untracked `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/` from 2026-11-19 are the owner's to keep or drop). **Immediate blockers:** none.
+**Gate:** GREEN at `190c102` (2026-11-21); EOD gate result is recorded in the journal. main is 4+ commits
+ahead of origin, unpushed by the owner's choice. Untracked `docs/plans/P5-intent-provenance-plan.md` and
+`kernel/cmd/p6dbprobe/` (2026-11-19) are the owner's to keep or drop. **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
