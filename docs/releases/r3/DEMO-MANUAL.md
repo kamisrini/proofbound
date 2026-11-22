@@ -613,6 +613,86 @@ event log, not stored as editable state.
 **Business value.** The record is not a database someone could quietly edit; anyone can rebuild it and
 get the same answer, so it holds up to scrutiny.
 
+## Step 15 — The Audit room: audit the release in a browser, and close the exception (v0.3.3)
+
+**Needs v0.3.3.** On v0.3.2, `proofbound ui` prints the usage line; skip this step.
+
+**What you're doing.** Changing hats a third time: you are now **compliance**, checking whether
+everything since the keys were declared followed the rules. You open the Audit room in a browser,
+read the answers, and close the one exception with a signed outcome, without typing another
+command. The reviewer's key signs it, because nobody may close an exception on their own commit and
+the spec owner wrote that commit.
+
+```bash
+keys=$(git log --diff-filter=A --format=%H -- .proofbound/keys | tail -1)
+PROOFBOUND_KEY="$W/reviewer.key" proofbound ui --base "$keys"
+```
+
+**What you should see** (your port and link differ; the command keeps running until you press Ctrl-C):
+
+```text
+ui http://127.0.0.1:39117/?k=0c5c942de3dcc7f37f1b3674a43da5e6f3d0bbc58de9efacdda3bb742618047d (Ctrl-C to stop; the link is your key to this page, do not share it)
+```
+
+**Open that link in your browser** (on WSL, paste it into your Windows browser). The page says:
+
+```text
+3 of 4 controls held for this range. 1 exception(s), 0 with a signed outcome.
+C1 EXCEPTION   Every commit that claims a spec passed its readiness gate.   0 of 1 passed
+C2 HELD        No commit changed code without claiming a spec.
+C3 NONE        Every passing claim carries a warranty that verifies.         no passing claim to warrant
+C4 LISTED      Promises that changed after they were verified are disclosed. 1 change(s) disclosed
+C5 LISTED      Every commit in the range is accounted for.                   4 commits, each in one class
+C6 HELD        Changes to who may sign, and to the check itself
+C7 HELD        Each claimed spec existed before the code that claims it.     1 of 1
+```
+
+Then, in the page:
+1. Click **C1** and **C4** to see the commits behind each answer, and the terminal command that gives
+   the same answer.
+2. Under **1 exception(s)**, the totals row has no review. Click **Record an outcome**, choose
+   **Accepted risk**, and type a reason, for example `Ships unreviewed in this release; review booked
+   for the next one`.
+3. Click **Review what will be written**. You see the exact record, signed by `demo-reviewer`:
+
+```text
+.proofbound/outcomes/gate-72ff20b35658.json
+{
+  "at": "2026-11-22T22:30:16Z",
+  "by": "demo-reviewer",
+  "commit": "72ff20b3565864c6cf83d562f4237c379dde3de5",
+  "exception": "gate-72ff20b35658",
+  "key": "f55026f8c456771a",
+  "outcome": "accepted",
+  "reason": "Ships unreviewed in this release; review booked for the next one",
+  "schema": "proofbound.exception-outcome.v1"
+}
+signed by demo-reviewer (key f55026f8c456771a)
+```
+
+4. Click **Sign and record**. The page reloads: the headline now ends `1 with a signed outcome`, and
+   the exception shows who accepted it, when, and why.
+5. Optionally, **Countersign this transcript** the same way, and **Download JSON** to keep the audit.
+
+Press Ctrl-C in the terminal when you are done, then look at what the page wrote:
+
+```bash
+git log --oneline -1
+```
+
+```text
+5efc244 proofbound: exception outcome gate-72ff20b35658
+```
+
+**What just happened.** Every answer was computed from the repository and the record, not typed in
+by anyone. The outcome is a signed file in git, committed on its own: anyone with a clone sees it
+verify, and nobody can change it without the change showing. A key declared after the range began
+could not have signed it, and the commit's own author could not have either.
+
+**Business value.** A compliance lead or an auditor can audit what the agents shipped, and close each
+exception with an accountable, signed decision, in a browser, without a terminal, a meeting or a
+spreadsheet.
+
 ---
 
 ## Try it yourself: review the totals row

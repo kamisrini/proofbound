@@ -6,19 +6,21 @@ As of: 2026-11-22
 
 ## Resume — 2026-11-22
 
-- **UI plan approved, next action U0** (`docs/plans/ui-local-plan.md`, owner 2026-11-22 "go ahead
-  lets do these"): local `proofbound ui` (option 2; hosted option 3 later), five workspaces for five
-  users. **Primary customer: compliance and auditors**, so U1 = the Audit room with controls 1 to 10,
-  including four authorized-perimeter views (every commit accounted for, rule-surface changes, who did
-  what, authorized before acted); U2 Now + Agent surface; U3 Review bench + Promise map + time rail.
-  Decided: ships as v0.3.3; interactive for non-developers, every act previewed then signed locally
-  with the person's own key (exception outcomes + transcript countersign in U1, two new record types
-  for U0's spec); `--bundle` for auditors without git; Ask stays behind an off-by-default flag. Exact next action: **U0** = a VD record for the UI direction (stdlib + embedded
-  vanilla JS, localhost, snapshot-and-release lock strategy), a BR obligation and change intent, then
-  the `internal/ui` SPEC.md (Law 6) before code. Design canvas (private):
-  https://claude.ai/artifact/CuzCa94AYJK2tJ1WBze8QS. Tier 2 perimeter (line-level scope, signed
-  exception dispositions) needs `DEF-CLAIMED-CODE-SCOPE-001` / `DEF-NO-INTENT-SELF-WAIVER-001`, still
-  dormant; recommended as the kernel milestone after the UI.
+- **U1 BUILT, not released: `proofbound ui`, the Audit room** (`a271e2d`, `CI-audit-room-u1-h5n9d2`,
+  owner 2026-11-22 "lets build it, so we can ship it to clients"). U0 `381edea`: VD-audit-room-ui-q2v6x3,
+  BD-audit-room-ui-k4m2p8 -> BR-audit-room-ui-r7t3w1 (O-1 Audit room, O-2 signed acts, `proposed`),
+  spec `docs/plans/ui-u1-audit-room-spec.md` (draft 2), CLI-INV-37..41. Seven controls C1..C7 over
+  base..HEAD; signed exception outcomes (`.proofbound/outcomes/`) and transcript attestations
+  (`.proofbound/attestations/`) from the browser; token only via the terminal link (port-named
+  SameSite=Strict cookie); signer key must be declared at the base and must not be the commit's author.
+  Spec review `ui-u1-spec-review-20261122` NEEDS_WORK (F1, F2 HIGH, F3..F11 MED) and code review
+  `ui-u1-code-review-20261122` NEEDS_WORK (F1..F4 MED): all fixed; mutants (Origin check, author rule,
+  tag) killed. Gate GREEN before commit. Accepted on the tour's shop repo and the DEMO-MANUAL repo
+  (all 19 blocks + new Step 15). Release notes v0.3.3 section marked unreleased.
+  **Exact next action:** owner try-out (DEMO-MANUAL Step 15, or `proofbound ui` in any repo), then on
+  owner OK cut v0.3.3 (tag, archives, GitHub release) as v0.3.2 was. Not in U1: other workspaces,
+  time rail, in-browser signature check, `--bundle`, sample draw. New: `DEF-KERNELCHECK-SDD-TIMEOUT-001`
+  (sdd package 442 s alone, near the 600 s go test limit under make check; failed the gate twice).
 - **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
   both CIs of `d8e0714`). Release commit `3c2995c` (`CI-mvp-release-v032-811d44`; review
   `mvp-release-v032-review-20261122` ACCEPTABLE, F1/F3 LOW fixed, F2 LOW recorded): install.sh warns on
