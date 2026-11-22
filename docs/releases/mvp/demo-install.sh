@@ -3,7 +3,7 @@
 #
 #   bash docs/releases/mvp/demo-install.sh [workdir]   # default: ${TMPDIR:-/tmp}/proofbound-install-demo
 #
-# Pushes are held, so nothing is published: this builds the release archives locally
+# Works offline, with no published release: this builds the release archives locally
 # (scripts/release-build.sh), serves them to install.sh as a file:// "release", installs into
 # <workdir>/bin, and runs the Release 2 loop (docs/releases/r2/demo-loop.sh) with the INSTALLED
 # binary: no go build in the loop. It times install -> PASS. Building the archives needs go, GNU tar

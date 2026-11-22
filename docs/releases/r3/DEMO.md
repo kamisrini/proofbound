@@ -1,4 +1,4 @@
-# Proofbound tour: everything in v0.3.1, and why it matters
+# Proofbound tour: everything in v0.3.2, and why it matters
 
 **Proofbound proves that someone other than the author checked AI-written code against its spec,
 promise by promise, and hands you a signed file that anyone can verify from a clone of your
@@ -37,7 +37,7 @@ bash docs/releases/r3/tour.sh                                        # builds th
 PROOFBOUND_BIN=$(command -v proofbound) bash docs/releases/r3/tour.sh   # or use an installed binary
 ```
 
-It creates a throwaway Spec Kit project, `shop`, and runs twelve chapters. The demo plays both the
+It creates a throwaway Spec Kit project, `shop`, and runs thirteen chapters. The demo plays both the
 spec owner and the reviewer, and says so; in real use the reviewer is a different person or a review
 agent with its own key. Output below is trimmed where marked (`…`).
 
@@ -52,10 +52,12 @@ appended .gitignore
 appended AGENTS.md
 wrote .claude/agents/proofbound-reviewer.md
 wrote .git/hooks/commit-msg
+wrote .git/hooks/prepare-commit-msg
 wrote .github/workflows/proofbound.yml
 ```
 
-One command adds a profile naming the spec owner (from `git config user.name`), a commit-message hook,
+One command adds a profile naming the spec owner (from `git config user.name`), two commit-message hooks
+(one adds the spec claim for a coding agent, one refuses code that claims no spec, chapter 13),
 instructions for coding agents (`AGENTS.md`), a ready-made reviewer agent, and the GitHub workflow that
 runs the pull-request check.
 
@@ -259,15 +261,48 @@ fresh clone, `sync all` rebuilds the same answers from git alone, which is what 
 **Why it matters:** the record is derived from git, not a database someone could edit, so it holds up
 to scrutiny.
 
+## 13. Agents: the claim is added for them, and unclaimed code fails the check
+
+```
+$ git commit -m "add a greeting"      # code, no claim, no task
+proofbound: this commit changes code (src/hello.sh) but claims no spec.
+  Run `proofbound task start <change>` and commit again: the claim is added for you.
+  Specs, docs, gates, review records and Markdown need no claim.
+$ proofbound task start 002-totals-row
+task sdd:002-totals-row: commits that change code now end with `Intent: sdd:002-totals-row`; `proofbound task stop` when done
+$ git commit -m "add a greeting"      # the same commit, with a task active
+$ git log -1 --format=%B
+add a greeting
+
+Intent: sdd:002-totals-row
+$ proofbound task stop
+no task
+$ git commit --no-verify -m "sneak in a change"      # skips the hooks: no claim
+$ proofbound check <before these commits>
+Proofbound: NOT WARRANTED (0 of 1 claiming commits verified; 1 commit changes code without claiming a spec)
+  72c2a430b618 sdd:002-totals-row NO REVIEW  …
+  4a79ce286a4a - UNCOVERED  claims no spec but changes src/hello.sh; run `proofbound task start <change>` …
+```
+
+A coding agent runs `proofbound task start <change>` once; from then on every commit that changes
+code carries the claim without anyone typing it. A code commit with no claim is refused at commit
+time, and if someone skips the hooks, the pull-request check lists it as `UNCOVERED` and fails.
+Commits that only touch specs, docs, `gates/`, review records or Markdown never need a claim.
+
+**Why it matters:** the check cannot be passed by leaving the label off. Every line of code in a
+warranted pull request belongs to a spec someone reviewed, and agents do not have to remember a rule
+to get there.
+
 ---
 
 ## Use it on your project
 
-Install and set up with the [quickstart](../mvp/QUICKSTART.md). The signing steps:
+Install and set up with the [quickstart](../mvp/QUICKSTART.md). Before an agent writes code for a
+change: `proofbound task start <change>` (chapter 13). The signing steps:
 
 ```bash
 proofbound keys init                       # private key in ~/.config/proofbound (never in the repo)
-git add .gitignore .proofbound/keys && PROOFBOUND_NO_INTENT=1 git commit -m "declare warranty key"
+git add .gitignore .proofbound/keys && git commit -m "declare warranty key"   # keys need no claim
 proofbound warranty export <commit>        # only for a commit whose ready-<commit12> gate is PASS
 ```
 

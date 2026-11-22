@@ -100,19 +100,22 @@ cd <this-repo>/kernel && CGO_ENABLED=0 go build -o "$HOME/bin/proofbound" ./cmd/
 ```bash
 proofbound init openspec            # or: proofbound init speckit
 git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
-PROOFBOUND_NO_INTENT=1 git commit -m "add proofbound"   # implements no spec, so no trailer
+git commit -m "add proofbound"   # changes no code, so it needs no claim
 ```
 
 `init` writes the profile (owner and sponsor = your `git config user.name`, or `--owner <name>`), two
 `.gitignore` lines, an AGENTS.md block that tells any agent the commit rule, a Claude Code reviewer
-subagent (`.claude/agents/proofbound-reviewer.md`), and a `commit-msg` hook. It never overwrites
+subagent (`.claude/agents/proofbound-reviewer.md`), and two git hooks (`prepare-commit-msg` adds the
+claim during a `proofbound task`, `commit-msg` refuses code that claims no spec). It never overwrites
 anything, so running it twice is safe.
 
 **Work as usual.** `proofbound sync all` records everything, specs included, because the profile is
-committed. End every commit that implements a spec with `Intent: sdd:<name>`, where
-`<name>` is the folder: the OpenSpec change under `openspec/changes/`, or the Spec Kit feature under
-`specs/` (for example `001-export`). Spec Kit counts a feature once its `tasks.md` exists. Commits
-that implement no spec use `PROOFBOUND_NO_INTENT=1 git commit …`.
+committed. Before writing code for a change, run `proofbound task start <name>`, where `<name>` is
+the folder: the OpenSpec change under `openspec/changes/`, or the Spec Kit feature under `specs/`
+(for example `001-export`); every commit that changes code then ends with `Intent: sdd:<name>`
+automatically (`proofbound task stop` when done). Spec Kit counts a feature once its `tasks.md`
+exists. Commits that only touch specs, docs, `gates/`, review records or Markdown need no claim; a
+code commit without one is refused, and fails the pull-request check as `UNCOVERED`.
 
 **Warrant a commit.** Someone who did not write it (another person, or the `proofbound-reviewer`
 subagent in a separate session) runs:
@@ -124,7 +127,7 @@ proofbound review draft <commit>                # prints every obligation; write
 # and VERIFIABLE / AMBIGUOUS / UNTESTABLE / CONTRADICTORY for the requirement review)
 proofbound review seal .proofbound/drafts/<commit>   # the folder, or its draft.json
 git add docs/verification/verdicts gates
-PROOFBOUND_NO_INTENT=1 git commit -m "review <commit>"
+git commit -m "review <commit>"                  # review records need no claim
 proofbound sync all && proofbound gates canary
 ```
 

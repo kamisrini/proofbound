@@ -73,7 +73,7 @@ specs with [GitHub Spec Kit](https://github.com/github/spec-kit) (`init openspec
 ```bash
 proofbound init speckit
 git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude .github
-PROOFBOUND_NO_INTENT=1 git commit -q -m "add proofbound"
+git commit -q -m "add proofbound"
 base=$(git rev-parse HEAD)
 git ls-files
 ```
@@ -86,6 +86,7 @@ appended …/shop/.gitignore
 appended …/shop/AGENTS.md
 wrote …/shop/.claude/agents/proofbound-reviewer.md
 wrote …/shop/.git/hooks/commit-msg
+wrote …/shop/.git/hooks/prepare-commit-msg
 wrote …/shop/.github/workflows/proofbound.yml
 .claude/agents/proofbound-reviewer.md
 .github/workflows/proofbound.yml
@@ -106,8 +107,8 @@ AGENTS.md
 | `.git/hooks/prepare-commit-msg` | Adds the claim for you while a `proofbound task` is active (step 3 shows the manual way) |
 | `.github/workflows/proofbound.yml` | The pull-request check, for when this project is on GitHub |
 
-This commit changes no code (only Proofbound's own files and Markdown), so it needs no claim; the
-`PROOFBOUND_NO_INTENT=1` prefix here and below is left over from v0.3.1 and does nothing now. `base` remembers this commit: later,
+This commit changes no code (only Proofbound's own files and Markdown), so it needs no claim. `base`
+remembers this commit: later,
 the pull-request check compares everything after it, as if it were the base of a pull request.
 
 **Business value.** Adoption is one command in an existing repository: no server to host, no account,
@@ -159,7 +160,7 @@ cat > specs/001-csv-export/spec.md <<'EOF'
 EOF
 printf -- '- [ ] T001 Implement CSV export\n' > specs/001-csv-export/tasks.md
 git add specs
-PROOFBOUND_NO_INTENT=1 git commit -q -m "spec: 001-csv-export"
+git commit -q -m "spec: 001-csv-export"
 cat specs/001-csv-export/spec.md
 ```
 
@@ -197,7 +198,9 @@ e620a48 implement CSV export
 ```
 
 **What just happened.** The hook accepted the commit because it makes a claim. `csv` remembers this
-commit's hash; steps 7–10 use it.
+commit's hash; steps 7–10 use it. A coding agent does not type the claim: it runs
+`proofbound task start 001-csv-export` once, and every commit that changes code gets the
+`Intent:` line added (`proofbound task stop` when done).
 
 **Business value.** The claim is explicit and machine-checkable. A coding agent learns to write it from
 `AGENTS.md`, so AI-written changes declare what they claim to do.
@@ -270,7 +273,7 @@ private key stays on that person's machine. The public half is committed to the 
 proofbound keys init --name spec-owner
 PROOFBOUND_KEY="$W/reviewer.key" proofbound keys init --name demo-reviewer
 git add .gitignore .proofbound/keys
-PROOFBOUND_NO_INTENT=1 git commit -q -m "declare the spec owner's and the reviewer's keys"
+git commit -q -m "declare the spec owner's and the reviewer's keys"
 git ls-files .proofbound/keys
 proofbound sync all
 ```
@@ -375,7 +378,7 @@ sh src/export.sh
 decide demo-reviewer
 PROOFBOUND_KEY="$W/reviewer.key" proofbound review seal "$draft"
 git add docs/verification/verdicts gates
-PROOFBOUND_NO_INTENT=1 git commit -q -m "review $(git rev-parse --short=12 "$csv")"
+git commit -q -m "review $(git rev-parse --short=12 "$csv")"
 proofbound sync all
 proofbound gates canary
 ```
@@ -517,7 +520,7 @@ cat > specs/002-totals-row/spec.md <<'EOF'
 EOF
 printf -- '- [ ] T001 Add the totals row\n' > specs/002-totals-row/tasks.md
 git add specs
-PROOFBOUND_NO_INTENT=1 git commit -q -m "spec: 002-totals-row"
+git commit -q -m "spec: 002-totals-row"
 cat >> src/export.sh <<'EOF'
 printf 'total,8\n'
 EOF
@@ -561,7 +564,7 @@ Then asking Proofbound what moved.
 sed -i 's/start every export with a header row\./start every export with a header row naming each column in lower case./' specs/001-csv-export/spec.md
 git diff
 git add specs
-PROOFBOUND_NO_INTENT=1 git commit -q -m "spec: tighten the header-row promise"
+git commit -q -m "spec: tighten the header-row promise"
 proofbound sync all
 proofbound report drift
 ```

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MVP step 4: the shareable proof a release would attach, built locally (nothing is published).
+# MVP step 4: the shareable proof a release would attach, built locally (nothing is uploaded anywhere).
 #
 #   bash docs/releases/mvp/demo-share.sh [workdir]   # default: ${TMPDIR:-/tmp}/proofbound-share-demo
 #
@@ -23,13 +23,14 @@ say "Release 2 loop, with a reviewer who signs (docs/releases/r2/demo-loop.sh)"
 DEMO_REVIEWER_KEY="$work/reviewer-key" bash "$repo/docs/releases/r2/demo-loop.sh" openspec "$work/loop" >"$work/loop.log" 2>&1 || { cat "$work/loop.log"; exit 1; }
 grep -E "state=PASS" "$work/loop.log"
 pb() { "$work/loop/proofbound" "$@"; }
+export PATH="$work/loop:$PATH"  # the git hooks `init` installs run `proofbound` from PATH: use this build
 cd "$work/loop/project"
 export XDG_CONFIG_HOME="$work/config"
 
 say "the exporter declares their key"
 pb keys init --name spec-owner
 git add .gitignore .proofbound/keys
-PROOFBOUND_NO_INTENT=1 git commit -qm "declare the exporter's key"
+git commit -qm "declare the exporter's key"
 pb sync all >/dev/null
 
 base=$(git log --format=%H --grep='^add proofbound' -1)
@@ -54,7 +55,7 @@ cat <<MSG
 
 == what this shows
 - One command turns every verified commit in a range into signed files plus a page and a badge a
-  release can attach; nothing here is published yet (pushes are held).
+  release can attach; this demo builds it locally and uploads nothing.
 - The page and index say they are unsigned; the stranger trusts only \`warranty verify\` on a clone.
 Workdir: $work (delete it when done).
 MSG

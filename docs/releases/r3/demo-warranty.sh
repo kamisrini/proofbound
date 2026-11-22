@@ -31,6 +31,7 @@ grep -E "state=PASS" "$work.loop.log"
 rm -f "$work.loop.log"
 
 pb() { "$work/proofbound" "$@"; }
+export PATH="$work:$PATH"  # the git hooks `init` installs run `proofbound` from PATH: use this build
 cd "$work/project"
 commit=$(git log --format=%H --grep='^implement CSV export' -1)
 export XDG_CONFIG_HOME="$work/config"
@@ -38,7 +39,7 @@ export XDG_CONFIG_HOME="$work/config"
 say "1. a signing key: private part outside the repository, public part committed"
 pb keys init --name spec-owner
 git add .gitignore .proofbound/keys
-PROOFBOUND_NO_INTENT=1 git commit -qm "declare the warranty signing key"
+git commit -qm "declare the warranty signing key"
 
 say "2. export a signed warranty for the PASS commit"
 pb warranty export "$commit" -o "$work/warranty.json"
@@ -53,7 +54,7 @@ pb warranty verify "$work/warranty.json" --repo . || echo "(exit $?)"
 say "5. the reviewer, with their own key, declares it and cosigns the warranty (MVP step 3, option B)"
 PROOFBOUND_KEY="$work/reviewer-key" pb keys init --name demo-reviewer
 git add .proofbound/keys
-PROOFBOUND_NO_INTENT=1 git commit -qm "declare the reviewer's key"
+git commit -qm "declare the reviewer's key"
 PROOFBOUND_KEY="$work/reviewer-key" pb warranty cosign "$work/warranty.json"
 echo "(option A instead: with that key declared before \`review seal\`, the seal signs each review file)"
 

@@ -35,6 +35,7 @@ unset DATABASE_URL
 
 say() { printf '\n== %s\n' "$*"; }
 pb() { "$work/proofbound" "$@"; }
+export PATH="$work:$PATH"  # the git hooks `init` installs run `proofbound` from PATH: use this build
 
 if [[ -n ${PROOFBOUND_BIN:-} ]]; then
   say "using the installed proofbound CLI ($PROOFBOUND_BIN)"
@@ -54,7 +55,7 @@ git config user.email spec-owner@example.invalid
 say "proofbound init $kit (the spec owner is 'spec-owner', from git config)"
 pb init "$kit"
 git add .proofbound/sdd-profile.json .gitignore AGENTS.md .claude
-PROOFBOUND_NO_INTENT=1 git commit -qm "add proofbound"
+git commit -qm "add proofbound"
 
 if [[ $kit == openspec ]]; then
   name=add-csv-export
@@ -95,7 +96,7 @@ fi
 say "the spec: $spec"
 cat "$spec"
 git add -A "${spec%%/*}"
-PROOFBOUND_NO_INTENT=1 git commit -qm "spec: $name"
+git commit -qm "spec: $name"
 
 say "implement it, with a test, in a commit that claims the spec (Intent: sdd:$name)"
 mkdir -p src
@@ -141,7 +142,7 @@ else
   pb review seal "$draft"
 fi
 git add docs/verification/verdicts gates
-PROOFBOUND_NO_INTENT=1 git commit -qm "review $commit"
+git commit -qm "review $commit"
 pb sync all
 
 say "the readiness gate for the reviewed commit"
@@ -153,7 +154,7 @@ pb report drift
 say "the spec owner rewords one obligation"
 reword
 git add -A "${spec%%/*}"
-PROOFBOUND_NO_INTENT=1 git commit -qm "spec: reword the header-row obligation"
+git commit -qm "spec: reword the header-row obligation"
 pb sync all
 pb report drift
 

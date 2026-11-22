@@ -4,8 +4,8 @@
 Suggested tag: `v0.2.0` · Line decided in [`VD-release-line-r2-sdd-t5j34p`](../../decisions/VD-release-line-r2-sdd-t5j34p.md) · Scope tracked in [`plans/RELEASE-PLAN.md`](../../plans/RELEASE-PLAN.md) · Plan: [`sdd-warranty-connector-plan.md`](../../plans/sdd-warranty-connector-plan.md)
 
 **Status: accepted by the owner, 2026-11-19.** Every milestone below passed one independent
-(non-author) review under the Law 11 review budget. The `v0.2.0` tag and push wait for the owner's
-word (pushes are held).
+(non-author) review under the Law 11 review budget. Tagged `v0.2.0`; the current release is
+[v0.3.2](../r3/RELEASE-NOTES.md).
 
 ---
 

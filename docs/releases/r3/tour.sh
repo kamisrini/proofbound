@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The full Proofbound tour (v0.3.1): every feature, on one small Spec Kit project, in order.
+# The full Proofbound tour (v0.3.2): every feature, on one small Spec Kit project, in order.
 #
 #   bash docs/releases/r3/tour.sh [workdir]   # default: ${TMPDIR:-/tmp}/proofbound-tour
 #   PROOFBOUND_BIN=$(command -v proofbound) bash docs/releases/r3/tour.sh   # use an installed binary
@@ -37,6 +37,7 @@ reviewer_key="$work/reviewer.key"         # the reviewer's private key, never in
 chapter() { printf '\n\n======== %s\n' "$*"; }
 step() { printf '\n$ %s\n' "$*"; }
 pb() { "$work/proofbound" "$@"; }
+export PATH="$work:$PATH"  # the git hooks `init` installs run `proofbound` from PATH: use this build
 run() { step "proofbound $*"; pb "$@"; }
 run_may_fail() { step "proofbound $*"; pb "$@" || echo "(exit $?)"; }
 
@@ -47,7 +48,7 @@ pb version
 p="$work/shop"; mkdir -p "$p"; cd "$p"
 git init -q -b main
 git config user.name spec-owner; git config user.email spec-owner@example.invalid
-nc() { PROOFBOUND_NO_INTENT=1 git commit -qm "$@"; }
+nc() { git commit -qm "$@"; }
 
 chapter "1. init: set up a Spec Kit project"
 run init speckit
@@ -165,6 +166,22 @@ chapter "12. the trust record is reproducible"
 run rebuild
 echo "-- every view was dropped and re-derived from git and the event log; the same question gets the same answer:"
 run_may_fail check "$base"
+
+chapter "13. agents: the claim is added for them, and unclaimed code fails the check"
+mid=$(git rev-parse HEAD)
+printf 'echo hello\n' > src/hello.sh; git add src
+step 'git commit -m "add a greeting"      # code, no claim, no task'
+git commit -qm "add a greeting" || echo "(exit $?: the commit-msg hook refused it)"
+run task start 002-totals-row
+step 'git commit -m "add a greeting"      # the same commit, with a task active'
+git commit -qm "add a greeting"
+step "git log -1 --format=%B"; git log -1 --format=%B
+run task stop
+printf 'echo bye\n' >> src/hello.sh; git add src
+step 'git commit --no-verify -m "sneak in a change"      # skips the hooks: no claim'
+git commit -q --no-verify -m "sneak in a change"
+pb sync all >/dev/null
+run_may_fail check "$mid"
 
 cat <<MSG
 

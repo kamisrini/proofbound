@@ -21,17 +21,19 @@ The script checks the archive against `SHA256SUMS` and never uses `sudo`. Window
 
 ## 2. Use it on your repository
 
-Follow the [quickstart](../mvp/QUICKSTART.md): `proofbound init`, claim a spec in a commit, have someone
-else review it, and get your first PASS and warranty. It also sets up the pull-request check.
+Follow the [quickstart](../mvp/QUICKSTART.md): `proofbound init`, `proofbound task start <change>` so
+your agent's commits claim the spec automatically, have someone else review it, and get your first PASS
+and warranty. It also sets up the pull-request check.
 
 ## 3. What you can do
 
 | Goal | Command | Details |
 |---|---|---|
 | Set up a repository for OpenSpec or Spec Kit (also writes the GitHub workflow) | `proofbound init openspec` or `init speckit` | [quickstart](../mvp/QUICKSTART.md) |
+| Tell the hooks which spec an agent is working on, so its code commits claim it | `proofbound task start <change>`, `task stop`, `task` | [tour, chapter 13](DEMO.md#13-agents-the-claim-is-added-for-them-and-unclaimed-code-fails-the-check) |
 | Record history: commits, specs, reviews | `proofbound sync all` | [quickstart](../mvp/QUICKSTART.md) |
 | Review a commit against its spec, signed by the reviewer's key | `proofbound review draft <commit>`, then `review seal` | [quickstart](../mvp/QUICKSTART.md) |
-| Check a pull request: is every spec-claiming commit verified? | `proofbound check <base>`, or the GitHub Action | [quickstart](../mvp/QUICKSTART.md) |
+| Check a pull request: is every spec-claiming commit verified, and does every code commit claim a spec? | `proofbound check <base>`, or the GitHub Action | [quickstart](../mvp/QUICKSTART.md) |
 | Export a signed warranty, and verify one with no database | `proofbound warranty export`, `warranty verify` | [tour](DEMO.md) |
 | Add a reviewer's signature to an existing warranty | `proofbound warranty cosign` | [release notes](RELEASE-NOTES.md) |
 | Attach proof to a release: signed files, a verification page, an index, a badge | `proofbound warranty bundle <base>` | [release notes](RELEASE-NOTES.md) |
