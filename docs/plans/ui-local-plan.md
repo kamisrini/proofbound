@@ -29,7 +29,7 @@ sidebar) is exactly that furniture. We design from the axioms instead:
 | **Trust composes / verifies locally** (Wonder 3: "its proof chain verifies locally in milliseconds") | Signatures are checked in the browser (WebCrypto Ed25519) against the repository's declared keys, so the page shows "verified here", not "the server says". The same code later lets anyone verify a hosted page without trusting us. |
 | **Rendered on demand** (Wonder 1: "a UI synthesized for this user, this task, this moment") | v1 has a small set of fixed lenses; each is a composition of a few primitives (promise, chain, moment, attention item), so later lenses can be composed per person or per task, by them or by an agent. |
 | **Agents first** (Proofbound is for agents coding) | Every view has a machine twin: the same URL with `Accept: application/json` returns the data the view rendered, and every suggested action is the exact CLI command, so an agent and a human act on the same surface. |
-| **Meaning is the only handwriting** (axiom 3) | The UI writes nothing a person did not decide. Human acts (review, sign) stay where the private keys are: the CLI or the agent's session. The UI hands them over as commands. |
+| **Meaning is the only handwriting** (axiom 3) | The UI writes nothing a person did not decide, and everything a person decides can be done in it, without a terminal. A human act (an exception outcome, a review, a countersignature) is previewed exactly as it will be written, confirmed, then signed on the person's own machine with their own key and written as the same record the CLI writes. |
 
 ## 2. The five users, and a UI for each one's work
 
@@ -104,10 +104,39 @@ worded "maps to", never "certifies", and checked by a compliance professional be
 touched, network calls, deploys). Until it exists Proofbound sees only what lands in the repository,
 and the Audit room says so on screen: it never implies an agent stayed out of production.
 
-**One decision this raises:** the review bench is only useful if a reviewer can record an outcome per
-promise. That writes the local draft (`.proofbound/drafts/<commit>/draft.json`), which is not the
-ledger; sealing and signing stay in the CLI (`review seal`), because private keys stay local. That is
-the one exception to "read-only v1" (section 8, decision 2, decided).
+### Interactive, for people who never open a terminal
+
+Owner, 2026-11-22: "is there a way we can provide more value by making them interactive, so people
+can interact without cli, especially non developers". Yes: the primary customer is not a developer.
+Two kinds of interaction (section 8, decision 2, as revised):
+
+**Explore (writes nothing; everywhere, from U1).** Pick a release or range; filter to exceptions;
+click a control to see the commits and events behind its answer, and a commit to see its diff and
+proof chain; draw the reproducible sample; compare two releases; drag the time rail; export the
+transcript as a readable page, PDF or JSON.
+
+**Act, signed, without the CLI.** `proofbound ui` runs on the person's own machine, as them, next to
+their key, so a button can run the same code path as the CLI command. Every act shows a preview of
+the exact record it will write and the key that will sign it; nothing is written until the person
+confirms. The record is the same signed file the CLI writes, so the ledger, replay and every check
+cannot tell the two apart.
+
+| Workspace | Act | Record written | Step |
+|---|---|---|---|
+| Audit room | **Record an outcome on an exception**: accepted risk, fixed in commit X, or reverted, with a reason | a signed exception-outcome record (new type) | U1 |
+| Audit room | **Countersign the transcript** | a signed auditor attestation (new type) | U1 |
+| Review bench | Choose outcomes per promise, then **seal and sign** | the same verdict and `.sig` files as `review seal` | U3 |
+| Now | **Hand this to my agent** | `.proofbound/task` (what `task start` writes) | U2 |
+| Promise map | Reply to a finding / **propose new wording** | a proposed spec change on a branch; it changes the rules, so it needs non-author review like any rule change | later |
+
+The two new record types need spec work in U0. A commit that carries only records signed by declared
+keys counts as signed, not as an unreviewed rule change, in the "changes to the rules" view. Writing
+safety: the existing loopback `Host` check, plus an `Origin` check and a per-session token on every
+act, so no other web page can trigger one.
+
+**Without git (U1).** `proofbound ui --bundle <file>` opens the evidence bundle the pull-request
+check already produces, so an auditor with no clone and no CLI can open it in a browser and have the
+page verify the signatures itself. The hosted option 3 replaces this later.
 
 ## 3. What v1 shows (only data Proofbound records today)
 
@@ -163,8 +192,9 @@ deterministic finder over promises, changes, commits and events.
   pushes the new snapshot to open pages (server-sent events), so the page is live without a refresh
   button. What a concurrent command sees during the seconds of a refresh is a spec question (wait or
   fail with a clear message).
-- **Read-only, local-only safety.** No write endpoints. Refuse requests whose `Host` header is not
-  the loopback address and port (DNS-rebinding guard). Every untrusted string (commit messages,
+- **Local-only safety.** The only write endpoints are the signed acts in section 2, each behind a
+  preview and a confirmation, an `Origin` check and a per-session token. Refuse requests whose `Host`
+  header is not the loopback address and port (DNS-rebinding guard). Every untrusted string (commit messages,
   spec text, reviewer findings) is escaped by `html/template`; no inline script built from data.
 - **Machine twin.** Each lens at `/now`, `/promise/<id>`, `/moment/<seq>`, `/check/<base>` returns
   HTML for a browser and JSON for `Accept: application/json`, from one handler, so the two cannot
@@ -194,9 +224,9 @@ designed as the inbox's first, honest version, and the time rail as the twin's.
 | Step | Delivers | The command |
 |---|---|---|
 | U0 | A decision record: the UI direction above, stack (stdlib + embedded vanilla JS), local-only and read-only, the lock strategy; a requirement obligation and change intent | — |
-| U1 | `proofbound ui` with the **Audit room** (primary customer): release or range scope, controls 1 to 10 (section 2, including the four perimeter views), exceptions, transcript export, Proof chain, browser signature check, the JSON twin of each | `proofbound ui --open` on the tour's `shop` project, open its release range |
+| U1 | `proofbound ui` with the **Audit room** (primary customer): release or range scope, controls 1 to 10 (section 2, including the four perimeter views), click-through evidence, exceptions with signed outcomes, sample, transcript export and countersign, `--bundle`, Proof chain, browser signature check, the JSON twin of each | `proofbound ui --open` on the tour's `shop` project, open its release range |
 | U2 | The **Now** workspace (developer) and the **Agent surface** (`/agent/next`), live refresh | `proofbound ui --open` while an agent holds a `task start` |
-| U3 | **Review bench** (reviewer, writes the local draft only), **Promise map** (spec owner), time rail and as-of replay | review a promise in the bench, then `proofbound review seal` |
+| U3 | **Review bench** (reviewer, seals and signs in the browser), **Promise map** (spec owner), time rail and as-of replay | review and sign a promise in the bench, no terminal |
 | U4 | Tour chapter and DEMO-MANUAL step per workspace; release | next release |
 
 Each step: a spec section first (Law 6, a `SPEC.md` for a new `internal/ui` package), one spec review,
@@ -206,9 +236,11 @@ one code review (Law 11), tests that derive from the spec, `make check` green.
 
 1. **Release.** DECIDED 2026-11-22: the UI ships as the next release (v0.3.3); v0.3.2 stays as
    published.
-2. **Read-only, except the review bench's local draft.** DECIDED 2026-11-22: the bench records a
-   reviewer's outcomes in `.proofbound/drafts/`, never the ledger; sealing and signing stay in the CLI
-   because private keys stay local.
+2. **Interactive, signed acts without the CLI.** DECIDED 2026-11-22, replacing the earlier
+   "read-only except the bench's local draft": exploring writes nothing; each act in section 2 is
+   previewed, confirmed and signed locally with the person's own key, writing the same record the CLI
+   writes. Exception outcomes and transcript countersignature in U1; bench sealing in U3; spec wording
+   later.
 3. **Order of workspaces:** DECIDED 2026-11-22: compliance and auditors are the primary customer,
    so the Audit room is U1 (section 7).
 4. **Ask (natural-language query):** confirm it stays behind an off-by-default flag, and out of v1.
@@ -218,6 +250,9 @@ one code review (Law 11), tests that derive from the spec, `make check` green.
 - **Scope gravity.** A UI invites width (settings, filters, charts). The test for every element:
   does it spend attention only where a person is needed, and does it carry its proof? If not, it is
   2026 furniture.
+- **A browser that can sign.** Signed acts make the local server a signing service; a missed origin
+  or token check would let another page sign as the user. The spec states the threat model, and the
+  code review tests it with a forged cross-origin request.
 - **Overclaiming the perimeter.** Tier 1 shows authorization and its paper trail, not that every
   line stayed in scope (Tier 2) or that the agent did nothing outside git (Tier 3). The Audit room
   must state both limits on screen; a compliance product that overstates its coverage is worse than

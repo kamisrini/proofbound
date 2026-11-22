@@ -11,8 +11,9 @@ As of: 2026-11-22
   users. **Primary customer: compliance and auditors**, so U1 = the Audit room with controls 1 to 10,
   including four authorized-perimeter views (every commit accounted for, rule-surface changes, who did
   what, authorized before acted); U2 Now + Agent surface; U3 Review bench + Promise map + time rail.
-  Decided: ships as v0.3.3; read-only except the review bench's local draft; Ask stays behind an
-  off-by-default flag. Exact next action: **U0** = a VD record for the UI direction (stdlib + embedded
+  Decided: ships as v0.3.3; interactive for non-developers, every act previewed then signed locally
+  with the person's own key (exception outcomes + transcript countersign in U1, two new record types
+  for U0's spec); `--bundle` for auditors without git; Ask stays behind an off-by-default flag. Exact next action: **U0** = a VD record for the UI direction (stdlib + embedded
   vanilla JS, localhost, snapshot-and-release lock strategy), a BR obligation and change intent, then
   the `internal/ui` SPEC.md (Law 6) before code. Design canvas (private):
   https://claude.ai/artifact/CuzCa94AYJK2tJ1WBze8QS. Tier 2 perimeter (line-level scope, signed
