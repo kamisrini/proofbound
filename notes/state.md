@@ -6,6 +6,17 @@ As of: 2026-11-22
 
 ## Resume — 2026-11-22
 
+- **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
+  both CIs of `d8e0714`). Release commit `3c2995c` (`CI-mvp-release-v032-811d44`; review
+  `mvp-release-v032-review-20261122` ACCEPTABLE, F1/F3 LOW fixed, F2 LOW recorded): install.sh warns on
+  a shadowing older binary, QUICKSTART fixes, DEMO-MANUAL step 1b for the new hook, release notes
+  (stricter check + hook upgrade step). Pushed main, tag + GitHub release `v0.3.2` (5 archives +
+  SHA256SUMS); public `install.sh` installs v0.3.2 (verified); live Action re-run in
+  `kamisrini/proofbound-action-test` installed v0.3.2 and reported WARRANTED. Deferrals
+  `DEF-RELEASE-V032-001`, `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
+  `DEF-INSTALL-PATH-SHADOW-001` RESOLVED. Landing page republished (card 05: fails the PR) and
+  committed in the private repo. Owner's `~/.local/bin/proofbound` upgraded to v0.3.2.
+
 - **Owner's two priorities built** (`d8e0714`, owner 2026-11-22 "lets do both one after other"):
   (1) `proofbound check` fails on UNCOVERED commits, i.e. unclaimed commits that change code
   (`CI-mvp-uncovered-code-581081`, CLI-INV-33; `DEF-CHECK-UNCLAIMED-CODE-001` RESOLVED); (2)
@@ -101,15 +112,13 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   the new one. (2)-(4) not fixed: `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
   `DEF-INSTALL-PATH-SHADOW-001`. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
 
-**Exact next action:** the owner is still trying `docs/releases/r3/DEMO-MANUAL.md` by hand and adding
-gaps as deferrals. When they say the trial is done, fix the trial findings (`DEF-QUICKSTART-STALE-001`
-§1 part, `DEF-QUICKSTART-EMPTY-REPO-001`, `DEF-INSTALL-PATH-SHADOW-001`) plus anything new, then with
-their OK push and cut the release (`DEF-RELEASE-V032-001`; owner 2026-11-22: keep it v0.3.2, no version bump;
-the release notes must say the check is stricter), and update landing card 05 to "fails the PR". Ask before starting other work.
+**Exact next action:** the owner continues the DEMO-MANUAL trial on v0.3.2 and adds gaps as
+deferrals. Fix new trial findings when asked. MVP step 5 (commercial) continues outside this
+repository. Ask before starting other work.
 
-**Gate:** GREEN at `d8e0714` (2026-11-22). main is 7+ commits ahead of origin, unpushed by the
-owner's choice. Untracked `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/`
-are the owner's to keep or drop. **Immediate blockers:** none.
+**Gate:** GREEN at `3c2995c` (2026-11-22). main is pushed (in sync with origin). Untracked
+`docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/` are the owner's to keep or
+drop. **Immediate blockers:** none.
 
 ## R2 build log — 2026-11-19
 
