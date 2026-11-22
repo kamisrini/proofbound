@@ -13,7 +13,7 @@ As of: 2026-11-22
   the claim; `PROOFBOUND_NO_INTENT` retired (`CI-mvp-agent-intent-3k7q2w`, CLI-INV-34..36). Review
   `mvp-uncovered-and-agent-intent-review-20261122` NEEDS_WORK (F1 HIGH, F2-F4 MED) all fixed by the
   author, F5-F7 LOW recorded; calibration mutant killed. Gate GREEN at `d8e0714`. Not released:
-  ships with v0.3.2 (or v0.4.0, since check now fails PRs that passed before). Demo scripts still
+  ships with v0.3.2 (owner: no bump; release notes say check now fails PRs that passed before). Demo scripts still
   set the retired env var (harmless; owner: demos not to be fixed).
 - **Also 2026-11-22:** gap deferrals `DEF-NO-INTENT-SELF-WAIVER-001`, `DEF-CLAIMED-CODE-SCOPE-001`,
   `DEF-AGENT-NATIVE-INTENT-001` (minimal slice now built; rest open); `DEF-P7-REGENLOOP-001` now
@@ -104,8 +104,8 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
 **Exact next action:** the owner is still trying `docs/releases/r3/DEMO-MANUAL.md` by hand and adding
 gaps as deferrals. When they say the trial is done, fix the trial findings (`DEF-QUICKSTART-STALE-001`
 §1 part, `DEF-QUICKSTART-EMPTY-REPO-001`, `DEF-INSTALL-PATH-SHADOW-001`) plus anything new, then with
-their OK push and cut the release (`DEF-RELEASE-V032-001`; owner to choose v0.3.2 vs v0.4.0, since the
-check is stricter), and update landing card 05 to "fails the PR". Ask before starting other work.
+their OK push and cut the release (`DEF-RELEASE-V032-001`; owner 2026-11-22: keep it v0.3.2, no version bump;
+the release notes must say the check is stricter), and update landing card 05 to "fails the PR". Ask before starting other work.
 
 **Gate:** GREEN at `d8e0714` (2026-11-22). main is 7+ commits ahead of origin, unpushed by the
 owner's choice. Untracked `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/`
