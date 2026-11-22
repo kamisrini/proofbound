@@ -17,8 +17,15 @@ As of: 2026-11-22
   `ui-u1-code-review-20261122` NEEDS_WORK (F1..F4 MED): all fixed; mutants (Origin check, author rule,
   tag) killed. Gate GREEN before commit. Accepted on the tour's shop repo and the DEMO-MANUAL repo
   (all 19 blocks + new Step 15). Release notes v0.3.3 section marked unreleased.
-  **Exact next action:** owner try-out (DEMO-MANUAL Step 15, or `proofbound ui` in any repo), then on
-  owner OK cut v0.3.3 (tag, archives, GitHub release) as v0.3.2 was. Not in U1: other workspaces,
+  **Owner try-out round** (`3688ee9`): requests wait instead of "busy"; a control that cannot be
+  computed is "not assessed"; audit-report layout in a lighter dark scheme (prints light); agent
+  oversight: C8 independent review, C9 commits signed by a declared key (`proofbound keys git-sign`),
+  Who did the work, Who reviewed each change, Agent sessions, commit log (CLI-INV-42..44); sessions
+  connector now reads real Claude Code logs (INV-7, INV-8). Gate GREEN before commit. These additions
+  came after the one code review; a short non-author review of `keys git-sign`/C9 was offered to the
+  owner (their call, Law 11). Dev binary for the owner at `~/projects/proofbound-dev-bin/proofbound`.
+  **Exact next action:** owner runs DEMO-MANUAL end to end with the dev binary first on PATH, then on
+  owner OK push and cut v0.3.3 (tag, archives, GitHub release) as v0.3.2 was. Not in U1: other workspaces,
   time rail, in-browser signature check, `--bundle`, sample draw. New: `DEF-KERNELCHECK-SDD-TIMEOUT-001`
   (sdd package 442 s alone, near the 600 s go test limit under make check; failed the gate twice).
 - **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
