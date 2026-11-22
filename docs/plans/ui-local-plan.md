@@ -27,7 +27,48 @@ sidebar) is exactly that furniture. We design from the axioms instead:
 | **Agents first** (Proofbound is for agents coding) | Every view has a machine twin: the same URL with `Accept: application/json` returns the data the view rendered, and every suggested action is the exact CLI command, so an agent and a human act on the same surface. |
 | **Meaning is the only handwriting** (axiom 3) | The UI writes nothing a person did not decide. Human acts (review, sign) stay where the private keys are: the CLI or the agent's session. The UI hands them over as commands. |
 
-## 2. What v1 shows (only data Proofbound records today)
+## 2. The five users, and a UI for each one's work
+
+Owner, 2026-11-22: these five are the main users, and each gets a UI specialised for the function
+they perform. There are no external users yet, so each row is a hypothesis to test with the first
+design partners.
+
+One product, five **workspaces**. A workspace is a composition of the same primitives (promise,
+chain, moment, attention item) for one job, not a permission level: locally, anyone can open any
+workspace. Every workspace is read from the same ledger snapshot, so two people looking at the same
+promise can never see different truths. Each one opens on the single question that person comes
+with, and shows nothing that does not help answer it.
+
+| # | User | Their function | The question they open with | Workspace | Where it runs |
+|---|---|---|---|---|---|
+| 1 | **Developer running coding agents** | Directs agents, merges their work | "What do my agents' changes need from me before they can merge?" | **Now**: attention items with minutes and the exact command; agents at work and the task each holds; promises at risk on the branch | local |
+| 2 | **Reviewer** (a person, or a reviewer agent in another session) | Independently checks a change against its promises | "What is waiting for someone who did not write it, and exactly what am I checking?" | **Review bench**: a queue of changes this person is eligible to review (never their own); one promise at a time beside the code that claims to keep it; an outcome per promise | local |
+| 3 | **Spec owner** | Decides what should be true | "Which of my promises hold, which drifted when I changed the words, and which did reviewers find unclear?" | **Promise map**: every promise they own, its state, drift, and the requirement-review findings (AMBIGUOUS, UNTESTABLE, CONTRADICTORY) that say which words to fix | local |
+| 4 | **Compliance and auditors** (internal compliance, external auditors, a customer's security reviewer) | Establish, for a period or a release, that the controls held, without trusting the team | "For this release or period, did every change follow the rules, and can I check that myself?" | **Audit room**: pick a release or date range; each control is a question with an answer, a count, its exceptions and the events behind it; reproduce it from a clone; export a transcript | local first (on a clone, offline), then hosted |
+| 5 | **Coding agents** | Write the code, claim the spec, ask what is next | "For my task, what is unproven and what is the next command?" | **Agent surface**: no pixels; the JSON twin of every workspace plus a task-shaped endpoint (`/agent/next?task=sdd:<change>`) returning open promises, their state and the next command; a tool server (MCP) later | local |
+
+**What each workspace never shows:** the developer is not shown other people's review queues; the
+reviewer is not shown changes they authored (Law 9: they are not eligible); the spec owner sees
+code only as evidence under a promise; the auditor sees no "needs you" items, only answers and
+evidence; the agent gets no prose it has to interpret, only typed states and commands.
+
+**Audit room controls in v1** (each answerable from today's ledger, each re-computable):
+- Every change that claims a spec was reviewed by someone who is neither its author nor its spec owner.
+- No code entered the release without a spec claim (no UNCOVERED commits), or each exception is listed.
+- Every warranty in the release verifies (VALID), checked in the auditor's browser against a clone.
+- Every reviewer's signature is by a key the repository declared before the review.
+- Which promises changed after they were verified (drift), and when.
+- The answers are reproducible: rebuilt from git alone, the same answers (`rebuild`, `sync all` on a clone).
+The transcript the auditor exports lists each control, its answer, its exceptions and the event
+numbers, so another auditor can re-run it and get the same result (vision-2028: "audit = a query +
+cryptographic transcript"). An auditor countersignature is reserved for later.
+
+**One decision this raises:** the review bench is only useful if a reviewer can record an outcome per
+promise. That writes the local draft (`.proofbound/drafts/<commit>/draft.json`), which is not the
+ledger; sealing and signing stay in the CLI (`review seal`), because private keys stay local. That is
+the one exception to "read-only v1" (section 8, decision 2).
+
+## 3. What v1 shows (only data Proofbound records today)
 
 No screen shows a capability that does not exist. Today's ledger holds: sdd changes and their
 obligations, claiming commits and their bound spec revision, UNCOVERED commits, readiness gates
@@ -35,7 +76,9 @@ obligations, claiming commits and their bound spec revision, UNCOVERED commits, 
 files, warranties (VALID, UNREVIEWED, INVALID), drift (CURRENT, STALE), declared keys, the active
 `proofbound task`, and every event with its sequence number and time.
 
-**Lens 1: Now (the home).**
+The lenses below are the building blocks the workspaces in section 2 are composed from.
+
+**Lens 1: Now (the developer's home).**
 - One generated sentence: "2 things need you, about 6 minutes. Everything else is proven or waiting
   on machines." Derived from the ledger, never written by anyone.
 - **Attention** (left): only items a person must act on, each with why it is theirs, an estimate in
@@ -65,7 +108,7 @@ commit's state, UNCOVERED commits, drift. The same data the GitHub Action prints
 behind an opt-in flag that is off by default (owner rule, 2026-11-22). Without it, the same box is a
 deterministic finder over promises, changes, commits and events.
 
-## 3. How it runs (boring kernel, 2030 surface)
+## 4. How it runs (boring kernel, 2030 surface)
 
 - `proofbound ui [--port N] [--open]` serves on `127.0.0.1` only, prints its URL, and stops on
   Ctrl-C. Go standard library only (`net/http`, `html/template`, `embed`): no new dependency, so no
@@ -88,7 +131,7 @@ deterministic finder over promises, changes, commits and events.
 - **Proof stays honest.** The page labels what it verified itself (signatures, in the browser) and
   what it reports from the ledger. It never shows green for something it has not checked.
 
-## 4. Option 3 later: the same UI, hosted
+## 5. Option 3 later: the same UI, hosted
 
 The hosted, multi-repository UI is the same lenses over many ledgers. What v1 must not foreclose:
 - Views read a snapshot, not the database, so a hosted service can serve snapshots that each
@@ -98,40 +141,43 @@ The hosted, multi-repository UI is the same lenses over many ledgers. What v1 mu
 Needs before it starts: real design partners asking, hosting, authentication, tenancy, and a
 decision record. Commercial terms stay out of this repository.
 
-## 5. Not in v1 (reserved, so the layout has room)
+## 6. Not in v1 (reserved, so the layout has room)
 
 The decision inbox of Governor v1, twin futures ("show me the quarter where we delay X"), ambiguity
 adjudication ("which of these two futures do you mean?"), value theses and the morning settlement
 report across a fleet. Each is a frozen organ (`VD-vertical-mvp-first-ai3dhn`); the Attention lens is
 designed as the inbox's first, honest version, and the time rail as the twin's.
 
-## 6. Build steps (each ends in one command the owner can run, Law 11)
+## 7. Build steps (each ends in one command the owner can run, Law 11)
 
 | Step | Delivers | The command |
 |---|---|---|
 | U0 | A decision record: the UI direction above, stack (stdlib + embedded vanilla JS), local-only and read-only, the lock strategy; a requirement obligation and change intent | — |
-| U1 | `proofbound ui` with Now and Proof chain lenses, live refresh, JSON twin, browser signature check | `proofbound ui --open` on the tour's `shop` project |
-| U2 | Moment (time rail, as-of replay, compare) and the Pull-request lens | drag the rail to before the review; the PR lens for `<base>` |
-| U3 | Tour chapter and DEMO-MANUAL step; release | next release |
+| U1 | `proofbound ui`: the **Now** workspace (developer) and the **Agent surface** (JSON twin + `/agent/next`), Proof chain, live refresh, browser signature check | `proofbound ui --open` on the tour's `shop` project |
+| U2 | **Review bench** (reviewer, writes the local draft only) and **Promise map** (spec owner) | review a promise in the bench, then `proofbound review seal` |
+| U3 | **Audit room** (compliance and auditors): controls, exceptions, time rail and as-of replay, transcript export | open the audit room for the tour's release range |
+| U4 | Tour chapter and DEMO-MANUAL step per workspace; release | next release |
 
 Each step: a spec section first (Law 6, a `SPEC.md` for a new `internal/ui` package), one spec review,
 one code review (Law 11), tests that derive from the spec, `make check` green.
 
-## 7. Decisions the owner should make before U0
+## 8. Decisions the owner should make before U0
 
 1. **Release.** v0.3.2 is published, so the UI ships as the next release (v0.3.3). Re-cutting v0.3.2
    is possible but not recommended.
-2. **Read-only v1** (recommended), or should the UI also drive actions (start a task, draft a review)?
-   Signing stays in the CLI either way, because private keys stay local.
-3. **Lens scope for U1:** Now + Proof chain (recommended), with time travel in U2, or all four at once.
+2. **Read-only, except the review bench's local draft** (recommended): the bench records a
+   reviewer's outcomes in `.proofbound/drafts/`, never the ledger; sealing and signing stay in the CLI
+   because private keys stay local. Or fully read-only (the reviewer edits `draft.json` by hand).
+3. **Order of workspaces:** developer + agents first (U1), reviewer + spec owner (U2), audit room
+   (U3), as recommended; or the audit room earlier, if compliance is what design partners pay for.
 4. **Ask (natural-language query):** confirm it stays behind an off-by-default flag, and out of v1.
 
-## 8. Risks
+## 9. Risks
 
 - **Scope gravity.** A UI invites width (settings, filters, charts). The test for every element:
   does it spend attention only where a person is needed, and does it carry its proof? If not, it is
   2026 furniture.
-- **Lock contention** (section 3) is the one technical unknown; the spec must settle it first.
+- **Lock contention** (section 4) is the one technical unknown; the spec must settle it first.
 - **Browser Ed25519** is in current Chrome, Firefox and Safari; older browsers fall back to "reported
   by the ledger, not verified here", labelled as such.
 - **Meta-tax** is 74%; the UI is product work and should lower it, provided reviews stay within the
