@@ -13,7 +13,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 
 - **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
   Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
-  since the last tag). It answers seven controls, each with the commits behind its answer and the
+  since the last tag). It answers nine controls, each with the commits behind its answer and the
   terminal command that gives the same answer:
   1. Every commit that claims a spec passed its readiness gate.
   2. No commit changed code without claiming a spec.
@@ -23,6 +23,19 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   6. Changes to who may sign (declared keys, the sdd profile), to the check's workflow, or to an
      existing gate are listed for review.
   7. Each claimed spec existed before the code that claims it.
+  8. No change was reviewed by its own author, agent or spec owner.
+  9. Commits are signed by a key the repository declares (a disclosure).
+- **Agent oversight.** The page shows who did the work: every agent (from the commit author or a
+  `Co-Authored-By` line naming Claude, Copilot, Cursor, Codex and similar) and every person, with
+  their commits, claims, code without a spec and open exceptions; who reviewed each change, and
+  whether that reviewer was independent of its author, agent and spec owner (control 8); which
+  commits are signed by a key the repository declares (control 9); and the Claude Code sessions in
+  the period (times and counts, never content) with the commits made while each ran.
+- **`proofbound keys git-sign`.** Run once in a repository and your declared Proofbound key signs your
+  git commits, so the Audit room can prove who (or which agent) made each one instead of trusting the
+  author name.
+- **Fixed:** the sessions connector read no real Claude Code logs (their lines exceed 64 KiB) and did
+  not count Claude Code's file edits; both work now.
 - **Close exceptions without a terminal.** For each exception, choose accepted risk, fixed in a later
   commit, or reverted, and give a reason. The page shows the exact record first; "Sign and record"
   signs it with your own key on your machine and commits it under `.proofbound/outcomes/`. Only a key

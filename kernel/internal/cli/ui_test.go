@@ -340,11 +340,20 @@ func TestUIRequestGuards(t *testing.T) {
 	if big.Code != http.StatusBadRequest {
 		t.Errorf("an oversized body: %d", big.Code)
 	}
-	s.mu.Lock()
+	// A request that arrives while another runs waits for it; past the wait it gets 503.
+	s.wait = 50 * time.Millisecond
+	s.gate <- struct{}{}
 	if busy := uiRequest(s, "GET", "/audit", host, "", s.token, ""); busy.Code != http.StatusServiceUnavailable {
-		t.Errorf("a second request while one runs: %d, want 503", busy.Code)
+		t.Errorf("a request past the wait: %d, want 503", busy.Code)
 	}
-	s.mu.Unlock()
+	s.wait = 5 * time.Second
+	done := make(chan int)
+	go func() { done <- uiRequest(s, "GET", "/audit", host, "", s.token, "").Code }()
+	time.Sleep(100 * time.Millisecond)
+	s.release()
+	if code := <-done; code != http.StatusOK {
+		t.Errorf("a request that waited for the one before it: %d, want 200", code)
+	}
 }
 
 // CLI-INV-41: the page and its JSON twin come from one handler and one report.
@@ -412,9 +421,9 @@ func TestOutcomeReadBack(t *testing.T) {
 		}
 		uiWrite(t, root, outcomesDir+"/"+id+".json", string(data))
 	}
-	record("uncovered-"+agent[:12], agent, "auditor", key, nil)                                     // good
-	record("uncovered-"+own[:12], own, "auditor", key, nil)                                         // by the author
-	record("uncovered-"+other[:12], agent, "auditor", key, nil)                                     // names another commit
+	record("uncovered-"+agent[:12], agent, "auditor", key, nil)                                                  // good
+	record("uncovered-"+own[:12], own, "auditor", key, nil)                                                      // by the author
+	record("uncovered-"+other[:12], agent, "auditor", key, nil)                                                  // names another commit
 	record("uncovered-"+fourth[:12], fourth, "late", late, map[string]any{"outcome": "fixed", "fixed_by": base}) // late key, bad fix
 	head := uiCommit(t, root, "auditor", "records")
 	rep := auditReport{Base: base, Head: head, Counts: auditCounts{Total: 5}, Exceptions: []auditException{ex(agent), ex(own), ex(other), ex(fourth)}}
@@ -532,5 +541,107 @@ func TestUISignFlow(t *testing.T) {
 	uiGit(t, root, "tag", "v1", agent)
 	if got := defaultAuditBase(context.Background(), root); got != "v1" {
 		t.Errorf("default base = %q, want the newest tag below HEAD", got)
+	}
+}
+
+// The "Who did the work" disclosure: agents come from the author or Co-Authored-By names; each commit
+// counts for its author and its agents, with its class and open exceptions.
+func TestWhoDidTheWork(t *testing.T) {
+	ctx := context.Background()
+	root := taskRepo(t)
+	base := uiCommit(t, root, "dev", "start")
+	uiWrite(t, root, "src/a.sh", "a\n")
+	withClaude := uiCommit(t, root, "dev", "code\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>")
+	uiWrite(t, root, "src/b.sh", "b\n")
+	bot := uiCommit(t, root, "copilot[bot]", "bot code")
+	uiWrite(t, root, "docs/x.md", "x\n")
+	uiCommit(t, root, "dev", "docs\n\nCo-Authored-By: Pat Person <pat@example.com>")
+	infos, err := commitInfos(ctx, root, base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := infos[withClaude].agents; len(got) != 1 || got[0] != "Claude Opus 5.5" {
+		t.Errorf("Co-Authored-By agent = %v", got)
+	}
+	if got := infos[bot].agents; len(got) != 1 || got[0] != "copilot[bot]" {
+		t.Errorf("agent author = %v", got)
+	}
+	rep := auditReport{Commits: []auditCommit{
+		{Commit: withClaude, Author: "dev", Class: classUncovered, Agents: infos[withClaude].agents},
+		{Commit: bot, Author: "copilot[bot]", Class: classClaimed, Agents: infos[bot].agents},
+	}, Exceptions: []auditException{{Commit: withClaude}, {Commit: withClaude, Outcome: &outcomeView{Verified: true}}}}
+	rows := actorRows(rep)
+	want := []actorRow{
+		{Name: "Claude Opus 5.5", Kind: "agent", Commits: 1, Uncovered: 1, Exceptions: 2, Open: 1},
+		{Name: "copilot[bot]", Kind: "agent", Commits: 1, Claimed: 1},
+		{Name: "dev", Kind: "person", Commits: 1, Uncovered: 1, Exceptions: 2, Open: 1},
+	}
+	if len(rows) != len(want) {
+		t.Fatalf("rows = %+v", rows)
+	}
+	for i := range want {
+		if rows[i] != want[i] {
+			t.Errorf("row %d = %+v, want %+v", i, rows[i], want[i])
+		}
+	}
+}
+
+// C8's rule: a reviewer may not be the author, an agent, the signer or a spec owner, by key name.
+func TestReviewIndependence(t *testing.T) {
+	c := auditCommit{Author: "Dev Person", Agents: []string{"Claude Opus 5.5"}, Signer: "agent-key"}
+	cases := []struct {
+		reviewers []string
+		ok        bool
+		note      string
+	}{
+		{[]string{"demo-reviewer"}, true, ""},
+		{[]string{"dev-person"}, false, "its author"},
+		{[]string{"claude-opus-5-5"}, false, "its agent"},
+		{[]string{"agent-key"}, false, "its signer"},
+		{[]string{"demo-reviewer", "spec-owner"}, false, "a spec owner"},
+	}
+	for _, k := range cases {
+		ok, note := independence(c, k.reviewers, []string{"Spec Owner"})
+		if ok != k.ok || !strings.Contains(note, k.note) {
+			t.Errorf("%v: %v %q", k.reviewers, ok, note)
+		}
+	}
+}
+
+// `keys git-sign` (CLI-INV-44): a commit made after it verifies as the declared key's owner; an
+// unsigned commit is unsigned; a key no longer declared at HEAD no longer verifies.
+func TestGitSignVerifies(t *testing.T) {
+	if _, err := exec.LookPath("ssh-keygen"); err != nil {
+		t.Skip("ssh-keygen not installed")
+	}
+	ctx := context.Background()
+	key := uiKey(t)
+	root := taskRepo(t)
+	base := uiCommit(t, root, "a", "start")
+	uiWrite(t, root, ".proofbound/keys/agent-a.pub", pbwarranty.PubLine(key.Public().(ed25519.PublicKey)))
+	unsigned := uiCommit(t, root, "a", "declare")
+	var out strings.Builder
+	if err := keysGitSign(ctx, root, &out); err != nil {
+		t.Fatalf("git-sign: %v", err)
+	}
+	if err := keysGitSign(ctx, root, &out); err != nil {
+		t.Fatalf("git-sign is not repeatable: %v", err)
+	}
+	uiWrite(t, root, "src/a.sh", "a\n")
+	uiGit(t, root, "add", "-A")
+	uiGit(t, root, "commit", "-q", "--no-verify", "-m", "signed by the agent")
+	signed := uiGit(t, root, "rev-parse", "HEAD")
+	sigs, err := commitSignatures(ctx, root, base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sigs[signed] != [2]string{sigVerified, "agent-a"} || sigs[unsigned][0] != sigUnsigned {
+		t.Fatalf("signatures = %v", sigs)
+	}
+	uiGit(t, root, "rm", "-q", ".proofbound/keys/agent-a.pub")
+	uiGit(t, root, "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-m", "undeclare")
+	sigs, _ = commitSignatures(ctx, root, base)
+	if sigs[signed][0] != sigOther {
+		t.Errorf("a key no longer declared still verified: %v", sigs[signed])
 	}
 }

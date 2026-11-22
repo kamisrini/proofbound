@@ -31,8 +31,10 @@ The UI never holds the store between requests. On each audit request it (a) runs
 computed from the ledger as it stands), then (b) opens the store, computes the audit (section 3) and
 closes it. Syncing appends to the local ledger under `.proofbound/` (gitignored); no GET writes a
 repository file. While another command holds the ledger, the request answers `503` ("The ledger is
-busy …"). One request runs at a time: a request that arrives while another runs answers `503` at
-once (`TryLock`), never waiting behind it.
+busy …") after retrying for about 10 seconds. One request computes at a time: a request that
+arrives while another runs waits up to 2 minutes for it (never past its own end), then answers
+`503`. (Draft 2 answered `503` at once; the owner's first try-out on a large repository showed a
+reload during the slow first sync as "busy", so the wait is bounded instead of zero.)
 
 ## 3. The audit (O-1)
 
@@ -177,7 +179,7 @@ whole command is accepted by running it on the tour's `shop` repository (the cha
 | F8 C5 tautology; C6, C7 | C5 is LISTED, never counted as held; `--name-status` named; C7 checks every claimed name and both archive forms |
 | F9 transcript reproducibility | stated as a signed statement of the signer's run |
 | F10 failed commit, HEAD moving | a failed git step removes the file; audit, validation and write happen under one lock |
-| F11 mutex | `TryLock`, 503 at once |
+| F11 mutex | bounded wait (2 minutes, or the request's end), then 503 |
 | F12 LOW | recorded; `textContent`, `base-uri`, `form-action` and a two-name key refusal adopted anyway |
 
 ## 9. Code review: what changed
@@ -190,3 +192,34 @@ attestations, the sign flow, the git-failure undo and the base refusals now have
 buttons disabled without a usable key), F8 (cookie named for the port), F9 (U+2028/2029 refused);
 LOW recorded: F7 (a record that does not verify must be removed with git), F9 (`computeAudit` as a
 whole and merge commits in C6 are proven at acceptance, not by a unit test).
+
+## 10. Owner try-out changes
+
+The owner's first run on this repository (2026-11-22) led to four changes: a request that arrives
+during a slow sync waits (section 2); a control that cannot be computed is "not assessed" with its
+reason instead of failing the page (Proofbound's own ledger cannot run drift,
+`DEF-SELFHOST-LEDGER-DANGLING-001`); the page is laid out as an audit report (summary, exceptions,
+controls, population, sign-off, limitations) in a dark scheme that prints light; and a **Who did the
+work** disclosure: each commit's git author, date and the agents named as its author or in a
+`Co-Authored-By` line (Claude, Copilot, Cursor, Codex and similar, by name pattern), with per-author
+and per-agent counts of commits, claims, code without a spec and open exceptions, plus the full
+commit log. Git identities are self-declared, and the page says so; this is a disclosure, not a
+control.
+
+## 11. Agent oversight (owner, 2026-11-22: "lets add that information first and make sure it is all complete")
+
+- **C8, who reviewed each change** (CLI-INV-42): reviewers and owners from the record; a reviewer who
+  is, by key name, the commit's author, an agent named on it, its verified signer or a spec owner is
+  a `self-review` exception. The page shows a row per claiming commit.
+- **C9, signed commits** (CLI-INV-43): git's own SSH signature check against the keys declared at
+  HEAD turns a self-declared author into a proven one. A disclosure (most teams do not sign yet); a
+  bad signature is an exception.
+- **`proofbound keys git-sign`** (CLI-INV-44): an agent or person runs it once per repository, and
+  their declared Proofbound key signs their commits from then on.
+- **Agent sessions** (CLI-INV-43): Claude Code session metadata the sessions connector already
+  records (times, tool calls, files written; never content), with the commits made while each ran.
+  The connector could not read real logs (64 KiB line limit) and did not count Claude Code's nested
+  Write and Edit calls; both fixed (sessions INV-7, INV-8).
+
+Still not visible, and said so on the page: actions outside git, line-level scope, and sessions of
+other agent tools or other machines.

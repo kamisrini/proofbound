@@ -249,3 +249,22 @@ func TestObserveMetadataBranches(t *testing.T) {
 		t.Fatal("empty session id accepted")
 	}
 }
+
+func TestSyncReadsLongLines(t *testing.T) {
+	root, home := t.TempDir(), t.TempDir()
+	long := `{"sessionId":"s-long","timestamp":"2026-08-01T00:00:00Z","type":"user","message":{"content":"` + strings.Repeat("x", 300<<10) + `"}}` + "\n" +
+		`{"sessionId":"s-long","timestamp":"2026-08-01T00:05:00Z","type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit","input":{}}]}}` + "\n"
+	writeFixture(t, home, root, "s-long.jsonl", long, 11*time.Minute)
+	a := &fakeAppender{}
+	r, err := testConnector(t, root, home).Sync(context.Background(), a)
+	if err != nil || r.Appended != 1 {
+		t.Fatalf("a session with a 300 KiB line was not recorded: result=%+v err=%v", r, err)
+	}
+	var got payload
+	if err := json.Unmarshal(a.events[0].Payload, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.ToolCallCount != 1 || got.FilesWrittenCount != 1 {
+		t.Fatalf("a nested Edit tool call was not counted: %+v", got)
+	}
+}

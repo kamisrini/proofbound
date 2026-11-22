@@ -32,6 +32,8 @@ non-empty lines. Files below 50% coverage emit no event and are counted as skipp
 | INV-4 | A file below 50% parse coverage emits no event | sessions_test.go::TestSyncDropsLowCoverage |
 | INV-5 | Session payload contains metadata only and no source-line content | sessions_test.go::TestSyncRecordsParseCoverage |
 | INV-6 | Repeating a sync is idempotent through the ledger appender | sessions_test.go::TestSyncDeduplicates |
+| INV-7 | A line up to 64 MiB is read whole (real session logs hold whole tool outputs on one line; the 64 KiB default rejected every real file) | sessions_test.go::TestSyncReadsLongLines |
+| INV-8 | A tool call nested in a message's `content` array (Claude Code's form) named Write, Edit, MultiEdit or NotebookEdit counts as a file written | sessions_test.go::TestSyncReadsLongLines |
 
 ## Non-goals
 

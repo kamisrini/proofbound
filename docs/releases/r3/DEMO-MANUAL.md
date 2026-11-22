@@ -645,11 +645,18 @@ C4 LISTED      Promises that changed after they were verified are disclosed. 1 c
 C5 LISTED      Every commit in the range is accounted for.                   4 commits, each in one class
 C6 HELD        Changes to who may sign, and to the check itself
 C7 HELD        Each claimed spec existed before the code that claims it.     1 of 1
+C8 NONE        No change was reviewed by its own author, agent or spec owner. no reviewed change in the range
+C9 LISTED      Commits are signed by a key the repository declares.          0 of 4 signed by a declared key
 ```
 
+On the page these read **Passed**, **Exception**, **Disclosed** and **Not assessed**. Below the
+summary you also see **Who did the work** (every author and agent, with their commits and open
+exceptions), **Who reviewed each change**, and **Agent sessions** (Claude Code sessions on this
+machine, if any ran in this folder).
+
 Then, in the page:
-1. Click **C1** and **C4** to see the commits behind each answer, and the terminal command that gives
-   the same answer.
+1. Click **C1** and **C4** in the Controls list to see the commits behind each answer, and the
+   terminal command that gives the same answer.
 2. Under **1 exception(s)**, the totals row has no review. Click **Record an outcome**, choose
    **Accepted risk**, and type a reason, for example `Ships unreviewed in this release; review booked
    for the next one`.
@@ -683,6 +690,24 @@ git log --oneline -1
 ```text
 5efc244 proofbound: exception outcome gate-72ff20b35658
 ```
+
+**Optional: prove who made each commit.** Author names in git are typed by whoever commits. To make
+the spec owner's commits provable, sign them with the key you declared in step 6:
+
+```bash
+proofbound keys git-sign
+git commit -q --allow-empty -m "a signed commit"
+```
+
+```text
+git-sign spec-owner key=e43fce3f6327e95f ssh=…/proofbound-manual-demo/config/proofbound/signing-key-git-ssh
+every commit in this repository is now signed as spec-owner; the Audit room shows it as verified
+```
+
+Start the Audit room again with the same `proofbound ui` command as above and open its new link: control
+C9 now reads `1 of 5 signed by a declared key`, and the commit log
+shows that commit as signed by `spec-owner`. Plain `git log --show-signature` cannot check it,
+because git does not know which keys this repository declares; the Audit room does.
 
 **What just happened.** Every answer was computed from the repository and the record, not typed in
 by anyone. The outcome is a signed file in git, committed on its own: anyone with a clone sees it

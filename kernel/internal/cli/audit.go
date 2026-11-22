@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -20,10 +19,10 @@ const auditSchema = "proofbound.audit.v1"
 
 // Control states.
 const (
-	auditHeld      = "HELD"
+	auditHeld     = "HELD"
 	auditExcepted = "EXCEPTION"
-	auditListed    = "LISTED"
-	auditNone      = "NONE"
+	auditListed   = "LISTED"
+	auditNone     = "NONE"
 )
 
 // Commit classes (C5).
@@ -37,6 +36,15 @@ type auditCommit struct {
 	Commit  string `json:"commit"`
 	Subject string `json:"subject"`
 	Class   string `json:"class"`
+	// Author, Date and Agents are as git records them: self-declared, never signed. Agents are the
+	// author and Co-Authored-By names that look like a coding agent (agentName).
+	Author string   `json:"author"`
+	Date   string   `json:"date"`
+	Agents []string `json:"agents"`
+	// Signature is verified, unsigned, bad or unchecked (commitSignatures); Signer is the declared key
+	// name of a verified signature. Unlike Author, a verified Signer is proven.
+	Signature string `json:"signature"`
+	Signer    string `json:"signer,omitempty"`
 }
 
 type auditEvidence struct {
@@ -81,6 +89,8 @@ type auditReport struct {
 	Commits    []auditCommit    `json:"commits"`
 	Controls   []auditControl   `json:"controls"`
 	Exceptions []auditException `json:"exceptions"`
+	Roles      []auditRole      `json:"roles"`
+	Sessions   []auditSession   `json:"sessions"`
 }
 
 // computeAudit answers C1..C7 for base..HEAD. base must already resolve to a commit.
@@ -98,7 +108,11 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	if err != nil {
 		return rep, err
 	}
-	subjects, err := commitSubjects(ctx, root, rep.Base)
+	infos, err := commitInfos(ctx, root, rep.Base)
+	if err != nil {
+		return rep, err
+	}
+	sigs, err := commitSignatures(ctx, root, rep.Base)
 	if err != nil {
 		return rep, err
 	}
@@ -132,14 +146,15 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		default:
 			rep.Counts.Housekeeping++
 		}
-		rep.Commits = append(rep.Commits, auditCommit{Commit: sha, Subject: printableUnit(subjects[sha]), Class: c})
+		info := infos[sha]
+		rep.Commits = append(rep.Commits, auditCommit{Commit: sha, Subject: printableUnit(info.subject), Class: c, Author: printableUnit(info.author), Date: info.date, Agents: info.agents, Signature: sigs[sha][0], Signer: sigs[sha][1]})
 	}
 	rep.Counts.Total = len(shas)
 	rep.Exceptions = []auditException{}
 	except := func(kind, control, commit, text string) {
 		rep.Exceptions = append(rep.Exceptions, auditException{ID: kind + "-" + commit[:12], Kind: kind, Control: control, Commit: commit, Text: text})
 	}
-	subject := func(sha string) string { return printableUnit(subjects[sha]) }
+	subject := func(sha string) string { return printableUnit(infos[sha].subject) }
 	rangeArg := rep.Base[:12]
 
 	// C1: readiness gates.
@@ -219,10 +234,11 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		Basis: "A promise whose words changed after its review is shown as STALE, never as proven."}
 	var drift bytes.Buffer
 	if err := reportDrift(ctx, root, ledger, &drift); err != nil {
-		return rep, err
-	}
-	c4.Evidence = driftEvidence(drift.String())
-	if len(c4.Evidence) == 0 {
+		// One control that cannot be computed must not blank the other six: say why, count nothing
+		// (owner try-out: Proofbound's own ledger holds a dangling intent revision).
+		c4.State, c4.Count = auditNone, "not computed"
+		c4.Basis = "Not computed: `proofbound report drift` fails on this record: " + printableUnit(err.Error()) + "."
+	} else if c4.Evidence = driftEvidence(drift.String()); len(c4.Evidence) == 0 {
 		c4.State, c4.Count = auditHeld, "no verified promise has changed"
 	} else {
 		c4.State, c4.Count = auditListed, fmt.Sprintf("%d change(s) disclosed", len(c4.Evidence))
@@ -230,7 +246,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 
 	// C5: every commit accounted for.
 	c5 := auditControl{ID: "C5", Question: "Every commit in the range is accounted for.", Command: "git rev-list --count " + rangeArg + "..HEAD",
-		Basis: "Each commit git lists for the range is classed exactly once: claimed a spec, changed code without one, or changed only specs, docs and records.",
+		Basis:    "Each commit git lists for the range is classed exactly once: claimed a spec, changed code without one, or changed only specs, docs and records.",
 		Evidence: []auditEvidence{{Text: fmt.Sprintf("%d claimed, %d uncovered, %d specs, docs and records only", rep.Counts.Claimed, rep.Counts.Uncovered, rep.Counts.Housekeeping)}}}
 	// C5 is a disclosure, not a test: it cannot fail, so it is never counted as held (spec review F8).
 	c5.State, c5.Count = auditListed, fmt.Sprintf("%d commits, each in one class", rep.Counts.Total)
@@ -291,7 +307,69 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		c7.State, c7.Count = auditExcepted, fmt.Sprintf("%d of %d", before, checked)
 	}
 
-	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7}
+	// C8: no change was reviewed by its own author, agent, signer or spec owner.
+	c8 := auditControl{ID: "C8", Question: "No change was reviewed by its own author, agent or spec owner.", Command: "proofbound warranty export <commit>",
+		Basis: "Each claiming commit's reviewers, read from its review records, are compared by key name with its git author, the agents named on it, its verified signer and its spec owners."}
+	rep.Roles = []auditRole{}
+	reviewed, independent := 0, 0
+	for _, c := range rep.Commits {
+		if c.Class != classClaimed {
+			continue
+		}
+		role := roleFor(ctx, ledger, c)
+		rep.Roles = append(rep.Roles, role)
+		if len(role.Reviewers) == 0 {
+			continue
+		}
+		reviewed++
+		if role.Independent {
+			independent++
+			c8.Evidence = append(c8.Evidence, auditEvidence{Commit: c.Commit, Text: "reviewed by " + strings.Join(role.Reviewers, ", ")})
+			continue
+		}
+		c8.Evidence = append(c8.Evidence, auditEvidence{Commit: c.Commit, Text: role.Note})
+		except("self-review", "C8", c.Commit, fmt.Sprintf("%q: %s", subject(c.Commit), role.Note))
+	}
+	switch {
+	case reviewed == 0:
+		c8.State, c8.Count = auditNone, "no reviewed change in the range"
+	case independent == reviewed:
+		c8.State, c8.Count = auditHeld, fmt.Sprintf("%d of %d", independent, reviewed)
+	default:
+		c8.State, c8.Count = auditExcepted, fmt.Sprintf("%d of %d independent", independent, reviewed)
+	}
+
+	// C9: which commits are signed by a declared key (a disclosure; a bad signature is an exception).
+	c9 := auditControl{ID: "C9", Question: "Commits are signed by a key the repository declares.", Command: "git log --show-signature " + rangeArg + "..HEAD",
+		Basis: "A git author name is self-declared; a commit signed by a declared key proves which person or agent made it. Commits are checked with git's SSH signature verification against .proofbound/keys at HEAD."}
+	verified, bad := 0, 0
+	for _, c := range rep.Commits {
+		switch c.Signature {
+		case sigVerified:
+			verified++
+		case sigBad:
+			bad++
+			c9.Evidence = append(c9.Evidence, auditEvidence{Commit: c.Commit, Text: "the signature does not verify"})
+			except("signature", "C9", c.Commit, fmt.Sprintf("%q carries a signature that does not verify", subject(c.Commit)))
+		case sigOther:
+			c9.Evidence = append(c9.Evidence, auditEvidence{Commit: c.Commit, Text: "signed, but not by a declared key (or not checkable here)"})
+		}
+	}
+	c9.Evidence = append([]auditEvidence{{Text: fmt.Sprintf("%d of %d commits signed by a declared key", verified, len(shas))}}, c9.Evidence...)
+	if bad > 0 {
+		c9.State, c9.Count = auditExcepted, fmt.Sprintf("%d bad signature(s)", bad)
+	} else {
+		c9.State, c9.Count = auditListed, fmt.Sprintf("%d of %d signed by a declared key", verified, len(shas))
+	}
+
+	if rep.Sessions, err = sessionsInPeriod(ctx, root, ledger, rep.Base, rep.Commits); err != nil {
+		return rep, err
+	}
+	if rep.Sessions == nil {
+		rep.Sessions = []auditSession{}
+	}
+
+	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9}
 	if rep.Counts.Total == 0 {
 		// An empty range holds nothing: no control can be held in it (spec review F5).
 		for i := range rep.Controls {
@@ -349,22 +427,60 @@ func transcript(rep auditReport) ([]byte, error) {
 	return append(canonical, '\n'), nil
 }
 
-func commitSubjects(ctx context.Context, root, base string) (map[string]string, error) {
-	cmd := exec.CommandContext(ctx, "git", "-C", root, "log", "--format=%H%x00%s", base+"..HEAD", "--")
+type commitInfo struct {
+	subject, author, date string
+	agents                []string
+}
+
+// agentMarkers are the name or e-mail fragments that mark a coding agent in git authorship. Git
+// identities are self-declared, so this is a disclosure, not an identification.
+var agentMarkers = []string{"anthropic.com", "claude", "copilot", "[bot]", "cursor", "codex", "openai", "devin", "aider", "gemini", "windsurf", "amazon q"}
+
+func agentName(ident string) bool {
+	l := strings.ToLower(ident)
+	for _, m := range agentMarkers {
+		if strings.Contains(l, m) {
+			return true
+		}
+	}
+	return false
+}
+
+// commitInfos reads each commit's subject, author, date and agent co-authors in one git call.
+func commitInfos(ctx context.Context, root, base string) (map[string]commitInfo, error) {
+	cmd := exec.CommandContext(ctx, "git", "-C", root, "log", "--format=%H%x00%an%x00%ae%x00%as%x00%s%x00%(trailers:key=Co-authored-by,valueonly,separator=%x01)%x1e", base+"..HEAD", "--")
 	cmd.Env = repositoryGitEnv()
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("audit: cannot read subjects of %s..HEAD: %v", base, err)
+		return nil, fmt.Errorf("audit: cannot read the commits of %s..HEAD: %v", base, err)
 	}
-	subjects := map[string]string{}
-	scanner := bufio.NewScanner(bytes.NewReader(out))
-	scanner.Buffer(make([]byte, 0, 64*1024), 1<<20)
-	for scanner.Scan() {
-		if sha, s, ok := strings.Cut(scanner.Text(), "\x00"); ok {
-			subjects[sha] = s
+	infos := map[string]commitInfo{}
+	for _, rec := range strings.Split(string(out), "\x1e") {
+		f := strings.Split(strings.TrimLeft(rec, "\n"), "\x00")
+		if len(f) != 6 {
+			continue
 		}
+		info := commitInfo{subject: f[4], author: f[1], date: f[3], agents: []string{}}
+		seen := map[string]bool{}
+		add := func(name string) {
+			name = printableUnit(strings.TrimSpace(name))
+			if name != "" && !seen[name] {
+				seen[name] = true
+				info.agents = append(info.agents, name)
+			}
+		}
+		if agentName(f[1] + " " + f[2]) {
+			add(f[1])
+		}
+		for _, co := range strings.Split(strings.TrimSpace(f[5]), "\x01") {
+			if co = strings.TrimSpace(co); co != "" && agentName(co) {
+				name, _, _ := strings.Cut(co, "<")
+				add(name)
+			}
+		}
+		infos[f[0]] = info
 	}
-	return subjects, scanner.Err()
+	return infos, nil
 }
 
 // uncoveredPaths is the path list of an UNCOVERED reason (CLI-INV-33 wording), without its advice.

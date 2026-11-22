@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order)-[0-9a-f]{12}$`)
+	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order|self-review|signature)-[0-9a-f]{12}$`)
 	sha40RE       = regexp.MustCompile(`^[0-9a-f]{40}$`)
 	hex64RE       = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	keyNameFileRE = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)

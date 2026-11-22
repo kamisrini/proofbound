@@ -18,10 +18,11 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -37,6 +38,16 @@ var uiKit embed.FS
 var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 	"short": func(s string) string { return short(s, 12) },
 	"lower": strings.ToLower,
+	// label is the reader's word for a control state; the JSON keeps the state itself.
+	"label": func(state string) string {
+		return map[string]string{auditHeld: "Passed", auditExcepted: "Exception", auditListed: "Disclosed", auditNone: "Not assessed"}[state]
+	},
+	"outcomeLabel": func(o string) string {
+		return map[string]string{"accepted": "Risk accepted", "fixed": "Fixed", "reverted": "Reverted"}[o]
+	},
+	"kindLabel": func(k string) string {
+		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify"}[k]
+	},
 }).ParseFS(uiKit, "uikit/audit.html"))
 
 const uiMaxBody = 16 << 10
@@ -89,7 +100,10 @@ func parseUI(args []string) (uiOptions, bool) {
 type uiServer struct {
 	root, databaseURL, defaultBase, token string
 	port                                  int
-	mu                                    sync.Mutex
+	// gate lets one request compute at a time; a later one waits up to wait for it, then gets 503,
+	// so a reload during a slow first sync shows the answer instead of "busy" (owner try-out).
+	gate chan struct{}
+	wait time.Duration
 	// compute syncs and computes the audit of a resolved base; tests replace it.
 	compute func(ctx context.Context, base string) (auditReport, string, error)
 	now     func() time.Time
@@ -107,7 +121,103 @@ type uiView struct {
 	Attestations []attestationView `json:"attestations"`
 	SyncError    string            `json:"sync_error,omitempty"`
 	Tags         []string          `json:"-"`
-	transcript   []byte
+	// Page-only: the repository's folder name, when this page was computed, and the summary tiles.
+	Repo       string      `json:"-"`
+	Generated  string      `json:"-"`
+	Summary    viewSummary `json:"-"`
+	Actors     []actorRow  `json:"-"`
+	transcript []byte
+}
+
+type viewSummary struct{ Held, Tests, Exceptions, Closed, Disclosed, NotAssessed int }
+
+func summarize(rep auditReport) viewSummary {
+	var sum viewSummary
+	for _, c := range rep.Controls {
+		switch c.State {
+		case auditHeld:
+			sum.Held++
+			sum.Tests++
+		case auditExcepted:
+			sum.Tests++
+		case auditListed:
+			sum.Disclosed++
+		default:
+			sum.NotAssessed++
+		}
+	}
+	sum.Exceptions = len(rep.Exceptions)
+	for _, e := range rep.Exceptions {
+		if e.Outcome != nil && e.Outcome.Verified {
+			sum.Closed++
+		}
+	}
+	return sum
+}
+
+// actorRow is one author or agent's share of the period (the "Who did the work" section).
+type actorRow struct {
+	Name, Kind                                            string
+	Commits, Claimed, Uncovered, Signed, Exceptions, Open int
+}
+
+// actorRows counts each commit for its author and for each agent named on it; agents first, then by
+// commits. Names are git's self-declared identities.
+func actorRows(rep auditReport) []actorRow {
+	rows := map[string]*actorRow{}
+	get := func(name, kind string) *actorRow {
+		key := kind + "\x00" + name
+		if rows[key] == nil {
+			rows[key] = &actorRow{Name: name, Kind: kind}
+		}
+		return rows[key]
+	}
+	exc, open := map[string]int{}, map[string]int{}
+	for _, e := range rep.Exceptions {
+		exc[e.Commit]++
+		if e.Outcome == nil || !e.Outcome.Verified {
+			open[e.Commit]++
+		}
+	}
+	for _, c := range rep.Commits {
+		var who []*actorRow
+		agentAuthor := false
+		for _, a := range c.Agents {
+			who = append(who, get(a, "agent"))
+			agentAuthor = agentAuthor || a == c.Author
+		}
+		if !agentAuthor && c.Author != "" {
+			who = append(who, get(c.Author, "person"))
+		}
+		for _, r := range who {
+			r.Commits++
+			if c.Signature == sigVerified {
+				r.Signed++
+			}
+			r.Exceptions += exc[c.Commit]
+			r.Open += open[c.Commit]
+			switch c.Class {
+			case classClaimed:
+				r.Claimed++
+			case classUncovered:
+				r.Uncovered++
+			}
+		}
+	}
+	out := make([]actorRow, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, *r)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Kind != out[j].Kind {
+			return out[i].Kind == "agent"
+		}
+		if out[i].Commits != out[j].Commits {
+			return out[i].Commits > out[j].Commits
+		}
+		return out[i].Name < out[j].Name
+	})
+	return out
 }
 
 var errLedgerBusy = errors.New("the ledger is busy: another proofbound command is running; reload in a few seconds")
@@ -152,7 +262,8 @@ func newUIServer(root, databaseURL, base string, port int) *uiServer {
 	if _, err := rand.Read(token); err != nil {
 		panic(err)
 	}
-	s := &uiServer{root: root, databaseURL: databaseURL, defaultBase: base, port: port, token: hex.EncodeToString(token), now: time.Now}
+	s := &uiServer{root: root, databaseURL: databaseURL, defaultBase: base, port: port, token: hex.EncodeToString(token), now: time.Now,
+		gate: make(chan struct{}, 1), wait: 2 * time.Minute}
 	s.compute = func(ctx context.Context, base string) (auditReport, string, error) {
 		syncNote := ""
 		var stderr bytes.Buffer
@@ -237,16 +348,38 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// view takes the one request lock (or answers busy at once) and computes the audit.
-func (s *uiServer) view(ctx context.Context, baseRef string) (uiView, int, error) {
-	if !s.mu.TryLock() {
-		return uiView{}, http.StatusServiceUnavailable, errLedgerBusy
+// acquire takes the request gate, waiting at most s.wait and never past the request's own end.
+func (s *uiServer) acquire(ctx context.Context) bool {
+	timer := time.NewTimer(s.wait)
+	defer timer.Stop()
+	select {
+	case s.gate <- struct{}{}:
+		return true
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return false
 	}
-	defer s.mu.Unlock()
-	return s.viewLocked(ctx, baseRef)
 }
 
-// viewLocked syncs, opens the store, computes the audit and closes it; s.mu is held.
+func (s *uiServer) release() { <-s.gate }
+
+// view takes the request gate and computes the audit.
+func (s *uiServer) view(ctx context.Context, baseRef string) (uiView, int, error) {
+	if !s.acquire(ctx) {
+		return uiView{}, http.StatusServiceUnavailable, errLedgerBusy
+	}
+	defer s.release()
+	v, status, err := s.viewLocked(ctx, baseRef)
+	// Another proofbound command may hold the ledger for a moment: retry for a short while.
+	for tries := 0; errors.Is(err, errLedgerBusy) && tries < 10 && ctx.Err() == nil; tries++ {
+		time.Sleep(time.Second)
+		v, status, err = s.viewLocked(ctx, baseRef)
+	}
+	return v, status, err
+}
+
+// viewLocked syncs, opens the store, computes the audit and closes it; the gate is held.
 func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int, error) {
 	if baseRef == "" {
 		baseRef = s.defaultBase
@@ -277,6 +410,10 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 	}
 	v.Attestations = readAttestations(ctx, s.root, rep)
 	v.Actor = localActor(ctx, s.root)
+	v.Repo = filepath.Base(s.root)
+	v.Generated = s.now().Format("2 Jan 2006, 15:04 MST")
+	v.Summary = summarize(rep)
+	v.Actors = actorRows(rep)
 	for _, t := range strings.Split(gitOutput(ctx, s.root, "tag", "--sort=-creatordate", "--merged", "HEAD"), "\n") {
 		if t = strings.TrimSpace(t); t != "" && len(v.Tags) < 30 {
 			v.Tags = append(v.Tags, t)
@@ -347,11 +484,11 @@ func (s *uiServer) serveAct(w http.ResponseWriter, r *http.Request, sign bool) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
 		return
 	}
-	if !s.mu.TryLock() {
+	if !s.acquire(r.Context()) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": errLedgerBusy.Error()})
 		return
 	}
-	defer s.mu.Unlock()
+	defer s.release()
 	// The audit, the validation and the write happen under one lock, so HEAD cannot move between them
 	// from this server (spec review F10).
 	v, status, err := s.viewLocked(r.Context(), req.Base)

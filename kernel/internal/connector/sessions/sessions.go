@@ -157,6 +157,9 @@ func (c *Connector) Sync(ctx context.Context, appender Appender) (Result, error)
 	return result, nil
 }
 
+// maxSessionLine is the longest JSONL line a session file may hold.
+const maxSessionLine = 64 << 20
+
 func parseFile(path, fallbackID string) (payload, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -167,6 +170,9 @@ func parseFile(path, fallbackID string) (payload, error) {
 	p.SessionID = fallbackID
 	var total, valid int
 	scanner := bufio.NewScanner(f)
+	// Real session logs carry whole tool outputs on one line, far past bufio's 64 KiB default, which
+	// made every real file "malformed" (INV-7, found in the U1 owner try-out 2026-11-22).
+	scanner.Buffer(make([]byte, 0, 1<<20), maxSessionLine)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -256,6 +262,19 @@ func writesFile(value map[string]any) bool {
 	}
 	if tool, ok := value["tool_name"].(string); ok && (tool == "Write" || tool == "Edit") {
 		return true
+	}
+	// Claude Code puts tool calls inside the assistant message's content array (INV-8).
+	if message, ok := value["message"].(map[string]any); ok {
+		if content, ok := message["content"].([]any); ok {
+			for _, item := range content {
+				if m, ok := item.(map[string]any); ok && m["type"] == "tool_use" {
+					switch m["name"] {
+					case "Write", "Edit", "MultiEdit", "NotebookEdit":
+						return true
+					}
+				}
+			}
+		}
 	}
 	return false
 }
