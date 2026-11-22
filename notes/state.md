@@ -16,6 +16,11 @@ As of: 2026-11-22
   `DEF-RELEASE-V032-001`, `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
   `DEF-INSTALL-PATH-SHADOW-001` RESOLVED. Landing page republished (card 05: fails the PR) and
   committed in the private repo. Owner's `~/.local/bin/proofbound` upgraded to v0.3.2.
+- **Docs and demos updated for v0.3.2** (`b908ea5`, owner: "lets update all the docs, demo etc"): tour
+  chapter 13 (hook refusal, `task start` stamping, `--no-verify` commit UNCOVERED), DEMO.md, DEMO-MANUAL,
+  R2 DEMO usage, r3 README table; demo scripts put their own build on PATH for the hooks and drop the
+  retired env var. Manual blocks, tour, demo-warranty (both kits), demo-share, demo-install all run
+  clean on the published v0.3.2. Historical specs/plans under `docs/plans/` left as written.
 
 - **Owner's two priorities built** (`d8e0714`, owner 2026-11-22 "lets do both one after other"):
   (1) `proofbound check` fails on UNCOVERED commits, i.e. unclaimed commits that change code
@@ -116,7 +121,7 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
 deferrals. Fix new trial findings when asked. MVP step 5 (commercial) continues outside this
 repository. Ask before starting other work.
 
-**Gate:** GREEN at `3c2995c` (2026-11-22). main is pushed (in sync with origin). Untracked
+**Gate:** GREEN at `b908ea5` (2026-11-22). main is pushed (in sync with origin). Untracked
 `docs/plans/P5-intent-provenance-plan.md` and `kernel/cmd/p6dbprobe/` are the owner's to keep or
 drop. **Immediate blockers:** none.
 
