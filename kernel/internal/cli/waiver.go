@@ -149,6 +149,9 @@ func waiverSign(ctx context.Context, root, id string, paths []string, reason, ex
 type waiverSubject struct {
 	writers map[string]string // key name -> role ("its author", "a co-author")
 	signer  string
+	// signed is true when the commit carries a signature verified against a declared key (C9), or, in
+	// the hook, when git is configured to sign it (CLI-INV-63).
+	signed bool
 }
 
 // newWaiverSubject builds the writer set from an author identity and co-author trailer values
@@ -234,6 +237,16 @@ func waiversAt(ctx context.Context, root, parent, base, floor string, code []str
 	if listing == "" {
 		return nil, code, nil
 	}
+	// CLI-INV-63: with the policy on (at the base or before the commit), only signed commits are waived.
+	policyOn, policyNote := waiverPolicy(ctx, root, parent)
+	if base != "" {
+		if on, note := waiverPolicy(ctx, root, base); on {
+			policyOn = true
+			if policyNote == "" {
+				policyNote = note
+			}
+		}
+	}
 	parentKeys := declaredKeys(ctx, root, parent)
 	keys := parentKeys
 	writerKeys := parentKeys
@@ -262,7 +275,7 @@ func waiversAt(ctx context.Context, root, parent, base, floor string, code []str
 	for _, p := range strings.Split(listing, "\n") {
 		p = strings.TrimSpace(p)
 		id, ok := strings.CutSuffix(path.Base(p), ".json")
-		if !ok || path.Dir(p) != waiversDir || !waiverIDRE.MatchString(id) {
+		if !ok || path.Dir(p) != waiversDir || !waiverIDRE.MatchString(id) || p == waiverPolicyPath {
 			continue
 		}
 		raw, err := gitBytes(ctx, root, "show", parent+":"+p)
@@ -293,6 +306,8 @@ func waiversAt(ctx context.Context, root, parent, base, floor string, code []str
 				c.problem = "is not independent of the commit: " + why
 			} else if day := laterDay(floor, signedDay); fields["expires"] < day {
 				c.problem = fmt.Sprintf("expired on %s (it must still be valid on %s: the latest of the commit's date, the range base's date and its own signing date)", fields["expires"], day)
+			} else if policyOn && !signedByKnownKey(ctx, root, base, who, keys) {
+				c.problem = "does not apply: this project waives only commits signed by a key declared at the range base (" + waiverPolicyPath + policyNote + "); this commit is not"
 			}
 		}
 		c.use.ID = id
@@ -353,6 +368,60 @@ func waiverDates(at, expires string) (string, error) {
 	return day, nil
 }
 
+// signedByKnownKey reports whether the commit counts as signed under the policy (CLI-INV-63). In
+// history (base given), the signature C9 verified must be by a key declared, unchanged, at the range
+// base, in the commit's parent and at HEAD (C9 verifies against HEAD): a key added or swapped inside
+// the range cannot make a commit count as signed (review waiver-signed-commits-review-20261123 F1).
+// In the hook (no base), git being configured to sign is the guidance.
+func signedByKnownKey(ctx context.Context, root, base string, who waiverSubject, keys map[string]ed25519.PublicKey) bool {
+	if !who.signed {
+		return false
+	}
+	if base == "" {
+		return true
+	}
+	k, ok := keys[who.signer]
+	if !ok {
+		return false
+	}
+	head, ok := declaredKeys(ctx, root, "HEAD")[who.signer]
+	return ok && head.Equal(k)
+}
+
+// waiverPolicyPath is the opt-in switch: waivers cover only signed commits (CLI-INV-63).
+const waiverPolicyPath = waiversDir + "/policy.json"
+
+// waiverPolicy reports whether the policy file exists at rev. Any file there turns the policy on; a
+// file that is not exactly the expected form still does (fail closed) and the note says so.
+func waiverPolicy(ctx context.Context, root, rev string) (bool, string) {
+	raw, err := gitBytes(ctx, root, "show", rev+":"+waiverPolicyPath)
+	if err != nil {
+		return false, ""
+	}
+	var p struct {
+		Schema  string `json:"schema"`
+		Require *bool  `json:"require_signed_commits"`
+	}
+	dec := json.NewDecoder(strings.NewReader(string(raw)))
+	dec.DisallowUnknownFields()
+	if dec.Decode(&p) != nil || p.Schema != "proofbound.waiver-policy.v1" || p.Require == nil || !*p.Require {
+		return true, ", malformed, so it applies"
+	}
+	return true, ""
+}
+
+// signingConfigured reports whether git will sign the commit the hook is checking, as `keys git-sign`
+// configures it; read with the hook's own environment.
+func signingConfigured(ctx context.Context, root string) bool {
+	get := func(key string) string {
+		cmd := exec.CommandContext(ctx, "git", "-C", root, "config", "--get", key)
+		cmd.Env = os.Environ()
+		out, _ := cmd.Output()
+		return strings.TrimSpace(string(out))
+	}
+	return get("commit.gpgsign") == "true" && get("gpg.format") == "ssh" && get("user.signingkey") != ""
+}
+
 // waivedReason is the check line for a waived commit.
 func waivedReason(uses []waiverUse) string {
 	parts := make([]string, 0, len(uses))
@@ -395,6 +464,7 @@ func stagedWaived(ctx context.Context, root, msg string, code []string) ([]waive
 		}
 	}
 	who := newWaiverSubject(name, email, coauthors, "")
+	who.signed = signingConfigured(ctx, root)
 	uses, _, notes := waiversAt(ctx, root, head, "", time.Now().UTC().Format("2006-01-02"), code, who)
 	return uses, notes
 }

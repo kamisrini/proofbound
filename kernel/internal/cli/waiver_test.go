@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -419,4 +420,162 @@ func TestWaiverReviewFindings(t *testing.T) {
 			t.Errorf("%+v %s", uses, notes)
 		}
 	})
+}
+
+// CLI-INV-63: with the policy on (base or parent, strictest wins, malformed counts as on), only
+// commits signed by a declared key are waived; the policy file is not a waiver; the hook asks for
+// signing to be configured.
+func TestWaiverRequiresSignedCommits(t *testing.T) {
+	ctx := context.Background()
+	const policy = `{"schema":"proofbound.waiver-policy.v1","require_signed_commits":true}` + "\n"
+	unsigned := newWaiverSubject("dev", "dev@example.com", nil, "")
+	signed := newWaiverSubject("dev", "dev@example.com", nil, "dev")
+	signed.signed = true
+	setup := func(t *testing.T, policyAtBase bool) (string, string) {
+		t.Helper()
+		root, _, _ := waiverRepo(t)
+		// The commit signer "dev" holds a key declared before the range (CLI-INV-63).
+		uiWrite(t, root, ".proofbound/keys/dev.pub", pbwarranty.PubLine(ed25519.NewKeyFromSeed(bytes.Repeat([]byte{3}, 32)).Public().(ed25519.PublicKey)))
+		if policyAtBase {
+			uiWrite(t, root, waiverPolicyPath, policy)
+		}
+		signWaiver(t, root, "vendor-lib", []string{"vendor/"}, day(30))
+		base := uiCommit(t, root, "approver", "waiver (and policy)")
+		return root, base
+	}
+	commit := func(t *testing.T, root string) string {
+		uiWrite(t, root, "vendor/a.c", time.Now().String()+"\n")
+		return uiCommit(t, root, "dev", "vendor")
+	}
+	t.Run("on at the base", func(t *testing.T) {
+		root, base := setup(t, true)
+		x := commit(t, root)
+		if uses, _, notes := waiversFor(ctx, root, base, x, []string{"vendor/a.c"}, unsigned); uses != nil || !strings.Contains(strings.Join(notes, ""), "waives only commits signed by a key declared at the range base") {
+			t.Errorf("unsigned: %+v %q", uses, notes)
+		}
+		if uses, _, _ := waiversFor(ctx, root, base, x, []string{"vendor/a.c"}, signed); len(uses) != 1 {
+			t.Errorf("signed: %+v", uses)
+		}
+	})
+	t.Run("removed inside the range still applies", func(t *testing.T) {
+		root, base := setup(t, true)
+		uiGit(t, root, "rm", "-q", waiverPolicyPath)
+		uiCommit(t, root, "dev", "drop the policy")
+		x := commit(t, root)
+		if uses, _, _ := waiversFor(ctx, root, base, x, []string{"vendor/a.c"}, unsigned); uses != nil {
+			t.Errorf("a policy removed in the range stopped applying: %+v", uses)
+		}
+	})
+	t.Run("on in the parent only, and malformed counts as on", func(t *testing.T) {
+		root, base := setup(t, false)
+		x := commit(t, root)
+		if uses, _, _ := waiversFor(ctx, root, base, x, []string{"vendor/a.c"}, unsigned); len(uses) != 1 {
+			t.Fatalf("without the policy an unsigned commit is waived as before: %+v", uses)
+		}
+		uiWrite(t, root, waiverPolicyPath, `{"schema":"proofbound.waiver-policy.v1","require_signed_commits":false}`)
+		uiCommit(t, root, "approver", "a malformed policy")
+		y := commit(t, root)
+		uses, _, notes := waiversFor(ctx, root, base, y, []string{"vendor/a.c"}, unsigned)
+		if uses != nil || !strings.Contains(strings.Join(notes, ""), "malformed, so it applies") {
+			t.Errorf("malformed policy: %+v %q", uses, notes)
+		}
+	})
+	t.Run("the policy file is not a waiver", func(t *testing.T) {
+		root, base := setup(t, true)
+		uiWrite(t, root, "policy.json", "x\n")
+		x := commit(t, root)
+		if uses, _, _ := waiversFor(ctx, root, base, x, []string{"vendor/a.c"}, signed); len(uses) != 1 || uses[0].ID != "vendor-lib" {
+			t.Errorf("uses = %+v", uses)
+		}
+	})
+	t.Run("the hook asks for signing", func(t *testing.T) {
+		root, _ := setup(t, true)
+		uiWrite(t, root, "vendor/b.c", "b\n")
+		uiGit(t, root, "add", "vendor/b.c")
+		msg := filepath.Join(t.TempDir(), "MSG")
+		if err := os.WriteFile(msg, []byte("vendor b\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		var out bytes.Buffer
+		if err := runHook(ctx, root, "commit-msg", msg, "", &out); err == nil || !strings.Contains(out.String(), "proofbound keys git-sign") {
+			t.Errorf("unsigned commit passed the hook under the policy: %v %s", err, out.String())
+		}
+		for k, v := range map[string]string{"commit.gpgsign": "true", "gpg.format": "ssh", "user.signingkey": "/k"} {
+			uiGit(t, root, "config", k, v)
+		}
+		out.Reset()
+		if err := runHook(ctx, root, "commit-msg", msg, "", &out); err != nil || !strings.Contains(out.String(), "waived by approver") {
+			t.Errorf("a signing-configured commit was refused: %v %s", err, out.String())
+		}
+	})
+}
+
+// Review waiver-signed-commits-review-20261123 F1, F2: real SSH-signed commits through the check's own
+// path. A commit signed by a key declared at the range base is waived; one signed by a key added inside
+// the range is not; an unsigned one is not.
+func TestWaiverPolicyRealSignatures(t *testing.T) {
+	if _, err := exec.LookPath("ssh-keygen"); err != nil {
+		t.Skip("ssh-keygen not installed")
+	}
+	ctx := context.Background()
+	dev := uiKey(t)
+	devHome := os.Getenv("XDG_CONFIG_HOME")
+	mallory := uiKey(t)
+	malloryHome := os.Getenv("XDG_CONFIG_HOME")
+	approver := uiKey(t) // active: signs the waiver
+	root := taskRepo(t)
+	uiWrite(t, root, ".proofbound/keys/approver.pub", pbwarranty.PubLine(approver.Public().(ed25519.PublicKey)))
+	uiWrite(t, root, ".proofbound/keys/dev.pub", pbwarranty.PubLine(dev.Public().(ed25519.PublicKey)))
+	uiWrite(t, root, waiverPolicyPath, `{"schema":"proofbound.waiver-policy.v1","require_signed_commits":true}`+"\n")
+	base := uiCommit(t, root, "owner", "keys and policy")
+	signWaiver(t, root, "vendor-lib", []string{"vendor/"}, day(30))
+	uiCommit(t, root, "approver", "waiver")
+
+	state := func(sha string) checkLine {
+		t.Helper()
+		lines, err := uncoveredCommits(ctx, root, base, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, l := range lines {
+			if l.commit == sha {
+				return l
+			}
+		}
+		t.Fatalf("%s not listed", sha)
+		return checkLine{}
+	}
+	commitAs := func(name, file string, sign bool) string {
+		t.Helper()
+		uiWrite(t, root, file, "x\n")
+		uiGit(t, root, "add", "-A")
+		uiGit(t, root, "-c", "commit.gpgsign="+strconv.FormatBool(sign), "-c", "user.name="+name, "-c", "user.email="+name+"@example.com", "commit", "-q", "--no-verify", "-m", file)
+		return uiGit(t, root, "rev-parse", "HEAD")
+	}
+	t.Setenv("XDG_CONFIG_HOME", devHome)
+	var out strings.Builder
+	if err := keysGitSign(ctx, root, &out); err != nil {
+		t.Fatal(err)
+	}
+	good := commitAs("dev", "vendor/a.c", true)
+	unsigned := commitAs("dev", "vendor/u.c", false)
+	// The attack: declare a new key inside the range and sign with it.
+	uiWrite(t, root, ".proofbound/keys/mallory.pub", pbwarranty.PubLine(mallory.Public().(ed25519.PublicKey)))
+	uiGit(t, root, "add", "-A")
+	uiGit(t, root, "-c", "user.name=dev", "-c", "user.email=dev@example.com", "commit", "-q", "--no-verify", "-m", "declare mallory")
+	t.Setenv("XDG_CONFIG_HOME", malloryHome)
+	if err := keysGitSign(ctx, root, &out); err != nil {
+		t.Fatal(err)
+	}
+	attack := commitAs("mallory", "vendor/b.c", true)
+
+	if l := state(good); l.state != checkWaived {
+		t.Errorf("a commit signed by a key declared at the base was not waived: %+v", l)
+	}
+	if l := state(unsigned); l.state != checkUncovered || !strings.Contains(l.reason, "waives only commits signed") {
+		t.Errorf("an unsigned commit: %+v", l)
+	}
+	if l := state(attack); l.state != checkUncovered || !strings.Contains(l.reason, "declared at the range base") {
+		t.Errorf("a commit signed by a key added inside the range was waived: %+v", l)
+	}
 }

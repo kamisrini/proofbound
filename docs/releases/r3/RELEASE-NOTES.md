@@ -9,11 +9,11 @@ and [`VD-vertical-mvp-first-ai3dhn`](../../decisions/VD-vertical-mvp-first-ai3dh
 its spec and code reviewed by a non-author (Law 11 budget). Published by the owner's decision of
 2026-11-20.
 
-## v0.3.2 (2026-11-22): a UI for compliance, reviewers, spec owners and agents; unclaimed code fails the check; agents get the claim added for them
+## v0.3.2 (2026-11-23): a UI for compliance, reviewers, spec owners and agents; unclaimed code fails the check; agents get the claim added for them; line-level scope, signed waivers, and release evidence in a browser
 
 - **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
   Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
-  since the last tag). It answers nine controls, each with the commits behind its answer and the
+  since the last tag). It answers ten controls, each with the commits behind its answer and the
   terminal command that gives the same answer:
   1. Every commit that claims a spec passed its readiness gate.
   2. No commit changed code without claiming a spec.
@@ -25,6 +25,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   7. Each claimed spec existed before the code that claims it.
   8. No change was reviewed by its own author, agent or spec owner.
   9. Commits are signed by a key the repository declares (a disclosure).
+  10. Each agent change stayed inside the area its spec declares (see line-level scope below).
 - **Agent oversight.** The page shows who did the work: every agent (from the commit author or a
   `Co-Authored-By` line naming Claude, Copilot, Cursor, Codex and similar) and every person, with
   their commits, claims, code without a spec and open exceptions; who reviewed each change, and
@@ -67,10 +68,34 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 - **Decision and contract:** [`VD-audit-room-ui-q2v6x3`](../../decisions/VD-audit-room-ui-q2v6x3.md),
   [U1 spec](../../plans/ui-u1-audit-room-spec.md) (CLI-INV-37..41), reviewed by a non-author twice
   (spec and code; every HIGH and MED finding fixed).
-- **Not yet:** the other workspaces (developer, reviewer, spec owner, agents), the time rail,
-  in-browser signature checks, and opening an evidence bundle without a clone. The Audit room says on
-  the page what it cannot see: whether every line of a claimed commit stays inside its spec, and
-  anything an agent did outside the repository.
+- **Line-level scope.** A spec folder may list the files its change may touch in a `scope.paths`
+  file (paths and patterns such as `src/cart/` or `src/**/*_test.go`, read from the commit's parent so
+  a commit cannot widen its own area). `proofbound review draft` lists every line range a claiming
+  commit changed outside that area; `review seal` (and the Review bench) refuses until the reviewer
+  accepts each with a reason or rejects it, keeps the decisions in a signed record, and a rejection
+  makes the review NEEDS_WORK. Control 10 flags anything no independent reviewer accepted, an invalid
+  area, and an area an agent changed. A spec without `scope.paths` is counted, not flagged. Spec:
+  [change-area-spec.md](../../plans/change-area-spec.md).
+- **Signed exception waivers.** For the rare commit that must change code without a spec (a hotfix,
+  vendored code), `proofbound waiver sign <id> --path <pattern> --reason <text> --expires <date>`
+  writes a signed waiver that lasts at most 90 days. A commit is WAIVED only when the waiver was
+  committed before it, is signed by a key declared at the start of the range, by someone who is not
+  the commit's author, co-author or signer, and has not expired. `proofbound check` lists it ("1 commit
+  waived") and still passes; the release bundle, its badge and the Audit room show it; the commit hook
+  lets it through. **Optional:** commit `.proofbound/waivers/policy.json` with
+  `{"schema":"proofbound.waiver-policy.v1","require_signed_commits":true}` and waivers cover only
+  commits signed by a declared key (`proofbound keys git-sign`), since a git author name is
+  self-declared. Specs: [signed-waiver-spec.md](../../plans/signed-waiver-spec.md),
+  [waiver-signed-commits-spec.md](../../plans/waiver-signed-commits-spec.md).
+- **Release evidence in a browser, no clone.** `proofbound ui --bundle <folder>` opens the folder
+  `proofbound warranty bundle` wrote as a read-only page, anywhere, with no repository or database.
+  Each warranty shows its promises, verdicts, reviews and reviewers from the signed file, labelled
+  with how far it was checked: SIGNATURE ONLY without a clone, VALID / UNREVIEWED / INVALID with
+  `--repo <clone>`, MISSING or ALTERED when it disagrees with the (unsigned) index; `--trust-key`
+  pins the exporter's key, and the browser re-verifies each signature. Spec:
+  [ui-bundle-spec.md](../../plans/ui-bundle-spec.md).
+- **Not yet:** mapping the controls to compliance frameworks, and anything an agent did outside the
+  repository, which the Audit room says on the page it cannot see.
 
 - **Stricter pull-request check (behaviour change).** `proofbound check` now lists every commit that
   claims no spec but changes code as `UNCOVERED`, and the pull request is **NOT WARRANTED**. Before,
@@ -87,6 +112,8 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 - **Action needed for repositories set up before v0.3.2:** `init` never replaces an existing hook, so
   remove `.git/hooks/commit-msg` and run `proofbound init openspec` (or `speckit`) again to get both
   new hooks. The old hook still works, but keeps the retired opt-out.
+- **`init` now stops ignoring `.proofbound/waivers/`.** Run `proofbound init` again in an existing
+  repository to add the line, or commit a waiver with `git add -f`.
 - **Fixed:** the reviewer agent `init` writes has valid YAML front matter (it was rejected by VS Code
   and strict parsers). `install.sh` now warns when an older `proofbound` earlier on PATH would run
   instead of the new one. The quickstart points to a from-scratch path for an empty folder.

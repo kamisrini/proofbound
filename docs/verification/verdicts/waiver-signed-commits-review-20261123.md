@@ -1,0 +1,37 @@
+---
+schema: vera.verdict.v1
+verdict_id: waiver-signed-commits-review-20261123
+status: NEEDS_WORK
+reviewed_commit: 506d97cfdba2a33887bff00ae5e81421a6783687
+findings:
+  - finding_id: waiver-signed-commits-review-20261123-F1
+    severity: HIGH
+  - finding_id: waiver-signed-commits-review-20261123-F2
+    severity: MED
+  - finding_id: waiver-signed-commits-review-20261123-F3
+    severity: LOW
+  - finding_id: waiver-signed-commits-review-20261123-F4
+    severity: LOW
+  - finding_id: waiver-signed-commits-review-20261123-F5
+    severity: LOW
+artifact_path: docs/verification/verdicts/waiver-signed-commits-review-20261123.md
+artifact_sha: 472f169fddd3a7fd60b282e61cc439fc43e4bfe7b2f8362684a766d6456a41ff
+---
+## Provenance
+Non-author review (Build Law 9), the one code round (Law 11), of the staged change (`git diff --cached`) on top of HEAD 506d97cfdba2a33887bff00ae5e81421a6783687: waivers only for signed commits (opt-in `.proofbound/waivers/policy.json`). Read docs/plans/waiver-signed-commits-spec.md, CLI-INV-63, docs/plans/signed-waiver-spec.md §2 and §7, and the staged waiver.go (waiverPolicy, signingConfigured, the policy condition in waiversAt, the listing skip, waiverSubject.signed, stagedWaived), check.go (uncoveredCommits' subject), task.go (hook hint) and waiver_test.go::TestWaiverRequiresSignedCommits, plus the unchanged machinery they rely on (commitSignatures in oversight.go, declaredKeys, waiverSubject.independent, housekeepingPath). `go vet ./internal/cli/` is clean and `go test ./internal/cli/ -run 'Waiver|Waived|TestHookHonoursWaiver'` passes. F1 was confirmed and F2/F3 were measured in a throwaway copy of the kernel module in the session scratchpad (no repository file was touched). Mutation calibration on TestWaiverRequiresSignedCommits: baseline survives; positive controls die (base policy read disabled; malformed policy read as off); `who.signed = true` in check.go and dropping the `p == waiverPolicyPath` skip both survive (F2, F3). `make check`, the sdd/e2e packages and the spec's `shop` acceptance were not run.
+
+## Status
+NEEDS_WORK: one HIGH, one MED. Checked and sound:
+- Switch placement: the policy is read at the first parent and, in history, at the range base, and either turns it on, so deleting or renaming the file inside the pull request does not switch it off for the range (the subtest proves the removal case). In the hook (base empty) only HEAD counts, as specified.
+- Fail closed: any object at the path counts. `git show rev:path` succeeds for a blob, a symlink (its target text, which is malformed) and a directory (a tree listing, malformed), so all three turn the policy on with the "malformed" note. Unknown fields, `false`, a missing field and a wrong schema read as on; a missing file reads as off. Case variants (`Policy.json`) are simply not the switch; they cannot switch it off, so they are not a way around it.
+- Ordering: the policy test is the last `else if`, so every earlier waiver condition (verification against base-and-parent keys, id, paths, independence, expiry) still applies and keeps its own reason.
+- Unsigned and wrongly signed commits: commitSignatures marks only `G` from the SSH allowed-signers file built from declared keys as verified; GPG signatures cannot verify (gpg.program points nowhere), `B`, `N`, `U` and keys declared at the base but no longer at HEAD all read as not signed, so they stay UNCOVERED (fail closed).
+- No policy file: waiverPolicy returns off and the only change is one extra `git show` per waiver-bearing commit; the "on in the parent only" subtest asserts an unsigned commit is still WAIVED without the file, and the existing waiver tests pass unchanged. The bundle and audit reach the same code through uncoveredCommits, so the policy is consistent across check, bundle and audit.
+- Hook hint: printed only when a note carries the policy text, which appears only when signing is not configured.
+
+## Findings
+- **F1 (HIGH).** kernel/internal/cli/check.go:217 with oversight.go:51 and waiver.go:309. "Signed by a declared key" means declared at HEAD, because commitSignatures builds its allowed-signers file from `declaredKeys(HEAD)`. A key added inside the pull request (a `.proofbound/keys/*.pub` file is a housekeeping path, so the commit that adds it needs no claim and no waiver) therefore makes the PR author's commits "signed". Confirmed: with the policy at the base and an `approver` waiver for `vendor/`, the approver adds `.proofbound/keys/mallory.pub` holding a second key of their own, runs `keys git-sign`, and commits `vendor/b.c` as `mallory`; `uncoveredCommits` reports it `WAIVED waived by approver`, while the unsigned control commit stays UNCOVERED. That is exactly the attack §0 of the spec exists to stop (a waiver-key holder committing under an unrelated name), now needing one extra file. The same hole already closed for waiver signers in signed-waiver-spec §7 F1 ("a key added inside the range can waive nothing in it") was not applied to commit signers. Fix: for the policy, count a commit as signed only when its verified signer is declared with the same public key at the range base (and in the parent), e.g. in waiversAt require `who.signed && keys[who.signer] != nil` (keys is already base-and-parent); say so in the reason ("not signed by a key declared at the range base") and in CLI-INV-63. Record in the spec that one person holding two keys already declared at the base remains out of scope.
+- **F2 (MED).** kernel/internal/cli/waiver_test.go:427-507 and check.go:217. Every policy assertion passes a hand-built `waiverSubject` with `signed` set directly to waiversFor; nothing exercises the line that connects real signature verification to the policy. Measured: changing check.go:217 to `who.signed = true` (policy void in check, bundle and audit) survives TestWaiverRequiresSignedCommits and the whole `Waiver|Waived|TestHookHonoursWaiver` set. Fix: add an end-to-end subtest through `uncoveredCommits` with real SSH-signed commits (as TestGitSignVerifies does): unsigned is UNCOVERED, signed by a base-declared key is WAIVED, signed by a key added in the range is UNCOVERED (F1's regression test).
+- **F3 (LOW).** kernel/internal/cli/waiver_test.go:480-487 and waiver.go:278. "the policy file is not a waiver" cannot fail: it writes an unrelated `policy.json` at the repository root, and without the `p == waiverPolicyPath` skip the policy file would only become a candidate that never verifies and has no paths, so it is never used and never noted. Measured: deleting the skip survives. Fix: use a malformed policy that carries `"paths":"vendor/"` and assert no note names `waiver policy`.
+- **F4 (LOW).** kernel/internal/cli/waiver.go:395-402. The hook's signing check compares raw strings: `commit.gpgsign` set to `True`, `yes`, `on` or `1` (all true to git) is refused, as is a one-off `git commit -S`; and it is fooled by `git commit --no-gpg-sign` and does not check that `user.signingkey` is a declared key. The hook is guidance and check re-judges from history, so this is not a bypass. Fix: read `commit.gpgsign` with `git config --type=bool --get`; optionally mention `-S`/`--no-gpg-sign` in the hint.
+- **F5 (LOW).** kernel/internal/cli/waiver.go:241-249. When the parent's policy is well formed and the base's is malformed, the reason says the policy is "malformed, so it applies", although the file the reader sees at the commit is fine. Fix: name which revision's file is malformed ("at the range base"), or prefer the note of the revision whose file is well formed.

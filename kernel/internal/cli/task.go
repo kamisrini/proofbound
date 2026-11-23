@@ -231,6 +231,9 @@ func runHook(ctx context.Context, root, hook, file, source string, output io.Wri
 	for _, n := range notes {
 		fmt.Fprintf(output, "  %s\n", n)
 	}
+	if strings.Contains(strings.Join(notes, " "), "waives only commits signed") {
+		fmt.Fprintf(output, "  Run `proofbound keys git-sign` so your commits are signed with your declared key, then commit again.\n")
+	}
 	return errHookBlock
 }
 

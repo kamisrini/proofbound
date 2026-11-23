@@ -213,7 +213,9 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 				coauthors = append(coauthors, co)
 			}
 		}
-		return newWaiverSubject(f[0], f[1], coauthors, sigs[sha][1]), nil
+		who := newWaiverSubject(f[0], f[1], coauthors, sigs[sha][1])
+		who.signed = sigs[sha][0] == sigVerified
+		return who, nil
 	}
 	for _, sha := range shas {
 		if claiming[sha] {
