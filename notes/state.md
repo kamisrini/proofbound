@@ -29,9 +29,13 @@ As of: 2026-11-22
   (`/agent/next`, separate read-only agent token in `.proofbound/ui.json`). CLI-INV-45..49. Review
   `ui-u2-review-20261122` NEEDS_WORK (F1..F4 MED) all fixed. Gate GREEN before commit. Accepted on the
   tour repo: a real review sealed and committed from the bench; Promise map agrees with report drift.
-  **Exact next action:** owner runs DEMO-MANUAL end to end with the dev binary first on PATH (Step 15
-  and the Review bench in "Try it yourself"), then on owner OK push and cut v0.3.3 (tag, archives,
-  GitHub release) as v0.3.2 was. Not in U1: other workspaces,
+  **Owner ran DEMO-MANUAL end to end** on v0.3.3-rc builds; fixes from the run in `d6e4e52` (outcome
+  signers judged before the judged commit, so validity no longer depends on the viewed period; C3
+  "not checked here" from a reviewer's key; readable period label). **Owner decided to fold the UI
+  into v0.3.2** (no one outside had it; public launch 2026-11-30): notes merged, VD amended (`e2e3490`).
+  **Exact next action:** push main; delete and recreate the v0.3.2 GitHub release and tag at the new
+  HEAD with `scripts/release-build.sh v0.3.2` archives + SHA256SUMS; verify public install.sh and the
+  live Action test repo; upgrade the owner's `~/.local/bin/proofbound`. Not in U1: other workspaces,
   time rail, in-browser signature check, `--bundle`, sample draw. New: `DEF-KERNELCHECK-SDD-TIMEOUT-001`
   (sdd package 442 s alone, near the 600 s go test limit under make check; failed the gate twice).
 - **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
