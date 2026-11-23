@@ -4,7 +4,9 @@ repo=$(git rev-parse --show-toplevel)
 tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 cd "$repo/kernel"
 GOCACHE=${GOCACHE:-/tmp/proofbound-go-build} go build ./...
-if ! GOCACHE=${GOCACHE:-/tmp/proofbound-go-build} go test ./... -count=1 -v >"$tmp" 2>&1; then cat "$tmp"; exit 1; fi
+# An explicit limit, not Go's default 10 minutes per package: the sdd e2e package needs ~7.5 minutes
+# alone and more beside the others, and timed out twice with no fault (DEF-KERNELCHECK-SDD-TIMEOUT-001).
+if ! GOCACHE=${GOCACHE:-/tmp/proofbound-go-build} go test ./... -count=1 -timeout 25m -v >"$tmp" 2>&1; then cat "$tmp"; exit 1; fi
 cd "$repo"
 scripts/skip-lint.sh "$tmp"
 cd "$repo/kernel"
