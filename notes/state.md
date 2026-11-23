@@ -16,8 +16,11 @@ order, each with spec first, one non-author review and a green gate (Law 6, 9, 1
    CLI-INV-56..59; review `signed-waiver-review-20261123` F1 HIGH + F2..F4 fixed, F5..F9 LOW recorded
    in docs/plans/signed-waiver-spec.md §7; `DEF-NO-INTENT-SELF-WAIVER-001` RESOLVED; accepted on shop).
    Owner decision raised: an opt-in switch requiring a verified commit signature on waived commits
-   (git identity is self-declared). **Next: item 3, spec first.**
-3. **`proofbound ui --bundle`**: open the warranty bundle / audit evidence in a browser with no clone.
+   (git identity is self-declared).
+3. ~~`proofbound ui --bundle`~~ **DONE 2026-11-23** (spec `016dbf7`; `CI-ui-bundle-tbfsbu`,
+   CLI-INV-60..62; review `ui-bundle-review-20261123` F1..F3 fixed, F4..F8 LOW recorded in
+   docs/plans/ui-bundle-spec.md §7; accepted on a shop bundle in a non-repository folder; the browser
+   script itself not run here: no Node, owner to open the page once). **Next: item 4, spec first.**
 4. **Framework mapping**: controls mapped to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14 in the
    transcript, worded "maps to", flagged for a compliance professional's check.
 Then the **documentation pass** (owner: "update documentation after this"): QUICKSTART, tour,
@@ -28,7 +31,7 @@ https://claude.ai/artifact/4EuubEfxnAvTSwXJstUXUd) for everything since v0.3.2.
 **Immediate blockers:** none. **Owner decisions pending:** whether to push the local commits
 `ddeea74..HEAD` and whether U3 joins v0.3.2 again or waits for after the
 2026-11-30 launch; a third requirement-review round for `BR-ui-workspaces-m6q2v8` O-6
-(`DEF-UI-WORKSPACES-REQ-REVIEW-001`); `BR-change-area-p59cyd` and `BR-signed-waiver-15j8f9` are `proposed` until a requirement
+(`DEF-UI-WORKSPACES-REQ-REVIEW-001`); `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9` and `BR-ui-bundle-da6ue0` are `proposed` until a requirement
 review. Noted, not fixed: C5's diff-tree has the submodule blind spot change-area F1 fixed for C10;
 `connector/checks` TestEmitter_PublicationFailuresAreLoud flaked once under the gate's load (fixed
 100 ms sleep), passed alone 5/5 and on rerun.
