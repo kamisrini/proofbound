@@ -6,9 +6,9 @@ As of: 2026-11-23
 
 ## Resume — 2026-11-23
 
-**Exact next action:** the owner decides how the bug fix `0b9b66d` reaches users: the agent demo
-(`docs/releases/r3/DEMO-AGENT.md`) needs it, and the page says "v0.3.3 or later" (recommended: cut a v0.3.3
-patch release; not done, it is outward-facing). After that, item 2 of the agent-first list: **framework
+**Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
+v0.3.2 (republish) until Sunday 2026-11-29; the warranty fix `0b9b66d` and the agent demo were folded in
+and v0.3.2 republished. After that, item 2 of the agent-first list: **framework
 mapping** (C1..C10 to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14, worded "maps to", framed as
 agent oversight). Then 3. session-to-line provenance, 4. a write-time perimeter hook (`scope.paths`,
 `DEF-AGENT-NATIVE-INTENT-001` option 5), 5. tests that can fail (mutation check per promise), then the

@@ -117,6 +117,13 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 - **Fixed:** the reviewer agent `init` writes has valid YAML front matter (it was rejected by VS Code
   and strict parsers). `install.sh` now warns when an older `proofbound` earlier on PATH would run
   instead of the new one. The quickstart points to a from-scratch path for an empty folder.
+- **Fixed:** after a reviewed branch was abandoned and the work redone on a new branch, `warranty
+  export` and `warranty bundle` for the redo failed on the same machine ("… is not committed at
+  HEAD"), because the warranty cited the abandoned branch's review. A warranty now cites only the
+  reviews committed at HEAD. Fresh clones, and so the GitHub Action, were never affected.
+- **New demo: [the agent goes off-script](DEMO-AGENT.md).** By hand, about 15 minutes: an agent's
+  change edits a file outside its spec's area and ships a test that cannot fail; the line is named,
+  the reviewer's finding is signed, and nothing is warranted until the redo.
 
 ## v0.3.1 (patch, 2026-11-20): the pull-request check works in CI
 

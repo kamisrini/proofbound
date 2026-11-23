@@ -27,7 +27,8 @@ Their private keys are kept in separate files so you can see that they are separ
 
 ## Before you start
 
-You need Proofbound v0.3.3 or later on your PATH, plus `git` and `jq`. Port 55432 must be free
+You need Proofbound v0.3.2 on your PATH, plus `git` and `jq`. If you installed it before 2026-11-24,
+run the install command again: the last step needs a fix that was added to v0.3.2 on 2026-11-23. Port 55432 must be free
 (Proofbound starts a private database there for each command and stops it afterwards).
 
 ```bash
