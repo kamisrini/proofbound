@@ -4,10 +4,12 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 5 and `docs/plans/p6-task5-requirement-review-SPEC.md`.
 
-Configured providers: `records`, `specdir`. Active requirement revisions: **2** (`records=2`, `specdir=0`). Active obligations: **3**. Exact matching reviews: **2**.
+Configured providers: `records`, `specdir`. Active requirement revisions: **3** (`records=3`, `specdir=0`). Active obligations: **5**. Exact matching reviews: **3**.
 
 | Requirement revision | Requirement artifact | Obligation | Review | Review artifact | Outcome |
 |---|---|---|---|---|---|
+| `intent.records:BR-audit-room-ui-r7t3w1@9da0b9acfb84a5e27cc99c721fbf29ddff5afcbc71968f971f0b90d1ec62b351` | `docs/intent/records/requirements/BR-audit-room-ui-r7t3w1/0002.md` | `O-1` | `RR-ui-audit-room-round1b-20261122` | `docs/verification/verdicts/RR-ui-audit-room-round1b-20261122.md` | `VERIFIABLE` |
+| `intent.records:BR-audit-room-ui-r7t3w1@9da0b9acfb84a5e27cc99c721fbf29ddff5afcbc71968f971f0b90d1ec62b351` | `docs/intent/records/requirements/BR-audit-room-ui-r7t3w1/0002.md` | `O-2` | `RR-ui-audit-room-round1b-20261122` | `docs/verification/verdicts/RR-ui-audit-room-round1b-20261122.md` | `VERIFIABLE` |
 | `intent.records:BR-intent-chain-d4e5f6@913d6751b8a3717254beda42ba889061fc2d247fc6a1d8505c69f1c27c314562` | `docs/intent/records/requirements/BR-intent-chain-d4e5f6/0001.md` | `O-1` | `RR-p5-independent-round1-20260911` | `docs/verification/verdicts/p5-requirement-review-round1.md` | `VERIFIABLE` |
 | `intent.records:BR-intent-chain-d4e5f6@913d6751b8a3717254beda42ba889061fc2d247fc6a1d8505c69f1c27c314562` | `docs/intent/records/requirements/BR-intent-chain-d4e5f6/0001.md` | `O-2` | `RR-p5-independent-round1-20260911` | `docs/verification/verdicts/p5-requirement-review-round1.md` | `VERIFIABLE` |
 | `intent.records:BR-replay-evidence-6e3d2b@f6b1d47ef836305464da5bdba66a591829df814c52eca749161e0df0ed41fd56` | `docs/intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md` | `O-1` | `RR-p7-replay-evidence-round1-20261014` | `docs/verification/verdicts/p7-replay-requirement-review-round1-20261014.md` | `VERIFIABLE` |
