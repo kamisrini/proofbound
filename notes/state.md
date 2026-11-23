@@ -6,23 +6,26 @@ As of: 2026-11-23
 
 ## Resume — 2026-11-23
 
-**Exact next action:** the owner picks what solidifies the agent-first value proposition (positioning
-saved; README rewritten in `f76aa75`). Recommended order, planning only, nothing started:
-1. **Launch demo "the agent goes off-script"** on the tour's shop repo (out-of-area lines, a test that
-   cannot fail, the bundle NOT WARRANTED), for the 2026-11-30 launch.
-2. **Framework mapping** (the fourth item of 2026-11-22, still queued): C1..C10 to SOC 2 CC8.1,
-   ISO 27001 A.8.32, EU AI Act Art. 12/14, worded "maps to", framed as agent oversight.
-3. **Proven session-to-line provenance** (which Claude Code session wrote which lines).
-4. **Write-time perimeter** (a PreToolUse hook refusing edits outside `scope.paths`;
-   `DEF-AGENT-NATIVE-INTENT-001` option 5).
-5. **Tests that can fail** (mutation check per promise), then an **agent track record** page.
-Then the **documentation pass**: QUICKSTART, tour, DEMO.md, DEMO-MANUAL, and the private landing page
-(agent-first, like the README).
+**Exact next action:** the owner decides how the bug fix `0b9b66d` reaches users: the agent demo
+(`docs/releases/r3/DEMO-AGENT.md`) needs it, and the page says "v0.3.3 or later" (recommended: cut a v0.3.3
+patch release; not done, it is outward-facing). After that, item 2 of the agent-first list: **framework
+mapping** (C1..C10 to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14, worded "maps to", framed as
+agent oversight). Then 3. session-to-line provenance, 4. a write-time perimeter hook (`scope.paths`,
+`DEF-AGENT-NATIVE-INTENT-001` option 5), 5. tests that can fail (mutation check per promise), then the
+agent track record page; then the documentation pass (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private
+landing page) agent-first.
+
+**Done today, after the release:** the launch demo "the agent goes off-script" (spec
+`docs/plans/agent-demo-spec.md`; `DEMO-AGENT.md` by hand, every block run in a clean shell; `agent-demo.sh`
+runs green). Running it found a real bug: a review sealed on an abandoned branch stays in the local
+ledger and blocked the redo's `warranty export`/`bundle` ("not committed at HEAD"); CI clones were not
+affected. Owner chose "fix it first": `0b9b66d`, CLI-INV-64, `CI-warranty-head-reviews-xa1ljk`, review
+`warranty-head-reviews-review-20261123` ACCEPTABLE (F1..F3 LOW recorded).
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
 of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
 owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
