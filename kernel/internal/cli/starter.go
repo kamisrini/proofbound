@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	connectorgit "github.com/kamisrini/proofbound/kernel/internal/connector/git"
 	connectorintent "github.com/kamisrini/proofbound/kernel/internal/connector/intent"
@@ -202,6 +203,9 @@ type draftFile struct {
 	DeclaredReviewer string         `json:"declared_reviewer"`
 	Reviews          []draftReview  `json:"reviews"`
 	Verdicts         []draftVerdict `json:"verdicts"`
+	// OutOfArea are the lines the commit changed outside its spec's declared area, each to be
+	// accepted (with a reason) or rejected (change-area-spec.md §3). Built from git, never trusted.
+	OutOfArea []areaDecision `json:"out_of_area"`
 }
 
 type draftReview struct {
@@ -254,6 +258,10 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 	if err != nil {
 		return err
 	}
+	draft, area, err := withArea(ctx, root, draft)
+	if err != nil {
+		return err
+	}
 	dir := draftDir(root, sha)
 	path := filepath.Join(dir, "draft.json")
 	if _, err := os.Lstat(path); err == nil {
@@ -275,6 +283,9 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 				return err
 			}
 		}
+	}
+	if err := writeAreaLines(output, area); err != nil {
+		return err
 	}
 	_, err = fmt.Fprintf(output, "draft %s\n", path)
 	return err
@@ -406,6 +417,14 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	if err != nil {
 		return err
 	}
+	area, err := commitArea(ctx, root, draft.Commit)
+	if err != nil {
+		return err
+	}
+	areaDecisions, areaRejected, err := decideArea(area, edited.OutOfArea)
+	if err != nil {
+		return err
+	}
 	signer, err := reviewSigner(root, reviewer)
 	if err != nil {
 		return err
@@ -464,6 +483,10 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	for i, verdict := range draft.Verdicts {
 		obligations := []connectorreviews.ObligationOutcome{}
 		status := "ACCEPTABLE"
+		if areaRejected {
+			// A rejected out-of-area change fails the review of the whole commit (§3).
+			status = "NEEDS_WORK"
+		}
 		for _, o := range verdict.Obligations {
 			switch o.Outcome {
 			case "SATISFIED":
@@ -498,6 +521,15 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 		if err := addSig(path, data); err != nil {
+			return err
+		}
+	}
+	if len(areaDecisions) > 0 {
+		data, err := areaRecordBytes(draft.Commit, pbwarranty.KeyName(reviewer), areaDecisions, signer, time.Now().UTC().Format(time.RFC3339))
+		if err != nil {
+			return err
+		}
+		if err := add(areaRecordPath(draft.Commit), data); err != nil {
 			return err
 		}
 	}
@@ -632,6 +664,16 @@ func mergeDecisions(truth, edited draftFile) (draftFile, error) {
 	}
 	if used != len(verdicts) {
 		return draftFile{}, mismatch("the verdicts hold obligations the ledger does not")
+	}
+	// Area decisions are matched by path and lines; the list itself is rebuilt from git (§3).
+	given := map[string]areaDecision{}
+	for _, d := range edited.OutOfArea {
+		given[areaHunk{Path: d.Path, Lines: d.Lines}.key()] = d
+	}
+	for i := range truth.OutOfArea {
+		if d, ok := given[areaHunk{Path: truth.OutOfArea[i].Path, Lines: truth.OutOfArea[i].Lines}.key()]; ok {
+			truth.OutOfArea[i].Decision, truth.OutOfArea[i].Reason = d.Decision, d.Reason
+		}
 	}
 	truth.DeclaredReviewer = edited.DeclaredReviewer
 	return truth, nil

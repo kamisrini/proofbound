@@ -58,6 +58,16 @@
       </fieldset>
       {{end}}
     {{end}}
+    {{if .Area}}<p class="muted area-note">{{.Area}}</p>{{end}}
+    {{range $ai, $a := .Draft.OutOfArea}}
+    <fieldset class="promise area" data-part="area" data-group="0" data-index="{{$ai}}" data-obligation="" data-path="{{$a.Path}}" data-lines="{{$a.Lines}}">
+      <legend><strong>Outside the area</strong> <code>{{$a.Path}}</code> {{$a.Lines}}</legend>
+      <p class="muted">The spec does not declare this file. Was this change needed?</p>
+      <label class="choice"><input type="radio" name="a-{{$ai}}" value="accept"{{if eq $a.Decision "accept"}} checked{{end}}> Accept</label>
+      <label class="choice"><input type="radio" name="a-{{$ai}}" value="reject"{{if eq $a.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
+      <label class="field">Reason (required to accept) <input name="f-a-{{$ai}}" value="{{$a.Reason}}" maxlength="500" autocomplete="off"></label>
+    </fieldset>
+    {{end}}
     <div class="buttons">
       <button type="button" class="secondary" data-act="review-draft"{{if .Refusal}} disabled{{end}}>Save draft</button>
       <button type="button" data-act="review-preview"{{if .Refusal}} disabled{{end}}>Review what sealing writes</button>

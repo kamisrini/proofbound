@@ -373,6 +373,12 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		c9.State, c9.Count = auditListed, fmt.Sprintf("%d of %d signed by a declared key", verified, len(shas))
 	}
 
+	// C10: the declared change area (docs/plans/change-area-spec.md §4).
+	c10, err := areaControl(ctx, root, rep.Base, &rep, except)
+	if err != nil {
+		return rep, err
+	}
+
 	if rep.Sessions, err = sessionsInPeriod(ctx, root, ledger, rep.Base, rep.Commits); err != nil {
 		return rep, err
 	}
@@ -380,7 +386,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		rep.Sessions = []auditSession{}
 	}
 
-	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9}
+	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9, c10}
 	if rep.Counts.Total == 0 {
 		// An empty range holds nothing: no control can be held in it (spec review F5).
 		for i := range rep.Controls {
@@ -557,20 +563,7 @@ func trustPaths(ctx context.Context, root, sha string) ([]string, error) {
 // specInParent reports whether change name's spec folder is in sha's first parent (C7).
 func specInParent(ctx context.Context, root, sha, name string) bool {
 	parent := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--verify", "--quiet", sha+"^1"))
-	if len(parent) != 40 {
-		return false
-	}
-	for _, dir := range []string{"openspec/changes/" + name, "specs/" + name, "openspec/changes/archive/" + name} {
-		if strings.TrimSpace(gitOutput(ctx, root, "ls-tree", "-d", "--name-only", parent, "--", dir)) != "" {
-			return true
-		}
-	}
-	for _, entry := range strings.Split(gitOutput(ctx, root, "ls-tree", "-d", "--name-only", parent+":openspec/changes/archive"), "\n") {
-		if strings.HasSuffix(strings.TrimSpace(entry), "-"+name) {
-			return true
-		}
-	}
-	return false
+	return len(parent) == 40 && len(specDirsAt(ctx, root, parent, name)) > 0
 }
 
 // reviewedBy reports whether name (a key name) reviewed the warranty body's change.

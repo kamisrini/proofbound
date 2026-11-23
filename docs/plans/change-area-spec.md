@@ -1,6 +1,6 @@
 # Spec: the declared change area (line-level scope)
 
-**Status:** draft 1, 2026-11-23, accepted by the owner with both §7 defaults; not yet reviewed. **Implements:** `CI-change-area-cpcm5w` →
+**Status:** draft 1, 2026-11-23, accepted by the owner with both §7 defaults; reviewed with the code by one non-author (§8). **Implements:** `CI-change-area-cpcm5w` →
 `BR-change-area-p59cyd` O-1..O-3 (requirement `proposed`). **Resolves:** `DEF-CLAIMED-CODE-SCOPE-001`.
 **Contract rows (to add):** CLI-INV-52..CLI-INV-55. **Authorized by:** `BD-audit-room-ui-k4m2p8`
 (whether agents' changes stayed inside what was authorized).
@@ -24,7 +24,8 @@ A spec folder may hold one optional file, `scope.paths`:
 - A pattern is a repository-relative path in which:
   - `*` matches within one path segment;
   - `**` matches any number of whole segments;
-  - a trailing `/` means "everything under this directory".
+  - a trailing `/` means "everything under this directory" (not a file of that name).
+  - `**` must be a whole segment; it cannot appear inside one.
 - Examples: `src/cart/`, `src/**/*_test.go`, `README.md`.
 - If a line is absolute, contains `..`, a backslash, or a control character, the **whole file is
   invalid**. An invalid file is reported as an exception (§3), never as "everything allowed".
@@ -139,7 +140,7 @@ period:
 | `TestOutOfArea` | A scripted repository. One claiming commit changes:<ul><li>an in-area file;</li><li>an outside file with two hunks;</li><li>a housekeeping file;</li><li>an outside deletion.</li></ul>Exactly the two hunks and the deletion are listed, with correct ranges. An area widened **in the same commit** is ignored (read from the parent). No `scope.paths` → not declared. |
 | `TestSealAccountsForArea` | The deferral's done-when.<ul><li>An undecided hunk blocks seal and nothing is written.</li><li>An old draft without the field is refused.</li><li>`accept` without a reason is refused.</li><li>`reject` → OV `NEEDS_WORK`.</li><li>`accept` → `AREA-` record written, signed, and verifying.</li></ul> |
 | `TestAuditC10` | NONE / HELD / EXCEPTION, the "set by an agent" case and the invalid-file case. An `AREA-` record signed by the author does not count (C8). |
-| `TestUISealFlow` (extended) | The bench sends area decisions and seal succeeds. |
+| `TestUIAreaDecisions` | The bench shows the ranges, refuses a preview until each is decided, refuses a decision for another range, and passes the decisions to seal. |
 
 **Acceptance:** on the tour's `shop` repository:
 1. Add `scope.paths` to a change.
@@ -159,3 +160,36 @@ changes, which is expected: the new file is part of the folder.
 2. **Granularity:**
    - *Recommended:* paths and globs, with the exact out-of-area line ranges reported.
    - Line ranges *in the declaration* are rejected: they go stale on the next edit.
+
+## 8. Review (`change-area-review-20261123`, NEEDS_WORK: F1..F5 MED, F6..F10 LOW)
+
+**MED findings, all fixed with a regression test (`TestAreaReviewFindings`):**
+- **F1:** both diffs pass `--ignore-submodules=none`, so a submodule bump outside the area cannot be
+  hidden by `ignore = all`.
+- **F2:** the "set by an agent" check looks at each area file on its own, so a later human edit of
+  one file cannot hide an agent's change to another.
+- **F3:** an archived folder counts only in its exact dated form `YYYY-MM-DD-<name>` (as the sdd
+  connector reads it). `2026-01-01-add-cart` is no longer part of `cart`'s area. C7 shares this rule
+  through `specDirsAt`.
+- **F4:** the list is capped at 200 entries in all, the last standing for the rest, and the Review
+  bench accepts requests up to 1 MiB.
+- **F5:** the agent check runs first, over every place a claimed change's `scope.paths` could be,
+  present or deleted. An agent that deletes the area file no longer turns its next change into "not
+  declared".
+
+**LOW findings, recorded (Law 11):**
+- **F6:** a `scope.paths` that is a directory is read as git's tree listing.
+- **F7:** line ranges follow the local diff configuration and git version.
+- **F8:** a new empty file is labelled "mode change".
+- **F9:** some paths have no test:
+  - the invalid case in C10;
+  - unsigned and wrong-commit records;
+  - the all-inside HELD path;
+  - the per-file cap;
+  - the binary and mode labels;
+  - `review draft` output.
+- **F10:** §1 says "contains `..`" where the code rejects a `..` segment, and a trailing tab is
+  trimmed before the control-character check.
+
+**Not changed:** C5 has the same submodule blind spot as F1. It predates this change and is noted
+for the owner.

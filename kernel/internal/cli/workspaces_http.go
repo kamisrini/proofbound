@@ -104,6 +104,8 @@ type reviewPage struct {
 	Saved   bool         `json:"saved_draft"`
 	Diff    string       `json:"-"`
 	Refusal string       `json:"refusal,omitempty"`
+	// Area says whether the commit's spec declares an area (change-area-spec.md §3).
+	Area string `json:"area,omitempty"`
 }
 
 func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
@@ -166,6 +168,12 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 			s.renderError(w, r, http.StatusNotFound, fmt.Errorf("commit %s is not waiting for review in this period", printableUnit(short(sha, 12))))
 			return
 		}
+		d, area, err := withArea(r.Context(), s.root, d)
+		if err != nil {
+			s.renderError(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		p.Area = areaNote(area)
 		if saved, has := localDraft(s.root, sha); has {
 			if merged, err := mergeDecisions(d, saved); err == nil {
 				d, p.Saved = merged, true
@@ -209,6 +217,10 @@ type reviewDecision struct {
 	ObligationID string `json:"obligation_id"`
 	Outcome      string `json:"outcome"`
 	Finding      string `json:"finding,omitempty"`
+	// Path and Lines address an out-of-area entry (part "area"); Outcome is accept or reject and
+	// Finding the reason.
+	Path  string `json:"path,omitempty"`
+	Lines string `json:"lines,omitempty"`
 }
 
 type reviewRequest struct {
@@ -242,6 +254,18 @@ func applyDecisions(d draftFile, reviewer string, decisions []reviewDecision) (d
 				return d, errors.New("the commit's promises changed; reload the page")
 			}
 			o.Outcome = dec.Outcome
+		case "area":
+			if dec.Index < 0 || dec.Index >= len(d.OutOfArea) {
+				return d, errors.New("a decision names no line range of this commit")
+			}
+			a := &d.OutOfArea[dec.Index]
+			if a.Path != dec.Path || a.Lines != dec.Lines {
+				return d, errors.New("the commit's lines outside its area changed; reload the page")
+			}
+			if err := checkReasonOrEmpty(dec.Finding); err != nil {
+				return d, err
+			}
+			a.Decision, a.Reason = dec.Outcome, dec.Finding
 		default:
 			return d, errors.New("a decision has no part")
 		}
@@ -278,13 +302,23 @@ func undecided(d draftFile) []string {
 			}
 		}
 	}
+	for _, a := range d.OutOfArea {
+		switch {
+		case a.Decision == "reject", a.Decision == "accept" && checkReason(a.Reason) == nil:
+		case a.Decision == "accept":
+			out = append(out, "why accept "+printableUnit(a.Path)+" "+a.Lines+"?")
+		default:
+			out = append(out, "accept or reject "+printableUnit(a.Path)+" "+a.Lines+" (outside the area)?")
+		}
+	}
 	return out
 }
 
 // serveReviewAct handles draft (save the local draft), preview (what sealing writes) and seal.
 func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act string) {
 	var req reviewRequest
-	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, uiMaxBody))
+	// Up to areaMaxTotal out-of-area decisions with 500-character reasons (review F4).
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, uiMaxReviewBody))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil || !sha40RE.MatchString(req.Commit) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
@@ -314,6 +348,10 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 	truth, ok := drafts[req.Commit]
 	if err != nil || !ok {
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "the record holds no review draft for that commit"})
+		return
+	}
+	if truth, _, err = withArea(r.Context(), s.root, truth); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 	if err := reviewerFor(v.Actor, *commit, truth); err != nil {
@@ -355,6 +393,9 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		}
 		for i := range edited.Verdicts {
 			files = append(files, fmt.Sprintf("docs/verification/verdicts/OV-%s-%d.md (+ .sig)", short12, i+1))
+		}
+		if len(edited.OutOfArea) > 0 {
+			files = append(files, areaRecordPath(req.Commit)+" (signed)")
 		}
 		files = append(files, "gates/ready-"+short12+".yaml")
 		writeJSON(w, http.StatusOK, map[string]any{"reviewer": v.Actor.Name + " (key " + v.Actor.Fingerprint + ")", "files": files, "commit_message": "review " + short12})

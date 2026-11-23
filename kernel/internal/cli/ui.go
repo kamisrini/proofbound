@@ -46,7 +46,7 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 		return map[string]string{"accepted": "Risk accepted", "fixed": "Fixed", "reverted": "Reverted"}[o]
 	},
 	"kindLabel": func(k string) string {
-		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify"}[k]
+		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify", "area": "Change outside its declared area"}[k]
 	},
 	"join": func(xs []string) string { return strings.Join(xs, ", ") },
 	"dict": func(kv ...any) map[string]any {
@@ -70,6 +70,9 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 }).ParseFS(uiKit, "uikit/*.html"))
 
 const uiMaxBody = 16 << 10
+
+// uiMaxReviewBody bounds a Review bench request: promises plus at most areaMaxTotal area decisions.
+const uiMaxReviewBody = 1 << 20
 
 type uiOptions struct {
 	base string

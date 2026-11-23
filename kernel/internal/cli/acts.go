@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order|self-review|signature)-[0-9a-f]{12}$`)
+	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order|self-review|signature|area)-[0-9a-f]{12}$`)
 	sha40RE       = regexp.MustCompile(`^[0-9a-f]{40}$`)
 	hex64RE       = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	keyNameFileRE = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
@@ -43,6 +43,7 @@ var (
 var recordFields = map[string][]string{
 	outcomeSchema:     {"schema", "exception", "commit", "outcome", "reason", "fixed_by", "by", "key", "at"},
 	attestationSchema: {"schema", "base", "head", "transcript_sha256", "headline", "by", "key", "at"},
+	areaSchema:        {"schema", "commit", "by", "key", "at", "hunks"},
 }
 
 type outcomeView struct {

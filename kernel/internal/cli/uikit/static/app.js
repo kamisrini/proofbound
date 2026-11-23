@@ -123,6 +123,7 @@
         var d = { part: part, group: g, index: i, obligation_id: f.getAttribute("data-obligation"), outcome: picked ? picked.value : "" };
         var finding = f.querySelector("input[name^=f-]");
         if (finding && finding.value.trim()) { d.finding = finding.value.trim(); }
+        if (part === "area") { d.path = f.getAttribute("data-path"); d.lines = f.getAttribute("data-lines"); }
         out.push(d);
       });
       return out;
