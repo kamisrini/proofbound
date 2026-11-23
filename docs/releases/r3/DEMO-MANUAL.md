@@ -654,10 +654,11 @@ summary you also see **Who did the work** (every author and agent, with their co
 exceptions), **Who reviewed each change**, and **Agent sessions** (Claude Code sessions on this
 machine, if any ran in this folder).
 
-Then, in the page:
-1. Click **C1** and **C4** in the Controls list to see the commits behind each answer, and the
-   terminal command that gives the same answer.
-2. Under **1 exception(s)**, the totals row has no review. Click **Record an outcome**, choose
+Then, in the **Audit room** (the page the link opens, and the first tab in the top bar):
+1. Scroll down to the **Controls** section (below the exceptions, "Who did the work" and "Who
+   reviewed each change") and click the rows **C1** and **C4** to open them: each shows the commits
+   behind its answer and a "Reproduce:" line with the terminal command that gives the same answer.
+2. Back near the top, under **Exceptions requiring an outcome**, the totals row has no review. Click **Record an outcome**, choose
    **Accepted risk**, and type a reason, for example `Ships unreviewed in this release; review booked
    for the next one`.
 3. Click **Review what will be written**. You see the exact record, signed by `demo-reviewer`:
