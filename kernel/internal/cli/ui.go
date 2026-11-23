@@ -48,7 +48,26 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 	"kindLabel": func(k string) string {
 		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify"}[k]
 	},
-}).ParseFS(uiKit, "uikit/audit.html"))
+	"join": func(xs []string) string { return strings.Join(xs, ", ") },
+	"dict": func(kv ...any) map[string]any {
+		m := map[string]any{}
+		for i := 0; i+1 < len(kv); i += 2 {
+			m[kv[i].(string)] = kv[i+1]
+		}
+		return m
+	},
+	"stateClass": func(state string) string {
+		switch state {
+		case promiseProven:
+			return "passed"
+		case promiseNotKept:
+			return "exception"
+		case promiseStale, promiseUnsure:
+			return "disclosed"
+		}
+		return "none"
+	},
+}).ParseFS(uiKit, "uikit/*.html"))
 
 const uiMaxBody = 16 << 10
 
@@ -98,15 +117,27 @@ func parseUI(args []string) (uiOptions, bool) {
 }
 
 type uiServer struct {
-	root, databaseURL, defaultBase, token string
-	port                                  int
+	// token opens the page for the person (the terminal link); agentToken only reads, by bearer, and
+	// is what .proofbound/ui.json holds (review ui-u2-review-20261122 F1).
+	root, databaseURL, defaultBase, token, agentToken string
+	port                                              int
 	// gate lets one request compute at a time; a later one waits up to wait for it, then gets 503,
 	// so a reload during a slow first sync shows the answer instead of "busy" (owner try-out).
 	gate chan struct{}
 	wait time.Duration
-	// compute syncs and computes the audit of a resolved base; tests replace it.
-	compute func(ctx context.Context, base string) (auditReport, string, error)
-	now     func() time.Time
+	// compute syncs and computes the audit and the promises of a resolved base; tests replace it.
+	compute func(ctx context.Context, base string) (ledgerView, string, error)
+	// drafts builds the ledger review drafts of commits (one store open); tests replace it.
+	drafts func(ctx context.Context, shas []string) (map[string]draftFile, error)
+	// seal runs `review seal` on a draft folder with an open store; tests replace it.
+	seal func(ctx context.Context, dir string, output io.Writer) error
+	now  func() time.Time
+}
+
+// ledgerView is what one store opening computes.
+type ledgerView struct {
+	Report   auditReport
+	Promises []promiseChange
 }
 
 // uiCookie names the cookie per port, so this server's token is never offered to another (code
@@ -122,10 +153,11 @@ type uiView struct {
 	SyncError    string            `json:"sync_error,omitempty"`
 	Tags         []string          `json:"-"`
 	// Page-only: the repository's folder name, when this page was computed, and the summary tiles.
-	Repo       string      `json:"-"`
-	Generated  string      `json:"-"`
-	Summary    viewSummary `json:"-"`
-	Actors     []actorRow  `json:"-"`
+	Repo       string          `json:"-"`
+	Generated  string          `json:"-"`
+	Summary    viewSummary     `json:"-"`
+	Actors     []actorRow      `json:"-"`
+	Promises   []promiseChange `json:"-"`
 	transcript []byte
 }
 
@@ -241,6 +273,14 @@ func runUI(ctx context.Context, root, databaseURL string, args []string, output 
 			fmt.Fprintf(output, "note: could not open a browser (%v); open %s yourself\n", err, url)
 		}
 	}
+	// The discovery file lets this user's agents find the server and read it (U2 spec section 4).
+	discovery := filepath.Join(stateRoot(root), "ui.json")
+	if raw, err := json.Marshal(map[string]any{"url": fmt.Sprintf("http://127.0.0.1:%d/", s.port), "token": s.agentToken, "pid": os.Getpid()}); err == nil {
+		if err := os.MkdirAll(stateRoot(root), 0o755); err == nil && os.WriteFile(discovery, append(raw, '\n'), 0o600) == nil {
+			_ = os.Chmod(discovery, 0o600)
+			defer os.Remove(discovery)
+		}
+	}
 	server := &http.Server{Handler: s, ReadHeaderTimeout: 10 * time.Second}
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
@@ -262,9 +302,13 @@ func newUIServer(root, databaseURL, base string, port int) *uiServer {
 	if _, err := rand.Read(token); err != nil {
 		panic(err)
 	}
-	s := &uiServer{root: root, databaseURL: databaseURL, defaultBase: base, port: port, token: hex.EncodeToString(token), now: time.Now,
+	agentToken := make([]byte, 32)
+	if _, err := rand.Read(agentToken); err != nil {
+		panic(err)
+	}
+	s := &uiServer{root: root, databaseURL: databaseURL, defaultBase: base, port: port, token: hex.EncodeToString(token), agentToken: hex.EncodeToString(agentToken), now: time.Now,
 		gate: make(chan struct{}, 1), wait: 2 * time.Minute}
-	s.compute = func(ctx context.Context, base string) (auditReport, string, error) {
+	s.compute = func(ctx context.Context, base string) (ledgerView, string, error) {
 		syncNote := ""
 		var stderr bytes.Buffer
 		if code := run(ctx, []string{"sync", "all"}, io.Discard, &stderr); code != 0 {
@@ -272,10 +316,38 @@ func newUIServer(root, databaseURL, base string, port int) *uiServer {
 		}
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
-			return auditReport{}, syncNote, err
+			return ledgerView{}, syncNote, err
 		}
-		rep, err := computeAudit(ctx, root, ledger, base)
-		return rep, syncNote, errors.Join(err, closeStore(ledger))
+		var lv ledgerView
+		lv.Report, err = computeAudit(ctx, root, ledger, base)
+		if err == nil {
+			var events []promiseEvent
+			if events, err = readPromiseEvents(ctx, ledger); err == nil {
+				lv.Promises = computePromises(events)
+			}
+		}
+		return lv, syncNote, errors.Join(err, closeStore(ledger))
+	}
+	s.drafts = func(ctx context.Context, shas []string) (map[string]draftFile, error) {
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return nil, err
+		}
+		out := map[string]draftFile{}
+		for _, sha := range shas {
+			if d, err := ledgerDraft(ctx, ledger, sha); err == nil {
+				out[sha] = d
+			}
+		}
+		return out, closeStore(ledger)
+	}
+	s.seal = func(ctx context.Context, dir string, output io.Writer) error {
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
+		return errors.Join(reviewSeal(ctx, root, dir, fresh, output), closeStore(ledger))
 	}
 	return s
 }
@@ -317,7 +389,10 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !strings.HasPrefix(r.URL.Path, "/static/") {
 		c, err := r.Cookie(s.cookieName())
-		if err != nil || !constantEqual(c.Value, s.token) {
+		bearer, hasBearer := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		// Agents read with the token from .proofbound/ui.json (GET only: agents read, people act).
+		readByAgent := hasBearer && r.Method == http.MethodGet && constantEqual(bearer, s.agentToken)
+		if !readByAgent && (err != nil || !constantEqual(c.Value, s.token)) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = io.WriteString(w, "Open the link `proofbound ui` printed in your terminal.\n")
@@ -336,6 +411,18 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/audit", http.StatusSeeOther)
 	case r.URL.Path == "/audit" && r.Method == http.MethodGet:
 		s.serveAudit(w, r)
+	case r.URL.Path == "/now" && r.Method == http.MethodGet:
+		s.serveNow(w, r)
+	case r.URL.Path == "/promises" && r.Method == http.MethodGet:
+		s.servePromises(w, r)
+	case r.URL.Path == "/review" && r.Method == http.MethodGet:
+		s.serveReview(w, r)
+	case r.URL.Path == "/agent" && r.Method == http.MethodGet:
+		s.serveAgentDoc(w, r)
+	case r.URL.Path == "/agent/next" && r.Method == http.MethodGet:
+		s.serveAgentNext(w, r)
+	case (r.URL.Path == "/act/review-draft" || r.URL.Path == "/act/review-preview" || r.URL.Path == "/act/review-seal") && r.Method == http.MethodPost:
+		s.serveReviewAct(w, r, strings.TrimPrefix(r.URL.Path, "/act/review-"))
 	case r.URL.Path == "/transcript" && r.Method == http.MethodGet:
 		s.serveTranscript(w, r)
 	case (r.URL.Path == "/act/preview" || r.URL.Path == "/act/sign") && r.Method == http.MethodPost:
@@ -395,7 +482,12 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 	if _, err := gitBytes(ctx, s.root, "merge-base", "--is-ancestor", base, "HEAD"); err != nil {
 		return v, http.StatusBadRequest, fmt.Errorf("base %q is not an ancestor of HEAD", printableUnit(baseRef))
 	}
-	rep, syncNote, err := s.compute(ctx, base)
+	lv, syncNote, err := s.compute(ctx, base)
+	rep := lv.Report
+	v.Promises = lv.Promises
+	if v.Promises == nil {
+		v.Promises = []promiseChange{}
+	}
 	v.SyncError = syncNote
 	if errors.Is(err, store.ErrLocked) {
 		return v, http.StatusServiceUnavailable, errLedgerBusy
@@ -457,7 +549,7 @@ func (s *uiServer) serveAudit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var page bytes.Buffer
-	if err := uiPage.Execute(&page, v); err != nil {
+	if err := uiPage.ExecuteTemplate(&page, "audit.html", v); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

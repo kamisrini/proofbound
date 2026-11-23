@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Now · {{.V.Repo}}</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body data-head="{{.Head}}">
+{{template "top" (dict "Active" "now" "V" .V)}}
+<main class="page">
+<section class="report-head">
+  <p class="eyebrow">Developer · Now</p>
+  <h1>{{if .Items}}{{len .Items}} thing(s) need a person.{{else}}Nothing needs you.{{end}}</h1>
+  {{template "period" .V}}
+  <p class="muted since" hidden></p>
+</section>
+
+<section class="card" aria-labelledby="att">
+  <div class="card-head"><h2 id="att">Needs a person</h2><span class="muted">Each with the exact command</span></div>
+  {{if not .Items}}<p class="empty">Everything in this period is proven, disclosed or waiting on machines.</p>{{end}}
+  {{range .Items}}
+  <article class="item">
+    <div class="ex-row">
+      <div class="ex-main">
+        <p class="ex-kind">{{.Title}}{{if .Commit}} <span class="muted">· commit <code>{{short .Commit}}</code></span>{{end}}</p>
+        <p class="ex-text">{{.Why}}</p>
+        <p class="cmd"><code>{{.Command}}</code></p>
+      </div>
+      <div class="ex-side"><a class="button secondary" href="{{.Link}}">Open</a></div>
+    </div>
+  </article>
+  {{end}}
+</section>
+
+<section class="card" aria-labelledby="agents">
+  <div class="card-head"><h2 id="agents">Agents at work</h2><span class="muted">Each worktree and the task its agent holds</span></div>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Worktree</th><th scope="col">Branch</th><th scope="col">Task</th><th scope="col">Head</th></tr></thead>
+    <tbody>{{range .Worktrees}}<tr><td>{{.Path}}</td><td>{{.Branch}}</td><td>{{if .Task}}<span class="tag tag-agent">{{.Task}}</span>{{else}}<span class="muted">no task</span>{{end}}</td><td><code>{{.Head}}</code></td></tr>{{end}}</tbody>
+  </table></div>
+  <p class="note-small">An agent starts a task with <code>proofbound task start &lt;change&gt;</code>; every code commit it makes then claims that spec.</p>
+</section>
+
+<section class="card" aria-labelledby="recent">
+  <div class="card-head"><h2 id="recent">Commits in this period</h2><span class="muted">Newer than your last visit are marked</span></div>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Date</th><th scope="col">Commit</th><th scope="col">Author</th><th scope="col">Agent</th><th scope="col">Class</th><th scope="col">Subject</th></tr></thead>
+    <tbody>{{range .Commits}}<tr data-commit="{{.Commit}}">
+      <td class="nowrap">{{.Date}} <span class="tag tag-agent new" hidden>new</span></td><td><code>{{short .Commit}}</code></td><td>{{.Author}}</td>
+      <td>{{range $i, $a := .Agents}}{{if $i}}, {{end}}{{$a}}{{else}}<span class="muted">none named</span>{{end}}</td>
+      <td>{{if eq .Class "claimed"}}<span class="tag tag-passed">Claimed a spec</span>{{else if eq .Class "uncovered"}}<span class="tag tag-exception">No spec</span>{{else}}<span class="tag tag-none">Specs, docs, records</span>{{end}}</td>
+      <td>{{.Subject}}</td></tr>{{end}}</tbody>
+  </table></div>
+</section>
+</main>
+</body>
+</html>

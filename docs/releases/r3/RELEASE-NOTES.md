@@ -36,6 +36,17 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   author name.
 - **Fixed:** the sessions connector read no real Claude Code logs (their lines exceed 64 KiB) and did
   not count Claude Code's file edits; both work now.
+- **Four more workspaces in the same `proofbound ui`:**
+  - **Now** (developer): what needs a person, each with the exact command; which task each
+    worktree's agent holds; commits since your last visit.
+  - **Review bench** (reviewer): only the changes you may review (never your own, your agent's or
+    your spec's); each promise beside the change; record an outcome per promise and **seal and sign
+    the review in the browser**, writing and committing exactly what `proofbound review seal` writes.
+  - **Promise map** (spec owner): every promise with its state (proven, changed after proof, not
+    kept, claimed but not reviewed, not claimed) and any reviewer's finding that the words are unclear.
+  - **Agent surface**: every page as JSON, and `/agent/next` gives a coding agent its task's
+    promises, what blocks it, whether it may act, and the next command. Agents read with the token in
+    `.proofbound/ui.json`; only people act.
 - **Close exceptions without a terminal.** For each exception, choose accepted risk, fixed in a later
   commit, or reverted, and give a reason. The page shows the exact record first; "Sign and record"
   signs it with your own key on your machine and commits it under `.proofbound/outcomes/`. Only a key

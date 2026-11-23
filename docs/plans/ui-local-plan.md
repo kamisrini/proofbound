@@ -1,6 +1,6 @@
 # Plan: the Proofbound UI (local first, hosted later)
 
-**Status:** APPROVED direction, 2026-11-22 (owner: "go ahead lets do these"; section 8 decisions
+**Status:** U1 and U2 BUILT 2026-11-22 (all five workspaces; see the U1 and U2 specs). APPROVED direction, 2026-11-22 (owner: "go ahead lets do these"; section 8 decisions
 1 to 3 made). Planning and design only: nothing is built; U0 (decision record, obligation, change
 intent) comes before any code. Owner direction: "lets go with 2 and then 3 later. plan and design. remember we
 are visionaries ... We dont want UI that is 2026, but rather 2030 UI."

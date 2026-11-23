@@ -79,27 +79,55 @@ func keysGitSign(ctx context.Context, root string, output io.Writer) error {
 		return err
 	}
 	pubLine := sshWireKey(a.key.Public().(ed25519.PublicKey)) + " proofbound:" + a.Name + "\n"
-	if _, err := os.Lstat(sshPath); err == nil {
-		// Already exported: keep it only if it is this key (its .pub says so), never replace it.
-		if existing, err := os.ReadFile(sshPath + ".pub"); err != nil || string(existing) != pubLine {
-			return fmt.Errorf("keys git-sign: %s exists for another key; move it away first", sshPath)
+	if info, err := os.Lstat(sshPath); err == nil {
+		// Already exported: keep it only if it is a regular 0600 file whose contents are this key's
+		// export (review ui-u2-review-20261122 F6), never replace it.
+		existing, rerr := os.ReadFile(sshPath)
+		if !info.Mode().IsRegular() || info.Mode().Perm() != 0o600 || rerr != nil || !sameOpenSSHKey(existing, a.key) {
+			return fmt.Errorf("keys git-sign: %s exists and is not this key's export; move it away first", sshPath)
 		}
 	} else {
-		if err := writeExclusive(sshPath, data); err != nil {
+		// Created 0600 and exclusively: never readable by others, not even for a moment (F2).
+		f, err := os.OpenFile(sshPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		if err != nil {
 			return fmt.Errorf("keys git-sign: %w", err)
 		}
-		if err := os.Chmod(sshPath, 0o600); err != nil {
+		if _, err := f.Write(data); err != nil {
+			f.Close()
+			os.Remove(sshPath)
 			return err
 		}
-		if err := os.WriteFile(sshPath+".pub", []byte(pubLine), 0o644); err != nil {
+		if err := f.Close(); err != nil {
 			return err
 		}
 	}
+	if err := os.WriteFile(sshPath+".pub", []byte(pubLine), 0o644); err != nil {
+		return err
+	}
+	// Per worktree (F3): in a linked worktree a plain --local would change every worktree's signer.
+	if out, err := gitRun(ctx, root, "config", "--local", "extensions.worktreeConfig", "true"); err != nil {
+		return fmt.Errorf("keys git-sign: git config: %s", out)
+	}
 	for _, kv := range [][2]string{{"gpg.format", "ssh"}, {"user.signingkey", sshPath}, {"commit.gpgsign", "true"}} {
-		if out, err := gitRun(ctx, root, "config", "--local", kv[0], kv[1]); err != nil {
+		if out, err := gitRun(ctx, root, "config", "--worktree", kv[0], kv[1]); err != nil {
 			return fmt.Errorf("keys git-sign: git config %s: %s", kv[0], out)
 		}
 	}
 	_, err = fmt.Fprintf(output, "git-sign %s key=%s ssh=%s\nevery commit in this repository is now signed as %s; the Audit room shows it as verified\n", a.Name, a.Fingerprint, sshPath, a.Name)
 	return err
+}
+
+// sameOpenSSHKey reports whether an OpenSSH private-key file holds exactly key (its random check
+// bytes differ between exports, so only the key blob is compared).
+func sameOpenSSHKey(file []byte, key ed25519.PrivateKey) bool {
+	block, _ := pem.Decode(file)
+	if block == nil || block.Type != "OPENSSH PRIVATE KEY" {
+		return false
+	}
+	var want bytes.Buffer
+	var n [4]byte
+	binary.BigEndian.PutUint32(n[:], uint32(len(key)))
+	want.Write(n[:])
+	want.Write(key)
+	return bytes.Contains(block.Bytes, want.Bytes())
 }

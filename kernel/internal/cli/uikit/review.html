@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review bench · {{.V.Repo}}</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body data-base="{{.V.Report.Base}}"{{if .Commit}} data-commit="{{.Commit.Commit}}"{{end}}>
+{{template "top" (dict "Active" "review" "V" .V)}}
+<main class="page">
+<section class="report-head">
+  <p class="eyebrow">Reviewer · Review bench</p>
+  <h1>{{len .Queue}} change(s) waiting for someone who did not write them.</h1>
+  {{if .V.Actor.Problem}}<p class="muted">You are read-only here: {{.V.Actor.Problem}}</p>{{end}}
+  {{if .Hidden}}<p class="muted">{{len .Hidden}} hidden because nobody reviews their own work: {{join .Hidden}}.</p>{{end}}
+</section>
+
+<div class="bench">
+<nav class="card queue" aria-label="Review queue">
+  <h2>Queue</h2>
+  {{if not .Queue}}<p class="empty">Nothing is waiting for you.</p>{{end}}
+  {{range .Queue}}
+  <a class="q-item{{if $.Commit}}{{if eq .Commit.Commit $.Commit.Commit}} q-on{{end}}{{end}}" href="/review?commit={{.Commit.Commit}}">
+    <code>{{short .Commit.Commit}}</code> {{.Commit.Subject}}
+    <span class="muted">{{.Promises}} promise(s) · {{.Commit.Author}}{{range .Commit.Agents}} · {{.}}{{end}}</span>
+  </a>
+  {{end}}
+</nav>
+
+<section class="card work">
+{{if .Commit}}
+  <div class="card-head"><h2>Review <code>{{short .Commit.Commit}}</code>: {{.Commit.Subject}}</h2>{{if .Saved}}<span class="tag tag-none">Draft loaded</span>{{end}}</div>
+  {{if .Refusal}}<p class="ex-outcome bad">{{.Refusal}}</p>{{end}}
+  <form class="bench-form">
+    {{range $gi, $v := .Draft.Verdicts}}
+      {{range $oi, $o := $v.Obligations}}
+      <fieldset class="promise" data-part="verdict" data-group="{{$gi}}" data-index="{{$oi}}" data-obligation="{{$o.ObligationID}}">
+        <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}}</legend>
+        <p class="muted">Does the code keep this promise?</p>
+        <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="SATISFIED"{{if eq $o.Outcome "SATISFIED"}} checked{{end}}> Kept</label>
+        <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="NOT_SATISFIED"{{if eq $o.Outcome "NOT_SATISFIED"}} checked{{end}}> Not kept</label>
+        <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="INCONCLUSIVE"{{if eq $o.Outcome "INCONCLUSIVE"}} checked{{end}}> Inconclusive</label>
+      </fieldset>
+      {{end}}
+    {{end}}
+    {{range $gi, $r := .Draft.Reviews}}
+      {{range $oi, $o := $r.Obligations}}
+      <fieldset class="promise" data-part="review" data-group="{{$gi}}" data-index="{{$oi}}" data-obligation="{{$o.ObligationID}}">
+        <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}} <span class="muted">· owner {{$r.DeclaredOwner}}</span></legend>
+        <p class="muted">Are the words clear enough to verify?</p>
+        <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="VERIFIABLE"{{if eq $o.Outcome "VERIFIABLE"}} checked{{end}}> Verifiable</label>
+        <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="AMBIGUOUS"{{if eq $o.Outcome "AMBIGUOUS"}} checked{{end}}> Ambiguous</label>
+        <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="UNTESTABLE"{{if eq $o.Outcome "UNTESTABLE"}} checked{{end}}> Untestable</label>
+        <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="CONTRADICTORY"{{if eq $o.Outcome "CONTRADICTORY"}} checked{{end}}> Contradictory</label>
+        <label class="field">Finding for the spec owner <input name="f-{{$gi}}-{{$oi}}" value="{{$o.Finding}}" maxlength="500" autocomplete="off"></label>
+      </fieldset>
+      {{end}}
+    {{end}}
+    <div class="buttons">
+      <button type="button" class="secondary" data-act="review-draft"{{if .Refusal}} disabled{{end}}>Save draft</button>
+      <button type="button" data-act="review-preview"{{if .Refusal}} disabled{{end}}>Review what sealing writes</button>
+    </div>
+  </form>
+  <div class="preview" hidden>
+    <p>Sealing writes these files, signs each with your key, and commits only them. Nothing is written until you confirm.</p>
+    <pre></pre>
+    <div class="buttons">
+      <button type="button" class="sign" data-act="review-seal">Seal and sign</button>
+      <button type="button" class="link" data-act="review-back">Edit</button>
+    </div>
+  </div>
+  <p class="msg" role="status"></p>
+  <details class="log" open>
+    <summary>The change</summary>
+    <pre class="diff">{{.Diff}}</pre>
+  </details>
+{{else}}
+  <p class="empty">Choose a change from the queue. You see each promise beside the code that claims to keep it, record an outcome per promise, and seal the review here, signed with your key.</p>
+{{end}}
+</section>
+</div>
+</main>
+</body>
+</html>

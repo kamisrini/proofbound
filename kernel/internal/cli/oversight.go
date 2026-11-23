@@ -63,7 +63,8 @@ func commitSignatures(ctx context.Context, root, base string) (map[string][2]str
 	if err := os.WriteFile(signers, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
 		return nil, err
 	}
-	cmd := exec.CommandContext(ctx, "git", "-C", root, "-c", "gpg.ssh.allowedSignersFile="+signers, "log", "--format=%H%x00%G?%x00%GS%x1e", base+"..HEAD", "--")
+	// gpg.program points nowhere, so a GPG signature can never read as a declared key (F5).
+	cmd := exec.CommandContext(ctx, "git", "-C", root, "-c", "gpg.ssh.allowedSignersFile="+signers, "-c", "gpg.program=proofbound-no-gpg", "log", "--format=%H%x00%G?%x00%GS%x1e", base+"..HEAD", "--")
 	cmd.Env = repositoryGitEnv()
 	out, err := cmd.Output()
 	if err != nil {

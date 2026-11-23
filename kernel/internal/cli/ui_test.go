@@ -274,7 +274,9 @@ func testUIServer(t *testing.T, root string, rep auditReport) *uiServer {
 	t.Setenv("PROOFBOUND_KEY", "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	s := newUIServer(root, "", "HEAD~1", 4242)
-	s.compute = func(ctx context.Context, base string) (auditReport, string, error) { return rep, "", nil }
+	s.compute = func(ctx context.Context, base string) (ledgerView, string, error) {
+		return ledgerView{Report: rep}, "", nil
+	}
 	return s
 }
 
@@ -472,9 +474,9 @@ func TestUISignFlow(t *testing.T) {
 	uiWrite(t, root, "src/b.sh", "b\n")
 	agent2 := uiCommit(t, root, "agent", "second agent change")
 	s := newUIServer(root, "", base, 4242)
-	s.compute = func(ctx context.Context, b string) (auditReport, string, error) {
-		return auditReport{Schema: auditSchema, Base: base, Head: agent2, Counts: auditCounts{Total: 2}, Controls: []auditControl{},
-			Exceptions: []auditException{{ID: "uncovered-" + agent[:12], Commit: agent}, {ID: "uncovered-" + agent2[:12], Commit: agent2}}}, "", nil
+	s.compute = func(ctx context.Context, b string) (ledgerView, string, error) {
+		return ledgerView{Report: auditReport{Schema: auditSchema, Base: base, Head: agent2, Counts: auditCounts{Total: 2}, Controls: []auditControl{},
+			Exceptions: []auditException{{ID: "uncovered-" + agent[:12], Commit: agent}, {ID: "uncovered-" + agent2[:12], Commit: agent2}}}}, "", nil
 	}
 	host, origin := "127.0.0.1:4242", "http://127.0.0.1:4242"
 	act := func(path string, body map[string]string) (int, map[string]any) {
@@ -626,6 +628,12 @@ func TestGitSignVerifies(t *testing.T) {
 	}
 	if err := keysGitSign(ctx, root, &out); err != nil {
 		t.Fatalf("git-sign is not repeatable: %v", err)
+	}
+	if got := uiGit(t, root, "config", "--worktree", "--get", "user.signingkey"); !strings.HasSuffix(got, "-git-ssh") {
+		t.Errorf("the signing key is not set for this worktree: %q", got)
+	}
+	if info, err := os.Stat(strings.TrimSpace(uiGit(t, root, "config", "--worktree", "--get", "user.signingkey"))); err != nil || info.Mode().Perm() != 0o600 {
+		t.Errorf("the exported key is not 0600: %v", err)
 	}
 	uiWrite(t, root, "src/a.sh", "a\n")
 	uiGit(t, root, "add", "-A")

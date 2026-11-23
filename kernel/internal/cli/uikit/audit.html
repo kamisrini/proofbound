@@ -8,12 +8,7 @@
 <script src="/static/app.js" defer></script>
 </head>
 <body data-base="{{.Report.Base}}">
-<header class="bar">
-  <div class="bar-in">
-    <span class="brand">Proofbound <span class="room">Audit room</span></span>
-    <span class="who">{{if .Actor.Name}}Signed in as <strong>{{.Actor.Name}}</strong> · key {{.Actor.Fingerprint}}{{else}}Read-only{{end}}</span>
-  </div>
-</header>
+{{template "top" (dict "Active" "audit" "V" .)}}
 
 <main class="page">
 <section class="report-head" aria-labelledby="title">

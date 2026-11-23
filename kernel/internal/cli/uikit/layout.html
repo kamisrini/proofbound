@@ -1,0 +1,14 @@
+{{define "top"}}<header class="bar">
+  <div class="bar-in">
+    <span class="brand">Proofbound</span>
+    <nav class="tabs" aria-label="Workspaces">
+      <a href="/audit"{{if eq .Active "audit"}} aria-current="page"{{end}}>Audit room</a>
+      <a href="/now"{{if eq .Active "now"}} aria-current="page"{{end}}>Now</a>
+      <a href="/review"{{if eq .Active "review"}} aria-current="page"{{end}}>Review bench</a>
+      <a href="/promises"{{if eq .Active "promises"}} aria-current="page"{{end}}>Promise map</a>
+      <a href="/agent"{{if eq .Active "agent"}} aria-current="page"{{end}}>Agent surface</a>
+    </nav>
+    <span class="who">{{if .V.Actor.Name}}<strong>{{.V.Actor.Name}}</strong> · key {{.V.Actor.Fingerprint}}{{else}}Read-only{{end}}</span>
+  </div>
+</header>{{end}}
+{{define "period"}}<p class="period muted">Period: since <strong>{{.BaseRef}}</strong> · <code>{{short .Report.Base}}..{{short .Report.Head}}</code> · {{.Report.Counts.Total}} commits · computed {{.Generated}}{{if .SyncError}} · <span class="tag tag-disclosed">Record partly refreshed</span>{{end}}</p>{{end}}

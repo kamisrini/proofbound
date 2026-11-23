@@ -127,6 +127,38 @@ body.only-exc .control:not(.state-exception) { display: none; }
 .log > summary { cursor: pointer; color: var(--link); font-size: 14px; min-height: 32px; }
 .log[open] > summary { margin-bottom: 10px; }
 
+/* Workspace tabs */
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; }
+.tabs a { color: var(--muted); text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+.tabs a:hover { color: var(--ink); background: var(--navy-soft); }
+.tabs a[aria-current="page"] { color: var(--navy-ink); background: var(--navy); font-weight: 600; }
+.period { margin: 0; font-size: 13px; }
+.page-note { margin: 0; }
+
+/* Now */
+.item { border-top: 1px solid var(--line-soft); padding: 12px 0; }
+.item:first-of-type { border-top: 0; padding-top: 2px; }
+.item .cmd { margin-top: 6px; }
+
+/* Promise map */
+.finding { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); }
+
+/* Review bench */
+.bench { display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.queue { display: flex; flex-direction: column; gap: 8px; }
+.queue h2 { margin-bottom: 4px; }
+.q-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 14px; }
+.q-item .muted { font-size: 12px; }
+.q-item:hover { background: var(--navy-soft); }
+.q-on { border-color: var(--link); }
+.work { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.bench-form { display: flex; flex-direction: column; gap: 12px; }
+.promise { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.promise legend { font-weight: 400; padding: 0 4px; margin: 0; width: auto; }
+.promise > p { width: 100%; margin: 0; font-size: 13px; }
+.promise .field { width: 100%; }
+.diff { max-height: 520px; overflow: auto; white-space: pre; word-break: normal; font-size: 12px; }
+
 /* Sign-off, limitations */
 .attested { margin: 12px 0 0; font-size: 14px; }
 .attest { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; align-items: flex-start; }
@@ -161,6 +193,7 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: var(
 .foot { border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; padding: 16px 0 24px; }
 
 @media (max-width: 720px) {
+  .bench { grid-template-columns: minmax(0, 1fr); }
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .control summary { grid-template-columns: 28px minmax(0, 1fr); }
   .res { grid-column: 2; align-items: flex-start; text-align: left; flex-direction: row; gap: 8px; }

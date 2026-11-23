@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promise map · {{.V.Repo}}</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+{{template "top" (dict "Active" "promises" "V" .V)}}
+<main class="page">
+<section class="report-head">
+  <p class="eyebrow">Spec owner · Promise map</p>
+  <h1>Every promise, and where its proof stands.</h1>
+  <p class="muted">You decide what should be true; reviewers and agents prove it. This page never changes a word: edit promises in the spec, in git.</p>
+</section>
+
+<section class="summary" aria-label="Summary">
+  <div class="tile"><span class="num">{{index .Counts "PROVEN"}}</span><span class="cap">Proven</span></div>
+  <div class="tile"><span class="num">{{index .Counts "CHANGED AFTER PROOF"}}</span><span class="cap">Changed after proof</span></div>
+  <div class="tile"><span class="num">{{index .Counts "UNCLEAR"}}</span><span class="cap">Unclear to a reviewer</span></div>
+  <div class="tile"><span class="num">{{index .Counts "CLAIMED, NOT REVIEWED"}}</span><span class="cap">Claimed, not reviewed</span></div>
+</section>
+
+{{if not .Changes}}<section class="card"><p class="empty">No spec changes are in the record yet. Write a spec, then run <code>proofbound sync all</code>.</p></section>{{end}}
+{{range .Changes}}
+<section class="card">
+  <div class="card-head"><h2>{{.Change}}</h2><span class="muted">owner {{join .Owners}} · <code>{{.IntentID}}</code></span></div>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Promise</th><th scope="col">State</th><th scope="col">Reviewer</th><th scope="col">Claimed by</th></tr></thead>
+    <tbody>{{range .Promises}}<tr>
+      <td><strong>{{.ID}}</strong> {{.Statement}}{{if .Unclear}}<p class="finding"><span class="tag tag-disclosed">{{.Unclear}}</span> said {{.FoundBy}}: “{{.Finding}}”</p>{{end}}</td>
+      <td><span class="tag tag-{{stateClass .State}}">{{.State}}</span></td>
+      <td>{{if .Reviewer}}{{.Reviewer}}{{else}}<span class="muted">—</span>{{end}}</td>
+      <td>{{range $i, $c := .Commits}}{{if $i}}, {{end}}<code>{{short $c}}</code>{{else}}<span class="muted">no commit yet</span>{{end}}</td>
+    </tr>{{end}}</tbody>
+  </table></div>
+</section>
+{{end}}
+<p class="note-small page-note">States: proven (an independent review found the code keeps it), changed after proof (its words changed after that review), not kept, inconclusive, claimed but not reviewed, not claimed. "Unclear" is the reviewer's finding about the words themselves: fix the words, then ask for a re-review.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent surface · {{.V.Repo}}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+{{template "top" (dict "Active" "agent" "V" .V)}}
+<main class="page">
+<section class="report-head">
+  <p class="eyebrow">Coding agents · Agent surface</p>
+  <h1>Agents read the same record, typed, with the next command.</h1>
+  <p class="muted">Every workspace a person sees is also JSON at the same address. An agent never parses prose: it gets states, commit ids and commands, so a person and an agent act on one truth. Agents read; people act.</p>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>How an agent connects</h2></div>
+  <p>While <code>proofbound ui</code> runs, it writes <code>.proofbound/ui.json</code> (readable only by you) with its address and token. An agent of the same user reads it and sends the token:</p>
+  <pre>u=$(jq -r .url .proofbound/ui.json); t=$(jq -r .token .proofbound/ui.json)
+curl -s -H "Authorization: Bearer $t" "${u}agent/next"</pre>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Endpoints</h2></div>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Address</th><th scope="col">What it returns</th></tr></thead>
+    <tbody>
+      <tr><td><code>/agent/next[?task=sdd:&lt;change&gt;]</code></td><td>For a task (default: this worktree's): its promises and their states, the commits that claim it, what blocks it and whether the agent may act, and the next steps as commands.</td></tr>
+      <tr><td><code>/now?format=json</code></td><td>What needs a person, each worktree's task, the commits.</td></tr>
+      <tr><td><code>/promises?format=json</code></td><td>Every promise with its state, reviewer and finding.</td></tr>
+      <tr><td><code>/review?format=json</code></td><td>The review queue. An agent may review another agent's change, never its own.</td></tr>
+      <tr><td><code>/audit?format=json</code></td><td>The nine controls, exceptions, roles, sessions and the commit log.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Now, for {{if .Task}}<code>{{.Task}}</code>{{else}}this worktree (no task){{end}}</h2><span class="muted">What <code>/agent/next</code> returns at this moment</span></div>
+  <pre>{{.Example}}</pre>
+</section>
+</main>
+</body>
+</html>
