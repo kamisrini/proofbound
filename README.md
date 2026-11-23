@@ -1,27 +1,42 @@
 # Proofbound
 
-Proofbound is a warranty layer for software delivery.
+**Proofbound is a warranty layer for code written by AI agents.**
 
-It helps teams answer questions that ordinary build logs and test dashboards do not preserve well:
+People write code at a pace other people can review. Agents do not: they produce many changes a day,
+each larger than a person would write, and the commit log rarely says which agent did what, what it
+was asked to do, or whether it stayed inside that job. Proofbound keeps that record, and makes it
+something you can check.
 
-- What was this software change supposed to do?
-- What evidence shows that it does it?
-- Which exact commit was verified?
-- Who performed or owns the verification?
-- What remains unverified if something fails later?
+For every change an agent makes, Proofbound answers:
 
-The result is durable, machine-readable proof bound to the software it describes—not just a
-temporary “tests passed” message.
+- **What was the agent asked to do?** The spec it claims, which must be committed before the code.
+- **Did it stay inside that?** Every changed line outside the spec's declared area is listed, and a
+  reviewer must accept each one with a reason or reject it.
+- **What evidence shows it did it?** Each promise is checked by a reviewer who is not the agent, the
+  commit's author or the spec owner.
+- **Which exact commit, and which agent?** Agents are named from authorship and co-author lines,
+  Claude Code sessions are shown with the commits made while each ran, and commits can be signed by
+  keys the repository declares.
+- **What remains unverified?** Code with no spec, promises that changed after review, and every
+  exception, with who accepted it and why.
 
-## Why Proofbound?
+The result is a signed warranty bound to the exact commit, which anyone can verify without your
+infrastructure, not a green check that disappears with the CI log.
 
-Software is increasingly produced and changed by automated systems. That makes it important to
-preserve more than source code and a green pipeline. Proofbound is designed to make intent,
-verification evidence, verdicts, provenance, and accountability travel with each meaningful change.
+## Why agents change the problem
 
-Proofbound complements CI/CD and test runners. Those systems execute builds and checks; Proofbound
-records what was claimed, what was checked, what the evidence supports, and where the responsibility
-for the result lies.
+- **Volume.** No one can read everything an agent writes. Review has to aim at the promises and at
+  what fell outside them.
+- **Identity.** A git author name is whatever was typed. Proofbound names agents, and can require
+  that commits be signed by declared keys.
+- **Self-grading.** An agent that writes the code and the tests can pass its own work. Proofbound
+  never accepts a verdict from the change's author, agent or spec owner.
+- **The perimeter.** Compliance asks whether the agent acted only inside what was authorized. A commit
+  log cannot answer that; Proofbound's Audit room answers it control by control.
+
+The same record works for changes people make. Proofbound complements CI/CD and test runners: they run
+the checks; Proofbound records what was promised, what was checked, what the evidence supports, and
+who is accountable for the result.
 
 ## How it works
 
