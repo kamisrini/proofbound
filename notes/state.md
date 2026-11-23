@@ -6,6 +6,33 @@ As of: 2026-11-22
 
 ## Resume — 2026-11-22
 
+**Exact next action (owner, 2026-11-22 EOD: "lets all 4 one after other tomorrow"):** build, in this
+order, each with spec first, one non-author review and a green gate (Law 6, 9, 11):
+1. **Line-level scope** (`DEF-CLAIMED-CODE-SCOPE-001`, owner-named): flag the part of a claiming
+   commit's change that falls outside the area its spec declares.
+2. **Signed exception waivers** (`DEF-NO-INTENT-SELF-WAIVER-001`, owner-named): a pre-approved
+   exception signed by someone other than the author, shown on the warranty and badge.
+3. **`proofbound ui --bundle`**: open the warranty bundle / audit evidence in a browser with no clone.
+4. **Framework mapping**: controls mapped to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14 in the
+   transcript, worded "maps to", flagged for a compliance professional's check.
+Then the **documentation pass** (owner: "update documentation after this"): QUICKSTART, tour,
+DEMO.md, README, release notes, manual, and the private landing page
+(`~/projects/proofbound-commercial/gtm/landing.html`, artifact
+https://claude.ai/artifact/4EuubEfxnAvTSwXJstUXUd) for everything since v0.3.2.
+
+**Immediate blockers:** none. **Owner decisions pending:** whether to push the local commits
+`ddeea74..60fba13` (+ this closeout) and whether U3 joins v0.3.2 again or waits for after the
+2026-11-30 launch; a third requirement-review round for `BR-ui-workspaces-m6q2v8` O-6
+(`DEF-UI-WORKSPACES-REQ-REVIEW-001`).
+
+**Today in one paragraph:** v0.3.2 published, then the whole UI was built and folded into v0.3.2 by
+the owner's decision (nobody outside had it; launch 2026-11-30), republished at `463b369` and
+verified (install.sh, live Action WARRANTED, owner binary). After that, locally: gate test limit 25m
+(`ddeea74`), UI requirement reviews (`2702f8f`; BR-audit-room-ui active), U3 time rail + proof in the
+browser (`e103947`). Owner rc binary: `~/projects/proofbound-dev-bin/proofbound` (v0.3.3-rc3).
+
+## Today in detail — 2026-11-22
+
 - **U1 BUILT, not released: `proofbound ui`, the Audit room** (`a271e2d`, `CI-audit-room-u1-h5n9d2`,
   owner 2026-11-22 "lets build it, so we can ship it to clients"). U0 `381edea`: VD-audit-room-ui-q2v6x3,
   BD-audit-room-ui-k4m2p8 -> BR-audit-room-ui-r7t3w1 (O-1 Audit room, O-2 signed acts, `proposed`),
@@ -429,7 +456,8 @@ accepts, quoted paths in `intent-applicability.sh`, `mutant-apply` comment class
 
 ## Branch status
 
-`main` == `origin/main` after this note's commit (public, `kamisrini/proofbound`); tags `v0.3.0`, `v0.3.1`.
+`main` is 5 commits ahead of `origin/main` after this closeout (not pushed: owner decision pending);
+tags `v0.3.0`, `v0.3.1`, `v0.3.2` (republished at `463b369`).
 Local-only branch `backup/pre-scrub-20261120` must never be pushed.
 
 ## Open / deferred (`docs/deferrals.tsv`) — all dormant until the owner names them
@@ -447,6 +475,9 @@ Local-only branch `backup/pre-scrub-20261120` must never be pushed.
   ~7 s, reviewer-measured).
 
 ## Institutionalized today
+
+- 2026-11-22: explicit `-timeout 25m` in `scripts/kernel-check.sh` (a red gate that is not a fault);
+  memory note: never run embedded-Postgres work while `make check` runs (port 55432 contention).
 
 - `scripts/mutant-apply.sh` (+ self-test in `make check`): refuses no-op / comment-only mutants —
   compiled response to `LESSON class=fixture-not-what-it-claims` (3 sightings).
