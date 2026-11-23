@@ -6,35 +6,31 @@ As of: 2026-11-23
 
 ## Resume — 2026-11-23
 
-**Exact next action (owner, 2026-11-22 EOD: "lets all 4 one after other tomorrow"):** build, in this
-order, each with spec first, one non-author review and a green gate (Law 6, 9, 11):
-1. ~~Line-level scope~~ **DONE 2026-11-23** (`78803fd`, spec `dbe0154`; `CI-change-area-cpcm5w`,
-   CLI-INV-52..55, audit control C10; review `change-area-review-20261123` F1..F5 fixed, F6..F10 LOW
-   recorded in docs/plans/change-area-spec.md §8; `DEF-CLAIMED-CODE-SCOPE-001` RESOLVED; accepted on
-   the tour's shop repo).
-2. ~~Signed exception waivers~~ **DONE 2026-11-23** (spec `8e60da7`; `CI-signed-waiver-6oqz6f`,
-   CLI-INV-56..59; review `signed-waiver-review-20261123` F1 HIGH + F2..F4 fixed, F5..F9 LOW recorded
-   in docs/plans/signed-waiver-spec.md §7; `DEF-NO-INTENT-SELF-WAIVER-001` RESOLVED; accepted on shop).
-   Owner decision raised: an opt-in switch requiring a verified commit signature on waived commits
-   (git identity is self-declared).
-3. ~~`proofbound ui --bundle`~~ **DONE 2026-11-23** (spec `016dbf7`; `CI-ui-bundle-tbfsbu`,
-   CLI-INV-60..62; review `ui-bundle-review-20261123` F1..F3 fixed, F4..F8 LOW recorded in
-   docs/plans/ui-bundle-spec.md §7; accepted on a shop bundle in a non-repository folder; the browser
-   script itself not run here: no Node, owner to open the page once). **Next: item 4, spec first.**
-4. **Framework mapping**: controls mapped to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14 in the
-   transcript, worded "maps to", flagged for a compliance professional's check.
-Then the **documentation pass** (owner: "update documentation after this"): QUICKSTART, tour,
-DEMO.md, README, release notes, manual, and the private landing page
-(`~/projects/proofbound-commercial/gtm/landing.html`, artifact
-https://claude.ai/artifact/4EuubEfxnAvTSwXJstUXUd) for everything since v0.3.2.
+**Exact next action:** the owner picks what solidifies the agent-first value proposition (positioning
+saved; README rewritten in `f76aa75`). Recommended order, planning only, nothing started:
+1. **Launch demo "the agent goes off-script"** on the tour's shop repo (out-of-area lines, a test that
+   cannot fail, the bundle NOT WARRANTED), for the 2026-11-30 launch.
+2. **Framework mapping** (the fourth item of 2026-11-22, still queued): C1..C10 to SOC 2 CC8.1,
+   ISO 27001 A.8.32, EU AI Act Art. 12/14, worded "maps to", framed as agent oversight.
+3. **Proven session-to-line provenance** (which Claude Code session wrote which lines).
+4. **Write-time perimeter** (a PreToolUse hook refusing edits outside `scope.paths`;
+   `DEF-AGENT-NATIVE-INTENT-001` option 5).
+5. **Tests that can fail** (mutation check per promise), then an **agent track record** page.
+Then the **documentation pass**: QUICKSTART, tour, DEMO.md, DEMO-MANUAL, and the private landing page
+(agent-first, like the README).
 
-**Immediate blockers:** none. **Owner decisions pending:** whether to push the local commits
-`ddeea74..HEAD` and whether U3 joins v0.3.2 again or waits for after the
-2026-11-30 launch; a third requirement-review round for `BR-ui-workspaces-m6q2v8` O-6
-(`DEF-UI-WORKSPACES-REQ-REVIEW-001`); `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9` and `BR-ui-bundle-da6ue0` are `proposed` until a requirement
-review. Noted, not fixed: C5's diff-tree has the submodule blind spot change-area F1 fixed for C10;
-`connector/checks` TestEmitter_PublicationFailuresAreLoud flaked once under the gate's load (fixed
-100 ms sleep), passed alone 5/5 and on rerun.
+**Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
+https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
+of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
+`BR-waiver-signed-commits-6fioa7` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
+
+**2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
+`ui --bundle` (`48519f2`) and the opt-in signed-commit waiver policy (`670517a`) were each specified,
+built, reviewed once by a non-author (every HIGH/MED fixed with a regression test), accepted on the
+tour's shop repo and gated green. By the owner's decision they joined v0.3.2: `main` pushed and
+v0.3.2 republished at `f76aa75` (install.sh gives v0.3.2 byte-identical to the archive; the live
+Action reads WARRANTED). `DEF-CLAIMED-CODE-SCOPE-001` and `DEF-NO-INTENT-SELF-WAIVER-001` RESOLVED.
 
 **Today in one paragraph:** v0.3.2 published, then the whole UI was built and folded into v0.3.2 by
 the owner's decision (nobody outside had it; launch 2026-11-30), republished at `463b369` and
