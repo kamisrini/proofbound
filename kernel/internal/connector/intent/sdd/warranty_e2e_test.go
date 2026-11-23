@@ -169,3 +169,71 @@ func TestWarrantyCosignEndToEnd(t *testing.T) {
 		t.Fatal("an in-place cosign left the file unchanged")
 	}
 }
+
+// CLI-INV-64: a review sealed on a branch that was later abandoned stays in the local ledger, but a
+// warranty cites only the requirement reviews committed at HEAD. The rejected first attempt's review
+// must neither block the redo's export nor appear in its warranty.
+func TestWarrantyIgnoresReviewsOffHead(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	m := &m3Tenant{t: t, root: t.TempDir()}
+	gitIn(t, m.root, "init", "-q", "-b", "main")
+	gitIn(t, m.root, "config", "user.name", "owner-a")
+	m.mustRun("init", "speckit")
+	if err := removeHooks(m.root); err != nil {
+		t.Fatal(err)
+	}
+	m.mustRun("keys", "init", "--name", "owner-a")
+	reviewerKey := filepath.Join(t.TempDir(), "reviewer-key")
+	t.Setenv("PROOFBOUND_KEY", reviewerKey)
+	m.mustRun("keys", "init", "--name", "proofbound-reviewer")
+	t.Setenv("PROOFBOUND_KEY", "")
+	gitIn(t, m.root, "add", "-A", "--", ".gitignore", ".proofbound/keys")
+	m.write("specs/001-export/spec.md", "# Feature: Export\n\n- **FR-001**: System MUST export reports as CSV.\n")
+	m.write("specs/001-export/tasks.md", "- [ ] T001 Export CSV\n")
+	spec := m.commit("specify 001-export")
+	seal := func(x, outcome string) {
+		t.Setenv("PROOFBOUND_KEY", reviewerKey)
+		defer t.Setenv("PROOFBOUND_KEY", "")
+		m.mustRun("review", "draft", x)
+		m.review(x, outcome)
+	}
+
+	// The first attempt is reviewed, found wanting, and abandoned.
+	gitIn(t, m.root, "checkout", "-q", "-b", "first", spec)
+	m.write("src/x", "one\n")
+	first := m.commit("first attempt", "Intent: sdd:001-export")
+	m.mustRun("sync", "all")
+	seal(first, "NOT_SATISFIED")
+	m.commit("review first")
+	m.mustRun("sync", "all")
+
+	// The redo starts again from the spec.
+	gitIn(t, m.root, "checkout", "-q", "-b", "redo", spec)
+	m.write("src/x", "two\n")
+	redo := m.commit("redo", "Intent: sdd:001-export")
+	m.mustRun("sync", "all")
+	seal(redo, "SATISFIED")
+	m.commit("review redo")
+	m.mustRun("sync", "all")
+
+	out := filepath.Join(t.TempDir(), "w.json")
+	if code, msg := runCLI(t, m.root, "warranty", "export", redo, "-o", out); code != 0 {
+		t.Fatalf("the redo did not export: exit %d\n%s", code, msg)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := warranty.Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Body.Reviews) != 1 || !strings.Contains(f.Body.Reviews[0].ArtifactPath, redo[:12]) {
+		t.Fatalf("the warranty cites reviews other than the redo's: %+v", f.Body.Reviews)
+	}
+	clone := filepath.Join(t.TempDir(), "clone")
+	gitIn(t, filepath.Dir(clone), "clone", "-q", "-b", "redo", m.root, clone)
+	if code, msg := runCLI(t, t.TempDir(), "warranty", "verify", out, "--repo", clone); code != 0 || !strings.HasPrefix(msg, "VALID ") {
+		t.Fatalf("the redo's warranty did not verify: exit %d\n%s", code, msg)
+	}
+}

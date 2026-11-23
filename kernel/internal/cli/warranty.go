@@ -242,6 +242,10 @@ func buildWarranty(ctx context.Context, root string, ledger *store.Store, sha st
 	if err != nil {
 		return nil, none, nil, nil, err
 	}
+	// The ledger keeps every review ever synced, including one sealed on a branch that was later
+	// abandoned; a warranty cites only those committed at HEAD (CLI-INV-64), which are the only ones
+	// a recipient's clone can hold. Coverage is still enforced by the verification below.
+	body.Reviews = reviewsAtHead(ctx, root, body.Reviews)
 	if body.ChangeName, err = claimedChange(ctx, root, sha); err != nil {
 		return nil, none, nil, nil, err
 	}
@@ -422,4 +426,20 @@ func writeExclusive(path string, data []byte) error {
 		return err
 	}
 	return f.Close()
+}
+
+// reviewsAtHead keeps the requirement reviews whose artifact is a regular file committed at HEAD.
+func reviewsAtHead(ctx context.Context, root string, all []reviews.RequirementReview) []reviews.RequirementReview {
+	kept := []reviews.RequirementReview{}
+	for _, r := range all {
+		out := gitOutput(ctx, root, "ls-tree", "-z", "HEAD", "--", r.ArtifactPath)
+		meta, path, ok := strings.Cut(strings.TrimSuffix(out, "\x00"), "\t")
+		if !ok || path != r.ArtifactPath || strings.Contains(path, "\x00") {
+			continue
+		}
+		if f := strings.Fields(meta); len(f) == 3 && f[1] == "blob" && (f[0] == "100644" || f[0] == "100755") {
+			kept = append(kept, r)
+		}
+	}
+	return kept
 }
