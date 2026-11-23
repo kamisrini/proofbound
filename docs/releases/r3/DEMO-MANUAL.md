@@ -733,7 +733,7 @@ PROOFBOUND_KEY="$W/reviewer.key" proofbound ui
 The queue lists the totals-row commit (the spec owner does not see it there: nobody reviews their own
 work). Open it, mark each promise **Kept** and each **Verifiable**, click **Review what sealing
 writes**, then **Seal and sign**: the page writes the same signed review files as `review seal` and
-commits them. Press Ctrl-C, then `proofbound check "$base"` says WARRANTED. The **Promise map** tab
+commits them. Press Ctrl-C, then `proofbound sync all` and `proofbound check "$base"`: it says WARRANTED. The **Promise map** tab
 now shows both totals-row promises as proven, and **Now** has nothing left to review.
 
 **In the terminal:** reuse steps 7–10: `proofbound review draft <its commit>` (from
