@@ -94,8 +94,17 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   `--repo <clone>`, MISSING or ALTERED when it disagrees with the (unsigned) index; `--trust-key`
   pins the exporter's key, and the browser re-verifies each signature. Spec:
   [ui-bundle-spec.md](../../plans/ui-bundle-spec.md).
-- **Not yet:** mapping the controls to compliance frameworks, and anything an agent did outside the
-  repository, which the Audit room says on the page it cannot see.
+- **What each control maps to.** Every Audit room control names the criteria it gives evidence
+  toward in SOC 2 (CC5.1, CC6.1, CC8.1), ISO/IEC 27001:2022 Annex A (for example A.8.32 change
+  management, A.5.3 segregation of duties), NIST SSDF v1.1 (PS.1, PS.2 partial, PS.3, PW.7, PO.3) and,
+  for providers of high-risk AI systems, the EU AI Act (Art. 17(1)(a)–(d) and (k), Art. 11 with
+  Annex IV). Each entry has a one-line reason, on the card and in the transcript (`maps_to`); the
+  whole mapping, with versions and caveats, is in
+  [FRAMEWORK-MAP.md](../../compliance/FRAMEWORK-MAP.md). It is worded "maps to", meaning evidence
+  toward a criterion, never compliance: whether a criterion is met is the auditor's judgment. EU AI
+  Act Art. 12 and Art. 14 are deliberately not mapped, and the page says why.
+- **Not yet:** anything an agent did outside the repository, which the Audit room says on the page it
+  cannot see.
 
 - **Stricter pull-request check (behaviour change).** `proofbound check` now lists every commit that
   claims no spec but changes code as `UNCOVERED`, and the pull request is **NOT WARRANTED**. Before,

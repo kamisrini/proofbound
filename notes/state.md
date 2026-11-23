@@ -7,10 +7,10 @@ As of: 2026-11-23
 ## Resume — 2026-11-23
 
 **Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
-v0.3.2 (republish) until Sunday 2026-11-29; the warranty fix `0b9b66d` and the agent demo were folded in
-and v0.3.2 republished. After that, item 2 of the agent-first list: **framework
-mapping** (C1..C10 to SOC 2 CC8.1, ISO 27001 A.8.32, EU AI Act Art. 12/14, worded "maps to", framed as
-agent oversight). Then 3. session-to-line provenance, 4. a write-time perimeter hook (`scope.paths`,
+v0.3.2 (republish) until Sunday 2026-11-29. Done since the release: the warranty fix `0b9b66d`, the
+agent demo, and **framework mapping** (`e7f2ff8`, CLI-INV-65, `docs/compliance/FRAMEWORK-MAP.md`,
+review `framework-map-review-20261123`: F1..F3 MED fixed, F4..F7 LOW recorded), all in v0.3.2. Also proposed: `BR-framework-map-n4c8te`. Next is
+item 3 of the agent-first list, session-to-line provenance (needs the owner's go-ahead on the approach); then 4. a write-time perimeter hook (`scope.paths`,
 `DEF-AGENT-NATIVE-INTENT-001` option 5), 5. tests that can fail (mutation check per promise), then the
 agent track record page; then the documentation pass (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private
 landing page) agent-first.
