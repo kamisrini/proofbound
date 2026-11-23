@@ -34,6 +34,21 @@ const (
 	classWaived       = "waived"
 )
 
+// controlQuestions are the ten questions the Audit room answers, by control ID (also read by
+// frameworkDoc for docs/compliance/FRAMEWORK-MAP.md).
+var controlQuestions = map[string]string{
+	"C1":  "Every commit that claims a spec passed its readiness gate.",
+	"C2":  "No commit changed code without claiming a spec.",
+	"C3":  "Every passing claim carries a warranty that verifies against this repository.",
+	"C4":  "Promises that changed after they were verified are disclosed.",
+	"C5":  "Every commit in the range is accounted for.",
+	"C6":  "Changes to who may sign, to waivers and to the check itself, are listed for review.",
+	"C7":  "Each claimed spec existed before the code that claims it.",
+	"C8":  "No change was reviewed by its own author, agent or spec owner.",
+	"C9":  "Commits are signed by a key the repository declares.",
+	"C10": "Each agent change stayed inside the area its spec declares.",
+}
+
 type auditCommit struct {
 	Commit  string `json:"commit"`
 	Subject string `json:"subject"`
@@ -62,6 +77,8 @@ type auditControl struct {
 	Basis    string          `json:"basis"`
 	Command  string          `json:"command"`
 	Evidence []auditEvidence `json:"evidence"`
+	// MapsTo are the framework criteria the control gives evidence toward (CLI-INV-65).
+	MapsTo []frameworkRef `json:"maps_to"`
 }
 
 type auditException struct {
@@ -175,7 +192,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	rangeArg := rep.Base[:12]
 
 	// C1: readiness gates.
-	c1 := auditControl{ID: "C1", Question: "Every commit that claims a spec passed its readiness gate.", Command: "proofbound check " + rangeArg,
+	c1 := auditControl{ID: "C1", Question: controlQuestions["C1"], Command: "proofbound check " + rangeArg,
 		Basis: "The readiness gate passes only when every promise the commit claims has a sealed review in the record."}
 	passed := 0
 	for _, l := range claims {
@@ -201,7 +218,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	c2 := uncoveredControl(rangeArg, len(shas), uncovered, waived, subject, except)
 
 	// C3: warranties, built in memory as `warranty bundle` does.
-	c3 := auditControl{ID: "C3", Question: "Every passing claim carries a warranty that verifies against this repository.", Command: "proofbound warranty bundle " + rangeArg,
+	c3 := auditControl{ID: "C3", Question: controlQuestions["C3"], Command: "proofbound warranty bundle " + rangeArg,
 		Basis: "A warranty is VALID only when a reviewer who is not the change's owner signed it with a key the repository declares."}
 	if passed == 0 {
 		c3.State, c3.Count = auditNone, "no passing claim to warrant"
@@ -247,7 +264,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 
 	// C4: drift disclosed (disclosure is the control, so drift is not an exception).
-	c4 := auditControl{ID: "C4", Question: "Promises that changed after they were verified are disclosed.", Command: "proofbound report drift",
+	c4 := auditControl{ID: "C4", Question: controlQuestions["C4"], Command: "proofbound report drift",
 		Basis: "A promise whose words changed after its review is shown as STALE, never as proven."}
 	var drift bytes.Buffer
 	if err := reportDrift(ctx, root, ledger, &drift); err != nil {
@@ -262,14 +279,14 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 
 	// C5: every commit accounted for.
-	c5 := auditControl{ID: "C5", Question: "Every commit in the range is accounted for.", Command: "git rev-list --count " + rangeArg + "..HEAD",
+	c5 := auditControl{ID: "C5", Question: controlQuestions["C5"], Command: "git rev-list --count " + rangeArg + "..HEAD",
 		Basis:    "Each commit git lists for the range is classed exactly once: claimed a spec, changed code without one, waived, or changed only specs, docs and records.",
 		Evidence: []auditEvidence{{Text: fmt.Sprintf("%d claimed, %d uncovered, %d waived, %d specs, docs and records only", rep.Counts.Claimed, rep.Counts.Uncovered, rep.Counts.Waived, rep.Counts.Housekeeping)}}}
 	// C5 is a disclosure, not a test: it cannot fail, so it is never counted as held (spec review F8).
 	c5.State, c5.Count = auditListed, fmt.Sprintf("%d commits, each in one class", rep.Counts.Total)
 
 	// C6: changes to who may sign and to the check itself.
-	c6 := auditControl{ID: "C6", Question: "Changes to who may sign, to waivers and to the check itself, are listed for review.", Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .github/workflows gates",
+	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .github/workflows gates",
 		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec. Reviews add gates; that is not listed."}
 	for _, sha := range shas {
 		paths, err := trustPaths(ctx, root, sha)
@@ -290,7 +307,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 
 	// C7: the claimed spec existed before its code.
-	c7 := auditControl{ID: "C7", Question: "Each claimed spec existed before the code that claims it.", Command: "git ls-tree -d <commit>^ -- specs/<change> openspec/changes/<change>",
+	c7 := auditControl{ID: "C7", Question: controlQuestions["C7"], Command: "git ls-tree -d <commit>^ -- specs/<change> openspec/changes/<change>",
 		Basis: "The change's spec folder must already be in the commit's first parent: permission before the work, not written with it."}
 	checked, before := 0, 0
 	for _, l := range claims {
@@ -325,7 +342,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 
 	// C8: no change was reviewed by its own author, agent, signer or spec owner.
-	c8 := auditControl{ID: "C8", Question: "No change was reviewed by its own author, agent or spec owner.", Command: "proofbound warranty export <commit>",
+	c8 := auditControl{ID: "C8", Question: controlQuestions["C8"], Command: "proofbound warranty export <commit>",
 		Basis: "Each claiming commit's reviewers, read from its review records, are compared by key name with its git author, the agents named on it, its verified signer and its spec owners."}
 	rep.Roles = []auditRole{}
 	reviewed, independent := 0, 0
@@ -357,7 +374,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 
 	// C9: which commits are signed by a declared key (a disclosure; a bad signature is an exception).
-	c9 := auditControl{ID: "C9", Question: "Commits are signed by a key the repository declares.", Command: "git log --show-signature " + rangeArg + "..HEAD",
+	c9 := auditControl{ID: "C9", Question: controlQuestions["C9"], Command: "git log --show-signature " + rangeArg + "..HEAD",
 		Basis: "A git author name is self-declared; a commit signed by a declared key proves which person or agent made it. Commits are checked with git's SSH signature verification against .proofbound/keys at HEAD."}
 	verified, bad := 0, 0
 	for _, c := range rep.Commits {
@@ -400,6 +417,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		}
 	}
 	for i := range rep.Controls {
+		rep.Controls[i].MapsTo = mapsTo(rep.Controls[i].ID)
 		if rep.Controls[i].Evidence == nil {
 			rep.Controls[i].Evidence = []auditEvidence{}
 		}
@@ -584,7 +602,7 @@ func reviewedBy(body pbwarranty.Body, name string) bool {
 
 // uncoveredControl is audit control C2 (CLI-INV-33, CLI-INV-59).
 func uncoveredControl(rangeArg string, total int, uncovered, waived []checkLine, subject func(string) string, except func(kind, control, commit, text string)) auditControl {
-	c2 := auditControl{ID: "C2", Question: "No commit changed code without claiming a spec.", Command: "proofbound check " + rangeArg,
+	c2 := auditControl{ID: "C2", Question: controlQuestions["C2"], Command: "proofbound check " + rangeArg,
 		Basis: "A commit that claims no spec may change only specs, docs, gates and Proofbound's own records, unless a waiver committed before it, signed by someone who did not make it and not expired, covers every code path it changes."}
 	for _, l := range waived {
 		c2.Evidence = append(c2.Evidence, auditEvidence{Commit: l.commit, Text: printableUnit(l.reason)})

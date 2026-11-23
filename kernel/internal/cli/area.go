@@ -506,7 +506,7 @@ var errNoAreaRecord = errors.New("no area record")
 
 // areaControl is audit control C10 (spec §4). owners maps a commit to its spec owners (from C8).
 func areaControl(ctx context.Context, root, base string, rep *auditReport, except func(kind, control, commit, text string)) (auditControl, error) {
-	c := auditControl{ID: "C10", Question: "Each agent change stayed inside the area its spec declares.", Command: "proofbound review draft <commit>",
+	c := auditControl{ID: "C10", Question: controlQuestions["C10"], Command: "proofbound review draft <commit>",
 		Basis: "A spec may list in scope.paths the files its change may touch, read from the commit's parent. Lines changed outside it must be accepted by a reviewer who did not write the change, in a signed record; a spec without scope.paths is counted, not flagged."}
 	owners := map[string][]string{}
 	for _, r := range rep.Roles {

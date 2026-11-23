@@ -98,6 +98,9 @@ main.page { padding-top: 24px; padding-bottom: 32px; display: flex; flex-directi
 .evidence td { padding: 7px 8px; border-bottom: 1px solid var(--line-soft); vertical-align: top; word-break: break-word; }
 .evidence td:first-child { white-space: nowrap; width: 1%; }
 .cmd { font-size: 12px; color: var(--muted); margin: 0; }
+.maps { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.maps span[title] { border-bottom: 1px dotted currentColor; cursor: help; }
+.maps-caveat { font-size: 12px; margin: 12px 0 0; }
 .filter { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 button.seg { background: transparent; color: var(--ink-2); border: 0; border-radius: 0; min-height: 36px; padding: 6px 14px; font-weight: 500; font-size: 13px; }
 button.seg + button.seg { border-left: 1px solid var(--line); }

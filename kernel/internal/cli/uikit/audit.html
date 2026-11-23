@@ -184,10 +184,12 @@
       <p>{{.Basis}}</p>
       {{if .Evidence}}<table class="evidence"><thead><tr><th scope="col">Commit</th><th scope="col">Evidence</th></tr></thead><tbody>{{range .Evidence}}<tr><td>{{if .Commit}}<code>{{short .Commit}}</code>{{else}}—{{end}}</td><td>{{.Text}}</td></tr>{{end}}</tbody></table>{{end}}
       <p class="cmd">Reproduce: <code>{{.Command}}</code></p>
+      {{if .MapsTo}}{{$id := .ID}}<p class="maps">Maps to (evidence toward, not compliance): {{range $i, $m := .MapsTo}}{{if $i}} · {{end}}<span title="{{mapReason $id $m}}">{{$m.Framework}} {{$m.Criterion}}</span>{{end}}</p>{{end}}
     </div>
   </details>
   {{end}}
   </div>
+  <p class="muted maps-caveat">{{frameworkCaveat}} The whole mapping, with versions and the reason for each entry: <a href="{{frameworkDocURL}}" rel="noreferrer">FRAMEWORK-MAP.md</a>.</p>
 </section>
 
 <section class="card" aria-labelledby="pop">
