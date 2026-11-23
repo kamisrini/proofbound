@@ -1,6 +1,6 @@
 # Spec: `proofbound ui --bundle`, release evidence in a browser without a clone
 
-**Status:** draft 1, 2026-11-23, accepted by the owner with the three §6 defaults; not yet reviewed. **Implements:** `CI-ui-bundle-tbfsbu` →
+**Status:** draft 1, 2026-11-23, accepted by the owner with the three §6 defaults; reviewed with the code by one non-author (§7). **Implements:** `CI-ui-bundle-tbfsbu` →
 `BR-ui-bundle-da6ue0` O-1..O-3 (requirement `proposed`). **Contract rows (to add):** CLI-INV-60..CLI-INV-62.
 **Authorized by:** `BD-audit-room-ui-k4m2p8`.
 
@@ -101,7 +101,8 @@ Cosignatures are not re-checked in the browser.
 | Test | Proves |
 |---|---|
 | `TestParseUIBundle` | Flags. `--bundle` with `--base` is refused, as is each flag given twice, and a dir must be given. `--trust-key` and `--repo` are accepted only with `--bundle`. |
-| `TestBundleView` | Built with a real `warranty bundle` of a scripted repository, then four folder variants:<ul><li>untouched: SIGNATURE ONLY, VALID with `--repo`, INVALID under a wrong `--trust-key`;</li><li>an edited file: ALTERED and INVALID;</li><li>a deleted file: MISSING;</li><li>an extra signed file: "not in the index".</li></ul>A symlink is refused, and a missing `index.json` fails the start. |
+| `TestBundleView` | Built from a warranty signed over a scripted repository (the warranty package's own fixture, ported) in a bundle folder with its index, then four folder variants:<ul><li>untouched: SIGNATURE ONLY, VALID with `--repo`, INVALID under a wrong `--trust-key`;</li><li>an edited file: ALTERED and INVALID;</li><li>a deleted file: MISSING;</li><li>an extra signed file: "not in the index".</li></ul>A symlink is refused, and a missing `index.json` fails the start. |
+| `TestBundleRunsOutsideARepository` | The built binary serves a bundle from a folder that is not a repository. |
 | `TestBundleServer` | Only `/` and `/static/*` answer. No POST. The guards hold: 401 without the cookie, 421 for a wrong host. The page carries the browser proof, and a Go re-check of those bytes verifies. The waived list is shown as unsigned. |
 
 **Acceptance:**
@@ -123,3 +124,38 @@ Cosignatures are not re-checked in the browser.
 3. **Input:**
    - *Recommended:* a local folder only.
    - Alternative: also a URL or a zip, later.
+
+## 7. Review (`ui-bundle-review-20261123`, NEEDS_WORK: F1..F3 MED, F4..F8 LOW)
+
+**Fixed, each with a regression test in `TestBundleReviewFindings`:**
+
+**F1: an INVALID warranty's contents were shown.** An edited statement, or a file signed by a key other
+than the pinned one, still displayed its promises, verdicts and reviewers. Now:
+- The signed body is shown only when the file reaches SIGNATURE ONLY, VALID or UNREVIEWED.
+- An INVALID card shows only the key and why it failed ("the signature does not match the file's
+  contents: it was edited or forged, so none of it is shown").
+- A commit shown on such a card is labelled as coming from the unsigned index.
+
+**F2: the index, the file name and the signed commit were not tied together.** A row is now ALTERED
+when:
+- the signed commit differs from the commit in its file name;
+- the signed commit differs from the commit its index entry names;
+- the index names the same file twice, or the same commit twice.
+
+Each file is counted once.
+
+**F3: the range came from the unsigned index without a label.** The title, heading and range now carry
+"from the unsigned index". With `--repo`, each warranty's commit must be in the index's `base..head`
+in the clone, or the row is ALTERED. The notice now says exactly what the page takes from the index.
+
+**LOW findings, recorded (Law 11):**
+- **F4:** a race between the check and the open. A file swapped for a symlink or FIFO between `Lstat`
+  and `Open` would be followed, and a file that grew is read at max + 1 bytes without an error.
+- **F5:** no cap on how many entries or files a folder may hold.
+- **F6:** SIGNATURE ONLY shares VALID's green, and reviewers carry no "not proven" mark without a
+  clone. The browser badge says "verified" the same way whether or not the key is pinned.
+- **F7:** the index's commit and reason strings are not validated or made printable, and `short` cuts
+  bytes, not characters.
+- **F8:** gaps in the tests:
+  - `TestBundleRunsOutsideARepository` skips if the build fails, and does not fetch the page;
+  - no test for a symlinked `index.json`, UNREVIEWED with a clone, or an unusable `DATABASE_URL`.

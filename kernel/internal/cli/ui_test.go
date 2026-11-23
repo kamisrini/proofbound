@@ -81,7 +81,7 @@ func TestParseUI(t *testing.T) {
 			t.Errorf("%q = %+v %v, want %+v", in, got, valid, want)
 		}
 	}
-	for _, in := range []string{"ui --port", "ui --port 70000", "ui --port -1", "ui --port 08", "ui --open --open", "ui --base", "ui --base --open", "ui --bundle x", "ui extra"} {
+	for _, in := range []string{"ui --port", "ui --port 70000", "ui --port -1", "ui --port 08", "ui --open --open", "ui --base", "ui --base --open", "ui --bundle", "ui --base v1 --bundle x", "ui extra"} {
 		if _, valid := parseUI(strings.Fields(in)); valid {
 			t.Errorf("%q was accepted", in)
 		}

@@ -78,6 +78,8 @@ type uiOptions struct {
 	base string
 	port int
 	open bool
+	// bundle, trustKey and repo are `ui --bundle <dir> [--trust-key <fp>] [--repo <clone>]` (CLI-INV-60).
+	bundle, trustKey, repo string
 }
 
 // parseUI accepts `ui [--base <ref>] [--port <n>] [--open]`, each flag at most once.
@@ -98,6 +100,19 @@ func parseUI(args []string) (uiOptions, bool) {
 		case "--open":
 			opts.open = true
 			rest = rest[1:]
+		case "--bundle", "--trust-key", "--repo":
+			if len(rest) < 2 || rest[1] == "" || strings.HasPrefix(rest[1], "-") {
+				return opts, false
+			}
+			switch flag {
+			case "--bundle":
+				opts.bundle = rest[1]
+			case "--trust-key":
+				opts.trustKey = rest[1]
+			default:
+				opts.repo = rest[1]
+			}
+			rest = rest[2:]
 		case "--base", "--port":
 			if len(rest) < 2 || rest[1] == "" || strings.HasPrefix(rest[1], "-") {
 				return opts, false
@@ -115,6 +130,10 @@ func parseUI(args []string) (uiOptions, bool) {
 		default:
 			return opts, false
 		}
+	}
+	// --trust-key and --repo only mean something for a bundle; a bundle has no period (CLI-INV-60).
+	if opts.bundle == "" && (opts.trustKey != "" || opts.repo != "") || opts.bundle != "" && opts.base != "" {
+		return opts, false
 	}
 	return opts, true
 }
@@ -138,6 +157,8 @@ type uiServer struct {
 	asOf    func(ctx context.Context, base, commit string) (ledgerView, string, error)
 	asOfMem map[string]ledgerView
 	now     func() time.Time
+	// bundle, when set, makes this a read-only bundle server: only / and /static/ (CLI-INV-60).
+	bundle *bundleView
 }
 
 // ledgerView is what one store opening computes.
@@ -399,14 +420,18 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.SetCookie(w, &http.Cookie{Name: s.cookieName(), Value: s.token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
-		http.Redirect(w, r, "/audit", http.StatusSeeOther)
+		target := "/audit"
+		if s.bundle != nil {
+			target = "/"
+		}
+		http.Redirect(w, r, target, http.StatusSeeOther)
 		return
 	}
 	if !strings.HasPrefix(r.URL.Path, "/static/") {
 		c, err := r.Cookie(s.cookieName())
 		bearer, hasBearer := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
 		// Agents read with the token from .proofbound/ui.json (GET only: agents read, people act).
-		readByAgent := hasBearer && r.Method == http.MethodGet && constantEqual(bearer, s.agentToken)
+		readByAgent := hasBearer && r.Method == http.MethodGet && s.bundle == nil && constantEqual(bearer, s.agentToken)
 		if !readByAgent && (err != nil || !constantEqual(c.Value, s.token)) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -420,6 +445,19 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "refused: not a request from this page", http.StatusForbidden)
 			return
 		}
+	}
+	if s.bundle != nil {
+		// A bundle page is read-only: no act, no other workspace (CLI-INV-60).
+		switch {
+		case r.URL.Path == "/" && r.Method == http.MethodGet:
+			s.serveBundle(w, r)
+		case strings.HasPrefix(r.URL.Path, "/static/") && r.Method == http.MethodGet:
+			sub, _ := fs.Sub(uiKit, "uikit/static")
+			http.StripPrefix("/static/", http.FileServer(http.FS(sub))).ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+		return
 	}
 	switch {
 	case r.URL.Path == "/" && r.Method == http.MethodGet:

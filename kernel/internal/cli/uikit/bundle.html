@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release evidence · {{short .Base}}..{{short .Head}} (unsigned range)</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<main class="page">
+<section class="report-head" aria-labelledby="title">
+  <p class="eyebrow">Release evidence · read-only</p>
+  <h1 id="title">Warranties in a bundle for <code>{{short .Base}}..{{short .Head}}</code></h1>
+  <dl class="meta">
+    <div><dt>Folder</dt><dd><code>{{.Dir}}</code></dd></div>
+    <div><dt>Range</dt><dd><code>{{.Base}}..{{.Head}}</code> <span class="tag tag-disclosed">from the unsigned index</span>{{if .Repo}} · each warranty's commit is checked to be in it, in the clone{{else}} · not checked: no clone{{end}}</dd></div>
+    <div><dt>Checked</dt><dd>{{.Checked}}{{if .Repo}}, against the clone <code>{{.Repo}}</code>{{else}}, with no clone: signatures only{{end}}</dd></div>
+    <div><dt>Exporter key</dt><dd>{{if .TrustKey}}pinned to <code>{{.TrustKey}}</code>: a file signed by any other key is INVALID{{else}}<strong>not pinned.</strong> Compare each file's key with a fingerprint you got from the project itself, or reopen with <code>--trust-key &lt;fingerprint&gt;</code>{{end}}</dd></div>
+  </dl>
+  <ul class="notices">
+    <li><span class="tag tag-disclosed">Unsigned</span> The bundle's <code>index.json</code> (and its <code>VERIFY.md</code> and badge) are the exporter's unsigned local result. Everything this page shows about a warranty comes from its signed file. From the index it takes only the range, the list of expected files and their digests (to notice files that are missing, altered or misnamed), the claims that have no warranty, and the waived commits, and it labels each of those as unsigned.</li>
+    {{if not .Repo}}<li><span class="tag tag-none">Signatures only</span> Without a clone, a warranty can show only that its file is intact and signed. Whether its claims match the source is checked with <code>--repo &lt;clone&gt;</code>.</li>{{end}}
+  </ul>
+  <p class="counts">{{range .Counts}}<span class="tag {{if or (eq .Result "VALID") (eq .Result "SIGNATURE ONLY")}}tag-passed{{else if eq .Result "UNREVIEWED"}}tag-disclosed{{else if eq .Result "NO WARRANTY"}}tag-none{{else}}tag-exception{{end}}">{{.Result}} · {{.N}}</span> {{end}}</p>
+</section>
+
+{{range .Warranties}}
+<section class="card warranty" aria-label="{{if .File}}{{.File}}{{else}}{{short .Commit}}{{end}}">
+  <div class="card-head">
+    <h2>{{if .Signed}}<code>{{short .Commit}}</code>{{if .Change}} · change <code>{{.Change}}</code>{{end}}{{else}}<code>{{short .Commit}}</code> <span class="tag tag-disclosed">commit from the unsigned index</span>{{end}}</h2>
+    <span class="tag {{if or (eq .Result "VALID") (eq .Result "SIGNATURE ONLY")}}tag-passed{{else if eq .Result "UNREVIEWED"}}tag-disclosed{{else if eq .Result "NO WARRANTY"}}tag-none{{else}}tag-exception{{end}}">{{.Result}}</span>
+    {{if .Proof}}{{template "proof" .Proof}}{{end}}
+  </div>
+  {{if .Problem}}<p class="muted">{{.Problem}}</p>{{end}}
+  {{if not .InIndex}}<p><span class="tag tag-exception">Not in the index</span> This warranty file is in the folder but the index does not name it.</p>{{end}}
+  {{if eq .Result "NO WARRANTY"}}<p class="muted">The unsigned index says this claiming commit has no warranty: {{.IndexState}}.</p>{{end}}
+  {{if .File}}
+  <dl class="meta">
+    <div><dt>File</dt><dd><code>{{.File}}</code>{{if .Key}} · signed by key <code>{{.Key}}</code>{{end}}</dd></div>
+    {{if .Issuer}}<div><dt>Issued</dt><dd>{{.IssuedAt}} by {{.Issuer}}{{if .RepoHint}} · repository hint <code>{{.RepoHint}}</code>{{end}}</dd></div>{{end}}
+    {{if .Reviewers}}<div><dt>Reviewers</dt><dd>{{join .Reviewers}}{{if .Proven}} · proven against the clone: {{join .Proven}}{{end}}</dd></div>{{end}}
+    {{if .Cosigners}}<div><dt>Cosigned by keys</dt><dd>{{join .Cosigners}}</dd></div>{{end}}
+  </dl>
+  {{range .Promises}}
+  <h3>Requirement <code>{{.Requirement}}</code></h3>
+  <table class="promises">
+    <thead><tr><th>Promise</th><th>What it says</th><th>Verdict</th></tr></thead>
+    <tbody>
+    {{range .Obligations}}<tr><td><code>{{.ID}}</code></td><td>{{.Statement}}</td><td>{{.Outcome}}</td></tr>{{end}}
+    </tbody>
+  </table>
+  {{end}}
+  {{range .Reviews}}
+  <p class="muted">Requirement review of <code>{{.Requirement}}</code> by {{.Reviewer}}: {{join .Outcomes}}</p>
+  {{end}}
+  {{end}}
+</section>
+{{end}}
+{{if not .Warranties}}<section class="card"><p class="empty">No commit in this range claims a spec; the bundle holds no warranty.</p></section>{{end}}
+
+<section class="card" aria-labelledby="waived">
+  <h2 id="waived">Waived commits <span class="tag tag-disclosed">from the unsigned index</span></h2>
+  {{if .Waived}}
+  <table>
+    <thead><tr><th>Commit</th><th>Waiver</th><th>Signed by</th><th>Until</th><th>Reason</th></tr></thead>
+    <tbody>{{range .Waived}}<tr><td><code>{{short .Commit}}</code></td><td><code>{{.Waiver}}</code></td><td>{{.By}}</td><td>{{.Expires}}</td><td>{{.Reason}}</td></tr>{{end}}</tbody>
+  </table>
+  <p class="muted">A waiver is checked against the source, not here: run <code>proofbound check</code> in a clone.</p>
+  {{else}}<p class="empty">None listed.</p>{{end}}
+  <p class="muted">The index also says {{.NonClaiming}} commit(s) in the range claim no spec; they carry no warranty.</p>
+</section>
+</main>
+</body>
+</html>

@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound ui --bundle <dir> [--trust-key <fingerprint>] [--repo <clone>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -237,6 +237,14 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	if cmd == commandWarrantyVerify {
 		// A verifier may be anywhere: no repository root, no database (W-INV-7).
 		return warrantyVerify(ctx, args[2], flagValue(args[3:], "--repo"), flagValue(args[3:], "--trust-key"), stdout)
+	}
+	if opts, _ := parseUI(args); cmd == commandUI && opts.bundle != "" {
+		// A bundle is read anywhere: no repository root, no store (CLI-INV-60).
+		if err := runUIBundle(ctx, opts, stdout); err != nil {
+			fmt.Fprintf(stderr, "proofbound: %v\n", err)
+			return 1
+		}
+		return 0
 	}
 	root, err := repositoryRoot()
 	if err == nil && cmd == commandHook {
