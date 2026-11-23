@@ -37,8 +37,15 @@ As of: 2026-11-22
   had it): release and tag recreated, 5 archives + SHA256SUMS from `scripts/release-build.sh v0.3.2`;
   public install.sh installs it (has `ui`); live Action re-run in `kamisrini/proofbound-action-test`
   installed it and reported WARRANTED; owner's `~/.local/bin/proofbound` upgraded (identical bytes).
-  **Exact next action:** none pending for the UI; public launch 2026-11-30. Candidates (owner's call):
-  time rail, in-browser signature checks, `DEF-KERNELCHECK-SDD-TIMEOUT-001`. Not in U1: other workspaces,
+  **After the republish (owner "lets do them now"):** gate test limit 25m (`ddeea74`,
+  DEF-KERNELCHECK-SDD-TIMEOUT-001 RESOLVED); requirement reviews (`2702f8f`): BR-audit-room-ui active
+  (0002), BR-ui-workspaces O-4/O-5 AMBIGUOUS twice, reworded O-6 in 0003, `proposed` (third round is the
+  owner's call); U3 time rail + proof in the browser (`e103947`, CLI-INV-50/51, review
+  ui-u3-review-20261122 F1..F3 fixed). Not pushed; not in the v0.3.2 release. Owner rc build
+  `~/projects/proofbound-dev-bin/proofbound` = v0.3.3-rc3.
+  **Exact next action:** owner picks the next build item (offered: line-level scope
+  DEF-CLAIMED-CODE-SCOPE-001 recommended, signed waivers, `ui --bundle` evidence pack, framework
+  mapping); documentation pass after the building (owner: "update documentation after this"). Not in U1: other workspaces,
   time rail, in-browser signature check, `--bundle`, sample draw. New: `DEF-KERNELCHECK-SDD-TIMEOUT-001`
   (sdd package 442 s alone, near the 600 s go test limit under make check; failed the gate twice).
 - **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
