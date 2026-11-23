@@ -192,11 +192,12 @@
 
 <section class="card" aria-labelledby="pop">
   <div class="card-head"><h2 id="pop">Population</h2><span class="muted">Every commit in the period, classed once</span></div>
-  {{if le .Report.Counts.Total 400}}<div class="popbar" role="img" aria-label="{{.Report.Counts.Claimed}} claimed a spec, {{.Report.Counts.Housekeeping}} specs, docs and records only, {{.Report.Counts.Uncovered}} code without a spec">{{range .Report.Commits}}<span class="seg-{{.Class}}" title="{{short .Commit}} {{.Subject}}"></span>{{end}}</div>{{end}}
+  {{if le .Report.Counts.Total 400}}<div class="popbar" role="img" aria-label="{{.Report.Counts.Claimed}} claimed a spec, {{.Report.Counts.Housekeeping}} specs, docs and records only, {{.Report.Counts.Uncovered}} code without a spec, {{.Report.Counts.Waived}} waived">{{range .Report.Commits}}<span class="seg-{{.Class}}" title="{{short .Commit}} {{.Subject}}"></span>{{end}}</div>{{end}}
   <ul class="legend">
     <li><span class="sw sw-claimed"></span>{{.Report.Counts.Claimed}} claimed a spec</li>
     <li><span class="sw sw-housekeeping"></span>{{.Report.Counts.Housekeeping}} specs, docs and records only</li>
     <li><span class="sw sw-uncovered"></span>{{.Report.Counts.Uncovered}} code without a spec</li>
+    {{if .Report.Counts.Waived}}<li><span class="sw sw-waived"></span>{{.Report.Counts.Waived}} waived</li>{{end}}
   </ul>
   {{if .Report.Commits}}
   <details class="log">

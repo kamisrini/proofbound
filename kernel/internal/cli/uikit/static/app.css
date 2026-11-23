@@ -110,6 +110,7 @@ body.only-exc .control:not(.state-exception) { display: none; }
 .seg-claimed, .sw-claimed { background: var(--pass); }
 .seg-housekeeping, .sw-housekeeping { background: #4A5868; }
 .seg-uncovered, .sw-uncovered { background: var(--exc); }
+.seg-waived, .sw-waived { background: var(--disc); }
 .legend { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 13px; color: var(--ink-2); }
 .legend li { display: flex; align-items: center; gap: 8px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }

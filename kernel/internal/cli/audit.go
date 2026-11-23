@@ -31,6 +31,7 @@ const (
 	classClaimed      = "claimed"
 	classUncovered    = "uncovered"
 	classHousekeeping = "housekeeping"
+	classWaived       = "waived"
 )
 
 type auditCommit struct {
@@ -77,6 +78,7 @@ type auditCounts struct {
 	Claimed      int `json:"claimed"`
 	Uncovered    int `json:"uncovered"`
 	Housekeeping int `json:"housekeeping"`
+	Waived       int `json:"waived"`
 }
 
 // auditReport is the transcript (everything here) plus, outside the transcript, what only this
@@ -121,9 +123,18 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	if err != nil {
 		return rep, err
 	}
-	uncovered, err := uncoveredCommits(ctx, root, rep.Base, claims)
+	listed, err := uncoveredCommits(ctx, root, rep.Base, claims)
 	if err != nil {
 		return rep, err
+	}
+	// A waived commit (CLI-INV-57) is its own class: shown under C2 as evidence, never an exception.
+	var uncovered, waived []checkLine
+	for _, l := range listed {
+		if l.state == checkWaived {
+			waived = append(waived, l)
+		} else {
+			uncovered = append(uncovered, l)
+		}
 	}
 
 	// C5 classes first: every other control refers to them.
@@ -133,6 +144,9 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	}
 	for _, l := range uncovered {
 		class[l.commit] = classUncovered
+	}
+	for _, l := range waived {
+		class[l.commit] = classWaived
 	}
 	for _, sha := range shas {
 		c := class[sha]
@@ -144,6 +158,8 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 			rep.Counts.Claimed++
 		case classUncovered:
 			rep.Counts.Uncovered++
+		case classWaived:
+			rep.Counts.Waived++
 		default:
 			rep.Counts.Housekeeping++
 		}
@@ -181,18 +197,8 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		c1.State, c1.Count = auditExcepted, fmt.Sprintf("%d of %d passed", passed, len(claims))
 	}
 
-	// C2: uncovered code.
-	c2 := auditControl{ID: "C2", Question: "No commit changed code without claiming a spec.", Command: "proofbound check " + rangeArg,
-		Basis: "A commit that claims no spec may change only specs, docs, gates and Proofbound's own records."}
-	for _, l := range uncovered {
-		c2.Evidence = append(c2.Evidence, auditEvidence{Commit: l.commit, Text: printableUnit(l.reason)})
-		except("uncovered", "C2", l.commit, fmt.Sprintf("%q changed code with no spec claim: %s", subject(l.commit), uncoveredPaths(l.reason)))
-	}
-	if len(uncovered) == 0 {
-		c2.State, c2.Count = auditHeld, fmt.Sprintf("%d of %d commits claim a spec or change no code", len(shas), len(shas))
-	} else {
-		c2.State, c2.Count = auditExcepted, fmt.Sprintf("%d commit(s) changed code with no claim", len(uncovered))
-	}
+	// C2: uncovered code; a waived commit is evidence, not an exception (CLI-INV-59).
+	c2 := uncoveredControl(rangeArg, len(shas), uncovered, waived, subject, except)
 
 	// C3: warranties, built in memory as `warranty bundle` does.
 	c3 := auditControl{ID: "C3", Question: "Every passing claim carries a warranty that verifies against this repository.", Command: "proofbound warranty bundle " + rangeArg,
@@ -257,14 +263,14 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 
 	// C5: every commit accounted for.
 	c5 := auditControl{ID: "C5", Question: "Every commit in the range is accounted for.", Command: "git rev-list --count " + rangeArg + "..HEAD",
-		Basis:    "Each commit git lists for the range is classed exactly once: claimed a spec, changed code without one, or changed only specs, docs and records.",
-		Evidence: []auditEvidence{{Text: fmt.Sprintf("%d claimed, %d uncovered, %d specs, docs and records only", rep.Counts.Claimed, rep.Counts.Uncovered, rep.Counts.Housekeeping)}}}
+		Basis:    "Each commit git lists for the range is classed exactly once: claimed a spec, changed code without one, waived, or changed only specs, docs and records.",
+		Evidence: []auditEvidence{{Text: fmt.Sprintf("%d claimed, %d uncovered, %d waived, %d specs, docs and records only", rep.Counts.Claimed, rep.Counts.Uncovered, rep.Counts.Waived, rep.Counts.Housekeeping)}}}
 	// C5 is a disclosure, not a test: it cannot fail, so it is never counted as held (spec review F8).
 	c5.State, c5.Count = auditListed, fmt.Sprintf("%d commits, each in one class", rep.Counts.Total)
 
 	// C6: changes to who may sign and to the check itself.
-	c6 := auditControl{ID: "C6", Question: "Changes to who may sign, and to the check itself, are listed for review.", Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/sdd-profile.json .github/workflows gates",
-		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove. Reviews add gates; that is not listed."}
+	c6 := auditControl{ID: "C6", Question: "Changes to who may sign, to waivers and to the check itself, are listed for review.", Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .github/workflows gates",
+		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec. Reviews add gates; that is not listed."}
 	for _, sha := range shas {
 		paths, err := trustPaths(ctx, root, sha)
 		if err != nil {
@@ -551,7 +557,7 @@ func trustPaths(ctx context.Context, root, sha string) ([]string, error) {
 			break
 		}
 		switch {
-		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json":
+		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", strings.HasPrefix(path, waiversDir+"/"):
 			out = append(out, path)
 		case strings.HasPrefix(path, "gates/") && strings.Trim(status, "A") != "":
 			out = append(out, path)
@@ -574,4 +580,27 @@ func reviewedBy(body pbwarranty.Body, name string) bool {
 		}
 	}
 	return false
+}
+
+// uncoveredControl is audit control C2 (CLI-INV-33, CLI-INV-59).
+func uncoveredControl(rangeArg string, total int, uncovered, waived []checkLine, subject func(string) string, except func(kind, control, commit, text string)) auditControl {
+	c2 := auditControl{ID: "C2", Question: "No commit changed code without claiming a spec.", Command: "proofbound check " + rangeArg,
+		Basis: "A commit that claims no spec may change only specs, docs, gates and Proofbound's own records, unless a waiver committed before it, signed by someone who did not make it and not expired, covers every code path it changes."}
+	for _, l := range waived {
+		c2.Evidence = append(c2.Evidence, auditEvidence{Commit: l.commit, Text: printableUnit(l.reason)})
+	}
+	for _, l := range uncovered {
+		c2.Evidence = append(c2.Evidence, auditEvidence{Commit: l.commit, Text: printableUnit(l.reason)})
+		except("uncovered", "C2", l.commit, fmt.Sprintf("%q changed code with no spec claim: %s", subject(l.commit), uncoveredPaths(l.reason)))
+	}
+	waivedNote := ""
+	if len(waived) > 0 {
+		waivedNote = "; " + waivedPhrase(len(waived))
+	}
+	if len(uncovered) == 0 {
+		c2.State, c2.Count = auditHeld, fmt.Sprintf("%d of %d commits claim a spec, change no code or are waived%s", total, total, waivedNote)
+	} else {
+		c2.State, c2.Count = auditExcepted, fmt.Sprintf("%d commit(s) changed code with no claim%s", len(uncovered), waivedNote)
+	}
+	return c2
 }

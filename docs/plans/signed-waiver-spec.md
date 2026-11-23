@@ -1,6 +1,6 @@
 # Spec: signed exception waivers
 
-**Status:** draft 1, 2026-11-23, accepted by the owner with the three §6 defaults; not yet reviewed. **Implements:** `CI-signed-waiver-6oqz6f` →
+**Status:** draft 1, 2026-11-23, accepted by the owner with the three §6 defaults; reviewed with the code by one non-author (§7). **Implements:** `CI-signed-waiver-6oqz6f` →
 `BR-signed-waiver-15j8f9` O-1..O-3 (requirement `proposed`). **Resolves:** `DEF-NO-INTENT-SELF-WAIVER-001`.
 **Contract rows (to add):** CLI-INV-56..CLI-INV-59. **Authorized by:** `BD-audit-room-ui-k4m2p8`.
 
@@ -65,8 +65,18 @@ non-housekeeping path. A waiver at path `P` is **valid for** commit `X` when all
 path it changes. Otherwise it stays UNCOVERED, and the reason names the unwaived paths and why each
 candidate waiver did not count (not in the parent, does not verify, signed by the author, expired).
 
-The function is `waiversFor(ctx, root, sha, code []string, info commitInfo) (waived []waiverUse,
-unwaived []string, notes []string)`.
+The function is `waiversFor(ctx, root, sha, code, who) (uses, unwaived, notes)`. It is built on
+`waiversAt`, which takes the parent and the date explicitly.
+
+**The commit-msg hook** (added during the build: without it, a waiver would work only with
+`--no-verify`) applies the same rule to the staged code:
+- the parent is HEAD;
+- the author is the configured git author, and the agents are the message's agent `Co-Authored-By`
+  names;
+- the date is today in UTC.
+
+It lets a waived commit through with a `waived by …` line. When it refuses, it says why each waiver did
+not count. The hook is guidance only; the pull-request check judges the commit again from history.
 
 ## 3. Where it is shown (O-3)
 
@@ -112,6 +122,7 @@ Waived commits carry no warranty file: they claim no spec.
 | `TestCheckWaived` | Plain and Markdown output: the WAIVED line, the headline suffix, and exit 0 with an otherwise warranted range. |
 | `TestBundleWaived` | `index.json` `waived` and the badge text; no `waived` field when none. |
 | `TestAuditWaived` | C2 shows evidence and raises no exception for a waived commit. C6 lists the waiver commit. |
+| `TestHookHonoursWaiver` | The hook lets a waived commit through and refuses the waiver's signer, an agent co-author who is the signer, and partly waived code. |
 
 **Acceptance:** on the tour's `shop` repository:
 1. The reviewer signs a waiver for `vendor/`.
@@ -133,3 +144,52 @@ Waived commits carry no warranty file: they claim no spec.
 3. **Signing surface:**
    - *Recommended:* CLI only in this slice; the Audit room shows waivers but cannot sign them.
    - Alternative: a signing act in the UI.
+
+## 7. Review (`signed-waiver-review-20261123`, NEEDS_WORK: F1 HIGH, F2..F4 MED, F5..F9 LOW)
+
+**Fixed, each with a regression test in `TestWaiverReviewFindings` that fails without its fix:**
+
+**F1 (HIGH): an author could waive their own commit.** Independence was compared by key *name*. The
+rule now has three parts:
+- **Writers:** a commit's writers are its author and every co-author, each by name and by e-mail
+  local part, plus its verified signer. The waiver's signer must be none of them.
+- **Same key, two names:** the signer's public key must not be declared for any writer under another
+  name.
+- **Keys added inside the range:** in `check`, the bundle and the audit, the signing key must already
+  be declared, with the same public key, at the range base. A key added inside the pull request can
+  waive nothing in it.
+
+**F2 (MED): only agent co-authors counted.** Every `Co-authored-by` name counts as a writer, in
+history and in the hook.
+
+**F3 (MED): a backdated commit could use an expired waiver.** A waiver must still be valid on the
+latest of three dates:
+- the commit's committer date;
+- the range base's date;
+- the waiver's own signing date.
+
+The committer controls only the first.
+
+**F4 (MED): the date rules were enforced only by `waiver sign`.** Every read now enforces them: `at`
+must be RFC 3339, `expires` a real date, and the waiver at most 90 days long. A hand-signed
+`9999-12-31` no longer counts.
+
+**Remaining limit (stated, not closable here):** on an unsigned commit, the author name and e-mail
+are whatever the committer typed. A waiver signer could commit under an unrelated name and pass the
+writer test. Only a commit signed by a declared key (C9, `keys git-sign`) proves who made it. A
+profile switch requiring waived commits to carry a verified signature is the owner's call (§6 would
+gain a fourth decision).
+
+**LOW findings, recorded (Law 11):**
+- **F5:** a waiver for `**` or `*/` waives everything for 90 days.
+- **F6:**
+  - a deleted waiver restored from history counts again;
+  - waivers are not bound to a repository, so one can be replayed where the same key is declared.
+- **F7:** the hook cannot see the commit's signer (`keys git-sign`), so a self-waived signed commit
+  passes the hook but fails `check`.
+- **F8:** users with no waivers still see changed wording:
+  - the C2 count and basis;
+  - the C6 question, command and basis;
+  - the audit popbar's aria-label, which reads "0 waived".
+- **F9:** no test runs `computeAudit` for the `waived` class and the C5 count (the wiring was accepted
+  on `shop`), and agent detection from a real co-author trailer is untested.

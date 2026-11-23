@@ -52,6 +52,18 @@ type bundleIndex struct {
 	ExporterKey        string        `json:"exporter_key"`
 	NonClaimingCommits int           `json:"non_claiming_commits"`
 	Entries            []bundleEntry `json:"entries"`
+	// Waived lists the range's waived commits (CLI-INV-58); omitted when none, so a bundle without
+	// waivers is byte-identical to one made before waivers existed.
+	Waived []bundleWaived `json:"waived,omitempty"`
+}
+
+// bundleWaived is one waived commit and the waiver that covers it.
+type bundleWaived struct {
+	Commit  string `json:"commit"`
+	Waiver  string `json:"waiver"`
+	By      string `json:"by"`
+	Expires string `json:"expires"`
+	Reason  string `json:"reason"`
 }
 
 // errBundleIncomplete makes `warranty bundle` exit 3 after it has written a bundle in which some
@@ -103,6 +115,18 @@ func warrantyBundle(ctx context.Context, root string, ledger *store.Store, base,
 	}
 	index := bundleIndex{Schema: bundleSchema, Unsigned: true, Note: bundleNote, Base: baseSHA, Head: headSHA,
 		ExporterKey: pbwarranty.Fingerprint(key.Public().(ed25519.PublicKey)), NonClaimingCommits: len(all) - len(lines), Entries: []bundleEntry{}}
+	listed, err := uncoveredCommits(ctx, root, base, lines)
+	if err != nil {
+		return err
+	}
+	for _, l := range listed {
+		if l.state != checkWaived {
+			continue
+		}
+		for _, u := range l.waivers {
+			index.Waived = append(index.Waived, bundleWaived{Commit: l.commit, Waiver: u.ID, By: u.By, Expires: u.Expires, Reason: u.Reason})
+		}
+	}
 	files := map[string][]byte{}
 	for _, l := range lines {
 		e := bundleEntry{Commit: l.commit, Claims: l.claims, State: l.state, Reason: l.reason}
@@ -242,6 +266,13 @@ func verifyPage(ix bundleIndex) string {
 	if len(ix.Entries) == 0 {
 		b.WriteString("| — | — | no commit in this range claims a spec | — | — | — |\n")
 	}
+	if len(ix.Waived) > 0 {
+		b.WriteString("\n## Waived commits\n\nThese commits claim no spec. Each was allowed by a waiver committed before it and signed by\nsomeone who did not make it. They carry no warranty.\n\n")
+		b.WriteString("| Commit | Waiver | Signed by | Until | Reason |\n|---|---|---|---|---|\n")
+		for _, w := range ix.Waived {
+			fmt.Fprintf(&b, "| `%s` | `%s` | %s | %s | %s |\n", w.Commit[:12], mdCell(w.Waiver), mdCell(w.By), mdCell(w.Expires), mdCell(w.Reason))
+		}
+	}
 	fmt.Fprintf(&b, `
 ## Verify it yourself
 
@@ -292,6 +323,9 @@ func bundleBadge(ix bundleIndex) string {
 	case onlyValidOrUnreviewed:
 		color = "#dfb317"
 	}
+	if waived := waivedCommits(ix); waived > 0 {
+		text += fmt.Sprintf(" · %d waived", waived)
+	}
 	const label = "proofbound"
 	title := fmt.Sprintf("proofbound: %s for %s..%s (unsigned local result; verify the warranty files)", text, ix.Base[:12], ix.Head[:12])
 	lw, rw := 7*len(label)+10, 7*len(text)+10
@@ -300,4 +334,13 @@ func bundleBadge(ix bundleIndex) string {
 		`<g fill="#fff" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11" text-anchor="middle">`+
 		`<text x="%d" y="14">%s</text><text x="%d" y="14">%s</text></g></svg>`+"\n",
 		lw+rw, html.EscapeString(title), html.EscapeString(title), lw, lw, rw, color, lw/2, label, lw+rw/2, html.EscapeString(text))
+}
+
+// waivedCommits counts the distinct waived commits in a bundle index.
+func waivedCommits(ix bundleIndex) int {
+	seen := map[string]bool{}
+	for _, w := range ix.Waived {
+		seen[w.Commit] = true
+	}
+	return len(seen)
 }

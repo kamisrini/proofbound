@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -93,6 +93,7 @@ const (
 	commandHook
 	commandUI
 	commandKeysGitSign
+	commandWaiverSign
 )
 
 func parseCommand(args []string) command {
@@ -169,6 +170,11 @@ func parseCommand(args []string) command {
 		return commandReviewDraft
 	case len(args) == 3 && args[0] == "review" && args[1] == "seal" && args[2] != "":
 		return commandReviewSeal
+	case args0(args, "waiver", "sign"):
+		if _, _, _, _, ok := parseWaiverSign(args); ok {
+			return commandWaiverSign
+		}
+		return commandInvalid
 	case len(args) == 2 && args[0] == "keys" && args[1] == "git-sign":
 		return commandKeysGitSign
 	case args0(args, "keys", "init") && flagsOK(args[2:], "--name"):
@@ -904,6 +910,9 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		return runUI(ctx, root, databaseURL, args, output)
 	case commandKeysGitSign:
 		return keysGitSign(ctx, root, output)
+	case commandWaiverSign:
+		id, paths, reason, expires, _ := parseWaiverSign(args)
+		return waiverSign(ctx, root, id, paths, reason, expires, time.Now(), output)
 	case commandTask:
 		sub, name, _ := parseTask(args)
 		return runTask(root, sub, name, output)

@@ -32,7 +32,11 @@ const (
 	checkUncovered = "UNCOVERED"
 )
 
-type checkLine struct{ commit, claims, state, reason, malformed string }
+type checkLine struct {
+	commit, claims, state, reason, malformed string
+	// waivers are the waivers that cover a WAIVED commit (CLI-INV-57).
+	waivers []waiverUse
+}
 
 // errNotWarranted makes `check` exit 1 after it has printed its report.
 var errNotWarranted = errors.New("check: not warranted")
@@ -62,9 +66,18 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 	if err != nil {
 		return err
 	}
-	uncovered, err := uncoveredCommits(ctx, root, base, lines)
+	listed, err := uncoveredCommits(ctx, root, base, lines)
 	if err != nil {
 		return err
+	}
+	var uncovered []checkLine
+	waived := 0
+	for _, l := range listed {
+		if l.state == checkWaived {
+			waived++
+		} else {
+			uncovered = append(uncovered, l)
+		}
 	}
 	passed := 0
 	for _, l := range lines {
@@ -88,8 +101,12 @@ func checkRange(ctx context.Context, root string, ledger *store.Store, base stri
 	default:
 		headline = fmt.Sprintf("Proofbound: NOT WARRANTED (%d of %d claiming commits verified)", passed, len(lines))
 	}
+	if waived > 0 {
+		// Every waived commit is named in the headline, whatever else it says (CLI-INV-58).
+		headline = strings.TrimSuffix(headline, ")") + "; " + waivedPhrase(waived) + ")"
+	}
 	claimed := len(lines)
-	lines = append(lines, uncovered...)
+	lines = append(lines, listed...)
 	var drift bytes.Buffer
 	if claimed > 0 {
 		if err := reportDrift(ctx, root, ledger, &drift); err != nil {
@@ -176,6 +193,28 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 		claiming[l.commit] = true
 	}
 	var out []checkLine
+	// Who made each commit, read only when a commit needs a waiver (CLI-INV-57): its author and every
+	// co-author, and its verified signer (read once for the range).
+	var sigs map[string][2]string
+	subject := func(sha string) (waiverSubject, error) {
+		if sigs == nil {
+			var err error
+			if sigs, err = commitSignatures(ctx, root, base); err != nil {
+				return waiverSubject{}, err
+			}
+		}
+		f := strings.SplitN(gitOutput(ctx, root, "log", "-1", "--format=%an%x00%ae%x00%(trailers:key=Co-authored-by,valueonly,separator=%x01)", "--end-of-options", sha), "\x00", 3)
+		if len(f) != 3 {
+			return waiverSubject{}, fmt.Errorf("check: cannot read who made %s", sha)
+		}
+		var coauthors []string
+		for _, co := range strings.Split(strings.TrimSpace(f[2]), "\x01") {
+			if co = strings.TrimSpace(co); co != "" {
+				coauthors = append(coauthors, co)
+			}
+		}
+		return newWaiverSubject(f[0], f[1], coauthors, sigs[sha][1]), nil
+	}
 	for _, sha := range shas {
 		if claiming[sha] {
 			continue
@@ -197,6 +236,19 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 		if len(code) == 0 {
 			continue
 		}
+		var notes []string
+		if strings.TrimSpace(gitOutput(ctx, root, "ls-tree", "--name-only", sha+"^1", "--", waiversDir+"/")) != "" {
+			who, err := subject(sha)
+			if err != nil {
+				return nil, err
+			}
+			uses, unwaived, why := waiversFor(ctx, root, base, sha, code, who)
+			if len(uses) > 0 {
+				out = append(out, checkLine{commit: sha, claims: "-", state: checkWaived, reason: waivedReason(uses), waivers: uses})
+				continue
+			}
+			code, notes = unwaived, why
+		}
 		shown := code
 		if len(shown) > 3 {
 			shown = shown[:3]
@@ -206,6 +258,9 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 			reason += fmt.Sprintf(" (+%d more)", len(code)-len(shown))
 		}
 		reason += "; run `proofbound task start <change>` before committing code, or end the message with `Intent: sdd:<change>`"
+		if len(notes) > 0 {
+			reason += "; " + strings.Join(notes, "; ")
+		}
 		out = append(out, checkLine{commit: sha, claims: "-", state: checkUncovered, reason: reason})
 	}
 	return out, nil

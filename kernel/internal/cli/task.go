@@ -218,11 +218,19 @@ func runHook(ctx context.Context, root, hook, file, source string, output io.Wri
 	if len(code) == 0 {
 		return nil
 	}
+	uses, notes := stagedWaived(ctx, root, uncommented(msg), code)
+	if len(uses) > 0 {
+		fmt.Fprintf(output, "proofbound: no spec claimed; %s\n", waivedReason(uses))
+		return nil
+	}
 	shown := code
 	if len(shown) > 3 {
 		shown = shown[:3]
 	}
 	fmt.Fprintf(output, "proofbound: this commit changes code (%s) but claims no spec.\n  Run `proofbound task start <change>` and commit again: the claim is added for you.\n  Specs, docs, gates, review records and Markdown need no claim.\n", strings.Join(shown, ", "))
+	for _, n := range notes {
+		fmt.Fprintf(output, "  %s\n", n)
+	}
 	return errHookBlock
 }
 

@@ -44,6 +44,7 @@ var recordFields = map[string][]string{
 	outcomeSchema:     {"schema", "exception", "commit", "outcome", "reason", "fixed_by", "by", "key", "at"},
 	attestationSchema: {"schema", "base", "head", "transcript_sha256", "headline", "by", "key", "at"},
 	areaSchema:        {"schema", "commit", "by", "key", "at", "hunks"},
+	waiverSchema:      {"schema", "id", "paths", "reason", "expires", "by", "key", "at"},
 }
 
 type outcomeView struct {
