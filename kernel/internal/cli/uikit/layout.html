@@ -11,4 +11,4 @@
     <span class="who">{{if .V.Actor.Name}}<strong>{{.V.Actor.Name}}</strong> · key {{.V.Actor.Fingerprint}}{{else}}Read-only{{end}}</span>
   </div>
 </header>{{end}}
-{{define "period"}}<p class="period muted">Period: since <strong>{{.BaseRef}}</strong> · <code>{{short .Report.Base}}..{{short .Report.Head}}</code> · {{.Report.Counts.Total}} commits · computed {{.Generated}}{{if .SyncError}} · <span class="tag tag-disclosed">Record partly refreshed</span>{{end}}</p>{{end}}
+{{define "period"}}<p class="period muted">Period: since <strong>{{.BaseLabel}}</strong> · <code>{{short .Report.Base}}..{{short .Report.Head}}</code> · {{.Report.Counts.Total}} commits · computed {{.Generated}}{{if .SyncError}} · <span class="tag tag-disclosed">Record partly refreshed</span>{{end}}</p>{{end}}

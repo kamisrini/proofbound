@@ -10,6 +10,7 @@ import (
 
 	"github.com/kamisrini/proofbound/kernel/internal/core"
 	"github.com/kamisrini/proofbound/kernel/internal/store"
+	pbwarranty "github.com/kamisrini/proofbound/kernel/internal/warranty"
 )
 
 // The Audit room's computation (U1, docs/plans/ui-u1-audit-room-spec.md section 3, CLI-INV-38). It
@@ -204,11 +205,18 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		c3.State, c3.Count = auditNone, "not checked"
 		c3.Basis = "Not checked on this machine: " + a.Problem + "."
 	} else {
-		valid := 0
+		valid, checked := 0, 0
 		for _, l := range claims {
 			if l.state != checkPass {
 				continue
 			}
+			// A warranty's issuer may not be its reviewer, so a machine signing as one of the change's
+			// reviewers cannot check it; that says nothing about the change (owner try-out).
+			if body, err := warrantyBody(ctx, ledger, l.commit); err == nil && reviewedBy(body, a.Name) {
+				c3.Evidence = append(c3.Evidence, auditEvidence{Commit: l.commit, Text: "not checked here: this machine signs as " + a.Name + ", one of its reviewers; check it from another key"})
+				continue
+			}
+			checked++
 			_, _, _, unreviewed, err := buildWarranty(ctx, root, ledger, l.commit)
 			switch {
 			case err != nil:
@@ -222,10 +230,13 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 				c3.Evidence = append(c3.Evidence, auditEvidence{Commit: l.commit, Text: "VALID"})
 			}
 		}
-		if valid == passed {
-			c3.State, c3.Count = auditHeld, fmt.Sprintf("%d of %d VALID", valid, passed)
-		} else {
-			c3.State, c3.Count = auditExcepted, fmt.Sprintf("%d of %d VALID", valid, passed)
+		switch {
+		case checked == 0:
+			c3.State, c3.Count = auditNone, "not checked from a reviewer's key"
+		case valid == checked:
+			c3.State, c3.Count = auditHeld, fmt.Sprintf("%d of %d VALID", valid, checked)
+		default:
+			c3.State, c3.Count = auditExcepted, fmt.Sprintf("%d of %d VALID", valid, checked)
 		}
 	}
 
@@ -556,6 +567,16 @@ func specInParent(ctx context.Context, root, sha, name string) bool {
 	}
 	for _, entry := range strings.Split(gitOutput(ctx, root, "ls-tree", "-d", "--name-only", parent+":openspec/changes/archive"), "\n") {
 		if strings.HasSuffix(strings.TrimSpace(entry), "-"+name) {
+			return true
+		}
+	}
+	return false
+}
+
+// reviewedBy reports whether name (a key name) reviewed the warranty body's change.
+func reviewedBy(body pbwarranty.Body, name string) bool {
+	for _, r := range bodyReviewers(body) {
+		if pbwarranty.KeyName(r) == name {
 			return true
 		}
 	}

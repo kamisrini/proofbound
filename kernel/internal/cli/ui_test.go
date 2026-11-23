@@ -237,8 +237,8 @@ func TestOutcomeRecords(t *testing.T) {
 	uiWrite(t, other, "src/y.sh", "y\n")
 	s2 := uiCommit(t, other, "agent", "key and code together")
 	rep2 := auditReport{Base: b2, Head: s2, Exceptions: []auditException{{ID: "uncovered-" + s2[:12], Commit: s2}}}
-	if _, _, err := buildAct(ctx, other, rep2, nil, localActor(ctx, other), actRequest{Kind: "outcome", Exception: "uncovered-" + s2[:12], Outcome: "accepted", Reason: "r"}, now); err == nil || !strings.Contains(err.Error(), "not declared when this range began") {
-		t.Errorf("a key declared inside the range could sign: %v", err)
+	if _, _, err := buildAct(ctx, other, rep2, nil, localActor(ctx, other), actRequest{Kind: "outcome", Exception: "uncovered-" + s2[:12], Outcome: "accepted", Reason: "r"}, now); err == nil || !strings.Contains(err.Error(), "not declared before commit") {
+		t.Errorf("a key declared in the judged commit could sign: %v", err)
 	}
 
 	// The commit's author cannot close it; bad outcomes and reasons are refused.
@@ -448,6 +448,13 @@ func TestOutcomeReadBack(t *testing.T) {
 	}
 	if !strings.Contains(rep.Headline, "4 exception(s), 1 with a signed outcome") {
 		t.Errorf("headline = %q", rep.Headline)
+	}
+	// The same record reads the same whatever period is viewed (owner try-out: it read invalid when
+	// the period started before the keys were declared).
+	wide := auditReport{Base: uiGit(t, root, "rev-list", "--max-parents=0", "HEAD"), Head: head, Counts: auditCounts{Total: 6}, Exceptions: []auditException{ex(agent)}}
+	attachOutcomes(ctx, root, &wide)
+	if o := wide.Exceptions[0].Outcome; o == nil || !o.Verified {
+		t.Errorf("a valid outcome read invalid for a wider period: %+v", o)
 	}
 
 	att := map[string]any{"schema": attestationSchema, "base": base, "head": head, "transcript_sha256": strings.Repeat("a", 64), "headline": "h", "by": "auditor", "key": pbwarranty.Fingerprint(pub), "at": "2026-11-22T12:00:00Z"}

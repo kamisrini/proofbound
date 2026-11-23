@@ -203,7 +203,7 @@ func verifyRecord(data []byte, schema string, keys map[string]ed25519.PublicKey)
 	}
 	pub, ok := keys[fields["by"]]
 	if !ok {
-		return nil, fmt.Errorf("signer %q has no key declared at the range's base", fields["by"])
+		return nil, fmt.Errorf("signer %q has no key declared before what the record judges", fields["by"])
 	}
 	if pbwarranty.Fingerprint(pub) != fields["key"] {
 		return nil, fmt.Errorf("key %s is not the key declared for %s", fields["key"], fields["by"])
@@ -239,10 +239,15 @@ func headRecords(ctx context.Context, root, dir string) map[string][]byte {
 	return out
 }
 
-// signerKeys are the keys a record about base..HEAD may be signed with: those already declared at
-// base, so a key added inside the range cannot close the range's own exceptions (spec review F2).
-func signerKeys(ctx context.Context, root string, rep auditReport) map[string]ed25519.PublicKey {
-	return declaredKeys(ctx, root, rep.Base)
+// keysBefore are the keys declared in commit's first parent: an outcome on an exception may be
+// signed only by a key that existed before the commit it judges, so a key added in that commit (or
+// later by its author) cannot close it, and the answer does not depend on the period a reader views
+// (owner try-out: a record valid for "since the keys" read invalid for "since the first commit").
+func keysBefore(ctx context.Context, root, commit string) map[string]ed25519.PublicKey {
+	if len(strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--verify", "--quiet", commit+"^1"))) != 40 {
+		return map[string]ed25519.PublicKey{}
+	}
+	return declaredKeys(ctx, root, commit+"^1")
 }
 
 // authorKey is the key name a commit's author would have (`keys init` default: git user.name).
@@ -266,10 +271,10 @@ func fixedByOK(ctx context.Context, root, commit, fix string) bool {
 // attachOutcomes sets each exception's outcome from HEAD's committed records and recomputes the
 // headline. A record that does not verify is shown, and closes nothing.
 func attachOutcomes(ctx context.Context, root string, rep *auditReport) {
-	keys := signerKeys(ctx, root, *rep)
 	records := headRecords(ctx, root, outcomesDir)
 	for i := range rep.Exceptions {
 		e := &rep.Exceptions[i]
+		keys := keysBefore(ctx, root, e.Commit)
 		p := outcomesDir + "/" + e.ID + ".json"
 		data, ok := records[p]
 		if !ok {
@@ -303,7 +308,6 @@ func attachOutcomes(ctx context.Context, root string, rep *auditReport) {
 
 // readAttestations verifies HEAD's attestations and compares each with the transcript now.
 func readAttestations(ctx context.Context, root string, rep auditReport) []attestationView {
-	keys := signerKeys(ctx, root, rep)
 	views := []attestationView{}
 	records := headRecords(ctx, root, attestationsDir)
 	paths := make([]string, 0, len(records))
@@ -313,6 +317,14 @@ func readAttestations(ctx context.Context, root string, rep auditReport) []attes
 	sort.Strings(paths)
 	for _, p := range paths {
 		v := attestationView{Path: p}
+		// An attestation is signed by a key declared at the base it attests to.
+		var head struct {
+			Base string `json:"base"`
+		}
+		keys := map[string]ed25519.PublicKey{}
+		if json.Unmarshal(records[p], &head) == nil && sha40RE.MatchString(head.Base) {
+			keys = declaredKeys(ctx, root, head.Base)
+		}
 		fields, err := verifyRecord(records[p], attestationSchema, keys)
 		if err != nil {
 			v.Problem = "does not verify: " + err.Error()
@@ -393,8 +405,9 @@ func buildAct(ctx context.Context, root string, rep auditReport, now []byte, a a
 	if a.key == nil {
 		return "", nil, errors.New(a.Problem)
 	}
-	if base, ok := signerKeys(ctx, root, rep)[a.Name]; !ok || !base.Equal(a.key.Public().(ed25519.PublicKey)) {
-		return "", nil, fmt.Errorf("your key %s was not declared when this range began (%s), so it cannot sign for it", a.Fingerprint, rep.Base[:12])
+	declaredAt := func(keys map[string]ed25519.PublicKey) bool {
+		k, ok := keys[a.Name]
+		return ok && k.Equal(a.key.Public().(ed25519.PublicKey))
 	}
 	fields := map[string]any{"by": a.Name, "key": a.Fingerprint, "at": at.UTC().Format(time.RFC3339)}
 	switch req.Kind {
@@ -410,6 +423,9 @@ func buildAct(ctx context.Context, root string, rep auditReport, now []byte, a a
 		}
 		if found == nil {
 			return "", nil, fmt.Errorf("%s is not an exception of this range now", req.Exception)
+		}
+		if !declaredAt(keysBefore(ctx, root, found.Commit)) {
+			return "", nil, fmt.Errorf("your key %s was not declared before commit %s, so it cannot judge it", a.Fingerprint, found.Commit[:12])
 		}
 		if a.Name == authorKey(ctx, root, found.Commit) {
 			return "", nil, errors.New("you wrote this commit; someone else must record its outcome")
@@ -434,6 +450,9 @@ func buildAct(ctx context.Context, root string, rep auditReport, now []byte, a a
 		fields["schema"], fields["exception"], fields["commit"], fields["outcome"], fields["reason"] = outcomeSchema, found.ID, found.Commit, req.Outcome, req.Reason
 		return outcomesDir + "/" + found.ID + ".json", fields, nil
 	case "attestation":
+		if !declaredAt(declaredKeys(ctx, root, rep.Base)) {
+			return "", nil, fmt.Errorf("your key %s was not declared when this period began (%s), so it cannot attest to it", a.Fingerprint, rep.Base[:12])
+		}
 		sum := sha256.Sum256(now)
 		fields["schema"], fields["base"], fields["head"], fields["transcript_sha256"], fields["headline"] = attestationSchema, rep.Base, rep.Head, hex.EncodeToString(sum[:]), rep.Headline
 		return attestationsDir + "/" + rep.Base[:12] + "-" + rep.Head[:12] + ".json", fields, nil

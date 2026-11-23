@@ -154,6 +154,7 @@ type uiView struct {
 	Tags         []string          `json:"-"`
 	// Page-only: the repository's folder name, when this page was computed, and the summary tiles.
 	Repo       string          `json:"-"`
+	BaseLabel  string          `json:"-"` // "v0.3.2", or "the first commit (6ad247c8a3d9)", or a short id
 	Generated  string          `json:"-"`
 	Summary    viewSummary     `json:"-"`
 	Actors     []actorRow      `json:"-"`
@@ -503,6 +504,12 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 	v.Attestations = readAttestations(ctx, s.root, rep)
 	v.Actor = localActor(ctx, s.root)
 	v.Repo = filepath.Base(s.root)
+	v.BaseLabel = printableUnit(baseRef)
+	if roots := strings.Fields(gitOutput(ctx, s.root, "rev-list", "--max-parents=0", "HEAD")); containsString(roots, rep.Base) {
+		v.BaseLabel = "the first commit (" + short(rep.Base, 12) + ")"
+	} else if sha40RE.MatchString(baseRef) {
+		v.BaseLabel = short(baseRef, 12)
+	}
 	v.Generated = s.now().Format("2 Jan 2006, 15:04 MST")
 	v.Summary = summarize(rep)
 	v.Actors = actorRows(rep)

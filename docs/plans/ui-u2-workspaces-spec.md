@@ -84,3 +84,13 @@ only the latest verdict counts. LOW adopted: F5 (GPG signatures can never verify
 F6 (an existing export must be a regular 0600 file holding this key). LOW recorded: F5's "a key
 declared under two names gets one principal", F7 (`you_may` is always false today; the HTTP seal test
 stubs `reviewSeal`, which the demo-repo acceptance run exercises for real).
+
+## 8. Owner's manual run
+
+- An outcome signed for the period "since the keys were declared" read "invalid" when the page showed
+  a wider period, because signers were judged by the keys at the viewed period's base. A record's
+  validity must not depend on the viewing window: an outcome's signer must now be declared in the
+  first parent of the commit it judges (still refusing a key added in that commit), an attestation's
+  at the base it attests to (CLI-INV-39).
+- C3 reported "warranty does not verify" when the UI ran with a reviewer's key: a warranty's issuer
+  may not be its reviewer. Such a commit is now "not checked here" (CLI-INV-38).
