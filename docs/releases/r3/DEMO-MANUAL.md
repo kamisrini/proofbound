@@ -722,10 +722,24 @@ spreadsheet.
 
 ## Try it yourself: review the totals row
 
-You now know every move. To make step 14 say WARRANTED, review `002-totals-row` as `demo-reviewer`,
-reusing steps 7–10: `proofbound review draft <its commit>` (from `git log --oneline`), set `draft` to its
-`draft.json`, `decide demo-reviewer`, seal with `PROOFBOUND_KEY="$W/reviewer.key"`, commit, `sync all`,
-`check "$base"`. (If you open a new terminal, paste step 0b and the `decide` line from step 8 again.)
+You now know every move. To make step 14 say WARRANTED, review `002-totals-row` as `demo-reviewer`.
+
+**In the browser (v0.3.3):** start the UI as the reviewer and open the **Review bench** tab:
+
+```bash
+PROOFBOUND_KEY="$W/reviewer.key" proofbound ui
+```
+
+The queue lists the totals-row commit (the spec owner does not see it there: nobody reviews their own
+work). Open it, mark each promise **Kept** and each **Verifiable**, click **Review what sealing
+writes**, then **Seal and sign**: the page writes the same signed review files as `review seal` and
+commits them. Press Ctrl-C, then `proofbound check "$base"` says WARRANTED. The **Promise map** tab
+now shows both totals-row promises as proven, and **Now** has nothing left to review.
+
+**In the terminal:** reuse steps 7–10: `proofbound review draft <its commit>` (from
+`git log --oneline`), set `draft` to its `draft.json`, `decide demo-reviewer`, seal with
+`PROOFBOUND_KEY="$W/reviewer.key"`, commit, `sync all`, `check "$base"`. (If you open a new terminal,
+paste step 0b and the `decide` line from step 8 again.)
 
 ## Clean up
 
