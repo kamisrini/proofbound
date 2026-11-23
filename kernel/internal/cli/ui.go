@@ -131,7 +131,10 @@ type uiServer struct {
 	drafts func(ctx context.Context, shas []string) (map[string]draftFile, error)
 	// seal runs `review seal` on a draft folder with an open store; tests replace it.
 	seal func(ctx context.Context, dir string, output io.Writer) error
-	now  func() time.Time
+	// asOf computes the audit of base..commit from a checkout of commit; tests replace it.
+	asOf    func(ctx context.Context, base, commit string) (ledgerView, string, error)
+	asOfMem map[string]ledgerView
+	now     func() time.Time
 }
 
 // ledgerView is what one store opening computes.
@@ -153,8 +156,12 @@ type uiView struct {
 	SyncError    string            `json:"sync_error,omitempty"`
 	Tags         []string          `json:"-"`
 	// Page-only: the repository's folder name, when this page was computed, and the summary tiles.
-	Repo       string          `json:"-"`
-	BaseLabel  string          `json:"-"` // "v0.3.2", or "the first commit (6ad247c8a3d9)", or a short id
+	Repo      string `json:"-"`
+	BaseLabel string `json:"-"` // "v0.3.2", or "the first commit (6ad247c8a3d9)", or a short id
+	// AsOf is set when the page shows a past moment (the time rail); Report is then that moment's.
+	AsOf *asOfInfo `json:"as_of,omitempty"`
+	// Rail is the period's commits for the time rail, oldest first (page only).
+	Rail       []auditCommit   `json:"-"`
 	Generated  string          `json:"-"`
 	Summary    viewSummary     `json:"-"`
 	Actors     []actorRow      `json:"-"`
@@ -342,6 +349,10 @@ func newUIServer(root, databaseURL, base string, port int) *uiServer {
 		}
 		return out, closeStore(ledger)
 	}
+	s.asOfMem = map[string]ledgerView{}
+	s.asOf = func(ctx context.Context, base, commit string) (ledgerView, string, error) {
+		return asOfCompute(ctx, root, databaseURL, base, commit)
+	}
 	s.seal = func(ctx context.Context, dir string, output io.Writer) error {
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
@@ -497,7 +508,9 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 		return v, http.StatusInternalServerError, err
 	}
 	attachOutcomes(ctx, s.root, &rep)
+	withReviewProofs(ctx, s.root, &rep)
 	v.Report = rep
+	v.Rail = rep.Commits
 	if v.transcript, err = transcript(rep); err != nil {
 		return v, http.StatusInternalServerError, err
 	}
@@ -523,6 +536,58 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 
 func constantEqual(a, b string) bool { return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1 }
 
+// viewAsOf computes now (for the rail and the comparison) and the moment asof, a commit of the
+// period, from its own checkout and record (CLI-INV-50); cached per base and commit.
+func (s *uiServer) viewAsOf(ctx context.Context, baseRef, asof string) (uiView, int, error) {
+	if !s.acquire(ctx) {
+		return uiView{}, http.StatusServiceUnavailable, errLedgerBusy
+	}
+	defer s.release()
+	v, status, err := s.viewLocked(ctx, baseRef)
+	if err != nil {
+		return v, status, err
+	}
+	commit, err := resolveCommit(ctx, s.root, asof)
+	inPeriod := false
+	if err == nil {
+		for _, c := range v.Report.Commits {
+			inPeriod = inPeriod || c.Commit == commit
+		}
+	}
+	if !inPeriod {
+		return v, http.StatusBadRequest, fmt.Errorf("%q is not a commit of this period", printableUnit(asof))
+	}
+	key := v.Report.Base + ".." + commit
+	then, ok := s.asOfMem[key]
+	note := ""
+	if !ok {
+		if then, note, err = s.asOf(ctx, v.Report.Base, commit); err != nil {
+			return v, http.StatusInternalServerError, err
+		}
+		// Only a moment whose record was built without error is kept (review ui-u3-review-20261122 F2).
+		if note == "" {
+			s.asOfMem[key] = then
+		}
+	}
+	changed, onlyThen, onlyNow := compareMoments(then.Report, v.Report)
+	info := &asOfInfo{Commit: commit, Changed: changed, OnlyThen: onlyThen, OnlyNow: onlyNow, SyncNote: note}
+	for _, c := range v.Report.Commits {
+		if c.Commit == commit {
+			info.Date = c.Date
+		}
+	}
+	v.AsOf = info
+	v.Report = then.Report
+	v.Promises = then.Promises
+	v.Summary = summarize(then.Report)
+	v.Actors = actorRows(then.Report)
+	v.Attestations = []attestationView{}
+	if v.transcript, err = transcript(then.Report); err != nil {
+		return v, http.StatusInternalServerError, err
+	}
+	return v, http.StatusOK, nil
+}
+
 // defaultAuditBase is the newest tag reachable from HEAD^, else the root commit.
 func defaultAuditBase(ctx context.Context, root string) string {
 	if tag := strings.TrimSpace(gitOutput(ctx, root, "describe", "--tags", "--abbrev=0", "HEAD^")); tag != "" {
@@ -540,7 +605,14 @@ func wantsJSON(r *http.Request) bool {
 }
 
 func (s *uiServer) serveAudit(w http.ResponseWriter, r *http.Request) {
-	v, status, err := s.view(r.Context(), r.URL.Query().Get("base"))
+	var v uiView
+	var status int
+	var err error
+	if asof := r.URL.Query().Get("asof"); asof != "" {
+		v, status, err = s.viewAsOf(r.Context(), r.URL.Query().Get("base"), asof)
+	} else {
+		v, status, err = s.view(r.Context(), r.URL.Query().Get("base"))
+	}
 	if err != nil {
 		if wantsJSON(r) {
 			writeJSON(w, status, map[string]string{"error": err.Error()})

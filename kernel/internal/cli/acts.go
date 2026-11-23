@@ -54,6 +54,8 @@ type outcomeView struct {
 	Verified bool   `json:"verified"`
 	Problem  string `json:"problem,omitempty"`
 	Path     string `json:"path"`
+	// Proof is what the browser needs to verify the record itself (page only).
+	Proof *browserProof `json:"-"`
 }
 
 type attestationView struct {
@@ -69,6 +71,8 @@ type attestationView struct {
 	// records (outcomes, attestations). An attestation covers its own head, never a later one.
 	Moved       int `json:"moved"`
 	RecordsOnly int `json:"records_only"`
+	// Proof is what the browser needs to verify the record itself (page only).
+	Proof *browserProof `json:"-"`
 }
 
 // actor is the person this machine signs as: the local key, when HEAD declares it.
@@ -300,6 +304,8 @@ func attachOutcomes(ctx context.Context, root string, rep *auditReport) {
 		} else {
 			view.Verified = true
 			view.Outcome, view.Reason, view.FixedBy, view.By, view.At = fields["outcome"], printableUnit(fields["reason"]), fields["fixed_by"], fields["by"], fields["at"]
+			pr := recordProof(p, data, keys[fields["by"]], outcomeSchema)
+			view.Proof = &pr
 		}
 		e.Outcome = view
 	}
@@ -338,6 +344,8 @@ func readAttestations(ctx context.Context, root string, rep auditReport) []attes
 		}
 		v.Verified = true
 		v.Base, v.Head, v.Headline, v.By, v.At = fields["base"], fields["head"], printableUnit(fields["headline"]), fields["by"], fields["at"]
+		pr := recordProof(p, records[p], keys[fields["by"]], attestationSchema)
+		v.Proof = &pr
 		for _, sha := range strings.Fields(gitOutput(ctx, root, "rev-list", "--end-of-options", v.Head+"..HEAD")) {
 			v.Moved++
 			if recordsOnly(ctx, root, sha) {

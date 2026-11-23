@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -291,4 +294,174 @@ func uiRequestWith(s *uiServer, method, path, auth string) *httptest.ResponseRec
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, r)
 	return w
+}
+
+// CLI-INV-50: the time rail shows a moment of the period from its own computation, compares it with
+// now, hides every act, refuses a commit outside the period, and computes each moment once.
+func TestAsOfAudit(t *testing.T) {
+	root := taskRepo(t)
+	base := uiCommit(t, root, "a", "start")
+	uiWrite(t, root, "src/a.sh", "a\n")
+	mid := uiCommit(t, root, "agent", "agent change")
+	uiWrite(t, root, "src/b.sh", "b\n")
+	head := uiCommit(t, root, "agent", "second agent change")
+	now := auditReport{Schema: auditSchema, Base: base, Head: head, Counts: auditCounts{Total: 2},
+		Commits:    []auditCommit{{Commit: mid, Class: classUncovered}, {Commit: head, Class: classUncovered}},
+		Controls:   []auditControl{{ID: "C2", Question: "q", State: auditExcepted, Count: "2"}},
+		Exceptions: []auditException{{ID: "uncovered-" + mid[:12], Kind: "uncovered", Commit: mid}, {ID: "uncovered-" + head[:12], Kind: "uncovered", Commit: head}}}
+	then := auditReport{Schema: auditSchema, Base: base, Head: mid, Counts: auditCounts{Total: 1},
+		Commits:    []auditCommit{{Commit: mid, Class: classUncovered}},
+		Controls:   []auditControl{{ID: "C2", Question: "q", State: auditExcepted, Count: "1"}},
+		Exceptions: []auditException{{ID: "uncovered-" + mid[:12], Kind: "uncovered", Commit: mid}}}
+	s := testUIServer(t, root, now)
+	calls := 0
+	s.asOf = func(ctx context.Context, b, commit string) (ledgerView, string, error) {
+		calls++
+		if b != base || commit != mid {
+			t.Errorf("asOf(%s, %s)", b, commit)
+		}
+		return ledgerView{Report: then}, "", nil
+	}
+	host := "127.0.0.1:4242"
+	if w := uiRequest(s, "GET", "/audit?asof="+base, host, "", s.token, ""); w.Code != http.StatusBadRequest {
+		t.Errorf("the base itself is not a moment of the period: %d", w.Code)
+	}
+	r := httptest.NewRequest("GET", "/audit?asof="+mid, nil)
+	r.Host = host
+	r.Header.Set("Accept", "application/json")
+	r.AddCookie(&http.Cookie{Name: s.cookieName(), Value: s.token})
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	var got uiView
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil || got.AsOf == nil {
+		t.Fatalf("as-of JSON: %v %s", err, w.Body.String())
+	}
+	if got.Report.Head != mid || len(got.AsOf.Changed) != 1 || got.AsOf.Changed[0].Then != "EXCEPTION · 1" || len(got.AsOf.OnlyNow) != 1 || len(got.AsOf.OnlyThen) != 0 {
+		t.Errorf("as-of = %+v / %+v", got.Report.Head, got.AsOf)
+	}
+	page := uiRequest(s, "GET", "/audit?asof="+mid, host, "", s.token, "").Body.String()
+	if strings.Contains(page, `data-act="open"`) || strings.Contains(page, `data-act="attest"`) || !strings.Contains(page, "Compare with now") {
+		t.Error("a past moment offers an act, or shows no comparison")
+	}
+	if calls != 1 {
+		t.Errorf("the moment was computed %d times, want once", calls)
+	}
+	now2 := uiRequest(s, "GET", "/audit", host, "", s.token, "").Body.String()
+	if !strings.Contains(now2, "asof="+mid) || !strings.Contains(now2, "Time rail") {
+		t.Error("the page has no time rail")
+	}
+}
+
+// CLI-INV-51: the page carries, for the browser, exactly what was signed; the browser's canonical
+// form of a record (sorted keys, JSON.stringify strings) is the signed canonical form.
+func TestBrowserProofData(t *testing.T) {
+	ctx := context.Background()
+	key := uiKey(t)
+	pub := key.Public().(ed25519.PublicKey)
+	root := taskRepo(t)
+	uiWrite(t, root, ".proofbound/keys/auditor.pub", pbwarranty.PubLine(pub))
+	base := uiCommit(t, root, "auditor", "keys")
+	uiWrite(t, root, "src/a.sh", "a\n")
+	agent := uiCommit(t, root, "agent", "agent change")
+	id := "uncovered-" + agent[:12]
+	f := map[string]any{"schema": outcomeSchema, "exception": id, "commit": agent, "outcome": "accepted", "reason": `quotes " and <tags> & é`, "by": "auditor", "key": pbwarranty.Fingerprint(pub), "at": "2026-11-22T12:00:00Z"}
+	data, _ := signRecord(f, key)
+	uiWrite(t, root, outcomesDir+"/"+id+".json", string(data))
+	// A review file with its .sig, as `review seal` writes them.
+	rr := []byte("---\nreview\n---\n")
+	uiWrite(t, root, "docs/verification/verdicts/RR-"+agent[:12]+"-1.md", string(rr))
+	uiWrite(t, root, "docs/verification/verdicts/RR-"+agent[:12]+"-1.md.sig", pbwarranty.SignArtifact(rr, key))
+	uiCommit(t, root, "auditor", "records")
+	rep := auditReport{Base: base, Counts: auditCounts{Total: 1}, Exceptions: []auditException{{ID: id, Commit: agent}}, Roles: []auditRole{{Commit: agent}}}
+	attachOutcomes(ctx, root, &rep)
+	withReviewProofs(ctx, root, &rep)
+	pr := rep.Exceptions[0].Outcome.Proof
+	if pr == nil || pr.KeyHex != hex.EncodeToString(pub) || pr.Tag != outcomeSchema+"\n" {
+		t.Fatalf("outcome proof = %+v", pr)
+	}
+	raw, _ := base64.StdEncoding.DecodeString(pr.Bytes64)
+	var obj map[string]string
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		t.Fatal(err)
+	}
+	sig, _ := hex.DecodeString(obj["signature"])
+	delete(obj, "signature")
+	keys := make([]string, 0, len(obj))
+	for k := range obj {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var b strings.Builder
+	b.WriteString("{")
+	for i, k := range keys {
+		if i > 0 {
+			b.WriteString(",")
+		}
+		b.WriteString(jsStringify(k) + ":" + jsStringify(obj[k]))
+	}
+	b.WriteString("}")
+	if !ed25519.Verify(pub, append([]byte(pr.Tag), b.String()...), sig) {
+		t.Errorf("the browser's canonical form does not verify: %s", b.String())
+	}
+	if len(rep.Roles[0].Proofs) != 1 {
+		t.Fatalf("review proofs = %+v", rep.Roles[0].Proofs)
+	}
+	rp := rep.Roles[0].Proofs[0]
+	rb, _ := base64.StdEncoding.DecodeString(rp.Bytes64)
+	fields := strings.Fields(rp.Sig)
+	rsig, _ := hex.DecodeString(fields[2])
+	if rp.KeyHex != hex.EncodeToString(pub) || fields[1] != rp.KeyHex || !ed25519.Verify(pub, append([]byte(rp.Tag), rb...), rsig) {
+		t.Errorf("review proof does not verify as the browser would: %+v", rp)
+	}
+}
+
+// jsStringify is JavaScript's JSON.stringify for a string: no HTML escaping.
+func jsStringify(s string) string {
+	var b strings.Builder
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(s)
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+// CLI-INV-50: the checkout is of exactly that commit (nothing later in it), runs no hook, and is
+// removed and pruned afterwards even when the work fails; DATABASE_URL refuses the time rail.
+func TestAsOfCheckout(t *testing.T) {
+	ctx := context.Background()
+	root := taskRepo(t)
+	uiWrite(t, root, "a.txt", "a\n")
+	early := uiCommit(t, root, "a", "early")
+	uiWrite(t, root, "later.txt", "later\n")
+	uiCommit(t, root, "a", "later")
+	marker := filepath.Join(t.TempDir(), "hook-ran")
+	uiWrite(t, root, ".git/hooks/post-checkout", "#!/bin/sh\ntouch "+marker+"\n")
+	if err := os.Chmod(filepath.Join(root, ".git", "hooks", "post-checkout"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var seen string
+	err := withCheckout(ctx, root, early, func(wt string) error {
+		seen = wt
+		if got := uiGit(t, wt, "rev-parse", "HEAD"); got != early {
+			t.Errorf("checkout HEAD = %s, want %s", got, early)
+		}
+		if _, err := os.Stat(filepath.Join(wt, "later.txt")); !os.IsNotExist(err) {
+			t.Error("a later commit's file is visible in the past checkout")
+		}
+		return errors.New("fail on purpose")
+	})
+	if err == nil || err.Error() != "fail on purpose" {
+		t.Fatalf("withCheckout = %v", err)
+	}
+	if _, err := os.Stat(seen); !os.IsNotExist(err) {
+		t.Error("the checkout was not removed after a failure")
+	}
+	if list := uiGit(t, root, "worktree", "list"); strings.Count(list, "\n") != 0 {
+		t.Errorf("worktree metadata left behind:\n%s", list)
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Error("the checkout ran the user's post-checkout hook")
+	}
+	if _, _, err := asOfCompute(ctx, root, "postgres://x", "HEAD~1", early); err == nil || !strings.Contains(err.Error(), "DATABASE_URL") {
+		t.Errorf("the time rail ran with DATABASE_URL set: %v", err)
+	}
 }

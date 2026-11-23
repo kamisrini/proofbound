@@ -47,6 +47,12 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   - **Agent surface**: every page as JSON, and `/agent/next` gives a coding agent its task's
     promises, what blocks it, whether it may act, and the next command. Agents read with the token in
     `.proofbound/ui.json`; only people act.
+- **Time rail.** Pick any commit of the period and the Audit room shows the audit exactly as it
+  stood then, computed from a checkout of that commit with its own record (nothing later can leak
+  in), and lists which controls and exceptions differ from now.
+- **Proof in your browser.** Every signed outcome, countersignature and reviewer signature the page
+  shows is verified again by your browser itself (Ed25519), so you do not have to take the server's
+  word for it.
 - **Close exceptions without a terminal.** For each exception, choose accepted risk, fixed in a later
   commit, or reverted, and give a reason. The page shows the exact record first; "Sign and record"
   signs it with your own key on your machine and commits it under `.proofbound/outcomes/`. Only a key

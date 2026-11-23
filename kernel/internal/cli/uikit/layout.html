@@ -11,4 +11,5 @@
     <span class="who">{{if .V.Actor.Name}}<strong>{{.V.Actor.Name}}</strong> · key {{.V.Actor.Fingerprint}}{{else}}Read-only{{end}}</span>
   </div>
 </header>{{end}}
+{{define "proof"}}<span class="bcheck tag tag-none" data-kind="{{.Kind}}" data-label="{{.Label}}" data-b64="{{.Bytes64}}" data-sig="{{.Sig}}" data-key="{{.KeyHex}}" data-tag="{{.Tag}}">checking in this browser…</span>{{end}}
 {{define "period"}}<p class="period muted">Period: since <strong>{{.BaseLabel}}</strong> · <code>{{short .Report.Base}}..{{short .Report.Head}}</code> · {{.Report.Counts.Total}} commits · computed {{.Generated}}{{if .SyncError}} · <span class="tag tag-disclosed">Record partly refreshed</span>{{end}}</p>{{end}}

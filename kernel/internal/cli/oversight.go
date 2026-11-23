@@ -102,6 +102,8 @@ type auditRole struct {
 	Owners      []string `json:"owners"`
 	Independent bool     `json:"independent"`
 	Note        string   `json:"note"`
+	// Proofs are the review files' signatures for the browser to check (page only).
+	Proofs []browserProof `json:"-"`
 }
 
 // roleFor reads the reviewers and owners of a claiming commit from the record (the same body a

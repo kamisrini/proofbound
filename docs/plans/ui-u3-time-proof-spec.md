@@ -42,8 +42,20 @@ Commit signatures (git's SSH format) are not checked in the browser; the page sa
 
 ## 3. Tests
 
-`TestAsOfAudit` (the as-of rule on a scripted repository with a stubbed sync: a later commit and a
+`TestAsOfCheckout` (the real checkout: exactly that commit, no hook run, removed and pruned even on
+failure; `DATABASE_URL` refused), `TestAsOfAudit` (the as-of rule on a scripted repository with a stubbed sync: a later commit and a
 later outcome are invisible; the worktree is removed; `asof` outside the period is a 400; acts ignore
 it), `TestBrowserProofData` (the page carries bytes, signature and declared key for an outcome and a
 review file, and a canonical re-serialization in Go equals the signed bytes). The browser script is
 accepted by running it in a browser on the tour's `shop` repository.
+
+## 4. Review (`ui-u3-review-20261122`, NEEDS_WORK: F1..F3 MED, F4, F5 LOW)
+
+F1: the checkout is now `withCheckout`, tested for real (`TestAsOfCheckout`). F2: a `sync all` error in
+the past checkout is shown on the page and that moment is not cached. F3: the checkout runs with
+`core.hooksPath` emptied (no user hook runs on a GET) and `git worktree prune` follows its removal.
+LOW recorded: F4 (the JS itself is accepted in a browser; Go mirrors its canonical form, and records
+cannot hold control or line-separator characters), F5 (the cache is per server run and per moment;
+"nothing can be signed" means the page offers no act and the act endpoints always act on HEAD; a
+review file without `.sig` is not shown as checked; the past checkout's sessions and check runs are
+read from this machine as they are now).

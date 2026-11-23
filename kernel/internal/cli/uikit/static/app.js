@@ -155,6 +155,47 @@
     });
   }
 
+  // Proof in the browser (U3, CLI-INV-51): re-verify each signature with WebCrypto Ed25519 against the
+  // declared key, from the exact bytes the page carries. Nothing is sent anywhere.
+  var fromB64 = function (b) { var s = atob(b), out = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) { out[i] = s.charCodeAt(i); } return out; };
+  var fromHex = function (h) { if (!/^([0-9a-f]{2})*$/.test(h)) { return null; } var out = new Uint8Array(h.length / 2); for (var i = 0; i < out.length; i++) { out[i] = parseInt(h.substr(i * 2, 2), 16); } return out; };
+  var utf8 = function (s) { return new TextEncoder().encode(s); };
+  var concat = function (a, b) { var out = new Uint8Array(a.length + b.length); out.set(a, 0); out.set(b, a.length); return out; };
+  // Canonical JSON of an all-string object: keys in UTF-16 order, JSON.stringify for every string
+  // (RFC 8785 for this shape).
+  var canonical = function (obj) {
+    return "{" + Object.keys(obj).sort().map(function (k) { return JSON.stringify(k) + ":" + JSON.stringify(obj[k]); }).join(",") + "}";
+  };
+  var mark = function (el, state, text) {
+    el.textContent = text;
+    el.className = "bcheck tag " + (state === "ok" ? "tag-passed" : state === "bad" ? "tag-exception" : "tag-none");
+  };
+  var verifyOne = function (el) {
+    var key = fromHex(el.getAttribute("data-key") || "");
+    if (!key || key.length !== 32) { mark(el, "bad", "no declared key: not verified in this browser"); return; }
+    var bytes = fromB64(el.getAttribute("data-b64") || ""), tag = utf8(el.getAttribute("data-tag") || ""), msg, sig;
+    if (el.getAttribute("data-kind") === "record") {
+      var obj;
+      try { obj = JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { mark(el, "bad", "malformed record: does not verify in this browser"); return; }
+      sig = fromHex(obj.signature || "");
+      delete obj.signature;
+      msg = concat(tag, utf8(canonical(obj)));
+    } else {
+      var f = (el.getAttribute("data-sig") || "").split(" ");
+      if (f.length !== 3 || f[0] !== "ed25519" || f[1] !== el.getAttribute("data-key")) { mark(el, "bad", "signature key is not the declared key"); return; }
+      sig = fromHex(f[2]);
+      msg = concat(tag, bytes);
+    }
+    if (!sig || sig.length !== 64) { mark(el, "bad", "malformed signature: does not verify in this browser"); return; }
+    if (!window.crypto || !crypto.subtle) { mark(el, "none", "this browser cannot check"); return; }
+    crypto.subtle.importKey("raw", key, { name: "Ed25519" }, false, ["verify"]).then(function (k) {
+      return crypto.subtle.verify({ name: "Ed25519" }, k, sig, msg);
+    }).then(function (ok) {
+      mark(el, ok ? "ok" : "bad", ok ? "verified in this browser" : "does NOT verify in this browser");
+    }, function () { mark(el, "none", "this browser cannot check Ed25519"); });
+  };
+  document.querySelectorAll(".bcheck").forEach(verifyOne);
+
   // Countersign the transcript.
   var attest = document.querySelector(".attest");
   if (attest) {

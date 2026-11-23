@@ -33,6 +33,29 @@
   {{end}}
 </section>
 
+{{if .Rail}}
+<section class="card rail" aria-labelledby="railh">
+  <div class="card-head"><h2 id="railh">Time rail</h2><span class="muted">Open any moment of the period: the audit exactly as it stood then</span></div>
+  <nav class="rail-dots" aria-label="Moments">
+    {{range .Rail}}<a href="/audit?base={{$.Report.Base}}&amp;asof={{.Commit}}" title="{{.Date}} {{.Subject}}"{{if $.AsOf}}{{if eq .Commit $.AsOf.Commit}} aria-current="true"{{end}}{{end}}><span class="dot dot-{{.Class}}"></span><span class="rail-label">{{.Date}} <code>{{short .Commit}}</code></span></a>{{end}}
+    <a href="/audit?base={{$.Report.Base}}" class="rail-now"{{if not $.AsOf}} aria-current="true"{{end}}><span class="dot dot-now"></span><span class="rail-label">Now</span></a>
+  </nav>
+</section>
+{{end}}
+{{if .AsOf}}
+<section class="card asof" aria-labelledby="asofh">
+  <div class="card-head"><h2 id="asofh">As of <code>{{short .AsOf.Commit}}</code>, {{.AsOf.Date}}</h2><a class="button secondary" href="/audit?base={{.Report.Base}}">Back to now</a></div>
+  <p>Computed from a checkout of that commit with its own record, built only from it: nothing that happened after it is visible below. Nothing can be signed while a past moment is shown.</p>
+  {{if .AsOf.SyncNote}}<p class="ex-outcome bad">The record at that moment could only be partly built, so some answers may be incomplete: {{.AsOf.SyncNote}}</p>{{end}}
+  <h3>Compare with now</h3>
+  {{if or .AsOf.Changed .AsOf.OnlyThen .AsOf.OnlyNow}}
+  {{if .AsOf.Changed}}<div class="tablewrap"><table class="grid"><thead><tr><th scope="col">Control</th><th scope="col">Then</th><th scope="col">Now</th></tr></thead><tbody>{{range .AsOf.Changed}}<tr><td><strong>{{.ID}}</strong> {{.Question}}</td><td>{{.Then}}</td><td>{{.Now}}</td></tr>{{end}}</tbody></table></div>{{end}}
+  {{if .AsOf.OnlyThen}}<p class="note-small">Exceptions then, gone now:</p><ul class="limits-list">{{range .AsOf.OnlyThen}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  {{if .AsOf.OnlyNow}}<p class="note-small">Exceptions now that did not exist then:</p><ul class="limits-list">{{range .AsOf.OnlyNow}}<li>{{.}}</li>{{end}}</ul>{{end}}
+  {{else}}<p class="empty">Every control and exception reads the same then and now.</p>{{end}}
+</section>
+{{end}}
+
 <section class="summary" aria-label="Summary">
   <div class="tile"><span class="num">{{.Summary.Held}}<span class="of"> / {{.Summary.Tests}}</span></span><span class="cap">Controls passed</span></div>
   <div class="tile {{if .Summary.Exceptions}}tile-exc{{end}}"><span class="num">{{.Summary.Exceptions}}</span><span class="cap">Exceptions · {{.Summary.Closed}} with a signed outcome</span></div>
@@ -58,11 +81,11 @@
     </div>
     {{if .Outcome}}
       {{if .Outcome.Verified}}
-      <p class="ex-outcome">{{outcomeLabel .Outcome.Outcome}}{{if .Outcome.FixedBy}} in <code>{{short .Outcome.FixedBy}}</code>{{end}} by <strong>{{.Outcome.By}}</strong>, {{.Outcome.At}}. “{{.Outcome.Reason}}” <span class="muted">Signed record <code>{{.Outcome.Path}}</code>, signature checked on this machine.</span></p>
+      <p class="ex-outcome">{{outcomeLabel .Outcome.Outcome}}{{if .Outcome.FixedBy}} in <code>{{short .Outcome.FixedBy}}</code>{{end}} by <strong>{{.Outcome.By}}</strong>, {{.Outcome.At}}. “{{.Outcome.Reason}}” <span class="muted">Signed record <code>{{.Outcome.Path}}</code>, signature checked by proofbound. {{with .Outcome.Proof}}{{template "proof" .}}{{end}}</span></p>
       {{else}}
       <p class="ex-outcome bad">The record <code>{{.Outcome.Path}}</code> {{.Outcome.Problem}}. It closes nothing.</p>
       {{end}}
-    {{else}}
+    {{else if not $.AsOf}}
     <button type="button" class="secondary start" data-act="open"{{if $.Actor.Problem}} disabled{{end}}>Record an outcome</button>
     <form class="outcome" hidden>
       <fieldset>
@@ -113,7 +136,7 @@
   <div class="card-head"><h2 id="rev">Who reviewed each change</h2><span class="muted">Every commit that claims a spec</span></div>
   {{if .Report.Roles}}
   <div class="tablewrap"><table class="grid">
-    <thead><tr><th scope="col">Change</th><th scope="col">Written by</th><th scope="col">Signed by</th><th scope="col">Reviewed by</th><th scope="col">Spec owner</th><th scope="col">Independent</th></tr></thead>
+    <thead><tr><th scope="col">Change</th><th scope="col">Written by</th><th scope="col">Signed by</th><th scope="col">Reviewed by</th><th scope="col">Spec owner</th><th scope="col">Independent</th><th scope="col">Review signatures</th></tr></thead>
     <tbody>{{range .Report.Roles}}<tr>
       <td><code>{{short .Commit}}</code></td>
       <td>{{.Author}}{{range .Agents}} <span class="tag tag-agent">{{.}}</span>{{end}}</td>
@@ -121,6 +144,7 @@
       <td>{{range $i, $r := .Reviewers}}{{if $i}}, {{end}}{{$r}}{{else}}<span class="muted">nobody yet</span>{{end}}</td>
       <td>{{range $i, $o := .Owners}}{{if $i}}, {{end}}{{$o}}{{else}}<span class="muted">—</span>{{end}}</td>
       <td>{{if .Independent}}<span class="tag tag-passed">Yes</span>{{else if .Reviewers}}<span class="tag tag-exception">No</span> <span class="muted">{{.Note}}</span>{{else}}<span class="tag tag-none">Not reviewed</span>{{end}}</td>
+      <td class="proofs">{{range .Proofs}}{{template "proof" .}} {{else}}<span class="muted">—</span>{{end}}</td>
     </tr>{{end}}</tbody>
   </table></div>
   {{else}}<p class="empty">No commit in this period claims a spec, so there is nothing to review.</p>{{end}}
@@ -200,12 +224,12 @@
   </div>
   {{range .Attestations}}
     {{if .Verified}}
-    <p class="attested"><span class="tag tag-passed">Countersigned</span> by <strong>{{.By}}</strong>, {{.At}}, over <code>{{short .Base}}..{{short .Head}}</code>: “{{.Headline}}”{{if .Moved}} <span class="muted">({{.Moved}} commit(s) since, {{.RecordsOnly}} of them only Proofbound records)</span>{{end}}</p>
+    <p class="attested"><span class="tag tag-passed">Countersigned</span> by <strong>{{.By}}</strong>, {{.At}}, over <code>{{short .Base}}..{{short .Head}}</code>: “{{.Headline}}”{{if .Moved}} <span class="muted">({{.Moved}} commit(s) since, {{.RecordsOnly}} of them only Proofbound records)</span>{{end}} {{with .Proof}}{{template "proof" .}}{{end}}</p>
     {{else}}
     <p class="attested bad"><code>{{.Path}}</code> {{.Problem}}.</p>
     {{end}}
   {{end}}
-  <div class="attest">
+  {{if not .AsOf}}<div class="attest">
     <button type="button" data-act="attest"{{if .Actor.Problem}} disabled{{end}}>Countersign this transcript</button>
     <div class="preview" hidden>
       <pre></pre>
@@ -215,7 +239,7 @@
       </div>
     </div>
     <p class="msg" role="status"></p>
-  </div>
+  </div>{{end}}
 </section>
 
 <section class="card limits" aria-labelledby="lim">
@@ -225,6 +249,7 @@
     <li>Actions an agent took outside the repository (commands, secrets, network calls, deployments) are not visible to this audit.</li>
     <li>Outcomes are signed statements by the person who recorded them; "risk accepted" and "reverted" are not verified against the code.</li>
     <li>Author and agent names are self-declared in git unless the commit is signed by a declared key; agent sessions are visible only on the machine where they ran.</li>
+    <li>Signed outcomes, countersignatures and review files are checked again in your browser; git commit signatures are checked by proofbound only.</li>
   </ul>
 </section>
 </main>
