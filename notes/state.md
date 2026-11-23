@@ -2,14 +2,16 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-22
+As of: 2026-11-23
 
-## Resume — 2026-11-22
+## Resume — 2026-11-23
 
 **Exact next action (owner, 2026-11-22 EOD: "lets all 4 one after other tomorrow"):** build, in this
 order, each with spec first, one non-author review and a green gate (Law 6, 9, 11):
-1. **Line-level scope** (`DEF-CLAIMED-CODE-SCOPE-001`, owner-named): flag the part of a claiming
-   commit's change that falls outside the area its spec declares.
+1. ~~Line-level scope~~ **DONE 2026-11-23** (`78803fd`, spec `dbe0154`; `CI-change-area-cpcm5w`,
+   CLI-INV-52..55, audit control C10; review `change-area-review-20261123` F1..F5 fixed, F6..F10 LOW
+   recorded in docs/plans/change-area-spec.md §8; `DEF-CLAIMED-CODE-SCOPE-001` RESOLVED; accepted on
+   the tour's shop repo). **Next: item 2, spec first.**
 2. **Signed exception waivers** (`DEF-NO-INTENT-SELF-WAIVER-001`, owner-named): a pre-approved
    exception signed by someone other than the author, shown on the warranty and badge.
 3. **`proofbound ui --bundle`**: open the warranty bundle / audit evidence in a browser with no clone.
@@ -21,9 +23,12 @@ DEMO.md, README, release notes, manual, and the private landing page
 https://claude.ai/artifact/4EuubEfxnAvTSwXJstUXUd) for everything since v0.3.2.
 
 **Immediate blockers:** none. **Owner decisions pending:** whether to push the local commits
-`ddeea74..60fba13` (+ this closeout) and whether U3 joins v0.3.2 again or waits for after the
+`ddeea74..78803fd` and whether U3 joins v0.3.2 again or waits for after the
 2026-11-30 launch; a third requirement-review round for `BR-ui-workspaces-m6q2v8` O-6
-(`DEF-UI-WORKSPACES-REQ-REVIEW-001`).
+(`DEF-UI-WORKSPACES-REQ-REVIEW-001`); `BR-change-area-p59cyd` is `proposed` until a requirement
+review. Noted, not fixed: C5's diff-tree has the submodule blind spot change-area F1 fixed for C10;
+`connector/checks` TestEmitter_PublicationFailuresAreLoud flaked once under the gate's load (fixed
+100 ms sleep), passed alone 5/5 and on rerun.
 
 **Today in one paragraph:** v0.3.2 published, then the whole UI was built and folded into v0.3.2 by
 the owner's decision (nobody outside had it; launch 2026-11-30), republished at `463b369` and
