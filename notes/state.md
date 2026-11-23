@@ -33,9 +33,12 @@ As of: 2026-11-22
   signers judged before the judged commit, so validity no longer depends on the viewed period; C3
   "not checked here" from a reviewer's key; readable period label). **Owner decided to fold the UI
   into v0.3.2** (no one outside had it; public launch 2026-11-30): notes merged, VD amended (`e2e3490`).
-  **Exact next action:** push main; delete and recreate the v0.3.2 GitHub release and tag at the new
-  HEAD with `scripts/release-build.sh v0.3.2` archives + SHA256SUMS; verify public install.sh and the
-  live Action test repo; upgrade the owner's `~/.local/bin/proofbound`. Not in U1: other workspaces,
+  **v0.3.2 REPUBLISHED 2026-11-23 01:19Z** at `463b369` (was `3c2995c`; owner-approved, nobody outside
+  had it): release and tag recreated, 5 archives + SHA256SUMS from `scripts/release-build.sh v0.3.2`;
+  public install.sh installs it (has `ui`); live Action re-run in `kamisrini/proofbound-action-test`
+  installed it and reported WARRANTED; owner's `~/.local/bin/proofbound` upgraded (identical bytes).
+  **Exact next action:** none pending for the UI; public launch 2026-11-30. Candidates (owner's call):
+  time rail, in-browser signature checks, `DEF-KERNELCHECK-SDD-TIMEOUT-001`. Not in U1: other workspaces,
   time rail, in-browser signature check, `--bundle`, sample draw. New: `DEF-KERNELCHECK-SDD-TIMEOUT-001`
   (sdd package 442 s alone, near the 600 s go test limit under make check; failed the gate twice).
 - **v0.3.2 PUBLISHED 2026-11-22** (owner: "i reviewed and accept, and do the rest"; owner accepted
