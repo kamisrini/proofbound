@@ -21,7 +21,9 @@ can ship it to clients as part of proofbound"):
    countersignature) is previewed exactly, confirmed, signed with the person's own declared key on their
    machine, and committed as a file any clone can verify. Writes need the loopback `Host`, a same-origin
    `Origin`, and a per-run token, so no other web page can trigger one.
-5. **Release:** ships as v0.3.3; v0.3.2 stays as published.
+5. **Release:** ships as v0.3.3; v0.3.2 stays as published. *Amended 2026-11-22 by the owner:* v0.3.2 had
+   reached no one outside (public launch 2026-11-30), so the UI is folded into v0.3.2 and its release is
+   rebuilt and republished at the new commit, rather than adding v0.3.3.
 
 **Consequences:** The primary customer can audit a release in a browser and close each exception with a
 signed record. Given up for U1: in-browser signature checks (the page says the binary checked them),

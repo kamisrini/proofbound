@@ -1,4 +1,4 @@
-# Proofbound v0.3 release notes (v0.3.0 to v0.3.3)
+# Proofbound v0.3 release notes (v0.3.0, v0.3.1, v0.3.2)
 
 **Release 3, first public cut: install it, gate pull requests, and hand over signed warranties.**
 Tag `v0.3.0` · Decisions [`VD-r3-warranty-first-s59ktv`](../../decisions/VD-r3-warranty-first-s59ktv.md)
@@ -9,7 +9,7 @@ and [`VD-vertical-mvp-first-ai3dhn`](../../decisions/VD-vertical-mvp-first-ai3dh
 its spec and code reviewed by a non-author (Law 11 budget). Published by the owner's decision of
 2026-11-20.
 
-## v0.3.3 (unreleased): the Audit room, for compliance and auditors
+## v0.3.2 (2026-11-22): a UI for compliance, reviewers, spec owners and agents; unclaimed code fails the check; agents get the claim added for them
 
 - **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
   Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
@@ -65,8 +65,6 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   in-browser signature checks, and opening an evidence bundle without a clone. The Audit room says on
   the page what it cannot see: whether every line of a claimed commit stays inside its spec, and
   anything an agent did outside the repository.
-
-## v0.3.2 (2026-11-22): unclaimed code fails the check; agents get the claim added for them
 
 - **Stricter pull-request check (behaviour change).** `proofbound check` now lists every commit that
   claims no spec but changes code as `UNCOVERED`, and the pull request is **NOT WARRANTED**. Before,

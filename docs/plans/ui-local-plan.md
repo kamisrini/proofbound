@@ -234,7 +234,8 @@ one code review (Law 11), tests that derive from the spec, `make check` green.
 
 ## 8. Decisions the owner made before U0
 
-1. **Release.** DECIDED 2026-11-22: the UI ships as the next release (v0.3.3); v0.3.2 stays as
+1. **Release.** DECIDED 2026-11-22, then changed the same day: folded into v0.3.2 (no one outside had it
+   before the 2026-11-30 launch), not v0.3.3. Originally: the UI ships as the next release (v0.3.3); v0.3.2 stays as
    published.
 2. **Interactive, signed acts without the CLI.** DECIDED 2026-11-22, replacing the earlier
    "read-only except the bench's local draft": exploring writes nothing; each act in section 2 is

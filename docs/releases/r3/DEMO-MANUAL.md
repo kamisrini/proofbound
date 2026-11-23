@@ -613,9 +613,7 @@ event log, not stored as editable state.
 **Business value.** The record is not a database someone could quietly edit; anyone can rebuild it and
 get the same answer, so it holds up to scrutiny.
 
-## Step 15 — The Audit room: audit the release in a browser, and close the exception (v0.3.3)
-
-**Needs v0.3.3.** On v0.3.2, `proofbound ui` prints the usage line; skip this step.
+## Step 15 — The Audit room: audit the release in a browser, and close the exception
 
 **What you're doing.** Changing hats a third time: you are now **compliance**, checking whether
 everything since the keys were declared followed the rules. You open the Audit room in a browser,
@@ -725,7 +723,7 @@ spreadsheet.
 
 You now know every move. To make step 14 say WARRANTED, review `002-totals-row` as `demo-reviewer`.
 
-**In the browser (v0.3.3):** start the UI as the reviewer and open the **Review bench** tab:
+**In the browser:** start the UI as the reviewer and open the **Review bench** tab:
 
 ```bash
 PROOFBOUND_KEY="$W/reviewer.key" proofbound ui

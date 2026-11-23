@@ -38,6 +38,8 @@ and warranty. It also sets up the pull-request check.
 | Add a reviewer's signature to an existing warranty | `proofbound warranty cosign` | [release notes](RELEASE-NOTES.md) |
 | Attach proof to a release: signed files, a verification page, an index, a badge | `proofbound warranty bundle <base>` | [release notes](RELEASE-NOTES.md) |
 | See which verified specs have since changed | `proofbound report drift` | [R2 demo](../r2/DEMO.md) |
+| Audit, review and track promises in a browser: Audit room, Now, Review bench, Promise map, Agent surface | `proofbound ui` | [manual, step 15](DEMO-MANUAL.md#step-15--the-audit-room-audit-the-release-in-a-browser-and-close-the-exception) |
+| Make your declared key sign your git commits, so the Audit room proves who made each one | `proofbound keys git-sign` | [release notes](RELEASE-NOTES.md) |
 
 ## 4. See it work (demos)
 
