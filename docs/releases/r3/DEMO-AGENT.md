@@ -6,7 +6,8 @@ the spec promised, and wrote a test that cannot fail. At agent speed, nobody rea
 is the change that gets merged.
 
 This page shows what Proofbound does with it:
-- it names the exact line outside the area the spec allowed;
+- with Claude Code, it stops an edit outside the area the spec allowed, before it happens;
+- when an edit gets through anyway, it names the exact line;
 - it undoes each part of the change and shows that the agent's test notices none of them;
 - an independent reviewer decides on each finding, and signs it;
 - the pull-request check and the release bundle refuse to warrant the change;
@@ -151,6 +152,46 @@ proofbound task start 001-csv-export
 ```text
 task sdd:001-csv-export: commits that change code now end with `Intent: sdd:001-csv-export`; `proofbound task stop` when done
 ```
+
+**With Claude Code, an edit outside the area is stopped before it happens.** `init` wrote
+`.claude/settings.json`, a hook that Claude Code runs before every file edit. Here you hand that hook
+exactly what Claude Code would send when the agent tries to edit `src/pricing.sh`, and then
+`src/export.sh`:
+
+```bash
+cat .claude/settings.json
+printf '{"cwd":"%s","tool_name":"Edit","tool_input":{"file_path":"%s/src/pricing.sh"}}' "$PWD" "$PWD" | proofbound hook pre-tool-use | jq -r '.hookSpecificOutput | .permissionDecision + ": " + .permissionDecisionReason'
+printf '{"cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/src/export.sh"}}' "$PWD" "$PWD" | proofbound hook pre-tool-use | wc -c
+```
+
+```text
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [ { "type": "command", "command": "proofbound hook pre-tool-use || true" } ]
+      }
+    ]
+  }
+}
+deny: proofbound: src/pricing.sh is outside the area the spec for sdd:001-csv-export allows (specs/001-csv-export/scope.paths: src/export.sh tests/). Do not edit it for this task. If the change truly needs it, stop and ask the spec owner to widen scope.paths and commit that first; otherwise the reviewer must accept or reject every line outside the area (control C10).
+0
+```
+
+**What just happened.**
+- **The pricing edit:** the hook answers in Claude Code's format, with permission `deny` and the
+  reason. Claude Code blocks the edit, and the agent reads the reason instead.
+- **The export edit:** it is inside the area, so the hook prints nothing (`0` bytes) and the edit
+  goes ahead.
+- **The `|| true`:** if `proofbound` is missing, too old or broken, the hook stays out of the way
+  rather than blocking every edit.
+
+**Why it matters, and its limit.** Stopping an out-of-scope edit while the agent works is cheaper
+than finding it in review. But the agent controls its own machine: it could change a file through a
+shell command, or remove the hook. So this is early feedback, not the guarantee. In this demo you play
+the agent in a shell, which no hook sees, so the next step makes the pricing edit anyway, and C10
+catches it at review.
 
 ## Step 5 — The agent's edits (you paste them)
 
@@ -562,7 +603,7 @@ does and who checked it, and checks it themselves against their own clone.
 
 | The agent… | What Proofbound did | Who decided |
 |---|---|---|
-| changed a file outside the spec's area | named `src/pricing.sh line 3` from git, and refused to seal until it was decided | the reviewer, signed |
+| changed a file outside the spec's area | with Claude Code, refused the edit as it was made; when it got through anyway, named `src/pricing.sh line 3` from git, and refused to seal until it was decided | the reviewer, signed |
 | shipped a test that cannot fail | undid each part of the change and showed the test noticed none of them; refused to seal until each was decided; blocked the warranty | the reviewer, signed |
 | said "tests pass" | did not count it: NOT WARRANTED until reviewed | — |
 | redid the work | WARRANTED, and a bundle any customer can verify against a clone | the reviewer, signed |

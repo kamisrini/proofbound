@@ -85,6 +85,13 @@ step "cat .proofbound/tests.json"; cat .proofbound/tests.json
 act "1. the agent works"
 git checkout -qb agent/csv-export
 run task start 001-csv-export
+echo "-- with Claude Code, the hook init wrote stops the agent's pricing edit before it happens:"
+step "cat .claude/settings.json"; cat .claude/settings.json
+step "echo '{\"cwd\":...,\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\".../src/pricing.sh\"}}' | proofbound hook pre-tool-use | jq ..."
+printf '{"cwd":"%s","tool_name":"Edit","tool_input":{"file_path":"%s/src/pricing.sh"}}' "$p" "$p" | pb hook pre-tool-use | jq -r '.hookSpecificOutput | .permissionDecision + ": " + .permissionDecisionReason'
+echo "(Claude Code blocks the edit and shows the agent this reason)"
+printf '{"cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/src/export.sh"}}' "$p" "$p" | pb hook pre-tool-use | wc -c | sed 's/^ *0$/(no output: src\/export.sh is inside the area, so the edit goes ahead)/' 
+echo "-- this demo plays the agent in a shell, which no hook sees, so the pricing edit still lands; C10 catches it at review."
 mkdir -p tests
 cat > src/export.sh <<'EOF'
 #!/bin/sh

@@ -13,15 +13,17 @@ v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.
 `tests-can-fail-review-20261123`: F1 HIGH + F2..F5 MED fixed, F6..F9 LOW recorded; the demo now shows
 "tests did NOT catch"). SSDF top two for Proofbound (owner asked): PO.3 (PO.3.3, tools generate
 artifacts of the practices) and PW.8 (PW.8.2, perform and document testing), both now mapped.
-Next, owner's pick: the **write-time perimeter** (a PreToolUse hook refusing agent edits outside
-`scope.paths`; needs the owner to name `DEF-AGENT-NATIVE-INTENT-001`), then session-to-line
-provenance, then the agent track record page. Before Sunday regardless: the **documentation pass**
+Also done: the **write-time perimeter** (`2e9a13f`, CLI-INV-69, owner "LETS DO IT" =
+`DEF-AGENT-NATIVE-INTENT-001` option 5; `proofbound hook pre-tool-use`, `.claude/settings.json` from
+init; review `write-perimeter-review-20261124`: F1 HIGH + F2..F4 MED fixed; not yet tried in a live
+Claude Code session: the owner tries it). Next: session-to-line provenance (needs the owner's
+go-ahead on the approach), then the agent track record page. Before Sunday regardless: the **documentation pass**
 (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
 of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
 owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),

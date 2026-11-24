@@ -95,6 +95,14 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   `--repo <clone>`, MISSING or ALTERED when it disagrees with the (unsigned) index; `--trust-key`
   pins the exporter's key, and the browser re-verifies each signature. Spec:
   [ui-bundle-spec.md](../../plans/ui-bundle-spec.md).
+- **Write-time perimeter for Claude Code.** `proofbound init` now writes `.claude/settings.json` (only
+  when there is none) with a PreToolUse hook: while a task is active, an agent's Edit, Write,
+  MultiEdit or NotebookEdit of a file outside the spec's committed `scope.paths` is refused before it
+  happens, and the agent is told why and what to do. It is early feedback, not the guarantee: the
+  agent controls its own machine (a shell command, or removing the hook, gets past it), so control
+  C10 still judges every committed line. The settings file needs no claim to commit, and C6 lists
+  every change to it. In an existing repository, run `proofbound init` again, or add the hook to your
+  own `.claude/settings.json` (init prints how).
 - **Tests that can fail.** Commit `.proofbound/tests.json` with your test command and test folders,
   and `review draft` undoes each hunk of code a claiming commit changed, one at a time and then all
   at once, runs your tests in a temporary worktree, and prints whether they noticed ("tests did NOT
