@@ -92,13 +92,11 @@ func TestCommitTests(t *testing.T) {
 		}
 	})
 	t.Run("a failing baseline judges nothing", func(t *testing.T) {
-		root, _, claim := testsRepo(t, true)
+		root, _, _ := testsRepo(t, true)
 		uiWrite(t, root, testsConfigPath, strings.Replace(testsJSON, "sh tests/t.sh", "exit 1", 1)+"\n")
 		uiCommit(t, root, "owner", "break the tests")
-		parent := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "HEAD"))
 		uiWrite(t, root, "src/a.sh", "echo ONE\n")
-		claim = uiCommit(t, root, "Claude", "again\n\nIntent: sdd:001-a")
-		_ = parent
+		claim := uiCommit(t, root, "Claude", "again\n\nIntent: sdd:001-a")
 		res, err := commitTests(ctx, root, claim)
 		if err != nil || res.Baseline != testsFail || res.Whole != testsNotRun || len(res.Hunks) == 0 || res.Hunks[0].Result != testsNotRun {
 			t.Fatalf("%+v %v", res, err)
