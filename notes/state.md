@@ -34,9 +34,10 @@ https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`). R
 2026-11-24 (owner approved all ten, both rounds of rewordings and a third round): nine of the ten
 are now `active` (round 1: ui-bundle, warranty-head-reviews, agent-track-record; round 2:
 signed-waiver, waiver-signed-commits, framework-map, session-provenance; round 3: change-area,
-write-perimeter). Still `proposed`: `BR-tests-can-fail-k2h06j` O-3, AMBIGUOUS in round 3 on hunk
-granularity (git's -U3 vs the -U0 the code uses); the reviewer's rewording is in
-`RR-tests-can-fail-round3-20261124`; a fourth round is the owner's call. The fail-open found while
+write-perimeter). Still `proposed`: `BR-tests-can-fail-k2h06j`, O-4 AMBIGUOUS in round 4 (owner
+approved round 4): plain `git diff` detects renames and prints no hunk for binary or mode-only
+changes, while tests.go uses `--no-renames` and one whole-file unit for those; rewording in
+`RR-tests-can-fail-round4-20261124`; a fifth round is the owner's call. The fail-open found while
 checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
 `tests-undo-failed-review-20261124` ACCEPTABLE, 3 LOW recorded): a hunk that cannot be undone is
 never caught. `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
