@@ -55,7 +55,7 @@ func TestInitOpenSpecNeverOverwritesAndIsIdempotent(t *testing.T) {
 	if !strings.HasPrefix(snapshot["AGENTS.md"], "# My agents\nkeep me\n") || !strings.Contains(snapshot["AGENTS.md"], agentsBegin) {
 		t.Fatalf("AGENTS.md lost its content or lacks the block:\n%s", snapshot["AGENTS.md"])
 	}
-	if snapshot[".gitignore"] != "node_modules\n.proofbound/*\n\n!.proofbound/sdd-profile.json\n!.proofbound/keys/\n!.proofbound/waivers/\n" {
+	if snapshot[".gitignore"] != "node_modules\n.proofbound/*\n\n!.proofbound/sdd-profile.json\n!.proofbound/keys/\n!.proofbound/waivers/\n!.proofbound/tests.json\n" {
 		t.Fatalf(".gitignore = %q", snapshot[".gitignore"])
 	}
 	if info, err := os.Stat(filepath.Join(root, ".git/hooks/commit-msg")); err != nil || info.Mode().Perm()&0o100 == 0 {

@@ -91,7 +91,7 @@ func initKit(ctx context.Context, root, kit, owner string, output io.Writer) err
 	steps := []func() error{
 		func() error { return writeNew(output, root, ".proofbound/sdd-profile.json", profile, 0o644) },
 		func() error {
-			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json", "!.proofbound/keys/", "!.proofbound/waivers/"})
+			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json", "!.proofbound/keys/", "!.proofbound/waivers/", "!.proofbound/tests.json"})
 		},
 		func() error { return appendBlock(output, root, "AGENTS.md", agentsBlock) },
 		func() error {
@@ -206,6 +206,9 @@ type draftFile struct {
 	// OutOfArea are the lines the commit changed outside its spec's declared area, each to be
 	// accepted (with a reason) or rejected (change-area-spec.md §3). Built from git, never trusted.
 	OutOfArea []areaDecision `json:"out_of_area"`
+	// Tests is what undoing each code hunk did to the declared tests (tests-can-fail-spec.md); absent
+	// when the project declares no tests. Seal runs them again and takes only the decisions.
+	Tests *testsResult `json:"tests,omitempty"`
 }
 
 type draftReview struct {
@@ -262,6 +265,13 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 	if err != nil {
 		return err
 	}
+	tests, err := draftTests(ctx, root, sha, output)
+	if err != nil {
+		return err
+	}
+	if tests.Declared {
+		draft.Tests = &tests
+	}
 	dir := draftDir(root, sha)
 	path := filepath.Join(dir, "draft.json")
 	if _, err := os.Lstat(path); err == nil {
@@ -285,6 +295,9 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 		}
 	}
 	if err := writeAreaLines(output, area); err != nil {
+		return err
+	}
+	if err := writeTestsLines(output, tests); err != nil {
 		return err
 	}
 	_, err = fmt.Fprintf(output, "draft %s\n", path)
@@ -425,6 +438,14 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	if err != nil {
 		return err
 	}
+	ran, err := draftTests(ctx, root, draft.Commit, output)
+	if err != nil {
+		return err
+	}
+	tests, testsNeedWork, err := decideTests(ran, edited.Tests)
+	if err != nil {
+		return err
+	}
 	signer, err := reviewSigner(root, reviewer)
 	if err != nil {
 		return err
@@ -483,7 +504,7 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	for i, verdict := range draft.Verdicts {
 		obligations := []connectorreviews.ObligationOutcome{}
 		status := "ACCEPTABLE"
-		if areaRejected {
+		if areaRejected || testsNeedWork {
 			// A rejected out-of-area change fails the review of the whole commit (§3).
 			status = "NEEDS_WORK"
 		}
@@ -530,6 +551,15 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 		if err := add(areaRecordPath(draft.Commit), data); err != nil {
+			return err
+		}
+	}
+	if tests.Declared {
+		data, err := testsRecordBytes(draft.Commit, pbwarranty.KeyName(reviewer), tests, signer, time.Now().UTC().Format(time.RFC3339))
+		if err != nil {
+			return err
+		}
+		if err := add(testsRecordPath(draft.Commit), data); err != nil {
 			return err
 		}
 	}

@@ -47,6 +47,7 @@ var controlQuestions = map[string]string{
 	"C8":  "No change was reviewed by its own author, agent or spec owner.",
 	"C9":  "Commits are signed by a key the repository declares.",
 	"C10": "Each agent change stayed inside the area its spec declares.",
+	"C11": "Each claimed change's tests fail when its code is undone.",
 }
 
 type auditCommit struct {
@@ -286,8 +287,8 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	c5.State, c5.Count = auditListed, fmt.Sprintf("%d commits, each in one class", rep.Counts.Total)
 
 	// C6: changes to who may sign and to the check itself.
-	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .github/workflows gates",
-		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec. Reviews add gates; that is not listed."}
+	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .proofbound/tests.json .github/workflows gates",
+		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec; the tests declaration decides what C11 runs. Reviews add gates; that is not listed."}
 	for _, sha := range shas {
 		paths, err := trustPaths(ctx, root, sha)
 		if err != nil {
@@ -409,7 +410,12 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 		rep.Sessions = []auditSession{}
 	}
 
-	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9, c10}
+	// C11: tests that can fail (docs/plans/tests-can-fail-spec.md §3).
+	c11, err := testsControl(ctx, root, rep.Base, &rep, except)
+	if err != nil {
+		return rep, err
+	}
+	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11}
 	if rep.Counts.Total == 0 {
 		// An empty range holds nothing: no control can be held in it (spec review F5).
 		for i := range rep.Controls {
@@ -575,7 +581,7 @@ func trustPaths(ctx context.Context, root, sha string) ([]string, error) {
 			break
 		}
 		switch {
-		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", strings.HasPrefix(path, waiversDir+"/"):
+		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", path == testsConfigPath, strings.HasPrefix(path, waiversDir+"/"):
 			out = append(out, path)
 		case strings.HasPrefix(path, "gates/") && strings.Trim(status, "A") != "":
 			out = append(out, path)

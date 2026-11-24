@@ -324,6 +324,12 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
 		return
 	}
+	if testsDeclared(r.Context(), s.root, req.Commit) {
+		// The bench never runs a commit's tests inside a request, and saving a draft from it would
+		// drop the test decisions in draft.json (tests-can-fail review F3).
+		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "this project declares its tests in " + testsConfigPath + ": review this commit with `proofbound review draft " + req.Commit[:12] + "` and `proofbound review seal` in a terminal, where the tests run and each hunk they do not catch is decided"})
+		return
+	}
 	if !s.acquire(r.Context()) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": errLedgerBusy.Error()})
 		return

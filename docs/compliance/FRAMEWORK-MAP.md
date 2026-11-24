@@ -21,16 +21,17 @@ evidence toward. The same mapping is on each control card and in the audit trans
 
 | Control | Question | SOC 2 | ISO 27001 | NIST SSDF | EU AI Act |
 |---|---|---|---|---|---|
-| C1 | Every commit that claims a spec passed its readiness gate. | CC8.1 | A.8.32 | PW.7 | Art. 17(1)(a), Art. 17(1)(d), Annex IV(2)(g) |
+| C1 | Every commit that claims a spec passed its readiness gate. | CC8.1 | A.8.32 | PW.7, PO.3 | Art. 17(1)(a), Art. 17(1)(d), Annex IV(2)(g) |
 | C2 | No commit changed code without claiming a spec. | CC8.1 | A.8.32 | — | Art. 17(1)(a), Art. 17(1)(c) |
-| C3 | Every passing claim carries a warranty that verifies against this repository. | CC8.1 | A.8.32 | PS.2, PS.3 | Art. 11 and Annex IV(6), Art. 17(1)(k) |
+| C3 | Every passing claim carries a warranty that verifies against this repository. | CC8.1 | A.8.32 | PS.2, PS.3, PO.3 | Art. 11 and Annex IV(6), Art. 17(1)(k) |
 | C4 | Promises that changed after they were verified are disclosed. | CC8.1 | A.8.32 | — | Art. 11 and Annex IV(6) |
-| C5 | Every commit in the range is accounted for. | CC8.1 | A.8.32 | — | Art. 17(1)(k) |
+| C5 | Every commit in the range is accounted for. | CC8.1 | A.8.32 | PO.3 | Art. 17(1)(k) |
 | C6 | Changes to who may sign, to waivers and to the check itself, are listed for review. | CC6.1, CC8.1 | A.5.18, A.8.9 | PO.3, PS.1 | — |
 | C7 | Each claimed spec existed before the code that claims it. | CC8.1 | A.8.32, A.8.25 | — | Art. 17(1)(b) |
 | C8 | No change was reviewed by its own author, agent or spec owner. | CC5.1, CC8.1 | A.5.3 | — | Art. 17(1)(d) |
 | C9 | Commits are signed by a key the repository declares. | CC6.1 | A.5.16, A.8.24 | PS.1 | — |
 | C10 | Each agent change stayed inside the area its spec declares. | CC8.1 | A.8.32 | PS.1 | Art. 17(1)(a) |
+| C11 | Each claimed change's tests fail when its code is undone. | CC8.1 | A.8.32 | PW.8, PO.3 | Art. 17(1)(d) |
 
 ## Why each entry
 
@@ -39,6 +40,7 @@ evidence toward. The same mapping is on each control card and in the audit trans
 - **SOC 2 CC8.1**: evidence toward approving changes before they count: each claimed promise needs a sealed review.
 - **ISO 27001 A.8.32**: evidence toward change management: each claimed change has a recorded readiness gate.
 - **NIST SSDF PW.7**: a code review is recorded for each claimed change; whether it covers security requirements is the reviewer's scope.
+- **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates a signed artifact of each review.
 - **EU AI Act Art. 17(1)(a)**: evidence toward procedures for managing modifications: each claimed modification is reviewed against its spec.
 - **EU AI Act Art. 17(1)(d)**: evidence toward examination and validation during development: a sealed review per change.
 - **EU AI Act Annex IV(2)(g)**: evidence toward documented validation: review records signed by the reviewer's declared key.
@@ -56,6 +58,7 @@ evidence toward. The same mapping is on each control card and in the audit trans
 - **ISO 27001 A.8.32**: evidence toward change management: each approved change's record verifies against a clone.
 - **NIST SSDF PS.2**: partial: a signed warranty lets an acquirer verify the review evidence for a source revision, not the integrity of built artifacts.
 - **NIST SSDF PS.3**: evidence toward archiving each release: a bundle of the release's warranties.
+- **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates portable, signed artifacts of the practice for each change.
 - **EU AI Act Art. 11 and Annex IV(6)**: evidence toward documenting the relevant changes made through the lifecycle.
 - **EU AI Act Art. 17(1)(k)**: evidence toward record-keeping of relevant documentation: signed, portable change records.
 
@@ -69,6 +72,7 @@ evidence toward. The same mapping is on each control card and in the audit trans
 
 - **SOC 2 CC8.1**: evidence toward tracking system changes: every commit git lists for the range is classed once.
 - **ISO 27001 A.8.32**: evidence toward change management: every commit git lists for the range is accounted for.
+- **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates a classed record of every commit in the period.
 - **EU AI Act Art. 17(1)(k)**: evidence toward record-keeping: a classed list of every commit in the period.
 
 ### C6: Changes to who may sign, to waivers and to the check itself, are listed for review.
@@ -107,6 +111,14 @@ evidence toward. The same mapping is on each control card and in the audit trans
 - **ISO 27001 A.8.32**: evidence toward change management: changes outside the approved scope are identified.
 - **NIST SSDF PS.1**: evidence toward detecting unauthorized change: code changed outside the declared area is named, after the fact.
 - **EU AI Act Art. 17(1)(a)**: evidence toward procedures for managing modifications: out-of-scope modifications are named and decided.
+
+### C11: Each claimed change's tests fail when its code is undone.
+
+- **SOC 2 CC8.1**: evidence toward testing changes: the tests are run with each hunk of the change undone, and the result is signed.
+- **ISO 27001 A.8.32**: evidence toward change management: whether a change's tests depend on it is recorded.
+- **NIST SSDF PW.8**: evidence toward PW.8.2, perform the testing and document the results: a signed record of which hunks the tests catch; undoing a hunk is not full mutation testing.
+- **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates a signed artifact of the testing practice.
+- **EU AI Act Art. 17(1)(d)**: evidence toward test procedures during development: tests are shown to depend on the change.
 
 ## Agents
 

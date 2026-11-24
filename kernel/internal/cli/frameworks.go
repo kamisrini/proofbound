@@ -49,6 +49,7 @@ var frameworkMap = map[string][]frameworkEntry{
 		fe(fwSOC2, "CC8.1", "evidence toward approving changes before they count: each claimed promise needs a sealed review"),
 		fe(fwISO, "A.8.32", "evidence toward change management: each claimed change has a recorded readiness gate"),
 		fe(fwSSDF, "PW.7", "a code review is recorded for each claimed change; whether it covers security requirements is the reviewer's scope"),
+		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates a signed artifact of each review"),
 		fe(fwEUAIA, "Art. 17(1)(a)", "evidence toward procedures for managing modifications: each claimed modification is reviewed against its spec"),
 		fe(fwEUAIA, "Art. 17(1)(d)", "evidence toward examination and validation during development: a sealed review per change"),
 		fe(fwEUAIA, "Annex IV(2)(g)", "evidence toward documented validation: review records signed by the reviewer's declared key"),
@@ -64,6 +65,7 @@ var frameworkMap = map[string][]frameworkEntry{
 		fe(fwISO, "A.8.32", "evidence toward change management: each approved change's record verifies against a clone"),
 		fe(fwSSDF, "PS.2", "partial: a signed warranty lets an acquirer verify the review evidence for a source revision, not the integrity of built artifacts"),
 		fe(fwSSDF, "PS.3", "evidence toward archiving each release: a bundle of the release's warranties"),
+		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates portable, signed artifacts of the practice for each change"),
 		fe(fwEUAIA, "Art. 11 and Annex IV(6)", "evidence toward documenting the relevant changes made through the lifecycle"),
 		fe(fwEUAIA, "Art. 17(1)(k)", "evidence toward record-keeping of relevant documentation: signed, portable change records"),
 	},
@@ -75,6 +77,7 @@ var frameworkMap = map[string][]frameworkEntry{
 	"C5": {
 		fe(fwSOC2, "CC8.1", "evidence toward tracking system changes: every commit git lists for the range is classed once"),
 		fe(fwISO, "A.8.32", "evidence toward change management: every commit git lists for the range is accounted for"),
+		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates a classed record of every commit in the period"),
 		fe(fwEUAIA, "Art. 17(1)(k)", "evidence toward record-keeping: a classed list of every commit in the period"),
 	},
 	"C6": {
@@ -108,6 +111,13 @@ var frameworkMap = map[string][]frameworkEntry{
 		fe(fwISO, "A.8.32", "evidence toward change management: changes outside the approved scope are identified"),
 		fe(fwSSDF, "PS.1", "evidence toward detecting unauthorized change: code changed outside the declared area is named, after the fact"),
 		fe(fwEUAIA, "Art. 17(1)(a)", "evidence toward procedures for managing modifications: out-of-scope modifications are named and decided"),
+	},
+	"C11": {
+		fe(fwSOC2, "CC8.1", "evidence toward testing changes: the tests are run with each hunk of the change undone, and the result is signed"),
+		fe(fwISO, "A.8.32", "evidence toward change management: whether a change's tests depend on it is recorded"),
+		fe(fwSSDF, "PW.8", "evidence toward PW.8.2, perform the testing and document the results: a signed record of which hunks the tests catch; undoing a hunk is not full mutation testing"),
+		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates a signed artifact of the testing practice"),
+		fe(fwEUAIA, "Art. 17(1)(d)", "evidence toward test procedures during development: tests are shown to depend on the change"),
 	},
 }
 
