@@ -7,7 +7,10 @@ your machine and in your CI.
 
 This page walks through every feature on one small project, using the real output of
 [`tour.sh`](tour.sh). To type every step yourself instead, follow [DEMO-MANUAL.md](DEMO-MANUAL.md).
-New here? [Start here](README.md) has install and the quickstart.
+New here? [Start here](README.md) has install and the quickstart. **Using coding agents?** The
+[agent demo](DEMO-AGENT.md) is the shorter path: one agent's change that goes off-script, and
+everything Proofbound shows about it (the line outside the spec's area, the test that notices nothing,
+which agent session wrote each line), through to a warranty on the redo.
 
 ## Why it matters
 
@@ -136,11 +139,17 @@ reviewer is a visible, reviewable commit.
 $ proofbound review draft 0c5c80d374d2…
 obligation CI-001-csv-export-184wxu O-FR-001: System MUST export a report as CSV.
 obligation CI-001-csv-export-184wxu O-FR-002: System MUST start every export with a header row.
+provenance src/export.sh: 0 by a session, 4 with no recorded agent edit (lines 1, 2, 3, 4), 0 common
+provenance warning: no session logs here, so nothing can be traced (they are local to the machine the agent ran on)
 
 $ proofbound review seal …/draft.json          # the spec owner names themselves as reviewer
 proofbound: seal: the reviewer "spec-owner" is the declared owner of BR-001-csv-export-9s0gqo; a different reviewer must review it
 (exit 1)
 ```
+
+In this tour a person wrote the code in a shell, so no agent session recorded it, and the draft says
+exactly that. With Claude Code, the same lines read "by Claude Code session …"
+([agent demo, step 8](DEMO-AGENT.md#step-8--the-review-draft-a-line-outside-the-area-and-a-test-that-notices-nothing)).
 
 **Why it matters:** independence is enforced by the tool, not by policy. This is what makes the record
 credible to someone outside the team.

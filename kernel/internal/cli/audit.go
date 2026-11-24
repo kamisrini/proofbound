@@ -113,6 +113,33 @@ type auditReport struct {
 	Exceptions []auditException `json:"exceptions"`
 	Roles      []auditRole      `json:"roles"`
 	Sessions   []auditSession   `json:"sessions"`
+	// track is what C10, C11 and C12 accepted from each commit's records, for the review outcomes by
+	// agent (CLI-INV-73): never in the transcript, so attestations are unchanged.
+	track map[string]*commitTrack
+}
+
+// commitTrack is one claimed commit's counts from records its control trusted (verified, judging this
+// commit, independent, and for tests the declared command), matched to what git lists now.
+type commitTrack struct {
+	AreaHunks, AreaAccepted, AreaRejected    int
+	TestParts, TestsNotCaught, TestsAccepted int
+	TestsRejected                            int
+	WholeNotCaught                           bool
+	Sessions                                 map[string]int
+	LinesUnrecorded                          int
+	// LinesTraced counts each line once, however many sessions recorded it.
+	LinesTraced int
+	Traced      bool
+}
+
+func (rep *auditReport) trackFor(sha string) *commitTrack {
+	if rep.track == nil {
+		rep.track = map[string]*commitTrack{}
+	}
+	if rep.track[sha] == nil {
+		rep.track[sha] = &commitTrack{Sessions: map[string]int{}}
+	}
+	return rep.track[sha]
 }
 
 // computeAudit answers C1..C7 for base..HEAD. base must already resolve to a commit.

@@ -13,15 +13,40 @@ For every change an agent makes, Proofbound answers:
 - **Did it stay inside that?** Every changed line outside the spec's declared area is listed, and a
   reviewer must accept each one with a reason or reject it.
 - **What evidence shows it did it?** Each promise is checked by a reviewer who is not the agent, the
-  commit's author or the spec owner.
-- **Which exact commit, and which agent?** Agents are named from authorship and co-author lines,
-  Claude Code sessions are shown with the commits made while each ran, and commits can be signed by
-  keys the repository declares.
+  commit's author or the spec owner, and Proofbound undoes each part of the change to show whether the
+  tests notice.
+- **Which exact commit, and which agent?** Agents are named from authorship and co-author lines, each
+  committed line is traced to the Claude Code session that wrote it (or flagged as written by no
+  recorded agent edit), and commits can be signed by keys the repository declares.
 - **What remains unverified?** Code with no spec, promises that changed after review, and every
   exception, with who accepted it and why.
 
 The result is a signed warranty bound to the exact commit, which anyone can verify without your
 infrastructure, not a green check that disappears with the CI log.
+
+## You don't have to trust the agent
+
+Proofbound does not make a model safe, and does not try to. It makes what an agent did **visible and
+checkable** to the people who answer for the software: the engineering lead, the reviewer, the
+auditor. Its checks are built to hold even when the agent is wrong, careless or working against you:
+
+| Holds even if the agent misbehaves | Why |
+|---|---|
+| Lines changed outside the spec's area are named (C10) | read from git, not from anything the agent reports |
+| A test that cannot fail is caught (C11) | Proofbound undoes each part of the change and runs the tests itself |
+| No one grades their own work (C8) | a review by the change's author, agent or spec owner is refused |
+| Signed commits (C9) and signed reviews | each signature is checked against keys the repository declares |
+| The warranty | bound to the exact commit; anyone can verify it from a clone |
+
+Two features help while the agent works, but the agent runs on the same machine and could get around
+them, so Proofbound never relies on them alone:
+- **The write-time perimeter:** a Claude Code hook refuses an edit outside the spec's area as it is
+  made. A shell command bypasses it; C10 still judges every committed line.
+- **Session provenance:** a Claude Code hook logs which session wrote which lines. The agent could
+  write to its own log; the reviewer signs what the logs showed, and lines no recorded edit wrote are
+  named.
+
+Each page and record says what it does not prove.
 
 ## Why agents change the problem
 
@@ -30,9 +55,13 @@ infrastructure, not a green check that disappears with the CI log.
 - **Identity.** A git author name is whatever was typed. Proofbound names agents, and can require
   that commits be signed by declared keys.
 - **Self-grading.** An agent that writes the code and the tests can pass its own work. Proofbound
-  never accepts a verdict from the change's author, agent or spec owner.
+  never accepts a verdict from the change's author, agent or spec owner, and shows when the tests do
+  not depend on the change at all.
 - **The perimeter.** Compliance asks whether the agent acted only inside what was authorized. A commit
   log cannot answer that; Proofbound's Audit room answers it control by control.
+
+**Start here:** install and the agent demo, in [docs/releases/r3/README.md](docs/releases/r3/README.md).
+The [agent demo](docs/releases/r3/DEMO-AGENT.md) shows an agent going off-script, step by step.
 
 The same record works for changes people make. Proofbound complements CI/CD and test runners: they run
 the checks; Proofbound records what was promised, what was checked, what the evidence supports, and

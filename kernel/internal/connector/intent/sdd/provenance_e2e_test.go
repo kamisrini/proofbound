@@ -68,6 +68,33 @@ func TestSessionProvenanceEndToEnd(t *testing.T) {
 		t.Fatalf("no PROV- record: %v %s", err, rec)
 	}
 
+	// CLI-INV-74: `report agents` prints the review outcomes by agent, as text and as JSON.
+	gitIn(t, m.root, "add", "-A", "-f", "--", "docs", "gates", ".proofbound/keys")
+	m.commit("record the review")
+	root := strings.TrimSpace(gitIn(t, m.root, "rev-list", "--max-parents=0", "HEAD"))
+	m.mustRun("sync", "all")
+	text := m.mustRun("report", "agents", root)
+	for _, want := range []string{"Review outcomes by agent", "Counts, not a score", "Claude", "e2e-session-1"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("report agents lacks %q:\n%s", want, text)
+		}
+	}
+	var tr struct {
+		Agents []struct {
+			Name            string `json:"name"`
+			Claimed         int    `json:"claimed"`
+			Acceptable      int    `json:"acceptable"`
+			LinesBySession  int    `json:"lines_by_a_session"`
+			LinesUnrecorded int    `json:"lines_no_recorded_agent_edit"`
+		} `json:"agents"`
+	}
+	if err := json.Unmarshal([]byte(m.mustRun("report", "agents", root, "--json")), &tr); err != nil || len(tr.Agents) != 1 || tr.Agents[0].Name != "Claude" || tr.Agents[0].Claimed != 1 || tr.Agents[0].Acceptable != 1 || tr.Agents[0].LinesBySession != 3 || tr.Agents[0].LinesUnrecorded != 1 {
+		t.Fatalf("report agents --json: %v %+v", err, tr)
+	}
+	if code, out := runCLI(t, m.root, "report", "agents", "no-such-ref"); code == 0 || !strings.Contains(out, "no-such-ref") {
+		t.Fatalf("an unknown base: exit %d\n%s", code, out)
+	}
+
 	// An agent commit none of whose lines any recorded edit wrote: the hook was probably not running.
 	m.write("src/y.sh", "echo never recorded\n")
 	y := m.commit("more export", "Co-Authored-By: Claude <noreply@anthropic.com>", "Intent: sdd:001-export")

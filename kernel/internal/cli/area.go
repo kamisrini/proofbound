@@ -534,6 +534,7 @@ func areaControl(ctx context.Context, root, base string, rep *auditReport, excep
 		parent := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--verify", "--quiet", cm.Commit+"^1"))
 		if setter := areaSetter(ctx, root, base, cm.Commit, areaCandidates(ctx, root, parent, res.Names), agents); setter != "" {
 			declared++
+			rep.trackFor(cm.Commit).AreaHunks = len(res.Hunks)
 			c.Evidence = append(c.Evidence, auditEvidence{Commit: cm.Commit, Text: "area last changed by agent commit " + setter[:12]})
 			except("area", "C10", cm.Commit, fmt.Sprintf("%q: its area was last changed by %s, a commit made by an agent", subj, setter[:12]))
 			continue
@@ -552,12 +553,14 @@ func areaControl(ctx context.Context, root, base string, rep *auditReport, excep
 		declared++
 		if len(res.Hunks) == 0 {
 			good++
+			rep.trackFor(cm.Commit)
 			c.Evidence = append(c.Evidence, auditEvidence{Commit: cm.Commit, Text: "inside its area"})
 			continue
 		}
 		problem := ""
 		by, decisions, err := readAreaRecord(ctx, root, cm.Commit)
 		accepted := map[string]areaDecision{}
+		rejected := map[string]bool{}
 		switch {
 		case errors.Is(err, errNoAreaRecord):
 			problem = "no reviewer decided them"
@@ -570,6 +573,21 @@ func areaControl(ctx context.Context, root, base string, rep *auditReport, excep
 			for _, d := range decisions {
 				if d.Decision == "accept" && checkReason(d.Reason) == nil {
 					accepted[areaHunk{Path: d.Path, Lines: d.Lines}.key()] = d
+				}
+				if d.Decision == "reject" {
+					rejected[areaHunk{Path: d.Path, Lines: d.Lines}.key()] = true
+				}
+			}
+		}
+		// What this control trusted, for the review outcomes by agent (CLI-INV-73).
+		tc := rep.trackFor(cm.Commit)
+		tc.AreaHunks = len(res.Hunks)
+		if problem == "" {
+			for _, h := range res.Hunks {
+				if _, ok := accepted[h.key()]; ok {
+					tc.AreaAccepted++
+				} else if rejected[h.key()] {
+					tc.AreaRejected++
 				}
 			}
 		}

@@ -14,6 +14,7 @@
 #      passes, the review is sealed NEEDS_WORK; the Audit room and the release bundle show why
 #   3. the redo from the spec: a test that fails first, a change inside its area, a signed review,
 #      WARRANTED, and a bundle that verifies VALID against a clone
+# `proofbound report agents` shows the review outcomes by agent after acts 2 and 3.
 # The demo plays the agent (it pastes the agent's edits), the spec owner and the reviewer, and says so.
 # Needs git, jq, curl, Go (unless PROOFBOUND_BIN is set) and port 55432. Nothing is fetched or pushed.
 set -euo pipefail
@@ -156,6 +157,8 @@ step "proofbound ui --base $base   # the Audit room, as text"
 page 47801 --base "$base"
 grep -E '^[0-9]+ of [0-9]+ controls held|· control C|changed lines outside' "$work/page-47801.txt"
 grep -A1 -E '^Claude ?$' "$work/page-47801.txt" | head -2
+echo "-- the same review outcomes, by agent, in the terminal:"
+run report agents "$base"
 run_may_fail warranty bundle "$base" -o "$work/release-1"
 step "proofbound ui --bundle release-1 --repo shop   # the bundle page, as text"
 page 47802 --bundle "$work/release-1" --repo "$p"
@@ -208,6 +211,7 @@ git add docs/verification/verdicts gates
 git commit -qm "review $(git rev-parse --short=12 "$redo")"
 pb sync all >/dev/null
 run check "$base"
+run report agents "$base"
 run warranty bundle "$base" -o "$work/release-2"
 git clone -q -b agent/csv-export-2 "$p" "$work/buyer-clone"
 step "proofbound ui --bundle release-2 --repo buyer-clone   # the bundle page, as text"

@@ -1,7 +1,10 @@
 # Proofbound quickstart: install and get your first warranty
 
-Proofbound tells you, for each commit that claims to implement a spec, whether someone other than its
-author has checked every promise in that spec — and gives you a signed file that proves it.
+Proofbound is a warranty layer for code written by AI agents. For each commit that claims to implement
+a spec, it tells you whether someone other than the agent and its author has checked every promise in
+that spec, what the change touched outside the spec's area, and whether its tests notice when its code
+is undone, and it gives you a signed file that proves it. To see all of that on one agent's change
+first, follow the [agent demo](../r3/DEMO-AGENT.md).
 
 ## 1. Install (Linux or macOS, about 10 seconds)
 
@@ -56,6 +59,33 @@ someone who is not the author review it (`proofbound review draft <commit>`, dec
 and run `proofbound sync all`. The commit's gate turns **PASS** when every obligation is verified.
 `proofbound warranty export <commit>` then writes a signed `warranty.json` that anyone can check
 with `proofbound warranty verify warranty.json --repo <clone>`.
+
+### When your agents run in Claude Code
+
+`init` also wrote `.claude/settings.json` with two hooks (only if you had none; otherwise it prints the
+exact JSON to add to yours):
+- **While a task is active, an edit outside the spec's area is refused as it is made.** The area is the
+  `scope.paths` file in the spec's folder, one pattern per line, committed before the work starts.
+  Without it, the hook allows everything.
+- **Each edit's added lines are logged** (hashes only, in the repository's git folder), so
+  `review draft` can say which Claude Code session wrote each committed line, and name the lines no
+  recorded agent edit wrote.
+
+Both help while the agent works, but the agent could get around them through a shell command, so
+review still judges every committed line (controls C10 and C12). Commit `.claude/settings.json` so
+every clone gets the hooks. `proofbound report agents <base>` then shows how each agent's changes
+fared in review.
+
+### Tests that can fail (optional)
+
+Commit `.proofbound/tests.json` with your test command:
+
+```json
+{"schema":"proofbound.tests.v1","run":"go test ./...","paths":["**/*_test.go"],"timeout_seconds":600}
+```
+
+`review draft` then undoes each part of a claiming commit's code, runs the tests each time, and says
+which parts no test noticed. It runs the commit's own code on the reviewer's machine, never in CI.
 
 Step-by-step, with what each command prints: [Release 2 demo hub §4](../r2/DEMO.md#4-use-it-on-your-own-openspec-or-spec-kit-project)
 and the [warranty demo](../r3/DEMO.md).

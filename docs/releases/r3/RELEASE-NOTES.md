@@ -125,6 +125,14 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   the logs on the agent's machine showed, not proof against a hostile agent, which could write to its
   own log. In a repository set up with an earlier v0.3.2, run `proofbound init` again: it prints the
   exact hook to add to your `.claude/settings.json`.
+- **Review outcomes by agent.** `proofbound report agents <base>` (and a new section of the Audit
+  room) shows, per coding agent, how its changes fared when someone checked them: ACCEPTABLE,
+  NEEDS_WORK, reviewed but not independent, or not reviewed; the hunks outside the spec's area and the
+  parts no test caught, with how each was decided; the lines a recorded session wrote and the lines
+  no recorded agent edit wrote; and the open exceptions. It also lists the sessions in the provenance
+  records. The counts come only from signed records the controls C10, C11 and C12 trust, never from
+  what an agent says. They are counts, not a score, and the output says what they do not mean.
+  `--json` gives the same for a script or an agent.
 - **What each control maps to.** Every Audit room control names the criteria it gives evidence
   toward in SOC 2 (CC5.1, CC6.1, CC8.1), ISO/IEC 27001:2022 Annex A (for example A.8.32 change
   management, A.5.3 segregation of duties), NIST SSDF v1.1 (PS.1, PS.2 partial, PS.3, PW.7, PO.3) and,

@@ -664,6 +664,22 @@ func provControl(ctx context.Context, root string, rep *auditReport, except func
 			continue
 		}
 		good++
+		// What this control trusted, for the review outcomes by agent (CLI-INV-73).
+		tc := rep.trackFor(cm.Commit)
+		tc.Traced = true
+		added, _, err := commitAddedLines(ctx, root, cm.Commit)
+		if err != nil {
+			return c, err
+		}
+		for _, f := range res.Files {
+			for _, s := range f.Sessions {
+				tc.Sessions[s.Session] += s.Lines
+			}
+			tc.LinesUnrecorded += len(f.Unrecorded)
+			if n := len(added[f.Path]) - f.Common - len(f.Unrecorded); n > 0 {
+				tc.LinesTraced += n
+			}
+		}
 		c.Evidence = append(c.Evidence, auditEvidence{Commit: cm.Commit, Text: provSummary(res) + ", recorded by " + fields["by"]})
 	}
 	switch {

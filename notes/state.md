@@ -21,13 +21,18 @@ Claude Code session: the owner tries it). Also done: **session-to-line provenanc
 `proofbound hook post-tool-use`, `PROV-` record, control C12 LISTED; spec review NEEDS_WORK folded
 into draft 2; code review `session-provenance-review-20261124`: F1 HIGH + F2..F7 MED fixed, F10 LOW
 recorded; the demo shows the shell-written pricing line as "no recorded agent edit"; not tried in a
-live Claude Code session). Next: the agent track record page (reads PROV/AREA/TESTS records). Before Sunday regardless: the **documentation pass**
+live Claude Code session). Also done 2026-11-24, owner "lest do both": the **documentation pass** (README, r3 README, QUICKSTART,
+DEMO.md, DEMO-MANUAL, DEMO-AGENT agent-first: "you don't have to trust the agent"; private landing page
+`~/projects/proofbound-commercial` commit `cbabd57`) and **review outcomes by agent** (`report agents
+<base>`, Audit room section; CLI-INV-73..74; spec review NEEDS_WORK folded; code review
+`agent-track-record-review-20261124`: M1, M2 fixed). Next: owner's pick; before Sunday re-check the
+docs once more and keep republishing v0.3.2. Before Sunday regardless: the **documentation pass**
 (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
 of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8`, `BR-session-provenance-p3v8nc` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8`, `BR-session-provenance-p3v8nc`, `BR-agent-track-record-k8w2qf` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
 owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),

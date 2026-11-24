@@ -200,6 +200,8 @@ type uiView struct {
 	Generated  string          `json:"-"`
 	Summary    viewSummary     `json:"-"`
 	Actors     []actorRow      `json:"-"`
+	Track      trackReport     `json:"-"`
+	TrackNotes []string        `json:"-"`
 	Promises   []promiseChange `json:"-"`
 	transcript []byte
 }
@@ -578,6 +580,7 @@ func (s *uiServer) viewLocked(ctx context.Context, baseRef string) (uiView, int,
 	v.Generated = s.now().Format("2 Jan 2006, 15:04 MST")
 	v.Summary = summarize(rep)
 	v.Actors = actorRows(rep)
+	v.Track, v.TrackNotes = computeTrack(ctx, s.root, rep), trackNotes
 	for _, t := range strings.Split(gitOutput(ctx, s.root, "tag", "--sort=-creatordate", "--merged", "HEAD"), "\n") {
 		if t = strings.TrimSpace(t); t != "" && len(v.Tags) < 30 {
 			v.Tags = append(v.Tags, t)
@@ -633,6 +636,7 @@ func (s *uiServer) viewAsOf(ctx context.Context, baseRef, asof string) (uiView, 
 	v.Promises = then.Promises
 	v.Summary = summarize(then.Report)
 	v.Actors = actorRows(then.Report)
+	v.Track, v.TrackNotes = computeTrack(ctx, s.root, then.Report), trackNotes
 	v.Attestations = []attestationView{}
 	if v.transcript, err = transcript(then.Report); err != nil {
 		return v, http.StatusInternalServerError, err

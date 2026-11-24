@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound ui --bundle <dir> [--trust-key <fingerprint>] [--repo <clone>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound ui --bundle <dir> [--trust-key <fingerprint>] [--repo <clone>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound report agents <base> [--json] | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -94,6 +94,7 @@ const (
 	commandUI
 	commandKeysGitSign
 	commandWaiverSign
+	commandReportAgents
 )
 
 func parseCommand(args []string) command {
@@ -148,6 +149,8 @@ func parseCommand(args []string) command {
 		return commandReportWeek
 	case len(args) == 2 && args[0] == "report" && args[1] == "drift":
 		return commandReportDrift
+	case (len(args) == 3 || len(args) == 4 && args[3] == "--json") && args[0] == "report" && args[1] == "agents" && args[2] != "" && !strings.HasPrefix(args[2], "-"):
+		return commandReportAgents
 	case len(args) == 2 && args[0] == "report" && args[1] == "github":
 		return commandReportGitHub
 	case len(args) == 3 && args[0] == "report" && args[1] == "intent" && args[2] != "":
@@ -956,6 +959,36 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		return checkRange(ctx, root, ledger, base, markdown, requireClaims, output)
+	case commandReportAgents:
+		// The agent track record (CLI-INV-74): computed from the same audit as the Audit room.
+		base, err := resolveCommit(ctx, root, args[2])
+		if err != nil {
+			return err
+		}
+		// Sync first, as the Audit room does, so reviews and claims committed since the last sync count
+		// (review M2); a failed sync is reported, not fatal.
+		var syncErr bytes.Buffer
+		if code := run(ctx, []string{"sync", "all"}, io.Discard, &syncErr); code != 0 {
+			if _, err := fmt.Fprintf(output, "note: sync failed, so the record may be behind git: %s\n", printableUnit(strings.TrimSpace(syncErr.String()))); err != nil {
+				return err
+			}
+		}
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		rep, err := computeAudit(ctx, root, ledger, base)
+		if err != nil {
+			return err
+		}
+		// The same exceptions as the Audit room: a verified signed outcome closes one (review M1).
+		attachOutcomes(ctx, root, &rep)
+		tr := computeTrack(ctx, root, rep)
+		if len(args) == 4 {
+			return writeTrackJSON(output, tr)
+		}
+		return writeTrack(output, tr)
 	case commandReportDrift:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

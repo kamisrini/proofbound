@@ -608,6 +608,23 @@ func testsControl(ctx context.Context, root, base string, rep *auditReport, exce
 		for _, h := range hunks {
 			recorded[areaHunk{Path: h.Path, Lines: h.Lines}.key()] = h
 		}
+		// What this control trusted, for the review outcomes by agent (CLI-INV-73).
+		tc := rep.trackFor(cm.Commit)
+		tc.TestParts = len(units)
+		tc.WholeNotCaught = len(units) > 0 && fields["whole"] != testsCaught
+		for _, u := range units {
+			h, ok := recorded[areaHunk{Path: u.Path, Lines: u.Lines}.key()]
+			if !ok || h.Result == testsCaught {
+				continue
+			}
+			tc.TestsNotCaught++
+			switch {
+			case h.Decision == "accept" && checkReason(h.Reason) == nil:
+				tc.TestsAccepted++
+			case h.Decision == "reject":
+				tc.TestsRejected++
+			}
+		}
 		var open []string
 		for _, u := range units {
 			h, ok := recorded[areaHunk{Path: u.Path, Lines: u.Lines}.key()]

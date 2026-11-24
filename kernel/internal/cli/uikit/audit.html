@@ -132,6 +132,38 @@
   {{else}}<p class="empty">No commits in this period.</p>{{end}}
 </section>
 
+<section class="card" aria-labelledby="out">
+  <div class="card-head"><h2 id="out">Review outcomes by agent</h2><span class="muted">How each agent's changes fared when someone checked them: counts, not a score</span></div>
+  {{if .Track.Agents}}
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Agent</th><th scope="col" class="n">Commits</th><th scope="col" class="n">Claimed a spec</th><th scope="col" class="n">Code without a spec</th><th scope="col" class="n">ACCEPTABLE</th><th scope="col" class="n">NEEDS_WORK</th><th scope="col" class="n">Reviewed, not independent</th><th scope="col" class="n">Not reviewed</th><th scope="col" class="n">Hunks outside the area (rejected / accepted)</th><th scope="col" class="n">Parts no test caught (rejected / accepted)</th><th scope="col" class="n">Whole change not caught</th><th scope="col" class="n">Lines by a recorded session</th><th scope="col" class="n">Lines with no recorded agent edit</th><th scope="col" class="n">Open exceptions</th></tr></thead>
+    <tbody>{{range .Track.Agents}}<tr>
+      <td><strong>{{.Name}}</strong> <span class="tag tag-agent">Agent</span></td>
+      <td class="n">{{.Commits}}</td><td class="n">{{.Claimed}}</td><td class="n">{{if .Uncovered}}<span class="tag tag-exception">{{.Uncovered}}</span>{{else}}0{{end}}</td><td class="n">{{.Acceptable}}</td>
+      <td class="n">{{if .NeedsWork}}<span class="tag tag-exception">{{.NeedsWork}}</span>{{else}}0{{end}}</td>
+      <td class="n">{{if .NotIndependent}}<span class="tag tag-exception">{{.NotIndependent}}</span>{{else}}0{{end}}</td>
+      <td class="n">{{.Unreviewed}}</td>
+      <td class="n">{{.AreaHunks}} ({{.AreaRejected}} / {{.AreaAccepted}})</td>
+      <td class="n">{{.TestsNotCaught}} ({{.TestsRejected}} / {{.TestsAccepted}})</td>
+      <td class="n">{{.WholeNotCaught}}</td><td class="n">{{.LinesBySession}}</td><td class="n">{{.LinesUnrecorded}}</td>
+      <td class="n">{{if .Open}}<span class="tag tag-exception">{{.Open}}</span>{{else}}0{{end}}</td>
+    </tr>{{end}}</tbody>
+  </table></div>
+  {{if .Track.Sessions}}
+  <h3 class="sub">Sessions in the provenance records</h3>
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Session</th><th scope="col" class="n">Commits</th><th scope="col" class="n">Lines</th><th scope="col" class="n">ACCEPTABLE</th><th scope="col" class="n">NEEDS_WORK</th><th scope="col" class="n">Reviewed, not independent</th><th scope="col" class="n">Not reviewed</th></tr></thead>
+    <tbody>{{range .Track.Sessions}}<tr>
+      <td><code>{{.Session}}</code></td><td class="n">{{len .Commits}}</td><td class="n">{{.Lines}}</td><td class="n">{{.Acceptable}}</td><td class="n">{{.NeedsWork}}</td><td class="n">{{.NotIndependent}}</td><td class="n">{{.Unreviewed}}</td>
+    </tr>{{end}}</tbody>
+  </table></div>
+  <p class="note-small">These sessions are linked to commits by the hashes of the lines they wrote, as the reviewer's signed provenance record shows (C12), not by time like the agent sessions below. A line can count for more than one session.</p>
+  {{end}}
+  <ul class="note-small">{{range .TrackNotes}}<li>{{.}}</li>{{end}}</ul>
+  <p class="note-small">The same table in a terminal: <code>proofbound report agents &lt;base&gt;</code> (add <code>--json</code> for an agent or a script).</p>
+  {{else}}<p class="empty">No commit in this period names a coding agent.</p>{{end}}
+</section>
+
 <section class="card" aria-labelledby="rev">
   <div class="card-head"><h2 id="rev">Who reviewed each change</h2><span class="muted">Every commit that claims a spec</span></div>
   {{if .Report.Roles}}

@@ -455,6 +455,38 @@ to the git evidence behind it.
 The Agent row comes from git's author and `Co-Authored-By` lines, which anyone can type. The page says
 so. To prove who made a commit, sign commits with `proofbound keys git-sign` (control C9).
 
+**The same answer per agent, in the terminal.** The page's "Review outcomes by agent" section, which
+`report agents` prints too, puts everything above on one agent:
+
+```bash
+proofbound report agents demo-base
+```
+
+```text
+Review outcomes by agent, …, from records committed at HEAD
+  Counts, not a score. Agent names are as git records them (proven only for commits signed by a declared key, C9).
+  A commit counts once for every agent named on it, so the agents' counts do not add up to the range.
+  NEEDS_WORK already includes a rejected out-of-area hunk or a rejected uncaught part.
+  Area, tests and line counts come only from records the controls C10, C11 and C12 trusted; hunks are counted as git lists them now.
+
+Claude (agent)
+  commits 1: 1 claimed a spec, 0 changed code without one
+  review of the claimed: 0 ACCEPTABLE, 1 NEEDS_WORK, 0 reviewed but not independent, 0 not reviewed
+  hunks outside the spec's area: 1 (1 rejected, 0 accepted)
+  parts no test caught when undone: 2 (2 rejected, 0 accepted); whole change not caught: 1
+  lines: 4 by a recorded session, 1 with no recorded agent edit
+  open exceptions: 3
+
+Sessions in the provenance records (linked by line hashes, not by time; a line can count for more than one session):
+SESSION                 COMMITS  LINES  ACCEPTABLE  NEEDS_WORK  NOT INDEPENDENT  NOT REVIEWED
+7f3c2a91-agent-session  1        4      0           1           0                0
+```
+
+**Why it matters.** This answers the question a lead or an auditor asks about an agent: when someone
+checked its work, how did it hold up? The counts come only from signed records the controls trust,
+never from what the agent says. It is not a score: one NEEDS_WORK on one commit says nothing about the
+model in general.
+
 ## Step 13 — The release bundle: no warranty
 
 **What you're doing.** Building the release evidence a customer or auditor would receive, and opening
@@ -630,6 +662,31 @@ Press Ctrl-C when done.
 
 **Why it matters.** The customer gets a signed statement, per promise, of what the agent's change
 does and who checked it, and checks it themselves against their own clone.
+
+**The agent's outcomes on this branch:**
+
+```bash
+proofbound report agents demo-base | tail -n +7
+```
+
+```text
+Claude (agent)
+  commits 1: 1 claimed a spec, 0 changed code without one
+  review of the claimed: 1 ACCEPTABLE, 0 NEEDS_WORK, 0 reviewed but not independent, 0 not reviewed
+  hunks outside the spec's area: 0 (0 rejected, 0 accepted)
+  parts no test caught when undone: 0 (0 rejected, 0 accepted); whole change not caught: 0
+  lines: 9 by a recorded session, 0 with no recorded agent edit
+  open exceptions: 0
+
+Sessions in the provenance records (linked by line hashes, not by time; a line can count for more than one session):
+SESSION                 COMMITS  LINES  ACCEPTABLE  NEEDS_WORK  NOT INDEPENDENT  NOT REVIEWED
+2b9e04d6-agent-session  1        9      1           0           0                0
+7f3c2a91-agent-session  1        2      1           0           0                0
+```
+
+The redo starts from `main`, so this branch holds only the redo. Session `7f3c2a91`, the first
+attempt, still shows: the redo repeats lines the first attempt's session wrote (`#!/bin/sh`), and
+identical lines match, which is why a line can count for more than one session.
 
 ---
 

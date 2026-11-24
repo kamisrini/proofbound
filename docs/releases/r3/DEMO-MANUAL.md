@@ -2,7 +2,10 @@
 
 This is the [tour](DEMO.md), but **you type every command**. Each step tells you what you are about to
 do, gives you a block to paste, shows what you should see, explains what just happened, and says why it
-matters to a business. It takes about 20–30 minutes.
+matters to a business. It takes about 20–30 minutes. **Using coding agents?** Start with the
+[agent demo](DEMO-AGENT.md) instead (about 15 minutes): it covers what this page does not, from an
+agent's point of view: the write-time perimeter, tests that can fail, and which agent session wrote
+each line.
 
 **How to read the blocks.** A block marked `bash` is safe to paste into your terminal as it is. A block
 marked `text` is output, for comparison only; never paste it. Your commit hashes and key fingerprints
@@ -317,6 +320,10 @@ jq '{declared_reviewer, review: [.reviews[].obligations[] | {obligation_id, stat
 ```text
 obligation CI-001-csv-export-184wxu O-FR-001: System MUST export a report as CSV.
 obligation CI-001-csv-export-184wxu O-FR-002: System MUST start every export with a header row.
+area: not declared by 001-csv-export
+provenance src/export.sh: 0 by a session, 4 with no recorded agent edit (lines 1, 2, 3, 4), 0 common
+provenance warning: no session logs here, so nothing can be traced (they are local to the machine the agent ran on)
+provenance: docs, Markdown and records are not traced; lines moved by a shell or rewritten by a formatter show as no recorded agent edit
 draft …/shop/.proofbound/drafts/e620a48c…/draft.json
 {
   "declared_reviewer": "",
@@ -339,6 +346,10 @@ draft …/shop/.proofbound/drafts/e620a48c…/draft.json
   `NOT_SATISFIED` / `INCONCLUSIVE`.
 
 `declared_reviewer` is who is answering. The draft is a working file, kept out of git.
+
+The `area` and `provenance` lines are the agent checks. This spec declares no area, and you typed the
+code in a shell, so no agent session recorded it, and the draft says exactly that rather than guessing.
+The [agent demo](DEMO-AGENT.md) shows both with an agent.
 
 **Business value.** Review becomes a checklist of the actual promises instead of a thumbs-up on a diff.
 A vague requirement gets caught as vague, not quietly "passed".
