@@ -36,7 +36,10 @@ warranty-head-reviews, agent-track-record; round 2: signed-waiver, waiver-signed
 framework-map, session-provenance; round 3: change-area, write-perimeter; round 5: tests-can-fail
 O-5). The fail-open found while checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
 `tests-undo-failed-review-20261124` ACCEPTABLE, 3 LOW recorded): a hunk that cannot be undone is
-never caught. Next (owner, 2026-11-24): update the documentation and the commercial material.
+never caught. Documentation and commercial pass done 2026-11-24 (DEMO.md tests caveat fixed; private
+landing page republished, video script rewritten, outreach and pilot changes laid as suggestion cards:
+see `~/projects/proofbound-commercial/README.md`). Next: the owner accepts or rejects those cards; the
+demo repository is still v0.3.1.
 `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 

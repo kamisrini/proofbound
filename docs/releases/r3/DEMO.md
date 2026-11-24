@@ -360,7 +360,9 @@ but a named reviewer has not signed. `INVALID` (exit 1) names the first check th
 - **A reviewer signature proves "the key declared as alice signed", not "the human alice signed".**
   Declaring a key is a commit, so forging a reviewer takes a visible key declaration instead of a text
   edit. Reviewer names are compared by key name (`Alice` and `alice` are one person).
-- **Proofbound records what reviewers decided; it does not re-run your tests.**
+- **Proofbound records what reviewers decided.** It runs your tests only when `.proofbound/tests.json`
+  declares them, and then only in `review draft` and `seal` on the reviewer's machine, never in CI (see
+  [the agent demo, step 8](DEMO-AGENT.md#step-8--the-review-draft-a-line-outside-the-area-and-a-test-that-notices-nothing)).
 - **Only commits that claim a spec are covered.** The bundle says how many are not.
 - **A warranty holds only while its evidence is in the repository.** Deleting or editing a cited review
   file makes it INVALID.
