@@ -15,13 +15,16 @@ v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.
 artifacts of the practices) and PW.8 (PW.8.2, perform and document testing), both now mapped.
 Also done: the **write-time perimeter** (`2e9a13f`, CLI-INV-69, owner "LETS DO IT" =
 `DEF-AGENT-NATIVE-INTENT-001` option 5; `proofbound hook pre-tool-use`, `.claude/settings.json` from
-init; review `write-perimeter-review-20261124`: F1 HIGH + F2..F4 MED fixed; not yet tried in a live
-Claude Code session: the owner tries it). Also done: **session-to-line provenance** (owner
+init; review `write-perimeter-review-20261124`: F1 HIGH + F2..F4 MED fixed; **tried live 2026-11-24** by the owner with
+Claude Code 2.1.331 in WSL: `/hooks` lists both project hooks; asked to edit `src/pricing.sh`, the agent first
+refused on its own from AGENTS.md and scope.paths, then, told to try, its Edit was blocked with the exact
+hook reason (Claude Code labels it `PreToolUse:Edit hook error`). The Windows `claude.exe` run from WSL
+would silently allow every edit (hook runs Windows-side, `|| true`): document it). Also done: **session-to-line provenance** (owner
 "approved" 2026-11-24, spec `docs/plans/session-provenance-spec.md` §6 defaults; CLI-INV-70..72,
 `proofbound hook post-tool-use`, `PROV-` record, control C12 LISTED; spec review NEEDS_WORK folded
 into draft 2; code review `session-provenance-review-20261124`: F1 HIGH + F2..F7 MED fixed, F10 LOW
-recorded; the demo shows the shell-written pricing line as "no recorded agent edit"; not tried in a
-live Claude Code session). Also done 2026-11-24, owner "lest do both": the **documentation pass** (README, r3 README, QUICKSTART,
+recorded; the demo shows the shell-written pricing line as "no recorded agent edit"; PostToolUse not yet seen
+live: no successful agent edit in the trial). Also done 2026-11-24, owner "lest do both": the **documentation pass** (README, r3 README, QUICKSTART,
 DEMO.md, DEMO-MANUAL, DEMO-AGENT agent-first: "you don't have to trust the agent"; private landing page
 `~/projects/proofbound-commercial` commit `cbabd57`) and **review outcomes by agent** (`report agents
 <base>`, Audit room section; CLI-INV-73..74; spec review NEEDS_WORK folded; code review
@@ -39,7 +42,8 @@ O-5). The fail-open found while checking wording is fixed (`CI-tests-undo-failed
 never caught. Documentation and commercial pass done 2026-11-24 (DEMO.md tests caveat fixed; private
 landing page republished, video script rewritten, outreach and pilot changes laid as suggestion cards:
 see `~/projects/proofbound-commercial/README.md`). Next: the owner accepts or rejects those cards; the
-demo repository is still v0.3.1.
+demo repository is still v0.3.1. Owner 2026-11-24: the agent demo should run with real agents; proposed
+(option 1, assumed, not yet confirmed) a `DEMO-AGENT-LIVE.md` beside the scripted page.
 `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
