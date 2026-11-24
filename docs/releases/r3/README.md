@@ -48,7 +48,7 @@ jq, Go to build the CLI (the loop demo accepts `PROOFBOUND_BIN=<installed binary
 
 | Demo | Shows | Run |
 |---|---|---|
-| **The agent goes off-script (agents start here)** | An agent's change edits a file outside its spec's area and ships a test that cannot fail: the line is named, the reviewer's finding is signed, nothing is warranted until the redo, which verifies VALID from a clone. You type every step, in [DEMO-AGENT.md](DEMO-AGENT.md) | follow [DEMO-AGENT.md](DEMO-AGENT.md) (about 15 minutes), or `bash docs/releases/r3/agent-demo.sh` |
+| **The agent goes off-script (agents start here)** | An agent's change edits a file outside its spec's area and ships a test that cannot fail: the line is named, Proofbound shows the test notices nothing when each part of the change is undone, the reviewer's findings are signed, nothing is warranted until the redo, which verifies VALID from a clone. You type every step, in [DEMO-AGENT.md](DEMO-AGENT.md) | follow [DEMO-AGENT.md](DEMO-AGENT.md) (about 15 minutes), or `bash docs/releases/r3/agent-demo.sh` |
 | **The full tour (start here)** | Every feature in order on one Spec Kit project, explained chapter by chapter with why each matters, in [DEMO.md](DEMO.md) | `bash docs/releases/r3/tour.sh` |
 | **By hand, step by step** | The same tour, but you type every command, with what each step does and its business value, in [DEMO-MANUAL.md](DEMO-MANUAL.md) | follow [DEMO-MANUAL.md](DEMO-MANUAL.md) (about 20–30 minutes) |
 | Install like a stranger | Builds the release archives, installs from them with `install.sh`, and times install → first gate PASS (Linux or WSL) | `bash docs/releases/mvp/demo-install.sh` |

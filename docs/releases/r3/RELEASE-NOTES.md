@@ -13,7 +13,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 
 - **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
   Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
-  since the last tag). It answers ten controls, each with the commits behind its answer and the
+  since the last tag). It answers eleven controls, each with the commits behind its answer and the
   terminal command that gives the same answer:
   1. Every commit that claims a spec passed its readiness gate.
   2. No commit changed code without claiming a spec.
@@ -26,6 +26,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   8. No change was reviewed by its own author, agent or spec owner.
   9. Commits are signed by a key the repository declares (a disclosure).
   10. Each agent change stayed inside the area its spec declares (see line-level scope below).
+  11. Each claimed change's tests fail when its code is undone (see tests that can fail below).
 - **Agent oversight.** The page shows who did the work: every agent (from the commit author or a
   `Co-Authored-By` line naming Claude, Copilot, Cursor, Codex and similar) and every person, with
   their commits, claims, code without a spec and open exceptions; who reviewed each change, and
@@ -94,6 +95,17 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   `--repo <clone>`, MISSING or ALTERED when it disagrees with the (unsigned) index; `--trust-key`
   pins the exporter's key, and the browser re-verifies each signature. Spec:
   [ui-bundle-spec.md](../../plans/ui-bundle-spec.md).
+- **Tests that can fail.** Commit `.proofbound/tests.json` with your test command and test folders,
+  and `review draft` undoes each hunk of code a claiming commit changed, one at a time and then all
+  at once, runs your tests in a temporary worktree, and prints whether they noticed ("tests did NOT
+  catch undoing src/export.sh lines 1-2"). `review seal` runs them again and needs a signed decision
+  (accept with a reason, or reject) for every hunk the tests did not catch; a reject, an uncaught
+  whole change or a failing test run makes the review NEEDS_WORK. The signed `TESTS-` record feeds
+  control C11 in the Audit room, which runs nothing itself. The declaration is read from the
+  commit's parent, so a commit cannot weaken its own tests. It is opt-in, never runs in CI, and runs
+  the commit's own code, so use it where you would run that commit's tests anyway. Undoing a hunk is
+  not full mutation testing: a test can notice a removed hunk and still miss a subtle bug in it. Run
+  `proofbound init` again in an existing repository so `.gitignore` stops hiding `.proofbound/tests.json`.
 - **What each control maps to.** Every Audit room control names the criteria it gives evidence
   toward in SOC 2 (CC5.1, CC6.1, CC8.1), ISO/IEC 27001:2022 Annex A (for example A.8.32 change
   management, A.5.3 segregation of duties), NIST SSDF v1.1 (PS.1, PS.2 partial, PS.3, PW.7, PO.3) and,

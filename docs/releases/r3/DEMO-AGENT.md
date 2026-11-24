@@ -7,7 +7,8 @@ is the change that gets merged.
 
 This page shows what Proofbound does with it:
 - it names the exact line outside the area the spec allowed;
-- an independent reviewer catches the test that proves nothing, and signs the finding;
+- it undoes each part of the change and shows that the agent's test notices none of them;
+- an independent reviewer decides on each finding, and signs it;
 - the pull-request check and the release bundle refuse to warrant the change;
 - the redo earns a warranty that anyone can verify from a clone.
 
@@ -81,6 +82,8 @@ cd "$W/shop"
 - `init speckit` adds Proofbound's profile, a commit hook, a reviewer agent and the pull-request
   workflow.
 - The spec owner and the reviewer each make a signing key. Only the public halves are committed.
+- `.proofbound/tests.json` says how to run this project's tests. With it, Proofbound can undo each
+  part of a change and check that a test notices.
 - The tag `demo-base` marks where the agent's work will start: every check below asks "is everything
   since `demo-base` warranted?"
 
@@ -90,8 +93,9 @@ git add -A .proofbound/sdd-profile.json .gitignore AGENTS.md .claude .github
 git commit -qm "add proofbound"
 proofbound keys init --name spec-owner > /dev/null
 PROOFBOUND_KEY="$W/reviewer.key" proofbound keys init --name demo-reviewer > /dev/null
-git add .gitignore .proofbound/keys
-git commit -qm "declare the spec owner's and the reviewer's keys"
+printf '{"schema":"proofbound.tests.v1","run":"sh tests/export_test.sh","paths":["tests/"],"timeout_seconds":60}\n' > .proofbound/tests.json
+git add .gitignore .proofbound/keys .proofbound/tests.json
+git commit -qm "declare the keys, and how to run the tests"
 git tag demo-base
 git ls-files .proofbound/keys
 ```
@@ -153,13 +157,13 @@ task sdd:001-csv-export: commits that change code now end with `Intent: sdd:001-
 **What you're doing.** Playing the agent. It writes the export, writes a test, and, "while it was
 there", raises the member discount from 10% to 25%. Look closely at all three:
 - the export has no header row;
-- the test only checks that the script runs;
+- the test runs the export but ignores what it prints, and always says PASS;
 - `src/pricing.sh` is not in the spec's area.
 
 ```bash
 mkdir -p tests
 printf '#!/bin/sh\nprintf "apples,3\\npears,5\\n"\n' > src/export.sh
-printf '#!/bin/sh\nsh src/export.sh > /dev/null && echo "PASS: export works"\n' > tests/export_test.sh
+printf '#!/bin/sh\nsh src/export.sh > /dev/null; echo "PASS: export works"\n' > tests/export_test.sh
 sed -i.bak 's/echo 10/echo 25/' src/pricing.sh && rm -f src/pricing.sh.bak
 git status --short
 ```
@@ -208,7 +212,7 @@ proofbound check demo-base
 
 ```text
 Proofbound: NOT WARRANTED (0 of 1 claiming commits verified)
-  a14083681dee sdd:001-csv-export NO REVIEW  no readiness gate gates/ready-a14083681dee.yaml; a reviewer runs `proofbound review draft a14083681dee`
+  9c887d3d5e67 sdd:001-csv-export NO REVIEW  no readiness gate gates/ready-9c887d3d5e67.yaml; a reviewer runs `proofbound review draft 9c887d3d5e67`
 Drift:
   summary warranted=0 current=0 stale=0 other=0
 proofbound: check: not warranted
@@ -221,35 +225,48 @@ other than the agent and the spec owner has checked each promise.
 
 ## Act 2 — An independent reviewer
 
-## Step 8 — The review draft names the line outside the area
+## Step 8 — The review draft: a line outside the area, and a test that notices nothing
 
-**What you're doing.** The reviewer asks Proofbound for a review draft of the agent's commit. The draft
-lists each promise to decide and, from git, every changed line outside the spec's area.
+**What you're doing.** The reviewer asks Proofbound for a review draft of the agent's commit. The
+draft lists each promise to decide and, from git, every changed line outside the spec's area. Then,
+because the project declares its tests, Proofbound undoes each part of the agent's change, one at a
+time and then all at once, runs the tests each time, and reports whether they noticed. It does this
+in a temporary copy, so your files are not touched. It runs the commit's own code, so do it only
+where you would run that commit's tests anyway.
 
 ```bash
 proofbound review draft attempt-1
 ```
 
 ```text
+tests: running `sh tests/export_test.sh` with each hunk of code undone (this runs the commit's own code)
 obligation CI-001-csv-export-184wxu O-FR-001: System MUST export a report as CSV.
 obligation CI-001-csv-export-184wxu O-FR-002: System MUST start every export with a header row.
 outside area src/pricing.sh line 3
 decide each in out_of_area: "accept" with a reason, or "reject"
-draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/a14083681deea06c39ff32ad303ba8f2b3aa82ff/draft.json
+tests did NOT catch undoing src/export.sh lines 1-2
+tests did NOT catch undoing src/pricing.sh line 3
+tests did NOT catch undoing the whole change
+decide each hunk not caught in tests.hunks: "accept" with a reason, or "reject"
+draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/9c887d3d5e6781f274895620b742e00494926261/draft.json
 ```
 
-**What just happened.** Proofbound found the discount change by itself: `src/pricing.sh line 3`. The
-review cannot be sealed until the reviewer accepts that line, with a reason, or rejects it, so a change
-outside the area cannot slip through unnoticed.
+**What just happened.** Two things, both found by Proofbound on its own:
+- **The discount change:** `src/pricing.sh line 3` is outside the spec's area.
+- **The test:** with the export removed, the price change removed, or the whole change removed, the
+  agent's test still passes. It notices nothing.
 
-**Why it matters.** In a large agent diff, a one-line price change hides easily. Here it is named,
-with its file and line, and it needs a signed decision.
+The review cannot be sealed until the reviewer decides on each finding: accept it with a reason, or
+reject it.
 
-## Step 9 — Does the agent's test prove anything?
+**Why it matters.** In a large agent diff, a one-line price change hides easily, and so does a test
+that only looks like a test. Here both are named, with file and line, and each needs a signed
+decision.
 
-**What you're doing.** The reviewer runs the test, then breaks the code on purpose (an export that
-prints nothing) and runs it again. A test that still passes on broken code proves nothing. Then the
-reviewer looks at the real output.
+## Step 9 — Confirm it by hand
+
+**What you're doing.** The reviewer checks Proofbound's finding by hand: run the test, break the code
+on purpose (an export that prints nothing), and run it again. Then look at the real output.
 
 ```bash
 sh tests/export_test.sh
@@ -267,19 +284,23 @@ apples,3
 pears,5
 ```
 
-**What just happened.** The test passed on code that does nothing, so it cannot fail. The real output
+**What just happened.** The test passed on code that does nothing, as Proofbound said. The real output
 has no header row, so FR-002 is not met.
 
-**Be clear about who found this.** Proofbound does not detect a test that cannot fail; the reviewer did,
-by breaking the code. What Proofbound guarantees is that the reviewer is someone other than the agent
-and the spec owner, that their finding is signed, and that nothing is warranted until it is fixed.
+**Be clear about what was checked.** Proofbound undid each *part* of the change. A test can notice a
+removed part and still miss a subtle bug inside it, so this is not full mutation testing, and the
+reviewer still judges each promise. What Proofbound adds is that "the agent's tests pass" is no longer
+taken on trust.
 
 ## Step 10 — The reviewer records the findings and signs them
 
 **What you're doing.** Filling in the draft:
 - both requirements are clear enough to check (VERIFIABLE);
 - FR-001 is SATISFIED and FR-002 is NOT_SATISFIED;
-- the pricing line is rejected.
+- the pricing line is rejected;
+- both hunks the tests did not catch are rejected.
+
+Seal runs the tests again itself, and takes only the reviewer's decisions from the draft.
 
 Then the reviewer seals it with their own key and commits the signed records.
 
@@ -288,7 +309,8 @@ draft=.proofbound/drafts/$(git rev-parse attempt-1)/draft.json
 jq '.declared_reviewer = "demo-reviewer"
   | .reviews[].obligations[].outcome = "VERIFIABLE"
   | .verdicts[].obligations |= map(.outcome = (if .obligation_id == "O-FR-002" then "NOT_SATISFIED" else "SATISFIED" end))
-  | .out_of_area |= map(.decision = "reject")' "$draft" > "$draft.tmp" && mv "$draft.tmp" "$draft"
+  | .out_of_area |= map(.decision = "reject")
+  | .tests.hunks |= map(if .result == "not caught" then .decision = "reject" else . end)' "$draft" > "$draft.tmp" && mv "$draft.tmp" "$draft"
 PROOFBOUND_KEY="$W/reviewer.key" proofbound review seal "$draft"
 git add docs/verification/verdicts gates
 git commit -qm "review attempt-1: needs work"
@@ -296,18 +318,22 @@ sed -n 2p docs/verification/verdicts/OV-*.md | jq -r .status
 ```
 
 ```text
-wrote docs/verification/verdicts/RR-a14083681dee-1.md
-wrote docs/verification/verdicts/RR-a14083681dee-1.md.sig
-wrote docs/verification/verdicts/OV-a14083681dee-1.md
-wrote docs/verification/verdicts/OV-a14083681dee-1.md.sig
-wrote docs/verification/verdicts/AREA-a14083681dee.json
-wrote gates/ready-a14083681dee.yaml
-signed as demo-reviewer (key 98d3a6c05b6d2203); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
+tests: running `sh tests/export_test.sh` with each hunk of code undone (this runs the commit's own code)
+wrote docs/verification/verdicts/RR-9c887d3d5e67-1.md
+wrote docs/verification/verdicts/RR-9c887d3d5e67-1.md.sig
+wrote docs/verification/verdicts/OV-9c887d3d5e67-1.md
+wrote docs/verification/verdicts/OV-9c887d3d5e67-1.md.sig
+wrote docs/verification/verdicts/AREA-9c887d3d5e67.json
+wrote docs/verification/verdicts/TESTS-9c887d3d5e67.json
+wrote gates/ready-9c887d3d5e67.yaml
+signed as demo-reviewer (key 1f9834b2f85b4562); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
 NEEDS_WORK
 ```
 
-**What just happened.** The verdict is NEEDS_WORK, and `AREA-….json` records, signed, that the pricing
-line was rejected and by whom.
+**What just happened.** The verdict is NEEDS_WORK. Two signed records say what was decided and by
+whom:
+- `AREA-….json`: the pricing line was rejected;
+- `TESTS-….json`: which parts the tests did not catch, and that each was rejected.
 
 ## Step 11 — The check after review
 
@@ -318,7 +344,7 @@ proofbound check demo-base
 
 ```text
 Proofbound: NOT WARRANTED (0 of 1 claiming commits verified)
-  a14083681dee sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+  9c887d3d5e67 sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 Drift:
   summary warranted=0 current=0 stale=0 other=0
 proofbound: check: not warranted
@@ -340,11 +366,15 @@ ui http://127.0.0.1:…/?k=… (Ctrl-C to stop; the link is your key to this pag
 ```
 
 **What to look for on the page:**
-- "5 of 7 controls held for this range. 2 exception(s), 0 with a signed outcome."
+- "5 of 8 controls held for this range. 3 exception(s), 0 with a signed outcome."
 - **Unreviewed change · control C1**: the commit claims the spec but is BLOCKED.
 - **Change outside its declared area · control C10**: "implement CSV export" changed lines outside its
   spec's area (not accepted): `src/pricing.sh line 3`.
-- **Who did the work**: Claude, as an Agent, with one commit and two open exceptions.
+- **Change its tests do not catch · control C11**: the tests do not catch undoing the whole change,
+  nor `src/export.sh` or `src/pricing.sh`.
+- **Who did the work**: Claude, as an Agent, with one commit and three open exceptions.
+- **Maps to** under each control, for example C11 → NIST SSDF PW.8 (perform the testing and document
+  the results).
 - **Who reviewed each change**: demo-reviewer, independent (Yes), with both review signatures checked
   in your browser.
 
@@ -365,7 +395,7 @@ proofbound warranty bundle demo-base -o "$W/release-1"
 ```
 
 ```text
-not warranted a14083681dee sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+not warranted 9c887d3d5e67 sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 bundle /home/you/projects/proofbound-agent-demo/release-1 (456aada51336..3114d958afbb): 0 of 1 claims verified (0 VALID, 0 UNREVIEWED); VERIFY.md, index.json, badge.svg
 proofbound: bundle: written, but not every claiming commit is VALID
 ```
@@ -438,7 +468,8 @@ no task
 
 **What you're doing.** The same review as before:
 - the draft now reports that every changed line is inside the area;
-- the break-it check now **fails** the test, so the test proves something;
+- Proofbound reports that undoing the export makes the tests fail, so the test depends on the change;
+- the reviewer's own break-it check agrees;
 - the output has its header row.
 
 Then the reviewer records every promise SATISFIED, signs, and commits.
@@ -454,10 +485,13 @@ sh src/export.sh
 ```
 
 ```text
+tests: running `sh tests/export_test.sh` with each hunk of code undone (this runs the commit's own code)
 obligation CI-001-csv-export-184wxu O-FR-001: System MUST export a report as CSV.
 obligation CI-001-csv-export-184wxu O-FR-002: System MUST start every export with a header row.
 area: every changed line is inside the declared area
-draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/b24e6d02a475cddb18434b03a2ade1c546c7d64b/draft.json
+tests caught undoing src/export.sh lines 1-4
+tests caught undoing the whole change
+draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/b1ecdc3ed0cb20bb8e7dcae9e5ef6be205449e5e/draft.json
 FAIL: first line is '', not the header row
 item,count
 apples,3
@@ -473,12 +507,14 @@ git commit -qm "review attempt-2"
 ```
 
 ```text
-wrote docs/verification/verdicts/RR-b24e6d02a475-1.md
-wrote docs/verification/verdicts/RR-b24e6d02a475-1.md.sig
-wrote docs/verification/verdicts/OV-b24e6d02a475-1.md
-wrote docs/verification/verdicts/OV-b24e6d02a475-1.md.sig
-wrote gates/ready-b24e6d02a475.yaml
-signed as demo-reviewer (key 98d3a6c05b6d2203); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
+tests: running `sh tests/export_test.sh` with each hunk of code undone (this runs the commit's own code)
+wrote docs/verification/verdicts/RR-b1ecdc3ed0cb-1.md
+wrote docs/verification/verdicts/RR-b1ecdc3ed0cb-1.md.sig
+wrote docs/verification/verdicts/OV-b1ecdc3ed0cb-1.md
+wrote docs/verification/verdicts/OV-b1ecdc3ed0cb-1.md.sig
+wrote docs/verification/verdicts/TESTS-b1ecdc3ed0cb.json
+wrote gates/ready-b1ecdc3ed0cb.yaml
+signed as demo-reviewer (key 1f9834b2f85b4562); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
 ```
 
 ## Step 17 — Warranted, and verifiable by anyone
@@ -497,11 +533,11 @@ git clone -q -b agent/csv-export-2 "$W/shop" "$W/buyer-clone"
 
 ```text
 Proofbound: WARRANTED (1 of 1 claiming commits verified)
-  b24e6d02a475 sdd:001-csv-export PASS  2 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+  b1ecdc3ed0cb sdd:001-csv-export PASS  2 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 Drift:
-  drift change=CI-001-csv-export-184wxu state=CURRENT verified_commit=b24e6d02a475 verdict=OV-b24e6d02a475-1 current_revision=994aee65
+  drift change=CI-001-csv-export-184wxu state=CURRENT verified_commit=b1ecdc3ed0cb verdict=OV-b1ecdc3ed0cb-1 current_revision=994aee65
   summary warranted=1 current=1 stale=0 other=0
-warranty /home/you/projects/proofbound-agent-demo/release-2/warranty-b24e6d02a475.json commit=b24e6d02a475cddb18434b03a2ade1c546c7d64b claims=sdd:001-csv-export VALID reviewers=demo-reviewer:98d3a6c05b6d2203
+warranty /home/you/projects/proofbound-agent-demo/release-2/warranty-b1ecdc3ed0cb.json commit=b1ecdc3ed0cb20bb8e7dcae9e5ef6be205449e5e claims=sdd:001-csv-export VALID reviewers=demo-reviewer:1f9834b2f85b4562
 bundle /home/you/projects/proofbound-agent-demo/release-2 (456aada51336..b413e4295911): 1 of 1 claims verified (1 VALID, 0 UNREVIEWED); VERIFY.md, index.json, badge.svg
 ```
 
@@ -527,13 +563,16 @@ does and who checked it, and checks it themselves against their own clone.
 | The agent… | What Proofbound did | Who decided |
 |---|---|---|
 | changed a file outside the spec's area | named `src/pricing.sh line 3` from git, and refused to seal until it was decided | the reviewer, signed |
-| shipped a test that cannot fail | made sure the reviewer was not the agent or the spec owner, signed their NOT_SATISFIED, and blocked the warranty | the reviewer (by breaking the code) |
+| shipped a test that cannot fail | undid each part of the change and showed the test noticed none of them; refused to seal until each was decided; blocked the warranty | the reviewer, signed |
 | said "tests pass" | did not count it: NOT WARRANTED until reviewed | — |
 | redid the work | WARRANTED, and a bundle any customer can verify against a clone | the reviewer, signed |
 
-**What Proofbound does not do (yet).** It does not detect a test that cannot fail, and it does not run
-your tests. Checking tests automatically by breaking the code is planned; today the reviewer does it.
-Git authorship is self-declared unless commits are signed (C9).
+**What Proofbound does not do.**
+- **It undoes parts of a change, not every possible bug.** A test can notice a removed part and still
+  miss a subtle bug inside it. This is not full mutation testing.
+- **It runs your tests only where the reviewer runs `review draft` and `review seal`,** and only when
+  `.proofbound/tests.json` declares them. It never runs them in CI; the check reads the signed record.
+- **Git authorship is self-declared** unless commits are signed (C9).
 
 **Where the first attempt went.** The branch `agent/csv-export` still holds the commit and its signed
 NEEDS_WORK review: the record of what the agent tried, and why it was rejected.

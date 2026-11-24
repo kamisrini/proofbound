@@ -7,25 +7,21 @@ As of: 2026-11-23
 ## Resume — 2026-11-23
 
 **Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
-v0.3.2 (republish) until Sunday 2026-11-29. Done since the release: the warranty fix `0b9b66d`, the
-agent demo, and **framework mapping** (`e7f2ff8`, CLI-INV-65, `docs/compliance/FRAMEWORK-MAP.md`,
-review `framework-map-review-20261123`: F1..F3 MED fixed, F4..F7 LOW recorded), all in v0.3.2. Also proposed: `BR-framework-map-n4c8te`. Next is
-item 3 of the agent-first list, session-to-line provenance (needs the owner's go-ahead on the approach); then 4. a write-time perimeter hook (`scope.paths`,
-`DEF-AGENT-NATIVE-INTENT-001` option 5), 5. tests that can fail (mutation check per promise), then the
-agent track record page; then the documentation pass (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private
-landing page) agent-first.
-
-**Done today, after the release:** the launch demo "the agent goes off-script" (spec
-`docs/plans/agent-demo-spec.md`; `DEMO-AGENT.md` by hand, every block run in a clean shell; `agent-demo.sh`
-runs green). Running it found a real bug: a review sealed on an abandoned branch stays in the local
-ledger and blocked the redo's `warranty export`/`bundle` ("not committed at HEAD"); CI clones were not
-affected. Owner chose "fix it first": `0b9b66d`, CLI-INV-64, `CI-warranty-head-reviews-xa1ljk`, review
-`warranty-head-reviews-review-20261123` ACCEPTABLE (F1..F3 LOW recorded).
+v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.2: the warranty fix
+`0b9b66d`; the agent demo; **framework mapping** (`e7f2ff8`, CLI-INV-65); **tests that can fail**
+(`205e557`, CLI-INV-66..68, control C11, `.proofbound/tests.json`; review
+`tests-can-fail-review-20261123`: F1 HIGH + F2..F5 MED fixed, F6..F9 LOW recorded; the demo now shows
+"tests did NOT catch"). SSDF top two for Proofbound (owner asked): PO.3 (PO.3.3, tools generate
+artifacts of the practices) and PW.8 (PW.8.2, perform and document testing), both now mapped.
+Next, owner's pick: the **write-time perimeter** (a PreToolUse hook refusing agent edits outside
+`scope.paths`; needs the owner to name `DEF-AGENT-NATIVE-INTENT-001`), then session-to-line
+provenance, then the agent track record page. Before Sunday regardless: the **documentation pass**
+(QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
 of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
 owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),

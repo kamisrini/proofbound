@@ -64,7 +64,8 @@ pb init speckit >/dev/null
 git add -A .proofbound/sdd-profile.json .gitignore AGENTS.md .claude .github; git commit -qm "add proofbound"
 pb keys init --name spec-owner >/dev/null
 PROOFBOUND_KEY=$reviewer_key pb keys init --name demo-reviewer >/dev/null
-git add .gitignore .proofbound/keys; git commit -qm "declare the spec owner's and the reviewer's keys"
+printf '{"schema":"proofbound.tests.v1","run":"sh tests/export_test.sh","paths":["tests/"],"timeout_seconds":60}\n' > .proofbound/tests.json
+git add .gitignore .proofbound/keys .proofbound/tests.json; git commit -qm "declare the keys, and how to run the tests"
 base=$(git rev-parse HEAD)
 mkdir -p specs/001-csv-export
 cat > specs/001-csv-export/spec.md <<'EOF'
@@ -79,6 +80,7 @@ printf -- '- [ ] T001 Implement CSV export\n' > specs/001-csv-export/tasks.md
 printf '# The only files this change may touch.\nsrc/export.sh\ntests/\n' > specs/001-csv-export/scope.paths
 git add specs; git commit -qm "spec: 001-csv-export"
 step "cat specs/001-csv-export/scope.paths"; cat specs/001-csv-export/scope.paths
+step "cat .proofbound/tests.json"; cat .proofbound/tests.json
 
 act "1. the agent works"
 git checkout -qb agent/csv-export
@@ -90,7 +92,7 @@ printf 'apples,3\npears,5\n'
 EOF
 cat > tests/export_test.sh <<'EOF'
 #!/bin/sh
-sh src/export.sh > /dev/null && echo "PASS: export works"
+sh src/export.sh > /dev/null; echo "PASS: export works"
 EOF
 sed -i.bak 's/echo 10/echo 25/' src/pricing.sh && rm -f src/pricing.sh.bak
 step "git status --short"; git status --short
@@ -107,7 +109,7 @@ run_may_fail check "$base"
 
 act "2. an independent reviewer"
 run review draft "$agent"
-echo "-- the reviewer runs the agent's test, then breaks the code on purpose and runs it again:"
+echo "-- Proofbound already undid each hunk; the reviewer can confirm by hand: break the code, run the test:"
 step "sh tests/export_test.sh"; sh tests/export_test.sh
 cp src/export.sh "$work/export.sh.keep"
 step "printf '#!/bin/sh\nexit 0\n' > src/export.sh   # an export that prints nothing"
@@ -120,8 +122,9 @@ draft=.proofbound/drafts/$agent/draft.json
 jq '.declared_reviewer = "demo-reviewer"
   | .reviews[].obligations[].outcome = "VERIFIABLE"
   | .verdicts[].obligations |= map(.outcome = (if .obligation_id == "O-FR-002" then "NOT_SATISFIED" else "SATISFIED" end))
-  | .out_of_area |= map(.decision = "reject")' "$draft" > "$draft.tmp" && mv "$draft.tmp" "$draft"
-echo "(demo-reviewer records: FR-001 SATISFIED, FR-002 NOT_SATISFIED, the pricing line rejected)"
+  | .out_of_area |= map(.decision = "reject")
+  | .tests.hunks |= map(if .result == "not caught" then .decision = "reject" else . end)' "$draft" > "$draft.tmp" && mv "$draft.tmp" "$draft"
+echo "(demo-reviewer records: FR-001 SATISFIED, FR-002 NOT_SATISFIED, the pricing line and both uncaught hunks rejected)"
 step "PROOFBOUND_KEY=$reviewer_key proofbound review seal $draft"
 PROOFBOUND_KEY=$reviewer_key pb review seal "$draft"
 step "sed -n 2p docs/verification/verdicts/OV-*.md | jq -r .status"; sed -n 2p docs/verification/verdicts/OV-"${agent:0:12}"-1.md | jq -r .status
