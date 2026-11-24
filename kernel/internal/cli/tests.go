@@ -402,9 +402,14 @@ func copyTree(from, to string) error {
 	})
 }
 
+// caughtWord turns a run with a hunk undone into its result. A hunk that could not be undone was
+// never tested, so it is never caught: it needs a decision like one the tests did not catch.
 func caughtWord(run string) string {
-	if run == testsPass {
+	switch run {
+	case testsPass:
 		return testsNotCaught
+	case testsUndoFailed:
+		return testsUndoFailed
 	}
 	return testsCaught
 }
@@ -453,7 +458,11 @@ func writeTestsLines(w io.Writer, res testsResult) error {
 			return err
 		}
 	}
-	if err := p("tests %s undoing the whole change\n", map[string]string{testsCaught: "caught", testsNotCaught: "did NOT catch", testsNotRun: "not run for"}[res.Whole]); err != nil {
+	if res.Whole == testsUndoFailed {
+		if err := p("tests: could not undo the whole change\n"); err != nil {
+			return err
+		}
+	} else if err := p("tests %s undoing the whole change\n", map[string]string{testsCaught: "caught", testsNotCaught: "did NOT catch", testsNotRun: "not run for"}[res.Whole]); err != nil {
 		return err
 	}
 	for _, h := range res.Hunks {

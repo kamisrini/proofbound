@@ -175,3 +175,13 @@ the whole group is killed; on Windows, only the shell is killed.
 - **F8:** §3 named a "base revision" field that the record does not have; a cancelled caller
   context reads as caught; the labels differ from C10's.
 - **F9:** C11's EU AI Act wording.
+
+## 9. Amendment 2026-11-24: a hunk that cannot be undone (owner-visible)
+
+Found while checking the requirement's wording (`CI-tests-undo-failed-q7x3k9`). A hunk whose undo
+failed was recorded as **caught**, although seal and C11 treat `undo failed` as needing a decision:
+a fail-open. Now `caughtWord` keeps `undo failed`, so seal asks for `accept` with a reason or
+`reject`, and a whole change that could not be undone makes the review NEEDS_WORK. `review draft`
+prints `tests: could not undo the whole change`. Mutation check: reverting the fix fails the new
+test (positive control), a comment edit does not (neutral control), and the whole-change line is
+checked too.

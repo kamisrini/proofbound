@@ -382,6 +382,25 @@ func TestTestsReviewFindings(t *testing.T) {
 			t.Fatalf("hunks not run were not asked for a decision: %v", err)
 		}
 	})
+	t.Run("a hunk that cannot be undone is never caught", func(t *testing.T) {
+		for run, want := range map[string]string{testsUndoFailed: testsUndoFailed, testsPass: testsNotCaught, testsFail: testsCaught, testsTimeout: testsCaught} {
+			if got := caughtWord(run); got != want {
+				t.Errorf("caughtWord(%q) = %q, want %q", run, got, want)
+			}
+		}
+		res := testsResult{Declared: true, Run: "make test", Baseline: testsPass, Whole: testsUndoFailed, Hunks: []testsHunk{{Path: "a", Lines: "line 1", Result: testsUndoFailed}}}
+		if _, _, err := decideTests(res, nil); err == nil || !strings.Contains(err.Error(), "line 1") {
+			t.Fatalf("a hunk that could not be undone was not asked for a decision: %v", err)
+		}
+		accept := &testsResult{Hunks: []testsHunk{{Path: "a", Lines: "line 1", Decision: "accept", Reason: "generated"}}}
+		if _, needs, err := decideTests(res, accept); err != nil || !needs {
+			t.Fatalf("a whole change that could not be undone did not need work: %v %v", needs, err)
+		}
+		var out bytes.Buffer
+		if err := writeTestsLines(&out, res); err != nil || !strings.Contains(out.String(), "tests: could not undo a line 1") || !strings.Contains(out.String(), "tests: could not undo the whole change") {
+			t.Fatalf("%q %v", out.String(), err)
+		}
+	})
 	t.Run("F2 decisions", func(t *testing.T) {
 		res := testsResult{Declared: true, Baseline: testsPass, Whole: testsCaught, Hunks: []testsHunk{{Path: "a", Lines: "line 1", Result: testsCaught}, {Path: "a", Lines: "line 9", Result: testsUndoFailed}}}
 		accept := &testsResult{Hunks: []testsHunk{{Path: "a", Lines: "line 9", Decision: "accept", Reason: "generated"}}}

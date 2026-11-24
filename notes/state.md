@@ -31,15 +31,15 @@ docs once more and keep republishing v0.3.2. Before Sunday regardless: the **doc
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`). Requirement reviews
-2026-11-24 (owner approved all ten, then all seven rewordings): seven of the ten are now `active`
-(ui-bundle, warranty-head-reviews, agent-track-record after round 1; signed-waiver,
-waiver-signed-commits, framework-map, session-provenance after round 2). Still `proposed`, review
-budget spent (a third round is the owner's call): `BR-change-area-p59cyd` O-4 ("names a coding
-agent"), `BR-tests-can-fail-k2h06j` O-2 and `BR-write-perimeter-i1xmq8` O-2 ("Proofbound record" vs
-the housekeeping paths of CLI-INV-33); rewordings proposed in their `RR-*-round2-20261124`
-verdicts. Found while checking wording, not fixed (code needs the owner's go-ahead): tests.go
-`caughtWord` records a hunk that cannot be undone as caught (fail-open), though `decideTests` says it
-needs a decision. `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
+2026-11-24 (owner approved all ten, both rounds of rewordings and a third round): nine of the ten
+are now `active` (round 1: ui-bundle, warranty-head-reviews, agent-track-record; round 2:
+signed-waiver, waiver-signed-commits, framework-map, session-provenance; round 3: change-area,
+write-perimeter). Still `proposed`: `BR-tests-can-fail-k2h06j` O-3, AMBIGUOUS in round 3 on hunk
+granularity (git's -U3 vs the -U0 the code uses); the reviewer's rewording is in
+`RR-tests-can-fail-round3-20261124`; a fourth round is the owner's call. The fail-open found while
+checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
+`tests-undo-failed-review-20261124` ACCEPTABLE, 3 LOW recorded): a hunk that cannot be undone is
+never caught. `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
