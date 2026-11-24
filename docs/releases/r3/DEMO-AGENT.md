@@ -172,6 +172,12 @@ printf '{"cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/src/export
         "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [ { "type": "command", "command": "proofbound hook pre-tool-use || true" } ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [ { "type": "command", "command": "proofbound hook post-tool-use || true" } ]
+      }
     ]
   }
 }
@@ -186,6 +192,9 @@ deny: proofbound: src/pricing.sh is outside the area the spec for sdd:001-csv-ex
   goes ahead.
 - **The `|| true`:** if `proofbound` is missing, too old or broken, the hook stays out of the way
   rather than blocking every edit.
+- **The second hook, `PostToolUse`:** after each edit the agent makes through Claude Code, it logs a
+  hash of every line the edit added (never the content), in the repository's git folder. Review uses
+  it in Step 8.
 
 **Why it matters, and its limit.** Stopping an out-of-scope edit while the agent works is cheaper
 than finding it in review. But the agent controls its own machine: it could change a file through a
@@ -201,10 +210,15 @@ there", raises the member discount from 10% to 25%. Look closely at all three:
 - the test runs the export but ignores what it prints, and always says PASS;
 - `src/pricing.sh` is not in the spec's area.
 
+The agent writes the two new files with Claude Code's Write tool, so its `PostToolUse` hook logs them.
+The second command hands the hook what Claude Code sends after each Write. The pricing edit is a
+shell `sed`, which no hook sees:
+
 ```bash
 mkdir -p tests
 printf '#!/bin/sh\nprintf "apples,3\\npears,5\\n"\n' > src/export.sh
 printf '#!/bin/sh\nsh src/export.sh > /dev/null; echo "PASS: export works"\n' > tests/export_test.sh
+for f in src/export.sh tests/export_test.sh; do jq -nc --arg cwd "$PWD" --arg f "$PWD/$f" --rawfile c "$f" '{session_id:"7f3c2a91-agent-session", cwd:$cwd, tool_name:"Write", tool_input:{file_path:$f, content:$c}, tool_response:{type:"create"}}' | proofbound hook post-tool-use; done
 sed -i.bak 's/echo 10/echo 25/' src/pricing.sh && rm -f src/pricing.sh.bak
 git status --short
 ```
@@ -289,13 +303,21 @@ tests did NOT catch undoing src/export.sh lines 1-2
 tests did NOT catch undoing src/pricing.sh line 3
 tests did NOT catch undoing the whole change
 decide each hunk not caught in tests.hunks: "accept" with a reason, or "reject"
+provenance src/export.sh: 2 by Claude Code session 7f3c2a91, 0 with no recorded agent edit, 0 common
+provenance src/pricing.sh: 0 by a session, 1 with no recorded agent edit (lines 3), 0 common
+provenance tests/export_test.sh: 2 by Claude Code session 7f3c2a91, 0 with no recorded agent edit, 0 common
+provenance: docs, Markdown and records are not traced; lines moved by a shell or rewritten by a formatter show as no recorded agent edit
 draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/9c887d3d5e6781f274895620b742e00494926261/draft.json
 ```
 
-**What just happened.** Two things, both found by Proofbound on its own:
+**What just happened.** Three things, all found by Proofbound on its own:
 - **The discount change:** `src/pricing.sh line 3` is outside the spec's area.
 - **The test:** with the export removed, the price change removed, or the whole change removed, the
   agent's test still passes. It notices nothing.
+- **Where each line came from:** the export and the test were written by Claude Code session
+  `7f3c2a91`, line for line. The pricing line has **no recorded agent edit**: it reached the commit
+  around the hooks, the edit the perimeter could not see. Proofbound says only what the logs show.
+  It does not guess who wrote the line.
 
 The review cannot be sealed until the reviewer decides on each finding: accept it with a reason, or
 reject it.
@@ -341,7 +363,8 @@ taken on trust.
 - the pricing line is rejected;
 - both hunks the tests did not catch are rejected.
 
-Seal runs the tests again itself, and takes only the reviewer's decisions from the draft.
+Seal runs the tests and the provenance match again itself, and takes only the reviewer's decisions
+from the draft.
 
 Then the reviewer seals it with their own key and commits the signed records.
 
@@ -366,6 +389,7 @@ wrote docs/verification/verdicts/OV-9c887d3d5e67-1.md
 wrote docs/verification/verdicts/OV-9c887d3d5e67-1.md.sig
 wrote docs/verification/verdicts/AREA-9c887d3d5e67.json
 wrote docs/verification/verdicts/TESTS-9c887d3d5e67.json
+wrote docs/verification/verdicts/PROV-9c887d3d5e67.json
 wrote gates/ready-9c887d3d5e67.yaml
 signed as demo-reviewer (key 1f9834b2f85b4562); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
 NEEDS_WORK
@@ -375,6 +399,7 @@ NEEDS_WORK
 whom:
 - `AREA-….json`: the pricing line was rejected;
 - `TESTS-….json`: which parts the tests did not catch, and that each was rejected.
+- `PROV-….json`: which session wrote which lines, and the pricing line with no recorded agent edit.
 
 ## Step 11 — The check after review
 
@@ -413,6 +438,10 @@ ui http://127.0.0.1:…/?k=… (Ctrl-C to stop; the link is your key to this pag
   spec's area (not accepted): `src/pricing.sh line 3`.
 - **Change its tests do not catch · control C11**: the tests do not catch undoing the whole change,
   nor `src/export.sh` or `src/pricing.sh`.
+- **Which agent sessions wrote its lines · control C12** (listed): 4 lines by session 7f3c2a91, and 1
+  with no recorded agent edit in `src/pricing.sh`. The counts are disclosed and never make an
+  exception, because people and generators write lines too. Only a record that does not verify, or
+  that the agent signed itself, is an exception.
 - **Who did the work**: Claude, as an Agent, with one commit and three open exceptions.
 - **Maps to** under each control, for example C11 → NIST SSDF PW.8 (perform the testing and document
   the results).
@@ -494,6 +523,7 @@ printf 'item,count\n'
 printf 'apples,3\npears,5\n'
 EOF
 sh tests/export_test.sh
+for f in src/export.sh tests/export_test.sh; do jq -nc --arg cwd "$PWD" --arg f "$PWD/$f" --rawfile c "$f" '{session_id:"2b9e04d6-agent-session", cwd:$cwd, tool_name:"Write", tool_input:{file_path:$f, content:$c}, tool_response:{type:"create"}}' | proofbound hook post-tool-use; done
 git add src tests
 git commit -qm "implement CSV export with a header row" -m "Co-Authored-By: Claude <noreply@anthropic.com>"
 git tag attempt-2
@@ -508,7 +538,7 @@ no task
 ## Step 16 — The reviewer checks the redo the same way
 
 **What you're doing.** The same review as before:
-- the draft now reports that every changed line is inside the area;
+- the draft now reports that every changed line is inside the area, and that the new lines were written by the redo's session;
 - Proofbound reports that undoing the export makes the tests fail, so the test depends on the change;
 - the reviewer's own break-it check agrees;
 - the output has its header row.
@@ -532,6 +562,9 @@ obligation CI-001-csv-export-184wxu O-FR-002: System MUST start every export wit
 area: every changed line is inside the declared area
 tests caught undoing src/export.sh lines 1-4
 tests caught undoing the whole change
+provenance src/export.sh: 4 by Claude Code session 2b9e04d6, 1 by Claude Code session 7f3c2a91, 0 with no recorded agent edit, 0 common
+provenance tests/export_test.sh: 5 by Claude Code session 2b9e04d6, 1 by Claude Code session 7f3c2a91, 0 with no recorded agent edit, 0 common
+provenance: docs, Markdown and records are not traced; lines moved by a shell or rewritten by a formatter show as no recorded agent edit
 draft /home/you/projects/proofbound-agent-demo/shop/.proofbound/drafts/b1ecdc3ed0cb20bb8e7dcae9e5ef6be205449e5e/draft.json
 FAIL: first line is '', not the header row
 item,count
@@ -554,6 +587,7 @@ wrote docs/verification/verdicts/RR-b1ecdc3ed0cb-1.md.sig
 wrote docs/verification/verdicts/OV-b1ecdc3ed0cb-1.md
 wrote docs/verification/verdicts/OV-b1ecdc3ed0cb-1.md.sig
 wrote docs/verification/verdicts/TESTS-b1ecdc3ed0cb.json
+wrote docs/verification/verdicts/PROV-b1ecdc3ed0cb.json
 wrote gates/ready-b1ecdc3ed0cb.yaml
 signed as demo-reviewer (key 1f9834b2f85b4562); commit .proofbound/keys/demo-reviewer.pub with the review if it is not committed yet
 ```
@@ -605,6 +639,7 @@ does and who checked it, and checks it themselves against their own clone.
 |---|---|---|
 | changed a file outside the spec's area | with Claude Code, refused the edit as it was made; when it got through anyway, named `src/pricing.sh line 3` from git, and refused to seal until it was decided | the reviewer, signed |
 | shipped a test that cannot fail | undid each part of the change and showed the test noticed none of them; refused to seal until each was decided; blocked the warranty | the reviewer, signed |
+| changed a file through the shell, around the hooks | named the line as having no recorded agent edit, next to the lines each Claude Code session wrote | the reviewer, signed (a disclosure) |
 | said "tests pass" | did not count it: NOT WARRANTED until reviewed | — |
 | redid the work | WARRANTED, and a bundle any customer can verify against a clone | the reviewer, signed |
 
@@ -614,6 +649,10 @@ does and who checked it, and checks it themselves against their own clone.
 - **It runs your tests only where the reviewer runs `review draft` and `review seal`,** and only when
   `.proofbound/tests.json` declares them. It never runs them in CI; the check reads the signed record.
 - **Git authorship is self-declared** unless commits are signed (C9).
+- **Session provenance is what the logs on the agent's machine show.** The agent could write to its
+  own log, and an identical line typed later still matches (the redo's `#!/bin/sh` matches the first
+  session too). It turns "the agent says it wrote this" into "these lines match these recorded edits,
+  and these match none".
 
 **Where the first attempt went.** The branch `agent/csv-export` still holds the commit and its signed
 NEEDS_WORK review: the record of what the agent tried, and why it was rejected.

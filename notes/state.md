@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-23
+As of: 2026-11-24
 
-## Resume — 2026-11-23
+## Resume — 2026-11-24
 
 **Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
 v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.2: the warranty fix
@@ -16,14 +16,18 @@ artifacts of the practices) and PW.8 (PW.8.2, perform and document testing), bot
 Also done: the **write-time perimeter** (`2e9a13f`, CLI-INV-69, owner "LETS DO IT" =
 `DEF-AGENT-NATIVE-INTENT-001` option 5; `proofbound hook pre-tool-use`, `.claude/settings.json` from
 init; review `write-perimeter-review-20261124`: F1 HIGH + F2..F4 MED fixed; not yet tried in a live
-Claude Code session: the owner tries it). Next: session-to-line provenance (needs the owner's
-go-ahead on the approach), then the agent track record page. Before Sunday regardless: the **documentation pass**
+Claude Code session: the owner tries it). Also done: **session-to-line provenance** (owner
+"approved" 2026-11-24, spec `docs/plans/session-provenance-spec.md` §6 defaults; CLI-INV-70..72,
+`proofbound hook post-tool-use`, `PROV-` record, control C12 LISTED; spec review NEEDS_WORK folded
+into draft 2; code review `session-provenance-review-20261124`: F1 HIGH + F2..F7 MED fixed, F10 LOW
+recorded; the demo shows the shell-written pricing line as "no recorded agent edit"; not tried in a
+live Claude Code session). Next: the agent track record page (reads PROV/AREA/TESTS records). Before Sunday regardless: the **documentation pass**
 (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
 of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
+`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8`, `BR-session-provenance-p3v8nc` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
 owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),

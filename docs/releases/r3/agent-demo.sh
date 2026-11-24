@@ -34,6 +34,16 @@ step() { printf '\n$ %s\n' "$*"; }
 pb() { "$work/proofbound" "$@"; }
 export PATH="$work:$PATH"  # the git hooks `init` installs run `proofbound` from PATH: use this build
 run() { step "proofbound $*"; pb "$@"; }
+# agent_wrote <session> <file>...: what Claude Code's PostToolUse hook sends after the agent's Write of
+# each file; `proofbound hook post-tool-use` logs a hash of each line (session-provenance-spec.md).
+agent_wrote() {
+  local session=$1 f; shift
+  for f in "$@"; do
+    jq -nc --arg s "$session" --arg cwd "$PWD" --arg f "$PWD/$f" --rawfile c "$f" \
+      '{session_id:$s, cwd:$cwd, hook_event_name:"PostToolUse", tool_name:"Write", tool_input:{file_path:$f, content:$c}, tool_response:{type:"create"}}' |
+      pb hook post-tool-use
+  done
+}
 run_may_fail() { step "proofbound $*"; pb "$@" || echo "(exit $?)"; }
 # page <port> <args...>: start `proofbound ui` on a port, fetch the page it links to, print its text.
 page() {
@@ -92,6 +102,7 @@ printf '{"cwd":"%s","tool_name":"Edit","tool_input":{"file_path":"%s/src/pricing
 echo "(Claude Code blocks the edit and shows the agent this reason)"
 printf '{"cwd":"%s","tool_name":"Write","tool_input":{"file_path":"%s/src/export.sh"}}' "$p" "$p" | pb hook pre-tool-use | wc -c | sed 's/^ *0$/(no output: src\/export.sh is inside the area, so the edit goes ahead)/' 
 echo "-- this demo plays the agent in a shell, which no hook sees, so the pricing edit still lands; C10 catches it at review."
+echo "-- the agent's two Writes go through Claude Code, whose PostToolUse hook logs a hash of each line; the pricing edit is a shell sed, which no hook sees"
 mkdir -p tests
 cat > src/export.sh <<'EOF'
 #!/bin/sh
@@ -101,6 +112,8 @@ cat > tests/export_test.sh <<'EOF'
 #!/bin/sh
 sh src/export.sh > /dev/null; echo "PASS: export works"
 EOF
+agent_wrote 7f3c2a91-agent-session src/export.sh tests/export_test.sh
+step "sed -i 's/echo 10/echo 25/' src/pricing.sh   # the agent, through the shell"
 sed -i.bak 's/echo 10/echo 25/' src/pricing.sh && rm -f src/pricing.sh.bak
 step "git status --short"; git status --short
 git add src tests
@@ -173,6 +186,7 @@ printf 'item,count\n'
 printf 'apples,3\npears,5\n'
 EOF
 step "sh tests/export_test.sh"; sh tests/export_test.sh
+agent_wrote 2b9e04d6-agent-session src/export.sh tests/export_test.sh
 git add src tests
 step 'git commit -m "implement CSV export with a header row" -m "Co-Authored-By: Claude <noreply@anthropic.com>"'
 git commit -qm "implement CSV export with a header row" -m "Co-Authored-By: Claude <noreply@anthropic.com>"

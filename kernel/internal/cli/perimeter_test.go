@@ -172,7 +172,7 @@ func TestInitWritesPerimeterHook(t *testing.T) {
 	other := t.TempDir()
 	uiWrite(t, other, ".claude/settings.json", "{}\n")
 	out.Reset()
-	if err := writeClaudeSettings(&out, other); err != nil || !strings.Contains(out.String(), "without the Proofbound hook") {
+	if err := writeClaudeSettings(&out, other); err != nil || !strings.Contains(out.String(), "without a Proofbound hook") || !strings.Contains(out.String(), `"PreToolUse"`) || !strings.Contains(out.String(), `"PostToolUse"`) {
 		t.Fatalf("%v %s", err, out.String())
 	}
 	if data, _ := os.ReadFile(filepath.Join(other, ".claude", "settings.json")); string(data) != "{}\n" {

@@ -119,6 +119,11 @@ var frameworkMap = map[string][]frameworkEntry{
 		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates a signed artifact of the testing practice"),
 		fe(fwEUAIA, "Art. 17(1)(d)", "evidence toward test procedures during development: tests are shown to depend on the change"),
 	},
+	"C12": {
+		fe(fwSOC2, "CC8.1", "evidence toward tracking changes: the reviewer signs which recorded agent sessions wrote a change's lines, and which lines no recorded edit wrote; the agent could write to its own log"),
+		fe(fwISO, "A.8.32", "evidence toward change management: the origin of each changed line is recorded as far as the session logs show"),
+		fe(fwSSDF, "PO.3", "evidence toward PO.3.3: the toolchain generates a signed artifact of which agent session produced which lines"),
+	},
 }
 
 // mapsTo returns a control's mapped criteria, in table order, for the transcript.
@@ -187,9 +192,11 @@ func frameworkDoc() string {
 	}
 	b.WriteString("\n## Agents\n\n")
 	b.WriteString("Git records who made a commit as typed text, and an agent's commit is often authored by the person\n")
-	b.WriteString("who ran it. The controls answer for agent work in four ways: C8 refuses a review by the change's\n")
+	b.WriteString("who ran it. The controls answer for agent work in five ways: C8 refuses a review by the change's\n")
 	b.WriteString("author, any agent named on it or its spec owner; C10 names every line an agent changed outside the\n")
 	b.WriteString("area its spec allowed; C2 lists agent code that claims no spec; and C9 binds a commit to a declared key\n")
-	b.WriteString("when it is signed (`proofbound keys git-sign`); who held the key is outside that evidence.\n")
+	b.WriteString("when it is signed (`proofbound keys git-sign`); who held the key is outside that evidence. And C12\n")
+	b.WriteString("names which recorded Claude Code sessions wrote a change's lines and which lines no recorded edit\n")
+	b.WriteString("wrote, as the reviewer read the logs on the agent's machine.\n")
 	return b.String()
 }

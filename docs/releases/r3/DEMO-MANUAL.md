@@ -393,6 +393,7 @@ wrote docs/verification/verdicts/RR-e620a48ca48b-1.md
 wrote docs/verification/verdicts/RR-e620a48ca48b-1.md.sig
 wrote docs/verification/verdicts/OV-e620a48ca48b-1.md
 wrote docs/verification/verdicts/OV-e620a48ca48b-1.md.sig
+wrote docs/verification/verdicts/PROV-e620a48ca48b.json
 wrote gates/ready-e620a48ca48b.yaml
 signed as demo-reviewer (key 7a7df12f53e632bd); …
 …

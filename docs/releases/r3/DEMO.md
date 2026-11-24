@@ -153,6 +153,7 @@ wrote docs/verification/verdicts/RR-0c5c80d374d2-1.md
 wrote docs/verification/verdicts/RR-0c5c80d374d2-1.md.sig
 wrote docs/verification/verdicts/OV-0c5c80d374d2-1.md
 wrote docs/verification/verdicts/OV-0c5c80d374d2-1.md.sig
+wrote docs/verification/verdicts/PROV-0c5c80d374d2.json
 wrote gates/ready-0c5c80d374d2.yaml
 signed as demo-reviewer (key 0877ffc28ca972b9)
 

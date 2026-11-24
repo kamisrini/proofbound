@@ -32,6 +32,7 @@ evidence toward. The same mapping is on each control card and in the audit trans
 | C9 | Commits are signed by a key the repository declares. | CC6.1 | A.5.16, A.8.24 | PS.1 | — |
 | C10 | Each agent change stayed inside the area its spec declares. | CC8.1 | A.8.32 | PS.1 | Art. 17(1)(a) |
 | C11 | Each claimed change's tests fail when its code is undone. | CC8.1 | A.8.32 | PW.8, PO.3 | Art. 17(1)(d) |
+| C12 | Traced changes say which agent sessions wrote their lines, in records that verify. | CC8.1 | A.8.32 | PO.3 | — |
 
 ## Why each entry
 
@@ -120,10 +121,18 @@ evidence toward. The same mapping is on each control card and in the audit trans
 - **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates a signed artifact of the testing practice.
 - **EU AI Act Art. 17(1)(d)**: evidence toward test procedures during development: tests are shown to depend on the change.
 
+### C12: Traced changes say which agent sessions wrote their lines, in records that verify.
+
+- **SOC 2 CC8.1**: evidence toward tracking changes: the reviewer signs which recorded agent sessions wrote a change's lines, and which lines no recorded edit wrote; the agent could write to its own log.
+- **ISO 27001 A.8.32**: evidence toward change management: the origin of each changed line is recorded as far as the session logs show.
+- **NIST SSDF PO.3**: evidence toward PO.3.3: the toolchain generates a signed artifact of which agent session produced which lines.
+
 ## Agents
 
 Git records who made a commit as typed text, and an agent's commit is often authored by the person
-who ran it. The controls answer for agent work in four ways: C8 refuses a review by the change's
+who ran it. The controls answer for agent work in five ways: C8 refuses a review by the change's
 author, any agent named on it or its spec owner; C10 names every line an agent changed outside the
 area its spec allowed; C2 lists agent code that claims no spec; and C9 binds a commit to a declared key
-when it is signed (`proofbound keys git-sign`); who held the key is outside that evidence.
+when it is signed (`proofbound keys git-sign`); who held the key is outside that evidence. And C12
+names which recorded Claude Code sessions wrote a change's lines and which lines no recorded edit
+wrote, as the reviewer read the logs on the agent's machine.

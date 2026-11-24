@@ -15,8 +15,16 @@ import (
 // active task's spec declares. It is guidance at the moment of writing, not a trust boundary: the
 // agent controls its own environment, and C10 still judges every committed line.
 
-// hookStdin is where `hook pre-tool-use` reads Claude Code's JSON (a variable for tests).
-var hookStdin io.Reader = os.Stdin
+// hookStdin is where the Claude Code hooks read their JSON when set (tests); otherwise os.Stdin, read
+// when the hook runs so a caller that swaps os.Stdin is honoured.
+var hookStdin io.Reader
+
+func hookInput() io.Reader {
+	if hookStdin != nil {
+		return hookStdin
+	}
+	return os.Stdin
+}
 
 type toolCall struct {
 	Cwd       string `json:"cwd"`
@@ -44,24 +52,12 @@ func perimeterDecision(ctx context.Context, raw []byte) (bool, string) {
 	default:
 		return true, ""
 	}
-	if target == "" || call.Cwd == "" {
-		return true, ""
-	}
-	if !filepath.IsAbs(target) {
-		target = filepath.Join(call.Cwd, target)
-	}
 	// The repository is the one holding the file, not the session's cwd (review F2): a session started
 	// above the repository, or after a `cd`, must still be judged, and a nested repository by its own.
-	target = resolvePath(target)
-	root := strings.TrimSpace(gitOutput(ctx, existingAncestor(target), "rev-parse", "--show-toplevel"))
-	if root == "" {
+	root, rel, ok := fileRepo(ctx, call.Cwd, target)
+	if !ok {
 		return true, ""
 	}
-	rel, err := filepath.Rel(resolvePath(root), target)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return true, ""
-	}
-	rel = filepath.ToSlash(rel)
 	if housekeepingPath(rel) {
 		return true, ""
 	}
@@ -125,7 +121,7 @@ func existingAncestor(p string) string {
 // an older proofbound returns for an unknown command and what a crash returns, and either must not
 // block every edit (review F1). The installed command adds `|| true` for the same reason.
 func runPerimeterHook(ctx context.Context, stdout io.Writer) int {
-	raw, err := io.ReadAll(io.LimitReader(hookStdin, 1<<20))
+	raw, err := io.ReadAll(io.LimitReader(hookInput(), 1<<20))
 	if err != nil {
 		return 0
 	}
@@ -143,13 +139,20 @@ func runPerimeterHook(ctx context.Context, stdout io.Writer) int {
 // claudeSettingsPath holds the agent hook: housekeeping (no claim needed) and listed by C6.
 const claudeSettingsPath = ".claude/settings.json"
 
-// claudeSettings is the .claude/settings.json `init` writes when there is none: the PreToolUse hook.
+// claudeSettings is the .claude/settings.json `init` writes when there is none: the PreToolUse
+// perimeter hook and the PostToolUse hook that records each edit (CLI-INV-70).
 const claudeSettings = `{
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [ { "type": "command", "command": "proofbound hook pre-tool-use || true" } ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [ { "type": "command", "command": "proofbound hook post-tool-use || true" } ]
       }
     ]
   }
@@ -162,11 +165,20 @@ func writeClaudeSettings(output io.Writer, root string) error {
 	path := filepath.Join(root, ".claude", "settings.json")
 	existing, err := os.ReadFile(path)
 	if err == nil {
-		if strings.Contains(string(existing), "proofbound hook pre-tool-use") {
+		// Each hook is checked on its own, so a file an older init wrote says what to add (provenance
+		// spec §1.5, review F2).
+		var missing []string
+		if !strings.Contains(string(existing), "proofbound hook pre-tool-use") {
+			missing = append(missing, `"PreToolUse": [ { "matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [ { "type": "command", "command": "proofbound hook pre-tool-use || true" } ] } ]`)
+		}
+		if !strings.Contains(string(existing), "proofbound hook post-tool-use") {
+			missing = append(missing, `"PostToolUse": [ { "matcher": "Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "proofbound hook post-tool-use || true" } ] } ]`)
+		}
+		if len(missing) == 0 {
 			_, err = fmt.Fprintf(output, "exists %s\n", path)
 			return err
 		}
-		_, err = fmt.Fprintf(output, "exists %s without the Proofbound hook; add a PreToolUse hook running `proofbound hook pre-tool-use || true` for Edit|Write|MultiEdit|NotebookEdit\n", path)
+		_, err = fmt.Fprintf(output, "exists %s without a Proofbound hook; add to its \"hooks\" object:\n  %s\n", path, strings.Join(missing, ",\n  "))
 		return err
 	}
 	return writeNew(output, root, ".claude/settings.json", claudeSettings, 0o644)

@@ -210,6 +210,9 @@ type draftFile struct {
 	// Tests is what undoing each code hunk did to the declared tests (tests-can-fail-spec.md); absent
 	// when the project declares no tests. Seal runs them again and takes only the decisions.
 	Tests *testsResult `json:"tests,omitempty"`
+	// Provenance is which recorded agent sessions wrote the lines the commit adds
+	// (session-provenance-spec.md); informational: seal matches again and trusts none of it.
+	Provenance *provResult `json:"provenance,omitempty"`
 }
 
 type draftReview struct {
@@ -273,6 +276,11 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 	if tests.Declared {
 		draft.Tests = &tests
 	}
+	prov, err := commitProvenance(ctx, root, sha)
+	if err != nil {
+		return err
+	}
+	draft.Provenance = &prov
 	dir := draftDir(root, sha)
 	path := filepath.Join(dir, "draft.json")
 	if _, err := os.Lstat(path); err == nil {
@@ -299,6 +307,9 @@ func reviewDraft(ctx context.Context, root string, ledger *store.Store, arg stri
 		return err
 	}
 	if err := writeTestsLines(output, tests); err != nil {
+		return err
+	}
+	if err := writeProvLines(output, prov); err != nil {
 		return err
 	}
 	_, err = fmt.Fprintf(output, "draft %s\n", path)
@@ -447,6 +458,11 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	if err != nil {
 		return err
 	}
+	// Provenance is matched again here, never read from the draft (spec §1.3).
+	prov, err := commitProvenance(ctx, root, draft.Commit)
+	if err != nil {
+		return err
+	}
 	signer, err := reviewSigner(root, reviewer)
 	if err != nil {
 		return err
@@ -561,6 +577,17 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 			return err
 		}
 		if err := add(testsRecordPath(draft.Commit), data); err != nil {
+			return err
+		}
+	}
+	// PROV is written only when the reviewer signs: an unsigned record never verifies, and C12 would
+	// turn every keyless seal into an exception (review F1).
+	if signer != nil {
+		data, err := provRecordBytes(draft.Commit, pbwarranty.KeyName(reviewer), prov, signer, time.Now().UTC().Format(time.RFC3339))
+		if err != nil {
+			return err
+		}
+		if err := add(provRecordPath(draft.Commit), data); err != nil {
 			return err
 		}
 	}

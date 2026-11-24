@@ -13,7 +13,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
 
 - **`proofbound ui`** opens the Audit room in your browser, served by the binary on `127.0.0.1` only.
   Run it in a repository, open the link it prints, and pick the range to audit (by default, everything
-  since the last tag). It answers eleven controls, each with the commits behind its answer and the
+  since the last tag). It answers twelve controls, each with the commits behind its answer and the
   terminal command that gives the same answer:
   1. Every commit that claims a spec passed its readiness gate.
   2. No commit changed code without claiming a spec.
@@ -27,6 +27,7 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   9. Commits are signed by a key the repository declares (a disclosure).
   10. Each agent change stayed inside the area its spec declares (see line-level scope below).
   11. Each claimed change's tests fail when its code is undone (see tests that can fail below).
+  12. Traced changes say which agent sessions wrote their lines, in records that verify.
 - **Agent oversight.** The page shows who did the work: every agent (from the commit author or a
   `Co-Authored-By` line naming Claude, Copilot, Cursor, Codex and similar) and every person, with
   their commits, claims, code without a spec and open exceptions; who reviewed each change, and
@@ -114,6 +115,16 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   the commit's own code, so use it where you would run that commit's tests anyway. Undoing a hunk is
   not full mutation testing: a test can notice a removed hunk and still miss a subtle bug in it. Run
   `proofbound init` again in an existing repository so `.gitignore` stops hiding `.proofbound/tests.json`.
+- **Session-to-line provenance.** `proofbound init` adds a second Claude Code hook (`PostToolUse`)
+  that logs a hash of every line an agent's Edit, Write or MultiEdit adds (never the content), in the
+  repository's git folder, so agents in worktrees are seen too. `review draft` then matches every line
+  the commit adds: written by which session, with **no recorded agent edit** (a shell command, a
+  person, a formatter, or an agent whose hook was not running), or too common to count (`}`,
+  repeated lines). `review seal` matches again and writes a signed `PROV-` record, and control C12 in
+  the Audit room discloses it; the counts never block. It is the reviewer's signed statement of what
+  the logs on the agent's machine showed, not proof against a hostile agent, which could write to its
+  own log. In a repository set up with an earlier v0.3.2, run `proofbound init` again: it prints the
+  exact hook to add to your `.claude/settings.json`.
 - **What each control maps to.** Every Audit room control names the criteria it gives evidence
   toward in SOC 2 (CC5.1, CC6.1, CC8.1), ISO/IEC 27001:2022 Annex A (for example A.8.32 change
   management, A.5.3 segregation of duties), NIST SSDF v1.1 (PS.1, PS.2 partial, PS.3, PW.7, PO.3) and,

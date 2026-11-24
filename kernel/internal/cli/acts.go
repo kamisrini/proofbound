@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order|self-review|signature|area|tests)-[0-9a-f]{12}$`)
+	exceptionIDRE = regexp.MustCompile(`^(gate|uncovered|warranty|trust|order|self-review|signature|area|tests|provenance)-[0-9a-f]{12}$`)
 	sha40RE       = regexp.MustCompile(`^[0-9a-f]{40}$`)
 	hex64RE       = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	keyNameFileRE = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
@@ -45,6 +45,7 @@ var recordFields = map[string][]string{
 	attestationSchema: {"schema", "base", "head", "transcript_sha256", "headline", "by", "key", "at"},
 	areaSchema:        {"schema", "commit", "by", "key", "at", "hunks"},
 	testsSchema:       {"schema", "commit", "by", "key", "at", "run", "baseline", "whole", "hunks"},
+	provSchema:        {"schema", "commit", "by", "key", "at", "files", "warnings", "logs"},
 	waiverSchema:      {"schema", "id", "paths", "reason", "expires", "by", "key", "at"},
 }
 

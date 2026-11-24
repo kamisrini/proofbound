@@ -34,7 +34,7 @@ const (
 	classWaived       = "waived"
 )
 
-// controlQuestions are the ten questions the Audit room answers, by control ID (also read by
+// controlQuestions are the twelve questions the Audit room answers, by control ID (also read by
 // frameworkDoc for docs/compliance/FRAMEWORK-MAP.md).
 var controlQuestions = map[string]string{
 	"C1":  "Every commit that claims a spec passed its readiness gate.",
@@ -48,6 +48,7 @@ var controlQuestions = map[string]string{
 	"C9":  "Commits are signed by a key the repository declares.",
 	"C10": "Each agent change stayed inside the area its spec declares.",
 	"C11": "Each claimed change's tests fail when its code is undone.",
+	"C12": "Traced changes say which agent sessions wrote their lines, in records that verify.",
 }
 
 type auditCommit struct {
@@ -288,7 +289,7 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 
 	// C6: changes to who may sign and to the check itself.
 	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .proofbound/tests.json .claude/settings.json .github/workflows gates",
-		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec; the tests declaration decides what C11 runs; .claude/settings.json holds the agent hook that keeps edits inside a spec's area. Reviews add gates; that is not listed."}
+		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec; the tests declaration decides what C11 runs; .claude/settings.json holds the agent hooks that keep edits inside a spec's area and record which lines each session wrote. Reviews add gates; that is not listed."}
 	for _, sha := range shas {
 		paths, err := trustPaths(ctx, root, sha)
 		if err != nil {
@@ -415,7 +416,12 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	if err != nil {
 		return rep, err
 	}
-	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11}
+	// C12: session-to-line provenance (docs/plans/session-provenance-spec.md §1.4), a disclosure.
+	c12, err := provControl(ctx, root, &rep, except)
+	if err != nil {
+		return rep, err
+	}
+	rep.Controls = []auditControl{c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12}
 	if rep.Counts.Total == 0 {
 		// An empty range holds nothing: no control can be held in it (spec review F5).
 		for i := range rep.Controls {

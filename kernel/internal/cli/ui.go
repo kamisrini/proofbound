@@ -46,7 +46,7 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 		return map[string]string{"accepted": "Risk accepted", "fixed": "Fixed", "reverted": "Reverted"}[o]
 	},
 	"kindLabel": func(k string) string {
-		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify", "area": "Change outside its declared area", "tests": "Change its tests do not catch"}[k]
+		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify", "area": "Change outside its declared area", "tests": "Change its tests do not catch", "provenance": "Provenance record does not verify"}[k]
 	},
 	"join": func(xs []string) string { return strings.Join(xs, ", ") },
 	// mapReason is the one-line reason a control maps to a criterion (frameworks.go, CLI-INV-65).

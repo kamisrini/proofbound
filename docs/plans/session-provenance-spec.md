@@ -1,7 +1,7 @@
 # Spec: session-to-line provenance (which agent session wrote which committed lines)
 
-**Status:** draft 2, 2026-11-23. Reviewed once by a non-author (§8: NEEDS_WORK, every HIGH and MED
-folded in here). Waiting for the owner's approval of §6. Planning only: no code yet. Item 3 of the
+**Status:** draft 2, 2026-11-23, **approved by the owner 2026-11-24** ("approved", the §6 defaults).
+Built; amended in §9 where the code review met the design. Item 3 of the
 agent-first list; the owner said "lets do next". **Would implement:** a new BR/CI pair (written at
 build, like the earlier features). **Contract rows:** CLI-INV-70..72 (§7).
 
@@ -236,3 +236,32 @@ contract before coding.
   commits sealed earlier is stated.
 - **F10 (MED):** C12 was self-contradictory. It now has defined states, signature and independence
   rules, and no opt-in.
+
+## 9. Code review and amendments (owner-visible)
+
+`session-provenance-review-20261124`: NEEDS_WORK (F1 HIGH, F2..F7 MED, all fixed with regression
+tests; F8, F9, F11 and F12 LOW fixed because they were one line each; F10 LOW recorded).
+
+- **F1 (HIGH), fixed.** Seal wrote an unsigned PROV record when the reviewer had no declared key, and
+  C12 then made every keyless seal an exception. **Amendment:** PROV is written only when the
+  reviewer signs. Without a key the commit is "not traced".
+- **F2 (MED), fixed.** Paths with a space (git adds a tab after them) or non-ASCII characters (git
+  quotes them) were mis-read: the lines were signed as "no recorded agent edit", or the file was left
+  out.
+- **F3 (MED), fixed.** An added line starting with `++ ` was taken for a file header, and the rest of
+  the file was lost. Hunks are now read to the length their header gives.
+- **F4 (MED), fixed.** **Amendment to §1.4:** C12 is **listed**, never held, so a page with one traced
+  commit and nine untraced ones no longer reads "held". The question now reads "Traced changes say
+  which agent sessions wrote their lines, in records that verify." A record that does not verify,
+  that judges another commit, or that the agent signed itself is still an exception.
+- **F5 (MED), fixed.** An unreadable log or log folder now gives a warning, not a failed draft or
+  seal. Very long diff lines no longer fail.
+- **F6 (MED), fixed.** Tests were added for a record of another commit and for a path too long for
+  one record.
+- **F7 (MED), fixed.** DEMO-MANUAL.md and DEMO.md now show the PROV line that seal prints.
+- **LOW, fixed:**
+  - F8: the settings warning says "in this checkout".
+  - F9: the hook never writes through a link planted at the log path.
+  - F11: the Basis says a merge commit is compared with its first parent.
+  - F12: a session id cannot start with a dot.
+- **LOW, recorded:** F10. Input over 8 MB, and a path too long for one record, are skipped silently.
