@@ -1,0 +1,11 @@
+---
+{"schema":"proofbound.requirement-review.v1","review_id":"RR-framework-map-round2b-20261124","requirement":{"record_kind":"requirement","source":"intent.records","record_id":"BR-framework-map-n4c8te","artifact_sha256":"25f0cf6f54ab2cd312da520bac00832757d0e79710f0eee09da901c10d539ed4","relation":"reviews"},"declared_reviewer":"agent-requirement-reviewer-round2-20261124","outcomes":[{"obligation_id":"O-2","outcome":"VERIFIABLE","finding":"statement unchanged from 0002; The round 1 grep-versus-meaning problem is resolved: no surface may claim compliance, certification or conformance, so caveats saying 'not compliance' pass. Testable on the page, transcript and generated document: 'maps to' wording, criteria from all four frameworks per control, the Art. 12 and Art. 14 explanation, and no affirmative compliance claim. (After this review the quote marks around maps to were changed from double to single, because the review packet's parser reads a statement only up to its first double quote; no other change.)"}],"artifact_path":"docs/verification/verdicts/RR-framework-map-round2b-20261124.md","artifact_sha256":"e20b7cd2ffad4af6a753d11b0423099ea6f29e958d101d5c362824ef328bdc4e"}
+---
+
+# Independent requirement review: framework mapping of the audit room controls, round 2b
+
+Reviewed commit: `6637847fd76b61d8299d0d0875e341276b7e99ec`.
+
+This review binds the active revision `BR-framework-map-n4c8te/0003`, whose obligations are identical (ids, statements and states) to `0002`, reviewed in `RR-framework-map-round2-20261124`. Declared reviewer: `agent-requirement-reviewer-round2-20261124`.
+
+- `O-2` VERIFIABLE: statement unchanged from 0002; The round 1 grep-versus-meaning problem is resolved: no surface may claim compliance, certification or conformance, so caveats saying 'not compliance' pass. Testable on the page, transcript and generated document: 'maps to' wording, criteria from all four frameworks per control, the Art. 12 and Art. 14 explanation, and no affirmative compliance claim. (After this review the quote marks around maps to were changed from double to single, because the review packet's parser reads a statement only up to its first double quote; no other change.)

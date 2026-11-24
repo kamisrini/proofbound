@@ -1,0 +1,13 @@
+---
+{"schema":"proofbound.requirement-review.v1","review_id":"RR-signed-waiver-round2b-20261124","requirement":{"record_kind":"requirement","source":"intent.records","record_id":"BR-signed-waiver-15j8f9","artifact_sha256":"59dd793722fa1c672cc89cae8bcef7bc77fb6d03896dedcc2bce039f4b73e6da","relation":"reviews"},"declared_reviewer":"agent-requirement-reviewer-round2-20261124","outcomes":[{"obligation_id":"O-1","outcome":"VERIFIABLE","finding":"statement unchanged from 0002; Confirmed from round 1: an expiry more than 90 days ahead and an overwrite of an existing waiver must be refused, and the created file must verify against a declared key."},{"obligation_id":"O-3","outcome":"VERIFIABLE","finding":"statement unchanged from 0002; Confirmed from round 1: signer, waiver, expiry and reason must appear on each named surface, and a waiver change must be listed in the Audit room."},{"obligation_id":"O-4","outcome":"VERIFIABLE","finding":"statement unchanged from 0002; The round 1 date ambiguity is resolved: the expiry must be on or after the latest of the commit's committer day, the range base's committer day and the waiver's signing day (UTC), with keys declared at both the base and the parent; each condition, including independence from author, agent and signer, has a pass and a fail fixture."}],"artifact_path":"docs/verification/verdicts/RR-signed-waiver-round2b-20261124.md","artifact_sha256":"5994d062e0381efb77c857475615cb3dfc2a59329e3406de0ce0ffbec0ccfa30"}
+---
+
+# Independent requirement review: signed exception waivers, round 2b
+
+Reviewed commit: `6637847fd76b61d8299d0d0875e341276b7e99ec`.
+
+This review binds the active revision `BR-signed-waiver-15j8f9/0003`, whose obligations are identical (ids, statements and states) to `0002`, reviewed in `RR-signed-waiver-round2-20261124`. Declared reviewer: `agent-requirement-reviewer-round2-20261124`.
+
+- `O-1` VERIFIABLE: statement unchanged from 0002; Confirmed from round 1: an expiry more than 90 days ahead and an overwrite of an existing waiver must be refused, and the created file must verify against a declared key.
+- `O-3` VERIFIABLE: statement unchanged from 0002; Confirmed from round 1: signer, waiver, expiry and reason must appear on each named surface, and a waiver change must be listed in the Audit room.
+- `O-4` VERIFIABLE: statement unchanged from 0002; The round 1 date ambiguity is resolved: the expiry must be on or after the latest of the commit's committer day, the range base's committer day and the waiver's signing day (UTC), with keys declared at both the base and the parent; each condition, including independence from author, agent and signer, has a pass and a fail fixture.

@@ -30,10 +30,17 @@ docs once more and keep republishing v0.3.2. Before Sunday regardless: the **doc
 (QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
-https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`); the requirement reviews
-of `BR-change-area-p59cyd`, `BR-signed-waiver-15j8f9`, `BR-ui-bundle-da6ue0`,
-`BR-waiver-signed-commits-6fioa7`, `BR-warranty-head-reviews-gdjrrv`, `BR-framework-map-n4c8te`, `BR-tests-can-fail-k2h06j`, `BR-write-perimeter-i1xmq8`, `BR-session-provenance-p3v8nc`, `BR-agent-track-record-k8w2qf` (all `proposed`); `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the
-owner); `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
+https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`). Requirement reviews
+2026-11-24 (owner approved all ten, then all seven rewordings): seven of the ten are now `active`
+(ui-bundle, warranty-head-reviews, agent-track-record after round 1; signed-waiver,
+waiver-signed-commits, framework-map, session-provenance after round 2). Still `proposed`, review
+budget spent (a third round is the owner's call): `BR-change-area-p59cyd` O-4 ("names a coding
+agent"), `BR-tests-can-fail-k2h06j` O-2 and `BR-write-perimeter-i1xmq8` O-2 ("Proofbound record" vs
+the housekeeping paths of CLI-INV-33); rewordings proposed in their `RR-*-round2-20261124`
+verdicts. Found while checking wording, not fixed (code needs the owner's go-ahead): tests.go
+`caughtWord` records a hunk that cannot be undone as caught (fail-open), though `decideTests` says it
+needs a decision. `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
+`DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
 `ui --bundle` (`48519f2`) and the opt-in signed-commit waiver policy (`670517a`) were each specified,
