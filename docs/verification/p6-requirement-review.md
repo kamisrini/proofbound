@@ -4,7 +4,7 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 5 and `docs/plans/p6-task5-requirement-review-SPEC.md`.
 
-Configured providers: `records`, `specdir`. Active requirement revisions: **12** (`records=12`, `specdir=0`). Active obligations: **20**. Exact matching reviews: **12**.
+Configured providers: `records`, `specdir`. Active requirement revisions: **13** (`records=13`, `specdir=0`). Active obligations: **21**. Exact matching reviews: **13**.
 
 | Requirement revision | Requirement artifact | Obligation | Review | Review artifact | Outcome |
 |---|---|---|---|---|---|
@@ -22,6 +22,7 @@ Configured providers: `records`, `specdir`. Active requirement revisions: **12**
 | `intent.records:BR-signed-waiver-15j8f9@59dd793722fa1c672cc89cae8bcef7bc77fb6d03896dedcc2bce039f4b73e6da` | `docs/intent/records/requirements/BR-signed-waiver-15j8f9/0003.md` | `O-1` | `RR-signed-waiver-round2b-20261124` | `docs/verification/verdicts/RR-signed-waiver-round2b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-signed-waiver-15j8f9@59dd793722fa1c672cc89cae8bcef7bc77fb6d03896dedcc2bce039f4b73e6da` | `docs/intent/records/requirements/BR-signed-waiver-15j8f9/0003.md` | `O-3` | `RR-signed-waiver-round2b-20261124` | `docs/verification/verdicts/RR-signed-waiver-round2b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-signed-waiver-15j8f9@59dd793722fa1c672cc89cae8bcef7bc77fb6d03896dedcc2bce039f4b73e6da` | `docs/intent/records/requirements/BR-signed-waiver-15j8f9/0003.md` | `O-4` | `RR-signed-waiver-round2b-20261124` | `docs/verification/verdicts/RR-signed-waiver-round2b-20261124.md` | `VERIFIABLE` |
+| `intent.records:BR-tests-can-fail-k2h06j@2446899d2474cfcab66dd3592c550aa1ccc07d74925bf4f6ed378c8c4893e86b` | `docs/intent/records/requirements/BR-tests-can-fail-k2h06j/0006.md` | `O-5` | `RR-tests-can-fail-round5b-20261124` | `docs/verification/verdicts/RR-tests-can-fail-round5b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-1` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-2` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-3` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |

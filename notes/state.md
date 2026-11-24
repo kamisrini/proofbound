@@ -31,16 +31,13 @@ docs once more and keep republishing v0.3.2. Before Sunday regardless: the **doc
 
 **Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
 https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`). Requirement reviews
-2026-11-24 (owner approved all ten, both rounds of rewordings and a third round): nine of the ten
-are now `active` (round 1: ui-bundle, warranty-head-reviews, agent-track-record; round 2:
-signed-waiver, waiver-signed-commits, framework-map, session-provenance; round 3: change-area,
-write-perimeter). Still `proposed`: `BR-tests-can-fail-k2h06j`, O-4 AMBIGUOUS in round 4 (owner
-approved round 4): plain `git diff` detects renames and prints no hunk for binary or mode-only
-changes, while tests.go uses `--no-renames` and one whole-file unit for those; rewording in
-`RR-tests-can-fail-round4-20261124`; a fifth round is the owner's call. The fail-open found while
-checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
+2026-11-24: all ten are `active` (owner approved every rewording; round 1: ui-bundle,
+warranty-head-reviews, agent-track-record; round 2: signed-waiver, waiver-signed-commits,
+framework-map, session-provenance; round 3: change-area, write-perimeter; round 5: tests-can-fail
+O-5). The fail-open found while checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
 `tests-undo-failed-review-20261124` ACCEPTABLE, 3 LOW recorded): a hunk that cannot be undone is
-never caught. `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
+never caught. Next (owner, 2026-11-24): update the documentation and the commercial material.
+`DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
 **2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
