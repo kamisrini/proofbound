@@ -4,15 +4,20 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 5 and `docs/plans/p6-task5-requirement-review-SPEC.md`.
 
-Configured providers: `records`, `specdir`. Active requirement revisions: **3** (`records=3`, `specdir=0`). Active obligations: **5**. Exact matching reviews: **3**.
+Configured providers: `records`, `specdir`. Active requirement revisions: **6** (`records=6`, `specdir=0`). Active obligations: **10**. Exact matching reviews: **6**.
 
 | Requirement revision | Requirement artifact | Obligation | Review | Review artifact | Outcome |
 |---|---|---|---|---|---|
+| `intent.records:BR-agent-track-record-k8w2qf@7bd36134b0fce93de7a144e0c13d6a83a1878f08a242fdddf4430ac55349b3e7` | `docs/intent/records/requirements/BR-agent-track-record-k8w2qf/0002.md` | `O-1` | `RR-agent-track-record-round1b-20261124` | `docs/verification/verdicts/RR-agent-track-record-round1b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-audit-room-ui-r7t3w1@9da0b9acfb84a5e27cc99c721fbf29ddff5afcbc71968f971f0b90d1ec62b351` | `docs/intent/records/requirements/BR-audit-room-ui-r7t3w1/0002.md` | `O-1` | `RR-ui-audit-room-round1b-20261122` | `docs/verification/verdicts/RR-ui-audit-room-round1b-20261122.md` | `VERIFIABLE` |
 | `intent.records:BR-audit-room-ui-r7t3w1@9da0b9acfb84a5e27cc99c721fbf29ddff5afcbc71968f971f0b90d1ec62b351` | `docs/intent/records/requirements/BR-audit-room-ui-r7t3w1/0002.md` | `O-2` | `RR-ui-audit-room-round1b-20261122` | `docs/verification/verdicts/RR-ui-audit-room-round1b-20261122.md` | `VERIFIABLE` |
 | `intent.records:BR-intent-chain-d4e5f6@913d6751b8a3717254beda42ba889061fc2d247fc6a1d8505c69f1c27c314562` | `docs/intent/records/requirements/BR-intent-chain-d4e5f6/0001.md` | `O-1` | `RR-p5-independent-round1-20260911` | `docs/verification/verdicts/p5-requirement-review-round1.md` | `VERIFIABLE` |
 | `intent.records:BR-intent-chain-d4e5f6@913d6751b8a3717254beda42ba889061fc2d247fc6a1d8505c69f1c27c314562` | `docs/intent/records/requirements/BR-intent-chain-d4e5f6/0001.md` | `O-2` | `RR-p5-independent-round1-20260911` | `docs/verification/verdicts/p5-requirement-review-round1.md` | `VERIFIABLE` |
 | `intent.records:BR-replay-evidence-6e3d2b@f6b1d47ef836305464da5bdba66a591829df814c52eca749161e0df0ed41fd56` | `docs/intent/records/requirements/BR-replay-evidence-6e3d2b/0001.md` | `O-1` | `RR-p7-replay-evidence-round1-20261014` | `docs/verification/verdicts/p7-replay-requirement-review-round1-20261014.md` | `VERIFIABLE` |
+| `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-1` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |
+| `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-2` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |
+| `intent.records:BR-ui-bundle-da6ue0@0b891929cd7be546e6d08ca726aa79255270743af26bab78d89bd872f925f81f` | `docs/intent/records/requirements/BR-ui-bundle-da6ue0/0002.md` | `O-3` | `RR-ui-bundle-round1b-20261124` | `docs/verification/verdicts/RR-ui-bundle-round1b-20261124.md` | `VERIFIABLE` |
+| `intent.records:BR-warranty-head-reviews-gdjrrv@002b84ec84216e50c44eb60ef17b3996bbb5ba25582c75851e091e1d8081c35b` | `docs/intent/records/requirements/BR-warranty-head-reviews-gdjrrv/0002.md` | `O-1` | `RR-warranty-head-reviews-round1b-20261124` | `docs/verification/verdicts/RR-warranty-head-reviews-round1b-20261124.md` | `VERIFIABLE` |
 
 ## Self-hosted chain
 

@@ -1,0 +1,15 @@
+---
+{"schema":"proofbound.requirement-review.v1","review_id":"RR-change-area-round1-20261124","requirement":{"record_kind":"requirement","source":"intent.records","record_id":"BR-change-area-p59cyd","artifact_sha256":"0fbd0a38db5048f1f006736653c93681e6bb10812860277a2b1b9b22f88be1b6","relation":"reviews"},"declared_reviewer":"agent-requirement-reviewer-20261124","outcomes":[{"obligation_id":"O-1","outcome":"VERIFIABLE","finding":"Testable with a fixture: declare an area, make a claiming commit touching files outside it, and assert every out-of-area line range is listed; a commit that edits its own area file must still be judged against the parent's area; a commit with no area must be reported as having none."},{"obligation_id":"O-2","outcome":"VERIFIABLE","finding":"Testable: seal must fail while any out-of-area range is undecided or an accept has no reason; a reject must yield NEEDS_WORK; the decision record must verify against the reviewer's key and tampering must break it."},{"obligation_id":"O-3","outcome":"AMBIGUOUS","finding":"'for the period' and 'each agent change' are undefined in the statement: testers could disagree on whether scope is all commits in the selected range or only claiming commits authored by an agent. Proposed rewording: 'for every commit in the Audit room's selected range that claims a spec, whether it stayed inside the area declared in its parent, ...'."}],"artifact_path":"docs/verification/verdicts/RR-change-area-round1-20261124.md","artifact_sha256":"3643e1d52896efccd1d398d40d00fcadd0ae53822694e703d1a5647bfec576f5"}
+---
+
+# Independent requirement review: declared change area, round 1
+
+Fresh non-author reviewer context: `agent-requirement-reviewer-20261124`. Reviewed commit: `8d1c786238809ae99776b5f380884d10e39edea3`.
+
+This review binds the exact `BR-change-area-p59cyd/0001` revision. The declared reviewer is distinct from the requirement's declared owner, `proofbound-maintainer`.
+
+`VERIFIABLE` means the obligation's words have a conceivable independent test and evidence route. It does not judge business merit or accept any implementation.
+
+- `O-1` VERIFIABLE: Testable with a fixture: declare an area, make a claiming commit touching files outside it, and assert every out-of-area line range is listed; a commit that edits its own area file must still be judged against the parent's area; a commit with no area must be reported as having none.
+- `O-2` VERIFIABLE: Testable: seal must fail while any out-of-area range is undecided or an accept has no reason; a reject must yield NEEDS_WORK; the decision record must verify against the reviewer's key and tampering must break it.
+- `O-3` AMBIGUOUS: 'for the period' and 'each agent change' are undefined in the statement: testers could disagree on whether scope is all commits in the selected range or only claiming commits authored by an agent. Proposed rewording: 'for every commit in the Audit room's selected range that claims a spec, whether it stayed inside the area declared in its parent, ...'.
