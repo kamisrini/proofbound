@@ -44,6 +44,9 @@ func parseTask(args []string) (sub, name string, ok bool) {
 // parseHook accepts `hook commit-msg <file>` and `hook prepare-commit-msg <file> [<source> [<sha>]]`,
 // the arguments git passes to those hooks.
 func parseHook(args []string) (hook, file, source string, ok bool) {
+	if len(args) == 2 && args[0] == "hook" && args[1] == "pre-tool-use" {
+		return args[1], "", "", true // Claude Code's PreToolUse hook (CLI-INV-69); its input is stdin
+	}
 	if len(args) < 3 || args[0] != "hook" || args[2] == "" {
 		return "", "", "", false
 	}

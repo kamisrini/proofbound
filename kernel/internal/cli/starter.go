@@ -97,6 +97,7 @@ func initKit(ctx context.Context, root, kit, owner string, output io.Writer) err
 		func() error {
 			return writeNew(output, root, ".claude/agents/proofbound-reviewer.md", reviewerAgent, 0o644)
 		},
+		func() error { return writeClaudeSettings(output, root) },
 		func() error { return writeNew(output, hooks, "commit-msg", commitMsgHook, 0o755) },
 		func() error { return writeNew(output, hooks, "prepare-commit-msg", prepareCommitMsgHook, 0o755) },
 		func() error {

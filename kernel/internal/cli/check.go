@@ -279,7 +279,7 @@ func housekeepingPath(path string) bool {
 		}
 	}
 	switch path {
-	case ".gitignore", ".github/workflows/proofbound.yml":
+	case ".gitignore", ".github/workflows/proofbound.yml", claudeSettingsPath:
 		return true
 	}
 	lower := strings.ToLower(path)

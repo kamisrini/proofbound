@@ -287,8 +287,8 @@ func computeAudit(ctx context.Context, root string, ledger *store.Store, base st
 	c5.State, c5.Count = auditListed, fmt.Sprintf("%d commits, each in one class", rep.Counts.Total)
 
 	// C6: changes to who may sign and to the check itself.
-	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .proofbound/tests.json .github/workflows gates",
-		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec; the tests declaration decides what C11 runs. Reviews add gates; that is not listed."}
+	c6 := auditControl{ID: "C6", Question: controlQuestions["C6"], Command: "git log --stat " + rangeArg + "..HEAD -- .proofbound/keys .proofbound/waivers .proofbound/sdd-profile.json .proofbound/tests.json .claude/settings.json .github/workflows gates",
+		Basis: "Declared keys decide whose signature counts; the profile decides which specs are governed; the workflow runs the check; a changed or deleted gate changes what a review must prove; a waiver changes what may be committed without a spec; the tests declaration decides what C11 runs; .claude/settings.json holds the agent hook that keeps edits inside a spec's area. Reviews add gates; that is not listed."}
 	for _, sha := range shas {
 		paths, err := trustPaths(ctx, root, sha)
 		if err != nil {
@@ -581,7 +581,7 @@ func trustPaths(ctx context.Context, root, sha string) ([]string, error) {
 			break
 		}
 		switch {
-		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", path == testsConfigPath, strings.HasPrefix(path, waiversDir+"/"):
+		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", path == testsConfigPath, path == claudeSettingsPath, strings.HasPrefix(path, waiversDir+"/"):
 			out = append(out, path)
 		case strings.HasPrefix(path, "gates/") && strings.Trim(status, "A") != "":
 			out = append(out, path)

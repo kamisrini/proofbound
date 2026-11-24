@@ -246,6 +246,10 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		}
 		return 0
 	}
+	if cmd == commandHook && len(args) == 2 && args[1] == "pre-tool-use" {
+		// The write-time perimeter reads its repository from Claude Code's input, not the cwd.
+		return runPerimeterHook(ctx, stdout)
+	}
 	root, err := repositoryRoot()
 	if err == nil && cmd == commandHook {
 		// The git hooks `init` installs: no store, messages to stderr, exit 1 refuses the commit.

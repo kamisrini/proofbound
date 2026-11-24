@@ -11,6 +11,9 @@ or [Spec Kit](https://github.com/github/spec-kit)) and uses Proofbound to warran
   Run `proofbound task stop` when the change is done, and `proofbound task` to see the active one.
 - **A commit that changes code without claiming a change is refused** here, and fails the pull-request
   check. Commits that only touch specs, docs, `gates/`, review records or Markdown need no claim.
+- **Stay inside the spec's area.** When a change's folder has a `scope.paths`, edit only the files it
+  lists. With Claude Code, the hook `init` writes refuses an edit outside it and says why; if the change
+  truly needs another file, stop and ask the spec owner to widen `scope.paths`.
 - **Never claim a change the commit does not implement.** The claim is what gets verified. One change
   per task: stop and start a task before working on another change.
 
