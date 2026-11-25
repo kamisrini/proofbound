@@ -2,7 +2,11 @@
 
 package main
 
-import "syscall/js"
+import (
+	"syscall/js"
+
+	pbwarranty "github.com/kamisrini/proofbound/kernel/internal/warranty"
+)
 
 // main exposes check to the page as proofboundVerify(bytes, trustKey) and stays alive.
 func main() {
@@ -12,7 +16,7 @@ func main() {
 		}
 		data := make([]byte, args[0].Get("length").Int())
 		js.CopyBytesToGo(data, args[0])
-		r := check(data, args[1].String())
+		r := pbwarranty.PageCheck(data, args[1].String())
 		return map[string]any{"state": r.State, "reason": r.Reason, "commit": r.Commit, "change": r.Change, "issuer": r.Issuer, "key": r.Key, "obligations": r.Claims}
 	}))
 	js.Global().Call("proofboundReady")

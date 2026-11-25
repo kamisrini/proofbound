@@ -12,7 +12,7 @@ O-7), round 3 found O-6 AMBIGUOUS in one clause (replaced by O-8), round 4 (owne
 Law 11 budget) found all VERIFIABLE; revision 0006 is active.
 `BR-ui-workspaces-m6q2v8` is not touched: its own requirement review is a dormant deferral
 (`DEF-UI-WORKSPACES-REQ-REVIEW-001`). **Contract
-rows:** CLI-INV-47 and 67 amended (R1); CLI-INV-75, 76 (R1), 77, 78, 79 (R2) new; CLI-INV-28, 30
+rows:** CLI-INV-47 and 67 amended (R1); CLI-INV-75, 76 (R1), 77, 78 (R2) new; W-INV-13 (the verify page's check, in the warranty package); CLI-INV-28, 30
 untouched (the browser's refusal deliberately differs, R2.2).
 
 ## 0. The gap, in one line
@@ -261,3 +261,8 @@ clone read VALID, and the verify page's check read SIGNATURE ONLY with that key,
 
 Mutation calibration for these fixes: Issue ignoring uncovered code, Review this only for the last
 commit, a subject alone counting as a release: each died; a comment edit survived.
+
+Found by the gate after commit `b553d2d`: the verify page's check lived in the command, where the
+package-spec lint cannot cite its test. It moved into the warranty package as `PageCheck` (W-INV-13,
+`page_test.go::TestPageCheck`), a pure addition that calls the existing `Parse` and `Verify`; the
+rule is unchanged. CLI-INV-79 is retired. The key-from-file mutation, re-run there, died.

@@ -57,6 +57,7 @@ The CLI commands `keys init`, `warranty export` and `warranty verify` live in `i
 | W-INV-10 | A reviewer's declared key equal to the exporter's key, a requirement owner's declared key, or another reviewer's declared key is INVALID | reviewer_test.go::TestReviewerKeysMustBeDistinct |
 | W-INV-11 | `Parse` accepts `cosignatures` only as 1-16 entries of lowercase hex (64-char key, 128-char sig), strictly sorted by key, no other fields; `[]` and `null` are malformed; absent parses as before | reviewer_test.go::TestCosignatureParsingIsStrict |
 | W-INV-12 | A cosignature (over the domain tag, the exporter's key and the canonical body) by a reviewer's declared key proves that reviewer; one carried to another exporter's file does not verify (INVALID even without a repository); one by a key that is no reviewer's declared key is INVALID; `Cosign` refuses the exporter's key and a repeat. Also proven end to end by the sdd package's `TestWarrantyCosignEndToEnd` | reviewer_test.go::TestCosignatureProvesAReviewer |
+| W-INV-13 | `PageCheck`, the check `proofbound-verify.html` runs in the browser (compiled to WebAssembly by `kernel/cmd/proofbound-verify`, built by `scripts/release-build.sh` and listed in SHA256SUMS), refuses to check anything unless the reader typed a 16-hex trust key (case and surrounding space ignored; never a key read from the file), then runs `Parse` and `Verify` with no repository and answers SIGNATURE ONLY or INVALID with the reason, never VALID | page_test.go::TestPageCheck |
 
 ## Non-goals
 
