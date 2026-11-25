@@ -2,9 +2,9 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-24
+As of: 2026-11-25
 
-## Resume — 2026-11-24
+## Resume — 2026-11-25
 
 **Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
 v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.2: the warranty fix
@@ -47,8 +47,12 @@ demo repository is still v0.3.1. Owner 2026-11-24: keep the scripted agent demo 
 defect: a verdict NEEDS_WORK with every promise SATISFIED (rejected out-of-area line or uncaught part)
 passed the PR check and got a VALID warranty. Fixed in `61ba190` (`CI-needs-work-blocks-h4r8wq`, spec
 `docs/plans/needs-work-blocks-spec.md`, review `needs-work-blocks-review-20261124` ACCEPTABLE, L1-L6
-recorded). Owner-approved next: the hook-gap fix (an agent may edit `.claude/settings.json` while a
-task is active), then the live demo page.
+recorded). The hook-gap fix is done (2026-11-25, owner "go" and "go with recommendations"): while a task file
+exists, the perimeter refuses an agent's file-tool edit of `.claude/settings.json`,
+`.claude/settings.local.json` or `.proofbound/task` (CI-hook-guard-w3n7c5, spec
+`docs/plans/hook-guard-spec.md`, CLI-INV-69 amended, BR-write-perimeter O-3 retired for O-4 after three
+requirement rounds, review `hook-guard-review-20261125` ACCEPTABLE, F3-F5/F8 LOW recorded; the area
+check's dangling-link blind spot recorded in spec §7). Next: the live demo page `DEMO-AGENT-LIVE.md`.
 `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 

@@ -35,6 +35,7 @@ func call(cwd, tool, path string) []byte {
 // CLI-INV-69: the PreToolUse hook refuses an edit outside the active task's declared area, read from
 // HEAD, and allows everything it cannot judge.
 func TestPerimeter(t *testing.T) {
+	t.Setenv("CLAUDE_PROJECT_DIR", "")
 	ctx := context.Background()
 	root := perimeterRepo(t)
 	allow := map[string][]byte{
@@ -189,4 +190,137 @@ func TestInitWritesPerimeterHook(t *testing.T) {
 	if paths, err := trustPaths(context.Background(), repo, sha); err != nil || len(paths) != 1 || paths[0] != claudeSettingsPath {
 		t.Errorf("C6 does not list the hook settings: %v %v", paths, err)
 	}
+}
+
+// CLI-INV-69 (hook-guard spec): while a task file exists, an agent's file tool may not change the
+// files that hold the guard on its own work, whatever the area says, in any case, through any link.
+func TestPerimeterGuardsItsOwnFiles(t *testing.T) {
+	t.Setenv("CLAUDE_PROJECT_DIR", "")
+	ctx := context.Background()
+	guarded := func(t *testing.T, in []byte, file, claim string) {
+		t.Helper()
+		ok, why := perimeterDecision(ctx, in)
+		if ok || !strings.Contains(why, "proofbound: "+file+" holds the guard on this agent's work") || !strings.Contains(why, "the active task "+claim+")") {
+			t.Errorf("not guarded: ok=%v %q", ok, why)
+		}
+	}
+	// Written out, not guardFiles, so a file dropped from the code's list fails here.
+	files := []string{".claude/settings.json", ".claude/settings.local.json", ".proofbound/task"}
+	root := perimeterRepo(t)
+	for _, tool := range []string{"Edit", "Write", "MultiEdit", "NotebookEdit"} {
+		for _, f := range files {
+			guarded(t, call(root, tool, filepath.Join(root, f)), f, "sdd:001-a")
+		}
+	}
+	guarded(t, call(root, "Write", ".claude/settings.local.json"), ".claude/settings.local.json", "sdd:001-a")
+	guarded(t, call(root, "Write", filepath.Join(root, ".CLAUDE/Settings.Local.json")), ".claude/settings.local.json", "sdd:001-a")
+	t.Run("whatever the area says", func(t *testing.T) {
+		uiWrite(t, root, taskFile, "sdd:002-b\n")
+		defer uiWrite(t, root, taskFile, "sdd:001-a\n")
+		for _, f := range files {
+			guarded(t, call(root, "Write", filepath.Join(root, f)), f, "sdd:002-b")
+		}
+		wide := perimeterRepo(t)
+		uiWrite(t, wide, "specs/001-a/scope.paths", "**\n")
+		uiCommit(t, wide, "owner", "widen")
+		uiWrite(t, wide, taskFile, "sdd:001-a\n")
+		for _, f := range files {
+			guarded(t, call(wide, "Edit", filepath.Join(wide, f)), f, "sdd:001-a")
+		}
+	})
+	t.Run("a corrupt task file keeps the guard on", func(t *testing.T) {
+		uiWrite(t, root, taskFile, "x\n")
+		defer uiWrite(t, root, taskFile, "sdd:001-a\n")
+		guarded(t, call(root, "Write", filepath.Join(root, ".claude/settings.json")), ".claude/settings.json", "x")
+		uiWrite(t, root, taskFile, "  \n")
+		guarded(t, call(root, "Write", filepath.Join(root, ".claude/settings.json")), ".claude/settings.json", "(unreadable)")
+		uiWrite(t, root, taskFile, "  sdd:001-a  \nmore\n")
+		guarded(t, call(root, "Write", filepath.Join(root, ".claude/settings.json")), ".claude/settings.json", "sdd:001-a")
+	})
+	t.Run("a linked .claude, either way round", func(t *testing.T) {
+		out := t.TempDir()
+		linked := perimeterRepo(t)
+		if err := os.Symlink(out, filepath.Join(linked, ".claude")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(linked, "Write", filepath.Join(linked, ".claude/settings.json")), ".claude/settings.json", "sdd:001-a")
+		if err := os.MkdirAll(filepath.Join(root, ".claude"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		uiWrite(t, root, ".claude/settings.json", "{}\n")
+		if err := os.MkdirAll(filepath.Join(root, "src", "a"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(filepath.Join(root, ".claude/settings.json"), filepath.Join(root, "src/a/cfg.json")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(root, "Edit", filepath.Join(root, "src/a/cfg.json")), ".claude/settings.json", "sdd:001-a")
+		// A link to a guard file not created yet: a Write through it would create the file.
+		if err := os.Symlink(filepath.Join(root, ".claude/settings.local.json"), filepath.Join(root, "src/a/new.json")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(root, "Write", filepath.Join(root, "src/a/new.json")), ".claude/settings.local.json", "sdd:001-a")
+	})
+	t.Run("the session's own folder", func(t *testing.T) {
+		sub := filepath.Join(root, "sub")
+		guarded(t, call(sub, "Write", filepath.Join(sub, ".claude/settings.json")), ".claude/settings.json", "sdd:001-a")
+		// Started at the root, sub/.claude is not loaded: judged by the area, as before.
+		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(sub, ".claude/settings.json"))); ok || strings.Contains(why, "holds the guard") {
+			t.Errorf("ok=%v %q", ok, why)
+		}
+	})
+	t.Run("the project directory after a cd (code review F1)", func(t *testing.T) {
+		proj := filepath.Join(root, "src", "a")
+		t.Setenv("CLAUDE_PROJECT_DIR", proj)
+		guarded(t, call(filepath.Join(proj, "deep"), "Write", filepath.Join(proj, ".claude/settings.json")), ".claude/settings.json", "sdd:001-a")
+	})
+	t.Run("another name for the same file (code review F2)", func(t *testing.T) {
+		if err := os.Link(filepath.Join(root, ".claude/settings.json"), filepath.Join(root, "src/a/hard.json")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(root, "Edit", filepath.Join(root, "src/a/hard.json")), ".claude/settings.json", "sdd:001-a")
+		for in, want := range map[string]string{"C:/r/.claude/settings.json.": "C:/r/.claude/settings.json", "C:/r/.claude/settings.json::$DATA": "C:/r/.claude/settings.json", "C:/r/.claude/settings.json . ": "C:/r/.claude/settings.json", "C:/r/x.go": "C:/r/x.go"} {
+			if got := windowsName(in); got != want {
+				t.Errorf("windowsName(%q) = %q, want %q", in, got, want)
+			}
+		}
+	})
+	t.Run("a linked .claude seen from outside, a linked .claude inside, an unreadable task (code review F6)", func(t *testing.T) {
+		out := t.TempDir()
+		linked := perimeterRepo(t)
+		if err := os.Symlink(out, filepath.Join(linked, ".claude")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(t.TempDir(), "Write", filepath.Join(linked, ".claude/settings.json")), ".claude/settings.json", "sdd:001-a")
+		inside := perimeterRepo(t)
+		if err := os.MkdirAll(filepath.Join(inside, "src/a/cfg"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(filepath.Join(inside, "src/a/cfg"), filepath.Join(inside, ".claude")); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(inside, "Write", filepath.Join(inside, ".claude/settings.local.json")), ".claude/settings.local.json", "sdd:001-a")
+		dir := perimeterRepo(t)
+		if err := os.Remove(filepath.Join(dir, taskFile)); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.MkdirAll(filepath.Join(dir, taskFile), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		guarded(t, call(dir, "Write", filepath.Join(dir, ".claude/settings.json")), ".claude/settings.json", "(unreadable)")
+	})
+	t.Run("with no task, or another .claude file, allowed", func(t *testing.T) {
+		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, ".claude/commands/x.md"))); !ok {
+			t.Errorf("a command file was refused: %s", why)
+		}
+		if err := os.Remove(filepath.Join(root, taskFile)); err != nil {
+			t.Fatal(err)
+		}
+		defer uiWrite(t, root, taskFile, "sdd:001-a\n")
+		for _, f := range files {
+			if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, f))); !ok {
+				t.Errorf("%s refused with no task: %s", f, why)
+			}
+		}
+	})
 }

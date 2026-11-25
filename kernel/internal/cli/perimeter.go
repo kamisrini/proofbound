@@ -3,10 +3,12 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -52,6 +54,10 @@ func perimeterDecision(ctx context.Context, raw []byte) (bool, string) {
 	default:
 		return true, ""
 	}
+	// The guard on the agent's own work runs first, before every allow below (hook-guard spec §1.4).
+	if why, refused := guardRefusal(ctx, call.Cwd, target); refused {
+		return false, why
+	}
 	// The repository is the one holding the file, not the session's cwd (review F2): a session started
 	// above the repository, or after a `cd`, must still be judged, and a nested repository by its own.
 	root, rel, ok := fileRepo(ctx, call.Cwd, target)
@@ -86,6 +92,135 @@ func perimeterDecision(ctx context.Context, raw []byte) (bool, string) {
 	}
 	return false, fmt.Sprintf("proofbound: %s is outside the area the spec for %s allows (%s: %s). Do not edit it for this task. If the change truly needs it, stop and ask the spec owner to widen %s and commit that first; otherwise the reviewer must accept or reject every line outside the area (control C10).",
 		rel, claim, strings.Join(files, ", "), strings.Join(patterns, " "), areaFileName)
+}
+
+// guardFiles hold the guard on an agent's own work: the hooks (and disableAllHooks) and the active
+// task. While a task file exists, an agent's file tool may not change them (docs/plans/hook-guard-spec.md).
+var guardFiles = []string{".claude/settings.json", ".claude/settings.local.json", taskFile}
+
+// guardRefusal is the reason to refuse an edit of a guard file while a task file exists, whatever it
+// holds (fail closed), at the root of one of the repositories below. The bases are the root of the
+// repository holding the edited file, the root a guard-file path as given names, the session's cwd,
+// Claude Code's project directory (CLAUDE_PROJECT_DIR: settings load from where the session started,
+// while cwd follows a later cd; code review F1) and the roots holding those two. A path matches by
+// name, without regard to letter case, as given or with symlinks resolved, or is the same file as an
+// existing guard file, which also catches other names Windows has for one file (code review F2).
+func guardRefusal(ctx context.Context, cwd, target string) (string, bool) {
+	if target == "" {
+		return "", false
+	}
+	if !filepath.IsAbs(target) {
+		if !filepath.IsAbs(cwd) {
+			return "", false
+		}
+		target = filepath.Join(cwd, target)
+	}
+	given := filepath.Clean(target)
+	resolved := resolvePath(given)
+	// resolvePath cannot follow a link whose target does not exist yet, and a Write through it creates
+	// that target: follow such a chain by hand.
+	for hops := 0; hops < 8; hops++ {
+		dest, err := os.Readlink(resolved)
+		if err != nil {
+			break
+		}
+		if !filepath.IsAbs(dest) {
+			dest = filepath.Join(filepath.Dir(resolved), dest)
+		}
+		resolved = resolvePath(dest)
+	}
+	top := func(dir string) string {
+		return strings.TrimSpace(gitOutput(ctx, existingAncestor(dir), "rev-parse", "--show-toplevel"))
+	}
+	same := func(a, b string) bool {
+		return a != "" && b != "" && strings.EqualFold(resolvePath(filepath.Clean(a)), resolvePath(filepath.Clean(b)))
+	}
+	var bases, repos []string
+	add := func(dir string, repo bool) {
+		if dir == "" || !filepath.IsAbs(dir) {
+			return
+		}
+		bases = append(bases, dir)
+		if repo {
+			repos = append(repos, dir)
+		}
+	}
+	add(top(resolved), true)
+	for _, dir := range []string{cwd, os.Getenv("CLAUDE_PROJECT_DIR")} {
+		if filepath.IsAbs(dir) {
+			add(dir, false)
+			add(top(dir), true)
+		}
+	}
+	// nameBase is the folder p names as holding guard file g, or "".
+	nameBase := func(p, g string) string {
+		slashed := filepath.ToSlash(p)
+		if runtime.GOOS == "windows" {
+			slashed = windowsName(slashed)
+		}
+		if len(slashed) <= len(g) || slashed[len(slashed)-len(g)-1] != '/' || !strings.EqualFold(slashed[len(slashed)-len(g):], g) {
+			return ""
+		}
+		return filepath.FromSlash(slashed[:len(slashed)-len(g)-1])
+	}
+	for _, p := range []string{given, resolved} {
+		for _, g := range guardFiles {
+			if b := nameBase(p, g); b != "" {
+				if t := top(b); same(b, t) {
+					add(t, true)
+				}
+			}
+		}
+	}
+	info, statErr := os.Stat(given)
+	hit := ""
+	for _, g := range guardFiles {
+		for _, b := range bases {
+			if same(nameBase(given, g), b) || same(nameBase(resolved, g), b) {
+				hit = g
+			} else if statErr == nil {
+				if gi, err := os.Stat(filepath.Join(b, filepath.FromSlash(g))); err == nil && os.SameFile(info, gi) {
+					hit = g
+				}
+			}
+			if hit != "" {
+				break
+			}
+		}
+		if hit != "" {
+			break
+		}
+	}
+	if hit == "" {
+		return "", false
+	}
+	for _, repo := range repos {
+		raw, err := os.ReadFile(filepath.Join(repo, filepath.FromSlash(taskFile)))
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		claim := "(unreadable)"
+		if err == nil {
+			if first := strings.TrimSpace(strings.SplitN(string(raw), "\n", 2)[0]); first != "" {
+				claim = first
+			}
+		}
+		return fmt.Sprintf("proofbound: %s holds the guard on this agent's work (the hooks, or the active task %s). An agent may not change it while a task is active. Ask the person running the task to change it.", hit, claim), true
+	}
+	return "", false
+}
+
+// windowsName drops what Win32 ignores at the end of a name: an alternate data stream (`:$DATA`) and
+// trailing dots and spaces, so `settings.json.` or `settings.json::$DATA` names settings.json.
+func windowsName(slashed string) string {
+	dir, name := "", slashed
+	if i := strings.LastIndex(slashed, "/"); i >= 0 {
+		dir, name = slashed[:i+1], slashed[i+1:]
+	}
+	if i := strings.Index(name, ":"); i >= 0 {
+		name = name[:i]
+	}
+	return dir + strings.TrimRight(name, ". ")
 }
 
 // resolvePath follows symlinks through the nearest existing ancestor and appends the rest, so a link

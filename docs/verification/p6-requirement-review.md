@@ -4,7 +4,7 @@
 
 Authority: `docs/plans/P6-CONSOLIDATION-PLAN-draft2.md` Task 5 and `docs/plans/p6-task5-requirement-review-SPEC.md`.
 
-Configured providers: `records`, `specdir`. Active requirement revisions: **13** (`records=13`, `specdir=0`). Active obligations: **21**. Exact matching reviews: **13**.
+Configured providers: `records`, `specdir`. Active requirement revisions: **14** (`records=14`, `specdir=0`). Active obligations: **22**. Exact matching reviews: **14**.
 
 | Requirement revision | Requirement artifact | Obligation | Review | Review artifact | Outcome |
 |---|---|---|---|---|---|
@@ -29,6 +29,7 @@ Configured providers: `records`, `specdir`. Active requirement revisions: **13**
 | `intent.records:BR-waiver-signed-commits-6fioa7@47cad080ae0cd32b5dbfce65e96e80345d980242b71eeacfb2e067a8ceb3f374` | `docs/intent/records/requirements/BR-waiver-signed-commits-6fioa7/0003.md` | `O-2` | `RR-waiver-signed-commits-round2b-20261124` | `docs/verification/verdicts/RR-waiver-signed-commits-round2b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-warranty-head-reviews-gdjrrv@002b84ec84216e50c44eb60ef17b3996bbb5ba25582c75851e091e1d8081c35b` | `docs/intent/records/requirements/BR-warranty-head-reviews-gdjrrv/0002.md` | `O-1` | `RR-warranty-head-reviews-round1b-20261124` | `docs/verification/verdicts/RR-warranty-head-reviews-round1b-20261124.md` | `VERIFIABLE` |
 | `intent.records:BR-write-perimeter-i1xmq8@5a3e365d82fbe1440a961f59c23baf57aa8bac57dd19755b79db97b53a6471a2` | `docs/intent/records/requirements/BR-write-perimeter-i1xmq8/0004.md` | `O-3` | `RR-write-perimeter-round3b-20261124` | `docs/verification/verdicts/RR-write-perimeter-round3b-20261124.md` | `VERIFIABLE` |
+| `intent.records:BR-write-perimeter-i1xmq8@a5c23381ae62328370895795503605d136f3a3be0888396c980115d75d9a8bdc` | `docs/intent/records/requirements/BR-write-perimeter-i1xmq8/0006.md` | `O-4` | `RR-write-perimeter-round4b-20261125` | `docs/verification/verdicts/RR-write-perimeter-round4b-20261125.md` | `VERIFIABLE` |
 
 ## Self-hosted chain
 
