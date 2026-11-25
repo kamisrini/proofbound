@@ -46,9 +46,11 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
     your spec's); each promise beside the change; record an outcome per promise and **seal and sign
     the review in the browser**, writing and committing exactly what `proofbound review seal` writes.
     The whole review, with no terminal: **Run the tests** (in the background, with progress; they
-    undo each part of the change), decide each part the tests did not notice, and see every added
-    line marked *outside the area*, *tests did not notice* or *no recorded agent edit*, beside the
-    spec it claims. Sealing runs the tests again. After sealing, the page shows the check result.
+    remove each piece of new code and show which pieces no test checks), decide each untested
+    part, and see every added line marked *outside the area*, *not tested* or *no recorded agent
+    edit*. On a wide screen the change, who wrote it and the spec sit beside the questions, each
+    question says in plain words what its answers mean, and **Show in the code** jumps to a flagged
+    part. Sealing runs the tests again. After sealing, the page shows the check result.
   - **Changes**: each spec change as one flow, from the agent's commits to reviews, the check and
     the warranty, with your one next step ("Review this", "Issue the warranty").
   - **Promise map** (spec owner): every promise with its state (proven, changed after proof, not

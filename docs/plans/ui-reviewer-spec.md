@@ -71,7 +71,7 @@ every page load, so the reviewer never runs `sync`.
 2. **Who wrote each line.** The bench shows the provenance summary per file (by which agent session,
    with no recorded agent edit, common) and its warnings. Read-only; seal matches again, as today.
 3. **The flags on the code itself.** In "The change", each flagged added line carries its flags beside
-   it: *outside the area*, *tests did not notice*, *no recorded agent edit*. The demo's pricing line
+   it: *outside the area*, *tests did not notice* (*not tested* since R3, §10), *no recorded agent edit*. The demo's pricing line
    reads all three. Past the 1,500-line cut, the page lists the flagged lines it could not show.
 4. **The spec beside the promises.** Above the promises: the claimed spec's Markdown files and
    `scope.paths`, read from the commit's **parent** (amended after code review F4: that is what the area
@@ -266,3 +266,68 @@ Found by the gate after commit `b553d2d`: the verify page's check lived in the c
 package-spec lint cannot cite its test. It moved into the warranty package as `PageCheck` (W-INV-13,
 `page_test.go::TestPageCheck`), a pure addition that calls the existing `Parse` and `Verify`; the
 rule is unchanged. CLI-INV-79 is retired. The key-from-file mutation, re-run there, died.
+
+## 10. R3: the code beside the questions, in plain words (owner "yes", 2026-11-25)
+
+Found by the owner walking the bench: the code sat far below the questions ("where is the code to
+check on this screen?"), and the questions assumed a developer ("what is this section supposed to
+be?"). R3 changes only the page: what the reviewer decides, what is sealed and what `check` reads are
+untouched.
+
+1. **Side by side.** With a commit open on a wide screen (≥ 1280 px), the bench shows the decisions in
+   one column and the evidence in another, in this order: the change (flagged lines marked), who wrote
+   each line, the spec. The evidence column stays in view while the decisions scroll (sticky, its
+   own scroll). The queue narrows. Below 1280 px it stays one column, with a "Read the change" link
+   at the top of the decisions. The page widens to 1600 px for the bench only.
+2. **Show in the code.** Each *Outside the area* and *No test checks this* box has a **Show in the
+   code** link that scrolls the change to that part's first added line (or the first line of the
+   file's section, `diff --git`, for a whole-file part or one with no added line) and highlights it. Added lines carry their path and new line number for this.
+   A part the change view does not show (past the 1,500-line cut) says so instead.
+3. **Plain words.** One line under each question, saying what each answer means:
+   - *Does the code keep this promise?* Read the change beside it. Kept: the code does what this
+     sentence says. Not kept: it does not, and the review will need work. Inconclusive: you cannot tell
+     from what is here.
+   - *Are the words clear enough to verify?* This is about the sentence, not the code: could anyone
+     check it and get a clear yes or no? If not, say what is unclear in the finding; the spec owner
+     rewords it.
+   - *Outside the area:* the spec lists the files this change may touch, and this one is not on it.
+     Accept only if the change was needed, and say why.
+   - *The tests* (owner, 2026-11-25: "test explanation is not really clear, make it simpler"): the
+     heading is "Do the tests check this code?"; the line under it: Proofbound removes each piece of
+     new code, one at a time, and runs the project's tests; if the tests still pass without a piece,
+     no test checks that piece. The run is summed up in a sentence ("The tests pass on this change.
+     With all the new code removed, they fail, so they do test it."), a part caught reads
+     "Tested: …", a part not caught is a box titled "No test checks this" asking "Is that OK?", and
+     the command is shown last, small. The diff flag *tests did not notice* becomes *not tested*,
+     and the queue says "N part(s) untested". Only words change; the run and the decisions do not.
+   - The finding field asks for a finding when the answer is not Verifiable (still optional, as the
+     record allows).
+4. **Promise to lines is not claimed.** Nothing records which lines keep which promise, so the page
+   does not pretend to link them. The agent reviewer (D4) is where per-promise line citations would
+   come from.
+
+**Not in R3:** any change to the endpoints, the draft, the seal or the records.
+
+**Tests:** `bench_test.go::TestBenchLayout`: the rendered bench has the decisions and evidence
+columns, each plain-words line, a Show in the code link per area and tests box whose path and line
+match an added diff line carrying the same path and number, and a whole-file part linking to its file
+header. Contract row: CLI-INV-76 amended (the anchors and the link). Mutation calibration: a link to
+the wrong line and a missing hint must die; a CSS colour change must survive.
+
+## 11. Code review of R3 (owner-visible)
+
+`ui-reviewer-r3-review-20261125`: **NEEDS_WORK** (two MED, four LOW); the MEDs fixed before commit:
+- **F1 MED, fixed.** A whole-file part (binary, empty, mode only, deleted) has no `+++` line, so its
+  link found nothing and the page said, falsely, that it was past the end of the view. Line 0 now
+  sits on each file's `diff --git` line (quoted paths read too); a part with no added line lands on
+  its file; the fallback says only that the file is not in the view.
+- **F2 MED, fixed.** The tests' sentence claimed runs that did not happen (baseline fail, timeout or
+  unreliable; whole change not run or not undone). It is now one sentence per result
+  (`testsSummary`); "Tested:" shows only when the tests pass reliably; a part not run or not undone is
+  titled "Not checked"; the queue says "they do not pass reliably" instead of "every part tested".
+- **F3, F4, F6 LOW, recorded / partly fixed:** removed lines land on the file's first line; the JS
+  link and the sticky column are not run by any test here (no browser): the owner checks them once
+  by hand; F6's labels fixed with F2. **F5 LOW, fixed:** the old wording in this spec.
+
+Mutation calibration for the fixes: a quoted path dropped, no anchor on `diff --git`, *unreliable*
+read as pass, a whole change not caught read as not tried: each died; a CSS outline width survived.

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -103,7 +104,7 @@ func TestBenchTestsFlow(t *testing.T) {
 	}
 
 	// A reload shows the saved run without running again.
-	if w := uiRequest(s, "GET", "/review?commit="+claim, "127.0.0.1:4242", "", s.token, ""); w.Code != 200 || !strings.Contains(w.Body.String(), "Tests did not notice</strong> <code>src/a.sh</code> line 7") {
+	if w := uiRequest(s, "GET", "/review?commit="+claim, "127.0.0.1:4242", "", s.token, ""); w.Code != 200 || !strings.Contains(w.Body.String(), "No test checks this</strong> <code>src/a.sh</code> line 7") {
 		t.Fatalf("the page does not show the saved run: %d", w.Code)
 	}
 	if again, _ := s.jobs.snapshot(claim); len(again.Lines) != len(job.Lines) || again.Running {
@@ -381,6 +382,133 @@ func TestBenchSpec(t *testing.T) {
 	for _, f := range got {
 		if f.Path == "specs/001-a/spec.md" && f.Text != "# the promise\n" {
 			t.Errorf("spec text %q", f.Text)
+		}
+	}
+}
+
+// ui-reviewer-spec §10 (R3): the decisions and the evidence are two columns, each question has its
+// plain-words line, and every "Show in the code" link names a path and line that a line of the
+// rendered change carries: the first line of a part, or a whole-file part's "+++" header (line 0).
+func TestBenchLayout(t *testing.T) {
+	key := uiKey(t)
+	root, base, claim := testsRepoWith(t, true, map[string]string{".proofbound/keys/demo-reviewer.pub": pbwarranty.PubLine(key.Public().(ed25519.PublicKey)), "specs/001-a/scope.paths": "src/a.sh\n"})
+	truth := draftFile{Commit: claim, Verdicts: []draftVerdict{{Obligations: []draftVerdictObligation{{ObligationID: "O-1", Statement: "one"}}}},
+		Reviews: []draftReview{{DeclaredOwner: "owner", Obligations: []draftReviewObligation{{ObligationID: "O-1", Statement: "one"}}}}}
+	s := newUIServer(root, "", base, 4242)
+	t.Cleanup(func() { s.stopLife(); s.jobs.wg.Wait() })
+	s.compute = func(ctx context.Context, b string) (ledgerView, string, error) {
+		return ledgerView{Report: auditReport{Schema: auditSchema, Base: base, Head: claim, Commits: []auditCommit{{Commit: claim, Author: "Claude", Class: classClaimed}},
+			Controls: []auditControl{{ID: "C1", Evidence: []auditEvidence{{Commit: claim, Text: "NO REVIEW: x"}}}}, Exceptions: []auditException{}}}, "", nil
+	}
+	s.drafts = func(ctx context.Context, shas []string) (map[string]draftFile, error) {
+		return map[string]draftFile{claim: truth}, nil
+	}
+	raw, _ := json.Marshal(reviewRequest{Commit: claim})
+	if w := uiRequest(s, "POST", "/act/review-tests", "127.0.0.1:4242", "http://127.0.0.1:4242", s.token, string(raw)); w.Code != 202 {
+		t.Fatalf("run: %d %s", w.Code, w.Body.String())
+	}
+	if job := waitJob(t, s, claim); job.Error != "" {
+		t.Fatalf("job %+v", job)
+	}
+	w := uiRequest(s, "GET", "/review?commit="+claim, "127.0.0.1:4242", "", s.token, "")
+	page := w.Body.String()
+	if w.Code != 200 {
+		t.Fatalf("page: %d", w.Code)
+	}
+	for _, want := range []string{
+		`<main class="page wide">`, `<div class="bench open">`, `<div class="decide">`, `<aside class="evidence"`, `id="the-change"`,
+		"Read the change beside these questions.", "This is about the sentence, not the code",
+		"The spec lists the files this change may touch", "Do the tests check this code?",
+		"If the tests still pass without a piece, no test checks that piece.", "The tests pass on this change.",
+		"No test checks this</strong> <code>src/a.sh</code> line 7", "Accept</b> only with a reason",
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the bench lacks %q", want)
+		}
+	}
+	// The evidence column comes after the decisions in the page, so a narrow screen reads them in order.
+	if strings.Index(page, `<aside class="evidence"`) < strings.Index(page, `data-act="review-seal"`) {
+		t.Error("the evidence is not after the decisions")
+	}
+	jumps := regexpAll(`class="jump" data-jump-path="([^"]+)" data-jump-line="(\d+)"`, page)
+	got := map[string]int{}
+	for _, m := range jumps {
+		got[m[1]+" "+m[2]]++
+		if !strings.Contains(page, `data-path="`+m[1]+`" data-line="`+m[2]+`"`) {
+			t.Errorf("Show in the code points at %s line %s, which no line of the change carries", m[1], m[2])
+		}
+	}
+	// One area box (the test file, outside scope.paths) and one tests box (line 7).
+	if len(got) != 2 || got["src/a.sh 7"] != 1 || got["tests/t.sh 1"] != 1 {
+		t.Errorf("links %v", got)
+	}
+	// The linked line is the flagged one, and its header line is the file's.
+	if !strings.Contains(page, `class="dl dl-add dl-flag" data-path="src/a.sh" data-line="7">&#43;echo SIX`) {
+		t.Error("line 7 of src/a.sh is not the flagged added line")
+	}
+	// A whole-file part (binary, mode change) links to the file's header, which carries line 0.
+	if n := jumpLineOf("file added"); n != 0 || jumpLineOf("lines 4-9") != 4 || jumpLineOf("line 3") != 3 {
+		t.Errorf("jumpLine: %d", n)
+	}
+	if !strings.Contains(page, `class="dl dl-file" data-path="tests/t.sh" data-line="0">diff --git a/tests/t.sh b/tests/t.sh`) {
+		t.Error("a file's header carries no line 0 for a whole-file part to land on")
+	}
+}
+
+func regexpAll(expr, s string) [][]string {
+	return regexp.MustCompile(expr).FindAllStringSubmatch(s, -1)
+}
+
+// Code review F1, F2 of R3: every file's section, even one git shows with no "+++" line (binary,
+// empty, mode only, deleted), carries line 0 for a whole-file part; the tests' sentence never claims
+// a run that did not happen.
+func TestBenchWholeFileAndSummary(t *testing.T) {
+	root := taskRepo(t)
+	uiWrite(t, root, "gone.txt", "bye\n")
+	uiWrite(t, root, "mode.sh", "echo\n")
+	uiCommit(t, root, "owner", "start")
+	uiWrite(t, root, "bin.dat", "a\x00b")
+	uiWrite(t, root, "empty.txt", "")
+	uiWrite(t, root, "tab\tname.txt", "x\n")
+	if err := os.Remove(filepath.Join(root, "gone.txt")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(filepath.Join(root, "mode.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sha := uiCommit(t, root, "Claude", "parts with no added line")
+	lines, _ := benchDiff(context.Background(), root, sha, lineFlags{})
+	headers := map[string]bool{}
+	for _, l := range lines {
+		if l.Path != "" && l.Line == 0 {
+			if !strings.HasPrefix(l.Text, "diff --git ") {
+				t.Errorf("line 0 of %s is %q, not its section's first line", l.Path, l.Text)
+			}
+			headers[l.Path] = true
+		}
+	}
+	for _, p := range []string{"bin.dat", "empty.txt", "gone.txt", "mode.sh", "tab\tname.txt"} {
+		if !headers[p] {
+			t.Errorf("%q has no line 0 to land on (got %v)", p, headers)
+		}
+	}
+
+	for _, c := range []struct {
+		res        testsResult
+		want, deny string
+	}{
+		{testsResult{Baseline: testsPass, Whole: testsCaught, Hunks: []testsHunk{{}}}, "they do test it", "need work"},
+		{testsResult{Baseline: testsPass, Whole: testsNotCaught, Hunks: []testsHunk{{}}}, "they do not test this change", "they fail"},
+		{testsResult{Baseline: testsPass, Whole: testsUndoFailed, Hunks: []testsHunk{{}}}, "could not remove", "they fail"},
+		{testsResult{Baseline: testsPass, Whole: testsNotRun, Hunks: []testsHunk{{}}}, "was not tried", "do not test"},
+		{testsResult{Baseline: testsPass}, "no new code", "removed"},
+		{testsResult{Baseline: testsFail, Whole: testsNotRun, Hunks: []testsHunk{{}}}, "fail on this change", "removed"},
+		{testsResult{Baseline: testsTimeout, Whole: testsNotRun, Hunks: []testsHunk{{}}}, "did not finish", "removed"},
+		{testsResult{Baseline: testsUnreliable, Whole: testsCaught, Hunks: []testsHunk{{}}}, "can be trusted", "do test it"},
+	} {
+		got := testsSummary(c.res)
+		if !strings.Contains(got, c.want) || strings.Contains(got, c.deny) {
+			t.Errorf("%+v: %q", c.res, got)
 		}
 	}
 }

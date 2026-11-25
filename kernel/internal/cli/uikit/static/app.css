@@ -251,3 +251,23 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: var(
 .steps li { margin: .35rem 0; }
 .steps.sub { margin: .25rem 0 .5rem; }
 .issue .msg { white-space: pre-wrap; }
+
+/* Review bench, R3 (ui-reviewer-spec §10): the evidence beside the questions, in plain words. */
+.page.wide { max-width: 1600px; }
+.bench.open { grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); }
+.work-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.decide, .evidence { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.hint { font-size: 13px; color: var(--ink-2); margin: 0; }
+.tests-sum { margin: .25rem 0; }
+.small { font-size: 12px; }
+.to-code { margin: 0; }
+.diff .dl-jump { outline: 2px solid var(--link); outline-offset: 1px; }
+@media (min-width: 1280px) {
+  .work-cols { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
+  .evidence { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+  .evidence .diff { max-height: none; }
+  .to-code { display: none; }
+}
+@media (max-width: 720px) {
+  .bench.open { grid-template-columns: minmax(0, 1fr); }
+}

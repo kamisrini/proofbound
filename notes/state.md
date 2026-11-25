@@ -6,6 +6,17 @@ As of: 2026-11-25
 
 ## Resume — 2026-11-25
 
+**Latest (2026-11-25 evening):** owner walked the bench in the browser and asked "where is the code to
+check on this screen?" and to make the tests explanation simpler. R3 (`ui-reviewer-spec.md` §10,
+`CI-ui-bench-layout-p3v8k2`): decisions and evidence side by side (sticky), Show in the code from each
+flagged part, a plain-words line under every question, the tests section reworded ("Do the tests check
+this code?", "No test checks this", flag *not tested*). Review `ui-reviewer-r3-review-20261125`
+NEEDS_WORK, F1/F2 MED fixed, LOWs recorded (§11). The owner released D4 ("yes to both"; agent = any
+configured command, default Claude Code headless): spec `docs/plans/agent-reviewer-spec.md` draft 1,
+**not built**, waiting for the owner's read and decisions D-A..D-D. Owner dev binary for R3:
+`~/projects/proofbound-dev-bin/proofbound`. Next: commit R3, republish v0.3.2; owner checks the JS
+link and the sticky column by hand (no browser here).
+
 **Latest (2026-11-25 afternoon):** owner "lets do both r1 and r2": the reviewer's whole job in the
 browser (spec `docs/plans/ui-reviewer-spec.md` draft 2; spec review NEEDS_WORK 4 HIGH folded; R1 code
 review `ui-reviewer-r1-review-20261125` NEEDS_WORK, 5 MED fixed). R1: the Review bench runs a project's

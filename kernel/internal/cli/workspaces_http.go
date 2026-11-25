@@ -207,9 +207,11 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 						missed++
 					}
 				}
-				item.Tests = fmt.Sprintf("tests run: %d part(s) not caught", missed)
-				if missed == 0 {
-					item.Tests = "tests run: every part caught"
+				item.Tests = fmt.Sprintf("tests run: %d part(s) untested", missed)
+				if local.Tests.Baseline != testsPass {
+					item.Tests = "tests run: they do not pass reliably"
+				} else if missed == 0 {
+					item.Tests = "tests run: every part tested"
 				}
 			}
 		}
@@ -404,7 +406,7 @@ func undecided(d draftFile, testsDeclared bool) []string {
 				case h.Decision == "accept":
 					out = append(out, "why accept "+printableUnit(h.Path)+" "+h.Lines+"?")
 				default:
-					out = append(out, "accept or reject "+printableUnit(h.Path)+" "+h.Lines+" (the tests did not notice it undone)?")
+					out = append(out, "accept or reject "+printableUnit(h.Path)+" "+h.Lines+" (no test checks it)?")
 				}
 			}
 		}
@@ -657,7 +659,7 @@ func sealWarnings(d draftFile) []string {
 		}
 		for _, h := range t.Hunks {
 			if h.Result != testsCaught && h.Decision == "reject" {
-				out = append(out, "you reject "+printableUnit(h.Path)+" "+h.Lines+" (the tests did not notice it): the review will be NEEDS_WORK")
+				out = append(out, "you reject "+printableUnit(h.Path)+" "+h.Lines+" (no test checks it): the review will be NEEDS_WORK")
 			}
 		}
 	}

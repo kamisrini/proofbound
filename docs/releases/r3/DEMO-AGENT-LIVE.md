@@ -526,7 +526,7 @@ PROOFBOUND_KEY="$W/reviewer.key" proofbound ui --base demo-base --open
   Open it: the spec, the promises, and the change, where the price line is already marked *outside
   the area* and *no recorded agent edit*.
 - **Run the tests:** the run goes on in the background, line by line. When it ends, the price line
-  also reads *tests did not notice*, and the page asks you to accept or reject that part.
+  also reads *not tested*, and the page asks you to accept or reject that part.
 - **Seal:** mark both promises kept and both requirements verifiable, reject the price line twice,
   then **Review what sealing writes** and **Seal and sign**. The tests run again, the review is
   committed, and the page shows the check: **BLOCKED**, the reviewer recorded NEEDS_WORK.

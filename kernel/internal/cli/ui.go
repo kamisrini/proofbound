@@ -48,7 +48,9 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 	"kindLabel": func(k string) string {
 		return map[string]string{"gate": "Unreviewed change", "uncovered": "Code without a spec", "warranty": "Warranty does not verify", "trust": "Change to signing or the check", "order": "Spec written with or after its code", "self-review": "Reviewed by its own author or owner", "signature": "Signature does not verify", "area": "Change outside its declared area", "tests": "Change its tests do not catch", "provenance": "Provenance record does not verify"}[k]
 	},
-	"join": func(xs []string) string { return strings.Join(xs, ", ") },
+	"join":         func(xs []string) string { return strings.Join(xs, ", ") },
+	"jumpLine":     jumpLineOf,
+	"testsSummary": testsSummary,
 	// mapReason is the one-line reason a control maps to a criterion (frameworks.go, CLI-INV-65).
 	"mapReason": func(control string, ref frameworkRef) string {
 		for _, e := range frameworkMap[control] {

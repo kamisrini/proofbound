@@ -140,7 +140,7 @@ func writeLocalDraft(root, sha string, d draftFile) error {
 
 const (
 	flagArea  = "outside the area"
-	flagTests = "tests did not notice"
+	flagTests = "not tested"
 	flagProv  = "no recorded agent edit"
 )
 
@@ -149,6 +149,10 @@ type diffLine struct {
 	Text  string   `json:"text"`
 	Kind  string   `json:"kind"` // "add", "del", "hunk", "file", ""
 	Flags []string `json:"flags,omitempty"`
+	// Path and Line place an added line (Line is its new line number) and a file's "+++" header
+	// (Line 0), so a decision box can show its part in the code (§10.2).
+	Path string `json:"path,omitempty"`
+	Line int    `json:"line,omitempty"`
 }
 
 // lineSpan reads the hunk labels of the area and tests checks: "line 3", "lines 1-39", or a whole-file
@@ -176,6 +180,68 @@ func lineSpan(label string) (lo, hi int, whole, ok bool) {
 		}
 	}
 	return lo, hi, false, true
+}
+
+// diffGitPath reads the path of a "diff --git a/P b/P" line (renames are off, so both sides name the
+// same path), quoted or not; "" when it cannot.
+func diffGitPath(l string) string {
+	rest := strings.TrimPrefix(l, "diff --git ")
+	if strings.HasPrefix(rest, `"`) {
+		q, err := strconv.QuotedPrefix(rest)
+		if err != nil {
+			return ""
+		}
+		a, err := strconv.Unquote(q)
+		if err != nil {
+			return ""
+		}
+		return strings.TrimPrefix(a, "a/")
+	}
+	if n := len(rest) - 5; n > 0 && n%2 == 0 && strings.HasPrefix(rest, "a/") {
+		p := rest[2 : 2+n/2]
+		if rest[2+n/2:] == " b/"+p {
+			return p
+		}
+	}
+	return ""
+}
+
+// testsSummary is the tests' run in one plain sentence, one per baseline and whole-change result,
+// never claiming a run that did not happen (code review F2).
+func testsSummary(t testsResult) string {
+	switch t.Baseline {
+	case testsFail:
+		return "The tests fail on this change as it is, so nothing more was tried. The review will need work."
+	case testsTimeout:
+		return "The tests did not finish on this change (they ran out of time), so nothing more was tried. The review will need work."
+	case testsUnreliable:
+		return "The tests gave different results when run again on the same change, so none of their results can be trusted. The review will need work."
+	case testsPass:
+	default:
+		return "The tests' result on this change is unknown (" + t.Baseline + ")."
+	}
+	if len(t.Hunks) == 0 {
+		return "The tests pass on this change. It has no new code for them to check."
+	}
+	switch t.Whole {
+	case testsCaught:
+		return "The tests pass on this change. With all the new code removed, they fail, so they do test it."
+	case testsNotCaught:
+		return "The tests pass on this change, and they still pass with all the new code removed: they do not test this change. The review will need work."
+	case testsUndoFailed:
+		return "The tests pass on this change. Proofbound could not remove all the new code at once, so that check was not made."
+	default:
+		return "The tests pass on this change. Removing all the new code at once was not tried."
+	}
+}
+
+// jumpLineOf is the new line a decision box's "Show in the code" goes to: the first line of its part,
+// or 0 (the file's "+++" header) for a whole-file part (ui-reviewer-spec §10.2).
+func jumpLineOf(label string) int {
+	if lo, _, whole, ok := lineSpan(label); ok && !whole {
+		return lo
+	}
+	return 0
 }
 
 // lineFlags maps path → new line number (0: every line) → flags.
@@ -253,7 +319,9 @@ func benchDiff(ctx context.Context, root, sha string, flags lineFlags) ([]diffLi
 		switch {
 		case strings.HasPrefix(l, "diff --git "):
 			file, inHunk = "", false
-			d.Kind = "file"
+			// Every file's section starts here, even one with no "+++" line (binary, empty, mode
+			// only, deleted): line 0 is where a whole-file part lands (code review F1).
+			d.Kind, d.Path = "file", diffGitPath(l)
 		case !inHunk && strings.HasPrefix(l, "+++ "):
 			file = strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(l, "+++ "), "b/"), "\t")
 			d.Kind = "file"
@@ -268,7 +336,7 @@ func benchDiff(ctx context.Context, root, sha string, flags lineFlags) ([]diffLi
 			}
 			d.Kind = "hunk"
 		case inHunk && strings.HasPrefix(l, "+"):
-			d.Kind, d.Flags = "add", flags.at(file, n)
+			d.Kind, d.Flags, d.Path, d.Line = "add", flags.at(file, n), file, n
 			n++
 		case inHunk && strings.HasPrefix(l, "-"):
 			d.Kind = "del"

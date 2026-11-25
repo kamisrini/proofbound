@@ -9,7 +9,7 @@
 </head>
 <body data-base="{{.V.Report.Base}}"{{if .Commit}} data-commit="{{.Commit.Commit}}"{{end}}{{if .Job}}{{if .Job.Running}} data-job="running"{{end}}{{end}}>
 {{template "top" (dict "Active" "review" "V" .V)}}
-<main class="page">
+<main class="page{{if .Commit}} wide{{end}}">
 <section class="report-head">
   <p class="eyebrow">Reviewer · Review bench</p>
   <h1>{{len .Queue}} change(s) waiting for someone who did not write them.</h1>
@@ -19,7 +19,7 @@
   {{if .Sealed}}<p class="ex-outcome {{if .Sealed.Pass}}closed{{else}}bad{{end}} sealed-result">Sealed <code>{{short .Sealed.Commit.Commit}}</code>. The check now reads: <strong>{{.Sealed.Text}}</strong>. <a href="/audit">Open the Audit room</a>.</p>{{end}}
 </section>
 
-<div class="bench">
+<div class="bench{{if .Commit}} open{{end}}">
 <nav class="card queue" aria-label="Review queue">
   <h2>Queue</h2>
   {{if not .Queue}}<p class="empty">Nothing is waiting for you.</p>{{end}}
@@ -42,18 +42,16 @@
 {{if .Commit}}
   <div class="card-head"><h2>Review <code>{{short .Commit.Commit}}</code>: {{.Commit.Subject}}</h2>{{if .Saved}}<span class="tag tag-none">Draft loaded</span>{{end}}</div>
   {{if .Refusal}}<p class="ex-outcome bad">{{.Refusal}}</p>{{end}}
-  {{if .Spec}}
-  <details class="log spec">
-    <summary>The spec this commit claims ({{len .Spec}} file(s), as they stood before the commit)</summary>
-    {{range .Spec}}<p class="muted"><code>{{.Path}}</code>{{if .Changed}} <span class="tag tag-exception">this commit also changes it</span>{{end}}</p><pre>{{.Text}}</pre>{{end}}
-  </details>
-  {{end}}
+  <div class="work-cols">
+  <div class="decide">
+  <p class="to-code muted"><a href="#the-change">Read the change</a>: it is below on a narrow screen, beside these questions on a wide one.</p>
   <form class="bench-form">
     {{range $gi, $v := .Draft.Verdicts}}
       {{range $oi, $o := $v.Obligations}}
       <fieldset class="promise" data-part="verdict" data-group="{{$gi}}" data-index="{{$oi}}" data-obligation="{{$o.ObligationID}}">
         <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}}</legend>
         <p class="muted">Does the code keep this promise?</p>
+        <p class="hint">Read the change beside these questions. <b>Kept</b>: the code does what this sentence says. <b>Not kept</b>: it does not, and the review will need work. <b>Inconclusive</b>: you cannot tell from what is here.</p>
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="SATISFIED"{{if eq $o.Outcome "SATISFIED"}} checked{{end}}> Kept</label>
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="NOT_SATISFIED"{{if eq $o.Outcome "NOT_SATISFIED"}} checked{{end}}> Not kept</label>
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="INCONCLUSIVE"{{if eq $o.Outcome "INCONCLUSIVE"}} checked{{end}}> Inconclusive</label>
@@ -65,11 +63,12 @@
       <fieldset class="promise" data-part="review" data-group="{{$gi}}" data-index="{{$oi}}" data-obligation="{{$o.ObligationID}}">
         <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}} <span class="muted">· owner {{$r.DeclaredOwner}}</span></legend>
         <p class="muted">Are the words clear enough to verify?</p>
+        <p class="hint">This is about the sentence, not the code: could anyone check it and get a clear yes or no? If not, say what is unclear in the finding; the spec owner rewords it.</p>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="VERIFIABLE"{{if eq $o.Outcome "VERIFIABLE"}} checked{{end}}> Verifiable</label>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="AMBIGUOUS"{{if eq $o.Outcome "AMBIGUOUS"}} checked{{end}}> Ambiguous</label>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="UNTESTABLE"{{if eq $o.Outcome "UNTESTABLE"}} checked{{end}}> Untestable</label>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="CONTRADICTORY"{{if eq $o.Outcome "CONTRADICTORY"}} checked{{end}}> Contradictory</label>
-        <label class="field">Finding for the spec owner <input name="f-{{$gi}}-{{$oi}}" value="{{$o.Finding}}" maxlength="500" autocomplete="off"></label>
+        <label class="field">Finding for the spec owner (say what is unclear when it is not Verifiable) <input name="f-{{$gi}}-{{$oi}}" value="{{$o.Finding}}" maxlength="500" autocomplete="off"></label>
       </fieldset>
       {{end}}
     {{end}}
@@ -78,6 +77,7 @@
     <fieldset class="promise area" data-part="area" data-group="0" data-index="{{$ai}}" data-obligation="" data-path="{{$a.Path}}" data-lines="{{$a.Lines}}">
       <legend><strong>Outside the area</strong> <code>{{$a.Path}}</code> {{$a.Lines}}</legend>
       <p class="muted">The spec does not declare this file. Was this change needed?</p>
+      <p class="hint">The spec lists the files this change may touch, and this one is not on it. Accept only if the change was needed, and say why. <a href="#the-change" class="jump" data-jump-path="{{$a.Path}}" data-jump-line="{{jumpLine $a.Lines}}">Show in the code</a></p>
       <label class="choice"><input type="radio" name="a-{{$ai}}" value="accept"{{if eq $a.Decision "accept"}} checked{{end}}> Accept</label>
       <label class="choice"><input type="radio" name="a-{{$ai}}" value="reject"{{if eq $a.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
       <label class="field">Reason (required to accept) <input name="f-a-{{$ai}}" value="{{$a.Reason}}" maxlength="500" autocomplete="off"></label>
@@ -85,31 +85,34 @@
     {{end}}
 
     {{if .TestsInvalid}}
-    <section class="tests-box"><h3>Do the tests notice each part undone?</h3><p class="ex-outcome bad">The project's tests file is invalid: {{.TestsInvalid}}. Fix it before reviewing; there is nothing to run.</p></section>
+    <section class="tests-box"><h3>Do the tests check this code?</h3><p class="ex-outcome bad">The project's tests file is invalid: {{.TestsInvalid}}. Fix it before reviewing; there is nothing to run.</p></section>
     {{else if .TestsDeclared}}
     <section class="tests-box">
-      <h3>Do the tests notice each part undone?</h3>
+      <h3>Do the tests check this code?</h3>
+      <p class="hint">Proofbound removes each piece of new code, one at a time, and runs the project's tests. If the tests still pass without a piece, no test checks that piece.</p>
       {{with .Draft.Tests}}
         {{if .Invalid}}<p class="ex-outcome bad">The project's tests file is invalid: {{.Invalid}}. Fix it before sealing; there is nothing to run.</p>
         {{else}}
-        <p class="muted">Ran <code>{{.Run}}</code>: with nothing undone, {{.Baseline}}{{if .Hunks}}; undoing the whole change, {{.Whole}}{{end}}.</p>
+        <p class="tests-sum">{{testsSummary .}}</p>
         {{range $ti, $h := .Hunks}}
-          {{if eq $h.Result "caught"}}<p class="muted">Caught: <code>{{$h.Path}}</code> {{$h.Lines}}</p>
+          {{if eq $h.Result "caught"}}<p class="muted">{{if eq $.Draft.Tests.Baseline "pass"}}Tested{{else}}The tests failed without it, which counts for nothing while they do not pass reliably{{end}}: <code>{{$h.Path}}</code> {{$h.Lines}}</p>
           {{else}}
           <fieldset class="promise tests" data-part="tests" data-group="0" data-index="{{$ti}}" data-obligation="" data-path="{{$h.Path}}" data-lines="{{$h.Lines}}">
-            <legend><strong>Tests did not notice</strong> <code>{{$h.Path}}</code> {{$h.Lines}} <span class="muted">({{$h.Result}})</span></legend>
-            <p class="muted">Undoing this part, the tests still passed. Is it fine untested?</p>
+            <legend><strong>{{if eq $h.Result "not caught"}}No test checks this{{else}}Not checked{{end}}</strong> <code>{{$h.Path}}</code> {{$h.Lines}}{{if ne $h.Result "not caught"}} <span class="muted">({{$h.Result}})</span>{{end}}</legend>
+            <p class="muted">{{if eq $h.Result "not caught"}}The tests still passed with this removed.{{else}}Proofbound could not check this part ({{$h.Result}}).{{end}} Is that OK?</p>
+            <p class="hint"><b>Accept</b> only with a reason (for example: it is a comment, or you checked it by hand). <b>Reject</b> if it needs a test. <a href="#the-change" class="jump" data-jump-path="{{$h.Path}}" data-jump-line="{{jumpLine $h.Lines}}">Show in the code</a></p>
             <label class="choice"><input type="radio" name="t-{{$ti}}" value="accept"{{if eq $h.Decision "accept"}} checked{{end}}> Accept</label>
             <label class="choice"><input type="radio" name="t-{{$ti}}" value="reject"{{if eq $h.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
             <label class="field">Reason (required to accept) <input name="f-t-{{$ti}}" value="{{$h.Reason}}" maxlength="500" autocomplete="off"></label>
           </fieldset>
           {{end}}
         {{end}}
+        <p class="muted small">Test command: <code>{{.Run}}</code></p>
         {{end}}
       {{else}}
-        <p class="muted">Not run yet. Running them undoes each part of the change in a throwaway copy and runs the project's tests each time.</p>
+        <p class="muted">Not run yet: click <b>Run the tests</b>.</p>
       {{end}}
-      <p class="warn">This runs the commit's own code, as you, with your files. Read the change first.</p>
+      <p class="warn">Running the tests runs this change's code on your computer. Look at the change first.</p>
       <div class="buttons"><button type="button" class="secondary" data-act="review-tests"{{if .Refusal}} disabled data-refused{{end}}>{{if .Draft.Tests}}Run the tests again{{else}}Run the tests{{end}}</button></div>
     </section>
     {{end}}
@@ -130,7 +133,15 @@
     </div>
   </div>
   <p class="msg" role="status"></p>
+  </div>
 
+  <aside class="evidence" aria-label="The evidence">
+  <details class="log" id="the-change" open>
+    <summary>The change{{if .Lines}} · flagged lines are marked{{end}}</summary>
+    <pre class="diff">{{range .Lines}}<span class="dl{{if .Kind}} dl-{{.Kind}}{{end}}{{if .Flags}} dl-flag{{end}}"{{if .Path}} data-path="{{.Path}}" data-line="{{.Line}}"{{end}}>{{.Text}}{{range .Flags}}<span class="flag">{{.}}</span>{{end}}</span>
+{{end}}</pre>
+    {{if .FlaggedPast}}<p class="muted">Flagged lines past the end of this view: {{join .FlaggedPast}}</p>{{end}}
+  </details>
   {{with .Draft.Provenance}}
   <details class="log prov" open>
     <summary>Who wrote each line</summary>
@@ -139,13 +150,14 @@
   </details>
   {{end}}
   {{if .ProvError}}<p class="muted">Who wrote each line: {{.ProvError}}</p>{{end}}
-
-  <details class="log" open>
-    <summary>The change{{if .Lines}} · flagged lines are marked{{end}}</summary>
-    <pre class="diff">{{range .Lines}}<span class="dl{{if .Kind}} dl-{{.Kind}}{{end}}{{if .Flags}} dl-flag{{end}}">{{.Text}}{{range .Flags}}<span class="flag">{{.}}</span>{{end}}</span>
-{{end}}</pre>
-    {{if .FlaggedPast}}<p class="muted">Flagged lines past the end of this view: {{join .FlaggedPast}}</p>{{end}}
+  {{if .Spec}}
+  <details class="log spec">
+    <summary>The spec this commit claims ({{len .Spec}} file(s), as they stood before the commit)</summary>
+    {{range .Spec}}<p class="muted"><code>{{.Path}}</code>{{if .Changed}} <span class="tag tag-exception">this commit also changes it</span>{{end}}</p><pre>{{.Text}}</pre>{{end}}
   </details>
+  {{end}}
+  </aside>
+  </div>
 {{else}}
   <p class="empty">Choose a change from the queue. You see each promise beside the code that claims to keep it, record an outcome per promise, and seal the review here, signed with your key.</p>
 {{end}}

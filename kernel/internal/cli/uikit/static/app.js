@@ -197,6 +197,28 @@
     });
   }
 
+  // Show in the code (ui-reviewer-spec §10.2): scroll the change to a decision's part and mark it.
+  document.querySelectorAll("a.jump").forEach(function (a) {
+    a.addEventListener("click", function (ev) {
+      var path = a.getAttribute("data-jump-path"), line = a.getAttribute("data-jump-line");
+      var target = null, header = null;
+      document.querySelectorAll(".diff .dl[data-path]").forEach(function (d) {
+        if (d.getAttribute("data-path") !== path) { return; }
+        if (!target && d.getAttribute("data-line") === line) { target = d; }
+        if (!header && d.getAttribute("data-line") === "0") { header = d; }
+      });
+      // A part with no added line of its own (removed lines) lands on its file's first line.
+      target = target || header;
+      if (!target) { a.textContent = "This file is not in the view (it is past the end the page shows): read it with git show"; ev.preventDefault(); return; }
+      ev.preventDefault();
+      var change = document.getElementById("the-change");
+      if (change) { change.open = true; }
+      document.querySelectorAll(".diff .dl-jump").forEach(function (d) { d.classList.remove("dl-jump"); });
+      target.classList.add("dl-jump");
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  });
+
   // Issue the warranty (ui-reviewer-spec §2.2): preview first; the server refuses a partial release.
   var issue = document.querySelector(".issue");
   if (issue && issue.querySelector("[data-act=issue-preview]")) {
