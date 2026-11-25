@@ -127,6 +127,13 @@ type reviewPage struct {
 	NeedsWork     []benchNote `json:"needs_work"`
 	Sealed        *benchNote  `json:"sealed,omitempty"`
 	Job           *benchJob   `json:"job,omitempty"`
+	// agent-reviewer-spec §1: whether this page may ask the agent (AgentWhy says why not, shown only
+	// when the person started with --agent-review), and its answer by question key.
+	AgentOn  bool                 `json:"agent_on"`
+	AgentCmd agentCommand         `json:"-"`
+	AgentWhy string               `json:"agent_why,omitempty"`
+	Agent    *agentReview         `json:"agent,omitempty"`
+	AgentBy  map[string]agentItem `json:"-"`
 }
 
 func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
@@ -256,6 +263,20 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 		if job, ok := s.jobs.snapshot(sha); ok {
 			p.Job = &job
 		}
+		if why := agentProblem(r.Context(), s.root, sha, s.agentReview); why == "" {
+			p.AgentOn = true
+			cfg, _, _ := readAgentConfig(r.Context(), s.root, sha)
+			p.AgentCmd = describeAgentCommand(r.Context(), s.root, sha, cfg)
+		} else if s.agentReview {
+			p.AgentWhy = why
+		}
+		// An answer is shown only while it still fits the questions (spec §1.6).
+		if d.Agent != nil && checkDraftAgent(d.Agent, d) == nil {
+			p.Agent, p.AgentBy = d.Agent, map[string]agentItem{}
+			for _, it := range d.Agent.Answer.Answers {
+				p.AgentBy[it.Question] = it
+			}
+		}
 	}
 	s.renderPage(w, r, "review.html", p, p)
 }
@@ -289,6 +310,9 @@ type reviewRequest struct {
 	Base      string           `json:"base"`
 	Commit    string           `json:"commit"`
 	Decisions []reviewDecision `json:"decisions"`
+	// Confirm is the second click that runs a command the project configured instead of the default
+	// agent, after the page showed it (agent-reviewer code review F1).
+	Confirm bool `json:"confirm,omitempty"`
 }
 
 // applyDecisions copies the bench's choices onto the ledger draft and names the reviewer.
@@ -471,6 +495,7 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 	declared := testsDeclared(r.Context(), s.root, req.Commit)
 	if local, has := localDraft(s.root, req.Commit); has && local.Commit == req.Commit {
 		truth.Tests = local.Tests
+		truth.Agent = local.Agent
 	}
 	edited, err := applyDecisions(truth, v.Actor.Name, req.Decisions)
 	if err != nil {
@@ -504,8 +529,78 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		if declared {
 			files = append(files, testsRecordPath(req.Commit)+" (signed)")
 		}
-		files = append(files, provRecordPath(req.Commit)+" (signed)", "gates/ready-"+short12+".yaml")
-		writeJSON(w, http.StatusOK, map[string]any{"reviewer": v.Actor.Name + " (key " + v.Actor.Fingerprint + ")", "files": files, "commit_message": "review " + short12, "warnings": sealWarnings(edited)})
+		files = append(files, provRecordPath(req.Commit)+" (signed)")
+		warnings := sealWarnings(edited)
+		switch err := checkDraftAgent(edited.Agent, edited); {
+		case edited.Agent == nil:
+		case errors.Is(err, errAgentStale):
+			warnings = append(warnings, "the agent's answer no longer fits these questions (the tests ran again?): it will not be recorded; ask the agent again to record one")
+		case err != nil:
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+			return
+		default:
+			files = append(files, agentRecordPath(req.Commit)+" (signed: the agent's answer and where you differ)")
+			for _, d := range agentDifferences(edited) {
+				warnings = append(warnings, "you differ from the agent: "+d)
+			}
+		}
+		files = append(files, "gates/ready-"+short12+".yaml")
+		writeJSON(w, http.StatusOK, map[string]any{"reviewer": v.Actor.Name + " (key " + v.Actor.Fingerprint + ")", "files": files, "commit_message": "review " + short12, "warnings": warnings})
+	case "agent":
+		// Off by default: --agent-review and an enabled config in the parent, or nothing (spec §3).
+		if why := agentProblem(r.Context(), s.root, req.Commit, s.agentReview); why != "" {
+			// 404 while the feature is off for this page; 422 when it is on but refused (spec review F6).
+			status := http.StatusNotFound
+			if _, found, _ := readAgentConfig(r.Context(), s.root, req.Commit); s.agentReview && found {
+				status = http.StatusUnprocessableEntity
+			}
+			writeJSON(w, status, map[string]string{"error": why})
+			return
+		}
+		cfg, _, _ := readAgentConfig(r.Context(), s.root, req.Commit)
+		if cmd := describeAgentCommand(r.Context(), s.root, req.Commit, cfg); !cmd.Default && !req.Confirm {
+			writeJSON(w, http.StatusConflict, map[string]any{"error": "this runs a command the project configured, not Claude Code; read it on the page and confirm", "command": cmd.Argv, "set_by": cmd.SetBy})
+			return
+		}
+		if err := writeLocalDraft(s.root, req.Commit, edited); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		sha := req.Commit
+		asked := edited
+		if prov, err := commitProvenance(r.Context(), s.root, sha); err == nil {
+			asked.Provenance = &prov
+		}
+		err := s.jobs.start(s.life, "agent", sha, func(ctx context.Context, say func(string)) (map[string]any, error) {
+			rv, err := agentReviewCommit(ctx, s.root, asked, cfg, say)
+			if err != nil {
+				return nil, err
+			}
+			select {
+			case s.gate <- struct{}{}:
+				defer s.release()
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+			d := edited
+			if local, has := localDraft(s.root, sha); has && local.Commit == sha {
+				d = local
+			}
+			// An answer to questions that changed meanwhile (a new test run) is not kept.
+			if err := checkDraftAgent(rv, d); err != nil {
+				return nil, errors.New("the questions changed while the agent answered (the tests ran again?); ask the agent again")
+			}
+			d.Agent = rv
+			if err := writeLocalDraft(s.root, sha, d); err != nil {
+				return nil, err
+			}
+			return map[string]any{"saved": true}, nil
+		})
+		if err != nil {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusAccepted, map[string]any{"job": "agent"})
 	case "tests":
 		if !declared {
 			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "this project declares no tests (" + testsConfigPath + ")"})

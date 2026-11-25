@@ -614,7 +614,7 @@ func trustPaths(ctx context.Context, root, sha string) ([]string, error) {
 			break
 		}
 		switch {
-		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", path == testsConfigPath, path == claudeSettingsPath, strings.HasPrefix(path, waiversDir+"/"):
+		case strings.HasPrefix(path, ".proofbound/keys/"), strings.HasPrefix(path, ".github/workflows/"), path == ".proofbound/sdd-profile.json", path == testsConfigPath, path == agentConfigPath, path == claudeSettingsPath, strings.HasPrefix(path, waiversDir+"/"):
 			out = append(out, path)
 		case strings.HasPrefix(path, "gates/") && strings.Trim(status, "A") != "":
 			out = append(out, path)

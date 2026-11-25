@@ -46,6 +46,7 @@ var recordFields = map[string][]string{
 	areaSchema:        {"schema", "commit", "by", "key", "at", "hunks"},
 	testsSchema:       {"schema", "commit", "by", "key", "at", "run", "baseline", "whole", "hunks"},
 	provSchema:        {"schema", "commit", "by", "key", "at", "files", "warnings", "logs"},
+	agentRecordSchema: {"schema", "commit", "by", "key", "at", "command", "model", "seen", "prompt_sha256", "answer_sha256", "answer", "differences"},
 	waiverSchema:      {"schema", "id", "paths", "reason", "expires", "by", "key", "at"},
 }
 

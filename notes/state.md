@@ -6,6 +6,16 @@ As of: 2026-11-25
 
 ## Resume — 2026-11-25
 
+**Latest (2026-11-25 night):** owner "approve" (D4 defaults D-A..D-D): the **agent reviewer** is built
+(`docs/plans/agent-reviewer-spec.md`, `CI-agent-reviewer-m5t2x9`, CLI-INV-80..82; `agentreview.go`).
+Spec review `agent-reviewer-spec-review-20261125` NEEDS_WORK (F1 HIGH: an agent's commit could set the
+command; fixed) folded (§11). Requirement round 5 found O-9 AMBIGUOUS: revision 0008 (proposed) retires
+it for O-9A in the reviewer's words; activating needs a further round (owner's call, past budget).
+Live run on a demo copy with real Claude Code: 6 of 6 answered, $0.08, 21 s; it found the price line
+and called FR-001 ambiguous; it also found a seal bug (area questions missing at seal), fixed with a
+regression test; `check` identical with and without the AGENT record. Init now un-ignores
+`.proofbound/agent-review.json`. Next: non-author code review, gate, commit, republish v0.3.2.
+
 **Latest (2026-11-25 evening):** owner walked the bench in the browser and asked "where is the code to
 check on this screen?" and to make the tests explanation simpler. R3 (`ui-reviewer-spec.md` §10,
 `CI-ui-bench-layout-p3v8k2`): decisions and evidence side by side (sticky), Show in the code from each

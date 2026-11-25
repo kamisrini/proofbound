@@ -1,11 +1,12 @@
 # Spec: an agent reviews first, then the person decides (D4)
 
-**Status:** draft 1, 2026-11-25, **not built**. The owner's design (2026-11-25, while running the live
+**Status:** draft 1, 2026-11-25, **approved by the owner** ("approve": D-A..D-D as recommended),
+being built. The owner's design (2026-11-25, while running the live
 demo): "agent reviewer first and then have human reviewer next with findings, assessment from agent
 reviewer; human reviewer should have ability to review the whole thing even then." Held as
 `ui-reviewer-spec.md` D4, released by the owner ("yes to both") with one choice made: **the agent is
 any command the project configures, by default Claude Code headless** (`claude -p`).
-**Implements (proposed):** a new obligation on `BR-audit-room-ui-r7t3w1` (§8), via a new change
+**Implements:** `BR-audit-room-ui-r7t3w1` O-9 (revision 0007 proposed, §8), via a new change
 intent. **Contract rows (proposed):** CLI-INV-80..82.
 
 ## 0. The gap, in one line
@@ -53,8 +54,9 @@ an agent went first.
   (`[{path, line}]`, each checked against the change; a cited line not in it is dropped with a note).
   Anything else, an unknown obligation, or invalid JSON: the run fails and says why; nothing is kept.
 - **Default command** (when the project enables the feature without naming a command):
-  `claude -p --output-format json --tools "" --no-session-persistence --strict-mcp-config
-  --json-schema <schema> --max-budget-usd <budget>` (budget default 1.00).
+  `claude -p --safe-mode --output-format json --tools "" --no-session-persistence --strict-mcp-config
+  --json-schema <schema> --max-budget-usd <budget>` (`--safe-mode`: none of the person's settings, hooks,
+  plugins or CLAUDE.md load or are sent; review F2) (budget default 1.00).
 - **Any command:** the project may name its own command (argv list) in the config; it reads the same
   prompt on stdin and must print the same JSON. This is how Codex, a local model, or a team's own
   reviewer plugs in.
@@ -91,9 +93,8 @@ config, same off-by-default rule (the CLI needs `--agent-review` too).
 
 - Not an agent that approves: the agent never seals, never signs, never counts as the reviewer.
 - Not a change to `check`, the gate, the warranty or what an existing record means.
-- Not the agent that wrote the code reviewing itself: if the agent's reported model/session is the
-  commit's recorded authoring session, the page says so in the summary (it cannot be prevented for an
-  arbitrary command; it is disclosed).
+- Not a check that the reviewing agent differs from the one that wrote the code: a headless run has
+  no session to compare, and a model name is not an identity (review F10). The person is the reviewer.
 - Not hosted: the command runs on the reviewer's machine.
 
 ## 7. Tests (planned)
@@ -111,14 +112,11 @@ config, same off-by-default rule (the CLI needs `--agent-review` too).
 - The default command line is exactly as §2 says (argv test; Claude Code itself is not run in tests).
 - One live run on the demo with real Claude Code, cost recorded, before release.
 
-## 8. Requirement (proposed wording for O-9)
+## 8. Requirement
 
-"Agent reviewer first: when a project's parent commit enables it and the reviewer starts proofbound ui
-with --agent-review, the reviewer can, with a click and never on page load, send a commit waiting for
-review to the configured agent command (by default Claude Code headless with no tools), and then sees
-the agent's answer beside each question it covers without any answer being selected for them; the
-seal records the agent's answer and every question where the reviewer's answer differs, signed by the
-reviewer, and the readiness check's result is the same with or without that record."
+`BR-audit-room-ui-r7t3w1` O-9A (revision 0008), the reviewer's wording of O-9 (round 5 found O-9
+AMBIGUOUS: who may click, a disabled or invalid file, what "differs" means). The record is the one
+home of the wording.
 
 ## 9. Decisions (defaults proposed; the owner decides)
 
@@ -137,3 +135,46 @@ reviewer, and the readiness check's result is the same with or without that reco
 One change intent, one requirement round, one non-author spec review, then build: about the size of
 R1. It fits before Sunday only if the owner approves this draft today or tomorrow; otherwise it is the
 first thing after launch.
+
+## 11. Spec review (owner-visible)
+
+`agent-reviewer-spec-review-20261125`: **NEEDS_WORK** (1 HIGH, 6 MED, 5 LOW), folded in while building:
+- **F1 HIGH, fixed.** An agent's commit could set the command the reviewer's click runs (with the
+  reviewer's home directory and keys reachable). The agent reviewer is refused while the config was
+  last changed by a commit that names a coding agent; the config is a trust file (C6).
+- **F2 MED, fixed:** `--safe-mode` (not `--bare`, which needs an API key). **F3 MED, fixed:** Claude
+  Code's envelope is read (structured output, else the result text), `is_error` or a non-success
+  subtype refused, model and cost from it; any other command prints the bare answer; stdout capped.
+  **F4 MED, fixed:** questions are keyed as the form names them (v-g-i, r-g-i, a-i, t-i), each answer
+  carries its obligation, outcomes are the seal's words, an unanswered question is never a
+  difference. **F5 MED, fixed:** the answer is carried like the tests' run, written under the request
+  gate, shown and sealed only while its digest and questions match (else refused: ask again).
+  **F6 MED, fixed:** CLI-INV-80, 81 write the endpoint's guards (404 off, 422 refused, 409 busy).
+  **F7 MED, fixed:** the prompt says where the change is cut; the answer and record say how much the
+  agent saw.
+- **F8 LOW, partly fixed:** unknown fields refused, limits, `--bundle` refused (no schema field).
+  **F9 LOW, fixed:** the record is written only when signed. **F10 LOW, fixed:** the self-review
+  disclosure is dropped (§6). **F11 LOW, partly fixed:** runner environment, empty directory,
+  timeout, Save keeping the answer, the F1 refusal and a tampered answer are tested; 409 and the
+  stdout cap are not. **F12 LOW, fixed:** §8 links the record.
+
+## 12. Code review (owner-visible)
+
+`agent-reviewer-code-review-20261125`: **NEEDS_WORK** (1 HIGH, 3 MED, 5 LOW); HIGH and MEDs fixed:
+- **F1 HIGH, fixed.** The person never saw what a click ran, and the agent-commit guard trusts commit
+  names. A configured (non-default) command is now shown word for word with the commit that set it,
+  marked "not Claude Code", and runs only after a ticked confirmation (409 otherwise); the CLI needs
+  `--yes`. The default command is shown too.
+- **F2 MED, fixed.** How much of the change the agent read is shown on the page, in the job log and on
+  the CLI ("It read only the first N of M lines").
+- **F3 MED, fixed.** `review agent` needs `review draft` first (it holds the test run).
+- **F4 MED, fixed.** A stale answer (its questions gone) is warned in the preview and left out of the
+  seal with a line; an edited one is refused.
+- **F5..F9 LOW, recorded:** the digest is a mistake check, not forgery-proof (the record says only what
+  the reviewer kept); answers bound by key and obligation, not a question digest; untrusted markers are
+  fixed strings; some mutations survive (signer-less record, subtype check, 422 vs 404, stdout cap,
+  the job's merge check); the budget does not apply to a configured command; `--agent-review` twice.
+
+Live run (demo copy, Claude Code 2.1.331, 2026-11-25): 6 of 6 answered in 21 s for $0.08; it found
+the seal's missing-area-questions bug, fixed with a regression test. Mutation calibration for the
+fixes: each of six positive controls died; a comment edit survived.

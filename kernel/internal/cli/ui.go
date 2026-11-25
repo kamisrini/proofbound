@@ -51,6 +51,15 @@ var uiPage = template.Must(template.New("audit.html").Funcs(template.FuncMap{
 	"join":         func(xs []string) string { return strings.Join(xs, ", ") },
 	"jumpLine":     jumpLineOf,
 	"testsSummary": testsSummary,
+	"agentWord":    agentWord,
+	"seenWords":    seenWords,
+	// agentAt is the agent's answer to a question key, if any (agent-reviewer-spec §1.3).
+	"agentAt": func(by map[string]agentItem, format string, a ...any) *agentItem {
+		if it, ok := by[fmt.Sprintf(format, a...)]; ok {
+			return &it
+		}
+		return nil
+	},
 	// mapReason is the one-line reason a control maps to a criterion (frameworks.go, CLI-INV-65).
 	"mapReason": func(control string, ref frameworkRef) string {
 		for _, e := range frameworkMap[control] {
@@ -93,6 +102,9 @@ type uiOptions struct {
 	open bool
 	// bundle, trustKey and repo are `ui --bundle <dir> [--trust-key <fp>] [--repo <clone>]` (CLI-INV-60).
 	bundle, trustKey, repo string
+	// agentReview is `--agent-review`: the person allows the bench to ask the project's agent
+	// reviewer, which may cost money and sends the change out (agent-reviewer-spec.md §3).
+	agentReview bool
 }
 
 // parseUI accepts `ui [--base <ref>] [--port <n>] [--open]`, each flag at most once.
@@ -112,6 +124,9 @@ func parseUI(args []string) (uiOptions, bool) {
 		switch flag {
 		case "--open":
 			opts.open = true
+			rest = rest[1:]
+		case "--agent-review":
+			opts.agentReview = true
 			rest = rest[1:]
 		case "--bundle", "--trust-key", "--repo":
 			if len(rest) < 2 || rest[1] == "" || strings.HasPrefix(rest[1], "-") {
@@ -145,7 +160,7 @@ func parseUI(args []string) (uiOptions, bool) {
 		}
 	}
 	// --trust-key and --repo only mean something for a bundle; a bundle has no period (CLI-INV-60).
-	if opts.bundle == "" && (opts.trustKey != "" || opts.repo != "") || opts.bundle != "" && opts.base != "" {
+	if opts.bundle == "" && (opts.trustKey != "" || opts.repo != "") || opts.bundle != "" && (opts.base != "" || opts.agentReview) {
 		return opts, false
 	}
 	return opts, true
@@ -156,6 +171,8 @@ type uiServer struct {
 	// is what .proofbound/ui.json holds (review ui-u2-review-20261122 F1).
 	root, databaseURL, defaultBase, token, agentToken string
 	port                                              int
+	// agentReview: started with --agent-review (agent-reviewer-spec.md §3).
+	agentReview bool
 	// gate lets one request compute at a time; a later one waits up to wait for it, then gets 503,
 	// so a reload during a slow first sync shows the answer instead of "busy" (owner try-out).
 	gate chan struct{}
@@ -320,6 +337,7 @@ func runUI(ctx context.Context, root, databaseURL string, args []string, output 
 		return fmt.Errorf("ui: %w", err)
 	}
 	s := newUIServer(root, databaseURL, opts.base, listener.Addr().(*net.TCPAddr).Port)
+	s.agentReview = opts.agentReview
 	url := fmt.Sprintf("http://127.0.0.1:%d/?k=%s", s.port, s.token)
 	if _, err := fmt.Fprintf(output, "ui %s (Ctrl-C to stop; the link is your key to this page, do not share it)\n", url); err != nil {
 		listener.Close()
@@ -520,7 +538,7 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.serveIssue(w, r)
 	case r.URL.Path == "/review/job" && r.Method == http.MethodGet:
 		s.serveJob(w, r)
-	case (r.URL.Path == "/act/review-draft" || r.URL.Path == "/act/review-preview" || r.URL.Path == "/act/review-tests" || r.URL.Path == "/act/review-seal") && r.Method == http.MethodPost:
+	case (r.URL.Path == "/act/review-draft" || r.URL.Path == "/act/review-preview" || r.URL.Path == "/act/review-tests" || r.URL.Path == "/act/review-agent" || r.URL.Path == "/act/review-seal") && r.Method == http.MethodPost:
 		s.serveReviewAct(w, r, strings.TrimPrefix(r.URL.Path, "/act/review-"))
 	case r.URL.Path == "/transcript" && r.Method == http.MethodGet:
 		s.serveTranscript(w, r)

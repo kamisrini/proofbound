@@ -537,6 +537,24 @@ owner's key, which reviewed nothing: `proofbound ui --base demo-base --open`. On
 change is warranted, **Issue the warranty** in the Audit room previews, then writes and commits
 `docs/warranties/<head>/`. With a commit that is not warranted it refuses and writes nothing.
 
+**An agent reviews first (optional, about $0.10 per review).** As the spec owner, enable it in a
+commit of your own (an agent's commit that sets it is refused), then start the page as the reviewer
+with `--agent-review`:
+
+```bash
+git checkout -q main && git checkout -qb agent-first
+echo '!.proofbound/agent-review.json' >> .gitignore
+printf '{"enabled":true,"budget_usd":1}\n' > .proofbound/agent-review.json
+git add .gitignore .proofbound/agent-review.json && git commit -qm "enable the agent reviewer"
+git cherry-pick attempt-1
+PROOFBOUND_KEY="$W/reviewer.key" proofbound ui --base demo-base --open --agent-review
+```
+
+Open the commit, **Run the tests**, then **Ask the agent reviewer**. In our run Claude Code answered in
+about 20 seconds: reject the price line (outside the area, untested, no recorded agent edit), both
+promises kept, and FR-001's words ambiguous ("what is a report?"). Its answers sit beside each
+question; you still choose every one, and the seal records where you differed.
+
 ---
 
 ## What you just saw

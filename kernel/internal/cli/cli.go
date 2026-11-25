@@ -38,7 +38,7 @@ import (
 	"github.com/kamisrini/proofbound/kernel/internal/twin"
 )
 
-const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] | proofbound ui --bundle <dir> [--trust-key <fingerprint>] [--repo <clone>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound report agents <base> [--json] | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
+const usage = "usage: proofbound version | proofbound task [start <change>|stop] | proofbound ui [--base <ref>] [--port <n>] [--open] [--agent-review] | proofbound ui --bundle <dir> [--trust-key <fingerprint>] [--repo <clone>] [--port <n>] [--open] | proofbound check <base> [--markdown] [--require-claims] | proofbound sync {git|checks|sessions|reviews|github|all} | proofbound sync intent {records|specdir|sdd|all} | proofbound migrate historical-evidence | proofbound rebuild | proofbound verify | proofbound report {week|github|drift|intent <id>|requirement <id>} | proofbound report agents <base> [--json] | proofbound intent check --commit <sha> | proofbound gates {canary|enforce} | proofbound twin replay [--through <seq>] [--candidate <file>] | proofbound init {openspec|speckit} [--owner <name>] | proofbound review {draft <commit>|seal <draft-dir>} | proofbound review agent <commit> --agent-review [--yes] | proofbound keys init [--name <name>] | proofbound keys git-sign | proofbound waiver sign <id> --path <pattern> [--path <pattern>]... --reason <text> --expires <YYYY-MM-DD> | proofbound warranty export <commit> [-o <file>] | proofbound warranty verify <file> [--repo <path>] [--trust-key <fingerprint>] | proofbound warranty cosign <file> [-o <file>] | proofbound warranty bundle <base> [-o <dir>]"
 
 const verifyTimeout = 15 * time.Minute
 
@@ -80,6 +80,7 @@ const (
 	commandSyncIntentSDD
 	commandInitOpenSpec
 	commandReviewDraft
+	commandReviewAgent
 	commandReviewSeal
 	commandReportDrift
 	commandKeysInit
@@ -171,6 +172,8 @@ func parseCommand(args []string) command {
 		return commandInitOpenSpec
 	case len(args) == 3 && args[0] == "review" && args[1] == "draft" && args[2] != "":
 		return commandReviewDraft
+	case (len(args) == 4 || len(args) == 5 && args[4] == "--yes") && args[0] == "review" && args[1] == "agent" && args[2] != "" && !strings.HasPrefix(args[2], "-") && args[3] == "--agent-review":
+		return commandReviewAgent
 	case len(args) == 3 && args[0] == "review" && args[1] == "seal" && args[2] != "":
 		return commandReviewSeal
 	case args0(args, "waiver", "sign"):
@@ -1005,6 +1008,13 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		return reportDrift(ctx, root, ledger, output)
+	case commandReviewAgent:
+		ledger, err := openStore(ctx, root, databaseURL)
+		if err != nil {
+			return err
+		}
+		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
+		return reviewAgent(ctx, root, ledger, args[2], len(args) == 5, output)
 	case commandReviewDraft:
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {

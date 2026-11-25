@@ -91,7 +91,7 @@ func initKit(ctx context.Context, root, kit, owner string, output io.Writer) err
 	steps := []func() error{
 		func() error { return writeNew(output, root, ".proofbound/sdd-profile.json", profile, 0o644) },
 		func() error {
-			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json", "!.proofbound/keys/", "!.proofbound/waivers/", "!.proofbound/tests.json"})
+			return appendMissingLines(output, root, ".gitignore", []string{".proofbound/*", "!.proofbound/sdd-profile.json", "!.proofbound/keys/", "!.proofbound/waivers/", "!.proofbound/tests.json", "!" + agentConfigPath})
 		},
 		func() error { return appendBlock(output, root, "AGENTS.md", agentsBlock) },
 		func() error {
@@ -213,6 +213,9 @@ type draftFile struct {
 	// Provenance is which recorded agent sessions wrote the lines the commit adds
 	// (session-provenance-spec.md); informational: seal matches again and trusts none of it.
 	Provenance *provResult `json:"provenance,omitempty"`
+	// Agent is the agent reviewer's checked answer (agent-reviewer-spec.md); advice only: it never
+	// decides a question, and the seal records it with the person's differences (AGENT- record).
+	Agent *agentReview `json:"agent,omitempty"`
 }
 
 type draftReview struct {
@@ -492,6 +495,20 @@ func reviewSealWith(ctx context.Context, root, dir string, ran *sealTestsRun, fr
 	if err != nil {
 		return err
 	}
+	// The agent's answer is checked against its digest and this commit's questions (spec §4): the
+	// questions as the bench asked them, with the parts outside the area rebuilt from git (the
+	// ledger's draft holds none) and the draft's test run (live run 2026-11-25).
+	asked := draft
+	asked.OutOfArea = areaDecisions
+	// An answer edited after the agent gave it is refused; one that no longer fits the questions (the
+	// tests ran again) is left out with a line saying so, never sealed (code review F4).
+	agentNote := ""
+	if err := checkDraftAgent(draft.Agent, asked); errors.Is(err, errAgentStale) {
+		draft.Agent, asked.Agent = nil, nil
+		agentNote = "agent: its answer no longer fits this commit's questions, so it is not recorded; ask the agent again to record one\n"
+	} else if err != nil {
+		return err
+	}
 	signer, err := reviewSigner(root, reviewer)
 	if err != nil {
 		return err
@@ -620,6 +637,18 @@ func reviewSealWith(ctx context.Context, root, dir string, ran *sealTestsRun, fr
 			return err
 		}
 	}
+	// Like PROV, the AGENT record is written only when the reviewer signs (spec review F9).
+	if draft.Agent != nil && signer != nil {
+		mine := asked
+		mine.Tests = &tests
+		data, err := agentRecordBytes(draft.Commit, pbwarranty.KeyName(reviewer), draft.Agent, agentDifferences(mine), signer, time.Now().UTC().Format(time.RFC3339))
+		if err != nil {
+			return err
+		}
+		if err := add(agentRecordPath(draft.Commit), data); err != nil {
+			return err
+		}
+	}
 	gate := fmt.Sprintf(`{"schema":"proofbound.gate.v1","id":"ready-%s","description":"readiness of commit %s","expires":"2099-01-01","mode":"canary","rule":"intent-delivery-readiness","scope_commit":"%s"}`+"\n", short, short, draft.Commit)
 	if err := add("gates/ready-"+short+".yaml", []byte(gate)); err != nil {
 		return err
@@ -651,6 +680,11 @@ func reviewSealWith(ctx context.Context, root, dir string, ran *sealTestsRun, fr
 	}
 	for _, rel := range order {
 		if _, err := fmt.Fprintf(output, "wrote %s\n", rel); err != nil {
+			return err
+		}
+	}
+	if agentNote != "" {
+		if _, err := io.WriteString(output, agentNote); err != nil {
 			return err
 		}
 	}
@@ -765,6 +799,7 @@ func mergeDecisions(truth, edited draftFile) (draftFile, error) {
 	// The test run is never in the record; the draft's run and its decisions are carried so the
 	// Review bench shows them (ui-reviewer-spec §1.1, review F1). Seal runs the tests again.
 	truth.Tests = edited.Tests
+	truth.Agent = edited.Agent
 	truth.DeclaredReviewer = edited.DeclaredReviewer
 	return truth, nil
 }

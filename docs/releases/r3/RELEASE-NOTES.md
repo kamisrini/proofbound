@@ -51,6 +51,14 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
     edit*. On a wide screen the change, who wrote it and the spec sit beside the questions, each
     question says in plain words what its answers mean, and **Show in the code** jumps to a flagged
     part. Sealing runs the tests again. After sealing, the page shows the check result.
+  - **Agent reviewer first** (opt-in, may cost money): with `.proofbound/agent-review.json` committed
+    by a person and `proofbound ui --agent-review`, **Ask the agent reviewer** sends the promises, the
+    spec, the change and the test results to an agent command you configure (by default Claude Code
+    headless, with no tools and none of your settings). Its answer, its reasons and the lines it
+    relies on sit beside each question; nothing is chosen for you, the preview lists where you
+    differ, and the seal records the agent's answer and your differences in a signed
+    `AGENT-<commit>.json`. It never counts as a review: `check` reads the same with or without it.
+    Also `proofbound review agent <commit> --agent-review`. A live run on the demo cost $0.08.
   - **Changes**: each spec change as one flow, from the agent's commits to reviews, the check and
     the warranty, with your one next step ("Review this", "Issue the warranty").
   - **Promise map** (spec owner): every promise with its state (proven, changed after proof, not

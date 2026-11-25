@@ -161,8 +161,11 @@
             jobLog.textContent = (job.lines || []).join("\n") + (job.error ? "\n" + job.error : "");
             if (job.running) { window.setTimeout(tick, 1000); return; }
             busy(false);
-            if (job.error) { say(bmsg, (job.kind === "seal" ? "Not sealed: " : "The tests did not finish: ") + job.error, true); return; }
-            if (job.kind === "seal") {
+            if (job.error) { say(bmsg, ({ seal: "Not sealed: ", agent: "The agent did not answer: " }[job.kind] || "The tests did not finish: ") + job.error, true); return; }
+            if (job.kind === "agent") {
+              say(bmsg, "The agent answered. Reloading to show its answers beside each question.");
+              window.setTimeout(function () { window.location.reload(); }, 800);
+            } else if (job.kind === "seal") {
               say(bmsg, "Sealed, signed and committed: " + job.result.files.join(", ") + ". Loading the check result.");
               window.setTimeout(function () { window.location.href = "/review?sealed=" + encodeURIComponent(commit); }, 1200);
             } else {
@@ -180,6 +183,18 @@
         send("review-tests").then(function (res) {
           if (res.error) { say(bmsg, res.error, true); return; }
           say(bmsg, "Running the tests. You may leave this page; the run goes on.");
+          follow();
+        });
+      });
+    }
+    var askAgent = work.querySelector("[data-act=review-agent]");
+    if (askAgent) {
+      askAgent.addEventListener("click", function () {
+        var confirmBox = work.querySelector(".agent-confirm");
+        if (confirmBox && !confirmBox.checked) { say(bmsg, "Read the command above and tick the box first: it is not Claude Code.", true); return; }
+        post("/act/review-agent", { base: base, commit: commit, decisions: decisions(), confirm: !!(confirmBox && confirmBox.checked) }).then(function (res) {
+          if (res.error) { say(bmsg, res.error, true); return; }
+          say(bmsg, "Asking the agent. You may leave this page; it goes on.");
           follow();
         });
       });

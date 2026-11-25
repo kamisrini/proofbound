@@ -24,10 +24,10 @@ func TestParseTwinReplayFlags(t *testing.T) {
 		through   int64
 		candidate string
 	}{
-		"bare":           {[]string{"twin", "replay"}, -1, ""},
-		"through":        {[]string{"twin", "replay", "--through", "7"}, 7, ""},
-		"candidate":      {[]string{"twin", "replay", "--candidate", "c.json"}, -1, "c.json"},
-		"both":           {[]string{"twin", "replay", "--through", "0", "--candidate", "c.json"}, 0, "c.json"},
+		"bare":      {[]string{"twin", "replay"}, -1, ""},
+		"through":   {[]string{"twin", "replay", "--through", "7"}, 7, ""},
+		"candidate": {[]string{"twin", "replay", "--candidate", "c.json"}, -1, "c.json"},
+		"both":      {[]string{"twin", "replay", "--through", "0", "--candidate", "c.json"}, 0, "c.json"},
 	}
 	for name, tc := range ok {
 		t.Run(name, func(t *testing.T) {

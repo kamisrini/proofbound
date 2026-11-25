@@ -271,3 +271,10 @@ pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: var(
 @media (max-width: 720px) {
   .bench.open { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* The agent reviewer (agent-reviewer-spec §1): its answers beside the person's, never in them. */
+.agent-box, .agent-sum { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.agent-box h3 { font-size: 1rem; margin: .25rem 0; }
+.agent-sum p { margin: .3rem 0; }
+.agent-says { width: 100%; border-left: 3px solid var(--agent); background: var(--agent-bg); padding: 4px 10px; border-radius: 0 4px 4px 0; }
+.agent-says p { margin: 2px 0; font-size: 13px; }

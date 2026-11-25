@@ -45,6 +45,30 @@
   <div class="work-cols">
   <div class="decide">
   <p class="to-code muted"><a href="#the-change">Read the change</a>: it is below on a narrow screen, beside these questions on a wide one.</p>
+  {{if .AgentOn}}
+  <section class="agent-box">
+    <h3>Ask the agent reviewer first</h3>
+    <p class="hint">An agent reads the promises, the spec, the change and the test results, and suggests an answer to each question, with its reasons and the lines it relies on. You still decide every answer.</p>
+    {{if .AgentCmd.Default}}
+    <p class="warn">This sends the change, the spec and the test results to Claude Code on this computer, which sends them to Anthropic, and may cost money (at most the budget in the project's setting). Run the tests first if you want the agent to see their result.</p>
+    {{else}}
+    <p class="warn">This is <b>not</b> Claude Code: the project configured its own command, and it runs on this computer as you, with your files. It was set in {{.AgentCmd.SetBy}}. Read it before you run it:</p>
+    <pre class="agent-cmd">{{.AgentCmd.Argv}}</pre>
+    <label class="choice"><input type="checkbox" class="agent-confirm"> I have read this command and want to run it</label>
+    {{end}}
+    <p class="muted small">Runs: <code>{{.AgentCmd.Argv}}</code></p>
+    <div class="buttons"><button type="button" class="secondary" data-act="review-agent"{{if .Refusal}} disabled data-refused{{end}}>{{if .Agent}}Ask the agent again{{else}}Ask the agent reviewer{{end}}</button></div>
+  </section>
+  {{else if .AgentWhy}}<p class="muted small">Agent reviewer: {{.AgentWhy}}</p>{{end}}
+  {{with .Agent}}
+  <section class="agent-sum">
+    <p><span class="tag tag-agent">Agent reviewer</span> <strong>{{if eq .Answer.Overall "ready"}}looks ready{{else}}needs work{{end}}</strong> · <code>{{index .Command 0}}</code>{{if .Model}} · {{.Model}}{{end}}{{if .CostUSD}} · ${{printf "%.2f" .CostUSD}}{{end}}</p>
+    <p>{{.Answer.Summary}}</p>
+    <p class="{{if eq .Seen "all"}}muted small{{else}}warn{{end}}">{{seenWords .Seen}}</p>
+    <p class="muted small">Its answers sit beside each question; none is chosen for you. Where you answer differently, the preview says so and the seal records it.</p>
+    {{range .Notes}}<p class="muted small">{{.}}</p>{{end}}
+  </section>
+  {{end}}
   <form class="bench-form">
     {{range $gi, $v := .Draft.Verdicts}}
       {{range $oi, $o := $v.Obligations}}
@@ -52,6 +76,7 @@
         <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}}</legend>
         <p class="muted">Does the code keep this promise?</p>
         <p class="hint">Read the change beside these questions. <b>Kept</b>: the code does what this sentence says. <b>Not kept</b>: it does not, and the review will need work. <b>Inconclusive</b>: you cannot tell from what is here.</p>
+{{template "agentSays" (agentAt $.AgentBy "v-%d-%d" $gi $oi)}}
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="SATISFIED"{{if eq $o.Outcome "SATISFIED"}} checked{{end}}> Kept</label>
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="NOT_SATISFIED"{{if eq $o.Outcome "NOT_SATISFIED"}} checked{{end}}> Not kept</label>
         <label class="choice"><input type="radio" name="v-{{$gi}}-{{$oi}}" value="INCONCLUSIVE"{{if eq $o.Outcome "INCONCLUSIVE"}} checked{{end}}> Inconclusive</label>
@@ -64,6 +89,7 @@
         <legend><strong>{{$o.ObligationID}}</strong> {{$o.Statement}} <span class="muted">· owner {{$r.DeclaredOwner}}</span></legend>
         <p class="muted">Are the words clear enough to verify?</p>
         <p class="hint">This is about the sentence, not the code: could anyone check it and get a clear yes or no? If not, say what is unclear in the finding; the spec owner rewords it.</p>
+{{template "agentSays" (agentAt $.AgentBy "r-%d-%d" $gi $oi)}}
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="VERIFIABLE"{{if eq $o.Outcome "VERIFIABLE"}} checked{{end}}> Verifiable</label>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="AMBIGUOUS"{{if eq $o.Outcome "AMBIGUOUS"}} checked{{end}}> Ambiguous</label>
         <label class="choice"><input type="radio" name="r-{{$gi}}-{{$oi}}" value="UNTESTABLE"{{if eq $o.Outcome "UNTESTABLE"}} checked{{end}}> Untestable</label>
@@ -78,6 +104,7 @@
       <legend><strong>Outside the area</strong> <code>{{$a.Path}}</code> {{$a.Lines}}</legend>
       <p class="muted">The spec does not declare this file. Was this change needed?</p>
       <p class="hint">The spec lists the files this change may touch, and this one is not on it. Accept only if the change was needed, and say why. <a href="#the-change" class="jump" data-jump-path="{{$a.Path}}" data-jump-line="{{jumpLine $a.Lines}}">Show in the code</a></p>
+{{template "agentSays" (agentAt $.AgentBy "a-%d" $ai)}}
       <label class="choice"><input type="radio" name="a-{{$ai}}" value="accept"{{if eq $a.Decision "accept"}} checked{{end}}> Accept</label>
       <label class="choice"><input type="radio" name="a-{{$ai}}" value="reject"{{if eq $a.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
       <label class="field">Reason (required to accept) <input name="f-a-{{$ai}}" value="{{$a.Reason}}" maxlength="500" autocomplete="off"></label>
@@ -101,6 +128,7 @@
             <legend><strong>{{if eq $h.Result "not caught"}}No test checks this{{else}}Not checked{{end}}</strong> <code>{{$h.Path}}</code> {{$h.Lines}}{{if ne $h.Result "not caught"}} <span class="muted">({{$h.Result}})</span>{{end}}</legend>
             <p class="muted">{{if eq $h.Result "not caught"}}The tests still passed with this removed.{{else}}Proofbound could not check this part ({{$h.Result}}).{{end}} Is that OK?</p>
             <p class="hint"><b>Accept</b> only with a reason (for example: it is a comment, or you checked it by hand). <b>Reject</b> if it needs a test. <a href="#the-change" class="jump" data-jump-path="{{$h.Path}}" data-jump-line="{{jumpLine $h.Lines}}">Show in the code</a></p>
+{{template "agentSays" (agentAt $.AgentBy "t-%d" $ti)}}
             <label class="choice"><input type="radio" name="t-{{$ti}}" value="accept"{{if eq $h.Decision "accept"}} checked{{end}}> Accept</label>
             <label class="choice"><input type="radio" name="t-{{$ti}}" value="reject"{{if eq $h.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
             <label class="field">Reason (required to accept) <input name="f-t-{{$ti}}" value="{{$h.Reason}}" maxlength="500" autocomplete="off"></label>
@@ -166,3 +194,4 @@
 </main>
 </body>
 </html>
+{{define "agentSays"}}{{with .}}<div class="agent-says"><p><span class="tag tag-agent">Agent</span> <strong>{{agentWord .Outcome}}</strong>{{if .Reason}}: {{.Reason}}{{end}}</p>{{if .Lines}}<p class="muted small">It relies on {{range $i, $l := .Lines}}{{if $i}}, {{end}}<a href="#the-change" class="jump" data-jump-path="{{$l.Path}}" data-jump-line="{{$l.Line}}">{{$l.Path}} line {{$l.Line}}</a>{{end}}</p>{{end}}</div>{{end}}{{end}}
