@@ -9,7 +9,8 @@ with checks that hold even when the agent is wrong. It works with **OpenSpec** a
 and runs entirely on your machine and in your CI.
 
 **New here, using agents?** Install (section 1), then follow the
-[agent demo](DEMO-AGENT.md) (about 15 minutes, every step typed by you).
+[agent demo](DEMO-AGENT.md) (about 15 minutes, every step typed by you). Then watch a **real** agent
+do it in the [live agent demo](DEMO-AGENT-LIVE.md) (Claude Code on your own account, about 20 minutes).
 
 This page is the one place to start. Older releases' pages are linked at the bottom as history; you do
 not need them to use Proofbound.
@@ -39,6 +40,7 @@ and warranty. It also sets up the pull-request check.
 | Tell the hooks which spec an agent is working on, so its code commits claim it | `proofbound task start <change>`, `task stop`, `task` | [tour, chapter 13](DEMO.md#13-agents-the-claim-is-added-for-them-and-unclaimed-code-fails-the-check) |
 | Declare which files a change may touch; every line outside is named and needs a signed decision (C10) | `scope.paths` in the spec folder | [agent demo, step 3](DEMO-AGENT.md#step-3--the-spec-and-the-area-it-allows) |
 | Stop a Claude Code agent's edit outside that area as it is made, and log which session wrote which lines | the hooks `init` writes to `.claude/settings.json` (`hook pre-tool-use`, `hook post-tool-use`) | [agent demo, steps 4, 5 and 8](DEMO-AGENT.md#step-4--the-agent-starts-its-task) |
+| Stop an agent from switching off its own guard: while a task is active, its edits of the hooks or the task are refused | the same `hook pre-tool-use` | [live agent demo, step 6](DEMO-AGENT-LIVE.md#step-6--insist-and-tell-it-to-remove-the-guard) |
 | Show whether your tests notice when each part of a change is undone (C11) | `.proofbound/tests.json`, then `review draft` | [agent demo, step 8](DEMO-AGENT.md#step-8--the-review-draft-a-line-outside-the-area-and-a-test-that-notices-nothing) |
 | See which agent sessions wrote a change's lines, and which lines no recorded agent edit wrote (C12) | `review draft`, `review seal` | [agent demo, step 8](DEMO-AGENT.md#step-8--the-review-draft-a-line-outside-the-area-and-a-test-that-notices-nothing) |
 | See how each agent's changes fared in review: outcomes, out-of-area hunks, uncaught parts, line provenance | `proofbound report agents <base>` (or the Audit room) | [agent demo, step 12](DEMO-AGENT.md#step-12--the-audit-room-what-an-auditor-sees) |
@@ -61,6 +63,7 @@ jq, Go to build the CLI (the loop demo accepts `PROOFBOUND_BIN=<installed binary
 | Demo | Shows | Run |
 |---|---|---|
 | **The agent goes off-script (agents start here)** | An agent's change edits a file outside its spec's area and ships a test that cannot fail: the Claude Code hook refuses the edit, the shell edit that gets around it is named as written by no recorded agent session, Proofbound shows the test notices nothing when each part of the change is undone, the reviewer's findings are signed, nothing is warranted until the redo, which verifies VALID from a clone. You type every step, in [DEMO-AGENT.md](DEMO-AGENT.md) | follow [DEMO-AGENT.md](DEMO-AGENT.md) (about 15 minutes), or `bash docs/releases/r3/agent-demo.sh` |
+| **A real agent, live** | Claude Code, headless on your account, builds the feature and declines an out-of-area price change; pushed, its edit is refused, and so is its attempt to remove the hook; a person then sneaks the price in by hand, and C10, C11 and C12 each name the line; every promise is met and the pull request is still BLOCKED; the agent's own commit is WARRANTED and verified from a clone. Real output, in [DEMO-AGENT-LIVE.md](DEMO-AGENT-LIVE.md) | follow [DEMO-AGENT-LIVE.md](DEMO-AGENT-LIVE.md) (about 20 minutes, about $1 of Claude usage) |
 | **The full tour (start here)** | Every feature in order on one Spec Kit project, explained chapter by chapter with why each matters, in [DEMO.md](DEMO.md) | `bash docs/releases/r3/tour.sh` |
 | **By hand, step by step** | The same tour, but you type every command, with what each step does and its business value, in [DEMO-MANUAL.md](DEMO-MANUAL.md) | follow [DEMO-MANUAL.md](DEMO-MANUAL.md) (about 20–30 minutes) |
 | Install like a stranger | Builds the release archives, installs from them with `install.sh`, and times install → first gate PASS (Linux or WSL) | `bash docs/releases/mvp/demo-install.sh` |

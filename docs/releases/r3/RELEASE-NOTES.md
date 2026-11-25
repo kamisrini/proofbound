@@ -103,7 +103,10 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   agent controls its own machine (a shell command, or removing the hook, gets past it), so control
   C10 still judges every committed line. The settings file needs no claim to commit, and C6 lists
   every change to it. In an existing repository, run `proofbound init` again, or add the hook to your
-  own `.claude/settings.json` (init prints how).
+  own `.claude/settings.json` (init prints how). While a task is active, the hook also refuses an
+  agent's edit of the files that hold its own guard: `.claude/settings.json`,
+  `.claude/settings.local.json` and `.proofbound/task` (any letter case, through any link). Spec:
+  [hook-guard-spec.md](../../plans/hook-guard-spec.md).
 - **Tests that can fail.** Commit `.proofbound/tests.json` with your test command and test folders,
   and `review draft` undoes each hunk of code a claiming commit changed, one at a time and then all
   at once, runs your tests in a temporary worktree, and prints whether they noticed ("tests did NOT
@@ -169,9 +172,18 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   export` and `warranty bundle` for the redo failed on the same machine ("… is not committed at
   HEAD"), because the warranty cited the abandoned branch's review. A warranty now cites only the
   reviews committed at HEAD. Fresh clones, and so the GitHub Action, were never affected.
+- **Fixed:** a review that met every promise but rejected something else (a line outside the area, or
+  a part no test caught) sealed NEEDS_WORK, yet the pull-request check read WARRANTED and the bundle
+  issued a VALID warranty. A NEEDS_WORK review now blocks the commit, no warranty is issued, and a
+  warranty issued before the fix that cites one verifies INVALID. Existing ledgers are migrated on
+  first use. Found by the first live agent run. Spec:
+  [needs-work-blocks-spec.md](../../plans/needs-work-blocks-spec.md).
 - **New demo: [the agent goes off-script](DEMO-AGENT.md).** By hand, about 15 minutes: an agent's
   change edits a file outside its spec's area and ships a test that cannot fail; the line is named,
   the reviewer's finding is signed, and nothing is warranted until the redo.
+- **New demo: [a real agent, live](DEMO-AGENT-LIVE.md).** Claude Code on your own account: the hooks
+  refuse its out-of-area edit and its attempt to remove them; a person's hand edit is named by C10,
+  C11 and C12; NEEDS_WORK blocks the pull request though every promise is met.
 
 ## v0.3.1 (patch, 2026-11-20): the pull-request check works in CI
 

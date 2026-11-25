@@ -13,7 +13,8 @@ This page shows what Proofbound does with it:
 - the pull-request check and the release bundle refuse to warrant the change;
 - the redo earns a warranty that anyone can verify from a clone.
 
-You type every command. It takes about 15 minutes.
+You type every command. It takes about 15 minutes. To watch a real agent instead of pasting its
+edits, see the [live agent demo](DEMO-AGENT-LIVE.md).
 
 **How to read the blocks.** A block marked `bash` is safe to paste into your terminal as it is. A block
 marked `text` is output, for comparison only; never paste it. Your commit hashes and key fingerprints

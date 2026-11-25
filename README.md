@@ -41,7 +41,8 @@ auditor. Its checks are built to hold even when the agent is wrong, careless or 
 Two features help while the agent works, but the agent runs on the same machine and could get around
 them, so Proofbound never relies on them alone:
 - **The write-time perimeter:** a Claude Code hook refuses an edit outside the spec's area as it is
-  made. A shell command bypasses it; C10 still judges every committed line.
+  made, and the agent's attempts to switch that hook off. A shell command bypasses it; C10 still
+  judges every committed line.
 - **Session provenance:** a Claude Code hook logs which session wrote which lines. The agent could
   write to its own log; the reviewer signs what the logs showed, and lines no recorded edit wrote are
   named.
@@ -61,7 +62,8 @@ Each page and record says what it does not prove.
   log cannot answer that; Proofbound's Audit room answers it control by control.
 
 **Start here:** install and the agent demo, in [docs/releases/r3/README.md](docs/releases/r3/README.md).
-The [agent demo](docs/releases/r3/DEMO-AGENT.md) shows an agent going off-script, step by step.
+The [agent demo](docs/releases/r3/DEMO-AGENT.md) shows an agent going off-script, step by step; the
+[live agent demo](docs/releases/r3/DEMO-AGENT-LIVE.md) does it with a real Claude Code agent.
 
 The same record works for changes people make. Proofbound complements CI/CD and test runners: they run
 the checks; Proofbound records what was promised, what was checked, what the evidence supports, and

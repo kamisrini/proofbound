@@ -52,7 +52,13 @@ exists, the perimeter refuses an agent's file-tool edit of `.claude/settings.jso
 `.claude/settings.local.json` or `.proofbound/task` (CI-hook-guard-w3n7c5, spec
 `docs/plans/hook-guard-spec.md`, CLI-INV-69 amended, BR-write-perimeter O-3 retired for O-4 after three
 requirement rounds, review `hook-guard-review-20261125` ACCEPTABLE, F3-F5/F8 LOW recorded; the area
-check's dangling-link blind spot recorded in spec §7). Next: the live demo page `DEMO-AGENT-LIVE.md`.
+check's dangling-link blind spot recorded in spec §7). The live demo page `docs/releases/r3/DEMO-AGENT-LIVE.md`
+is written from two real headless Claude Code runs (2026-11-25, ~$0.85 each, both told the same story:
+agent declines the price, both hooks refuse when pushed, a person's hand edit named by C10/C11/C12,
+NEEDS_WORK blocks with 2 of 2 SATISFIED, the agent's own commit WARRANTED and VALID from a clone); every
+bash block was run before commit. Docs linked (r3 README, README, release notes: both fixes). Next (owner:
+"make it real this week"): the commercial pass (private repo: landing page, video script, outreach, pilot)
+around the live demo, then a final docs re-check before Sunday.
 `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
