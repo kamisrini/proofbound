@@ -6,108 +6,49 @@ As of: 2026-11-25
 
 ## Resume — 2026-11-25
 
-**Latest (2026-11-25 night):** owner "approve" (D4 defaults D-A..D-D): the **agent reviewer** is built
-(`docs/plans/agent-reviewer-spec.md`, `CI-agent-reviewer-m5t2x9`, CLI-INV-80..82; `agentreview.go`).
-Spec review `agent-reviewer-spec-review-20261125` NEEDS_WORK (F1 HIGH: an agent's commit could set the
-command; fixed) folded (§11). Requirement round 5 found O-9 AMBIGUOUS: revision 0008 (proposed) retires
-it for O-9A in the reviewer's words; activating needs a further round (owner's call, past budget).
-Live run on a demo copy with real Claude Code: 6 of 6 answered, $0.08, 21 s; it found the price line
-and called FR-001 ambiguous; it also found a seal bug (area questions missing at seal), fixed with a
-regression test; `check` identical with and without the AGENT record. Init now un-ignores
-`.proofbound/agent-review.json`. Next: non-author code review, gate, commit, republish v0.3.2.
+**Exact next action:** nothing is in flight; `main` = `origin/main` = `d4f1e04`, v0.3.2 republished
+there and verified. By the owner's standing rule (2026-11-23) every finished change is folded into
+v0.3.2 until Sunday 2026-11-29 (launch 2026-11-30). Next is the owner's pick; before Sunday regardless:
+a final re-check of the docs (README, QUICKSTART, DEMO pages now mention the bench, the agent reviewer
+and the verify page).
 
-**Latest (2026-11-25 evening):** owner walked the bench in the browser and asked "where is the code to
-check on this screen?" and to make the tests explanation simpler. R3 (`ui-reviewer-spec.md` §10,
-`CI-ui-bench-layout-p3v8k2`): decisions and evidence side by side (sticky), Show in the code from each
-flagged part, a plain-words line under every question, the tests section reworded ("Do the tests check
-this code?", "No test checks this", flag *not tested*). Review `ui-reviewer-r3-review-20261125`
-NEEDS_WORK, F1/F2 MED fixed, LOWs recorded (§11). The owner released D4 ("yes to both"; agent = any
-configured command, default Claude Code headless): spec `docs/plans/agent-reviewer-spec.md` draft 1,
-**not built**, waiting for the owner's read and decisions D-A..D-D. Owner dev binary for R3:
-`~/projects/proofbound-dev-bin/proofbound`. Next: commit R3, republish v0.3.2; owner checks the JS
-link and the sticky column by hand (no browser here).
+**Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
+- `DEF-UI-BENCH-BROWSER-CHECK-001`: open `~/projects/proofbound-verify-try/proofbound-verify.html`
+  (key 9510b7cfe42f5475 → SIGNATURE ONLY; 0000000000000000 → INVALID) and the bench's Show in the
+  code links and sticky evidence column in a real browser (no browser here).
+- `DEF-UI-AGENT-REQ-ROUND6-001`: whether to run a sixth requirement round so BR-audit-room-ui 0008's
+  O-9A (the agent reviewer, reviewer's own wording) can go active.
+- `DEF-ORPHAN-EMBEDDED-PG-001`: a killed proofbound leaves its embedded Postgres on 55432 (owner: fix
+  after the demo).
+- Update the local binary: `curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`
+  (an owner UI was running `~/.local/bin/proofbound` from before R1). Dev build:
+  `~/projects/proofbound-dev-bin/proofbound` (deleted by the owner earlier; recreated for R3).
 
-**Latest (2026-11-25 afternoon):** owner "lets do both r1 and r2": the reviewer's whole job in the
-browser (spec `docs/plans/ui-reviewer-spec.md` draft 2; spec review NEEDS_WORK 4 HIGH folded; R1 code
-review `ui-reviewer-r1-review-20261125` NEEDS_WORK, 5 MED fixed). R1: the Review bench runs a project's
-declared tests in a background job, takes test decisions, marks each line (area / tests / provenance),
-shows the spec, signer, needs-work list and the post-seal result (CLI-INV-75, 76; 47, 67 amended). R2:
-Changes page (CLI-INV-77), Issue the warranty from the Audit room (CLI-INV-78), `proofbound-verify.html`
-release asset: the warranty check compiled to WebAssembly, trust key typed by the reader (CLI-INV-79).
-Requirement: `BR-audit-room-ui` 0003 adds O-3..O-5 (not BR-ui-workspaces: its review is a dormant
-deferral). Tried on a copy of the live demo: BLOCKED/PASS/Issue/VALID all match the CLI. Next: R2 code
-review, requirement review, CI record, gate, commit, republish v0.3.2; owner opens the verify page in a
-real browser (not testable here: no node/browser). Owner holds: agent-reviewer-first flow (spec D4); a
-killed `proofbound` leaves its embedded Postgres running (seen 2026-11-25; fix after the demo).
+**2026-11-25 in brief** (details: `notes/journal/2026-11-25.md`):
+- Hook guard (`681195a`) and the live agent demo page (`93e3372`).
+- R1 + R2 (`b553d2d`, `43746ee`, `fb527cf`; `docs/plans/ui-reviewer-spec.md`): the Review bench runs
+  the tests and seals in the browser; Changes page; Issue the warranty; `proofbound-verify.html`
+  release asset (WebAssembly, W-INV-13). BR-audit-room-ui 0006 active (O-5, O-7, O-8).
+- R3 (`2163bf3`, spec §10–11): code beside the questions, Show in the code, plain words, tests section
+  reworded. Review F1/F2 MED fixed.
+- Agent reviewer (`d4f1e04`, `docs/plans/agent-reviewer-spec.md`, CLI-INV-80..82): opt-in
+  (person-committed `.proofbound/agent-review.json` + `--agent-review`), default `claude -p
+  --safe-mode` with no tools; answers beside each question, nothing pre-selected; signed AGENT record
+  that no control reads. Spec review F1 HIGH and code review F1 HIGH fixed (agent-set config refused;
+  a configured command is shown and needs confirmation). Live run: $0.08, 21 s, found the price line
+  and a seal bug (fixed, regression test). Owner D4 decisions D-A..D-D taken as recommended.
 
-**Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
-v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.2: the warranty fix
-`0b9b66d`; the agent demo; **framework mapping** (`e7f2ff8`, CLI-INV-65); **tests that can fail**
-(`205e557`, CLI-INV-66..68, control C11, `.proofbound/tests.json`; review
-`tests-can-fail-review-20261123`: F1 HIGH + F2..F5 MED fixed, F6..F9 LOW recorded; the demo now shows
-"tests did NOT catch"). SSDF top two for Proofbound (owner asked): PO.3 (PO.3.3, tools generate
-artifacts of the practices) and PW.8 (PW.8.2, perform and document testing), both now mapped.
-Also done: the **write-time perimeter** (`2e9a13f`, CLI-INV-69, owner "LETS DO IT" =
-`DEF-AGENT-NATIVE-INTENT-001` option 5; `proofbound hook pre-tool-use`, `.claude/settings.json` from
-init; review `write-perimeter-review-20261124`: F1 HIGH + F2..F4 MED fixed; **tried live 2026-11-24** by the owner with
-Claude Code 2.1.331 in WSL: `/hooks` lists both project hooks; asked to edit `src/pricing.sh`, the agent first
-refused on its own from AGENTS.md and scope.paths, then, told to try, its Edit was blocked with the exact
-hook reason (Claude Code labels it `PreToolUse:Edit hook error`). The Windows `claude.exe` run from WSL
-would silently allow every edit (hook runs Windows-side, `|| true`): document it). Also done: **session-to-line provenance** (owner
-"approved" 2026-11-24, spec `docs/plans/session-provenance-spec.md` §6 defaults; CLI-INV-70..72,
-`proofbound hook post-tool-use`, `PROV-` record, control C12 LISTED; spec review NEEDS_WORK folded
-into draft 2; code review `session-provenance-review-20261124`: F1 HIGH + F2..F7 MED fixed, F10 LOW
-recorded; the demo shows the shell-written pricing line as "no recorded agent edit"; PostToolUse not yet seen
-live: no successful agent edit in the trial). Also done 2026-11-24, owner "lest do both": the **documentation pass** (README, r3 README, QUICKSTART,
-DEMO.md, DEMO-MANUAL, DEMO-AGENT agent-first: "you don't have to trust the agent"; private landing page
-`~/projects/proofbound-commercial` commit `cbabd57`) and **review outcomes by agent** (`report agents
-<base>`, Audit room section; CLI-INV-73..74; spec review NEEDS_WORK folded; code review
-`agent-track-record-review-20261124`: M1, M2 fixed). Next: owner's pick; before Sunday re-check the
-docs once more and keep republishing v0.3.2. Before Sunday regardless: the **documentation pass**
-(QUICKSTART, tour, DEMO.md, DEMO-MANUAL, private landing page) agent-first.
+**Standing rules:** use kamisrini@yahoo.com; commercial material stays in
+`~/projects/proofbound-commercial`; never push `backup/pre-scrub-20261120`; never stage
+`docs/plans/P5-intent-provenance-plan.md` or `kernel/cmd/p6dbprobe/`; token-spending features stay
+off by default; the demo repository stays local (`~/projects/proofbound-demo-build`); open deferrals
+stay dormant until the owner names them.
 
-**Immediate blockers:** none. **Owner pending:** update the local binary (`curl -fsSL
-https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`). Requirement reviews
-2026-11-24: all ten are `active` (owner approved every rewording; round 1: ui-bundle,
-warranty-head-reviews, agent-track-record; round 2: signed-waiver, waiver-signed-commits,
-framework-map, session-provenance; round 3: change-area, write-perimeter; round 5: tests-can-fail
-O-5). The fail-open found while checking wording is fixed (`CI-tests-undo-failed-q7x3k9`, review
-`tests-undo-failed-review-20261124` ACCEPTABLE, 3 LOW recorded): a hunk that cannot be undone is
-never caught. Documentation and commercial pass done 2026-11-24 (DEMO.md tests caveat fixed; private
-landing page republished, video script rewritten, outreach and pilot changes laid as suggestion cards:
-see `~/projects/proofbound-commercial/README.md`). Next: the owner accepts or rejects those cards; the
-demo repository is still v0.3.1. Owner 2026-11-24: keep the scripted agent demo and add a separate live one
-(`DEMO-AGENT-LIVE.md`, not written yet). The first live run (headless Claude Code, $0.26) found a HIGH
-defect: a verdict NEEDS_WORK with every promise SATISFIED (rejected out-of-area line or uncaught part)
-passed the PR check and got a VALID warranty. Fixed in `61ba190` (`CI-needs-work-blocks-h4r8wq`, spec
-`docs/plans/needs-work-blocks-spec.md`, review `needs-work-blocks-review-20261124` ACCEPTABLE, L1-L6
-recorded). The hook-gap fix is done (2026-11-25, owner "go" and "go with recommendations"): while a task file
-exists, the perimeter refuses an agent's file-tool edit of `.claude/settings.json`,
-`.claude/settings.local.json` or `.proofbound/task` (CI-hook-guard-w3n7c5, spec
-`docs/plans/hook-guard-spec.md`, CLI-INV-69 amended, BR-write-perimeter O-3 retired for O-4 after three
-requirement rounds, review `hook-guard-review-20261125` ACCEPTABLE, F3-F5/F8 LOW recorded; the area
-check's dangling-link blind spot recorded in spec §7). The live demo page `docs/releases/r3/DEMO-AGENT-LIVE.md`
-is written from two real headless Claude Code runs (2026-11-25, ~$0.85 each, both told the same story:
-agent declines the price, both hooks refuse when pushed, a person's hand edit named by C10/C11/C12,
-NEEDS_WORK blocks with 2 of 2 SATISFIED, the agent's own commit WARRANTED and VALID from a clone); every
-bash block was run before commit. Docs linked (r3 README, README, release notes: both fixes). Next (owner:
-"make it real this week"): the commercial pass (private repo: landing page, video script, outreach, pilot)
-around the live demo, then a final docs re-check before Sunday.
-`DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
-`DEF-UI-WORKSPACES-REQ-REVIEW-001`.
-
-**2026-11-23 in one paragraph:** line-level scope (`78803fd`, C10), signed waivers (`5a73932`),
-`ui --bundle` (`48519f2`) and the opt-in signed-commit waiver policy (`670517a`) were each specified,
-built, reviewed once by a non-author (every HIGH/MED fixed with a regression test), accepted on the
-tour's shop repo and gated green. By the owner's decision they joined v0.3.2: `main` pushed and
-v0.3.2 republished at `f76aa75` (install.sh gives v0.3.2 byte-identical to the archive; the live
-Action reads WARRANTED). `DEF-CLAIMED-CODE-SCOPE-001` and `DEF-NO-INTENT-SELF-WAIVER-001` RESOLVED.
-
-**Today in one paragraph:** v0.3.2 published, then the whole UI was built and folded into v0.3.2 by
-the owner's decision (nobody outside had it; launch 2026-11-30), republished at `463b369` and
-verified (install.sh, live Action WARRANTED, owner binary). After that, locally: gate test limit 25m
-(`ddeea74`), UI requirement reviews (`2702f8f`; BR-audit-room-ui active), U3 time rail + proof in the
-browser (`e103947`). Owner rc binary: `~/projects/proofbound-dev-bin/proofbound` (v0.3.3-rc3).
+**Earlier this week** (condensed; the journal has each day): 2026-11-24 write-time perimeter
+(`2e9a13f`), session provenance, tests that can fail (`205e557`), framework mapping (`e7f2ff8`),
+review outcomes by agent, documentation and commercial pass, the NEEDS_WORK-blocks fix (`61ba190`).
+2026-11-23: line-level scope (`78803fd`), signed waivers (`5a73932`), `ui --bundle` (`48519f2`),
+signed-commit waiver policy (`670517a`); v0.3.2 published then the UI folded in.
 
 ## Today in detail — 2026-11-22
 
@@ -534,8 +475,8 @@ accepts, quoted paths in `intent-applicability.sh`, `mutant-apply` comment class
 
 ## Branch status
 
-`main` is 5 commits ahead of `origin/main` after this closeout (not pushed: owner decision pending);
-tags `v0.3.0`, `v0.3.1`, `v0.3.2` (republished at `463b369`).
+`main` = `origin/main` at the closeout commit (pushed); tags `v0.3.0`, `v0.3.1`, `v0.3.2`
+(republished at `d4f1e04`, verified: install IDENTICAL, agent demo exit 0, live Action WARRANTED).
 Local-only branch `backup/pre-scrub-20261120` must never be pushed.
 
 ## Open / deferred (`docs/deferrals.tsv`) — all dormant until the owner names them
@@ -543,6 +484,8 @@ Local-only branch `backup/pre-scrub-20261120` must never be pushed.
 - `DEF-INTENT-TRAILER-BLOCK-001` — gate: pre-push hook + round-3 LOWs.
 - `DEF-INTENT-CI-REVISION-001` — change intents cannot supersede themselves (kernel limitation).
 - `DEF-P7-REGENLOOP-001`, `DEF-P7-DP-TWINROOT-001` — unchanged.
+- New 2026-11-25: `DEF-UI-AGENT-REQ-ROUND6-001`, `DEF-ORPHAN-EMBEDDED-PG-001`,
+  `DEF-UI-BENCH-BROWSER-CHECK-001` (see Resume).
 
 ## Unverified assumptions
 
@@ -553,6 +496,10 @@ Local-only branch `backup/pre-scrub-20261120` must never be pushed.
   ~7 s, reviewer-measured).
 
 ## Institutionalized today
+
+- 2026-11-25: LESSON `requirement-id-ordering` (obligation ids compare as strings: O-10 < O-9; name
+  the next O-9A). Live runs before release keep paying off: the agent reviewer's real Claude Code run
+  found a seal bug no test had.
 
 - 2026-11-22: explicit `-timeout 25m` in `scripts/kernel-check.sh` (a red gate that is not a fault);
   memory note: never run embedded-Postgres work while `make check` runs (port 55432 contention).
