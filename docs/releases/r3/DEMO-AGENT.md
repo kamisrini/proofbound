@@ -410,7 +410,7 @@ proofbound check demo-base
 
 ```text
 Proofbound: NOT WARRANTED (0 of 1 claiming commits verified)
-  9c887d3d5e67 sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+  9c887d3d5e67 sdd:001-csv-export BLOCKED  the reviewer recorded NEEDS_WORK (OV-9c887d3d5e67-1); 1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 Drift:
   summary warranted=0 current=0 stale=0 other=0
 proofbound: check: not warranted
@@ -497,7 +497,7 @@ proofbound warranty bundle demo-base -o "$W/release-1"
 ```
 
 ```text
-not warranted 9c887d3d5e67 sdd:001-csv-export BLOCKED  1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
+not warranted 9c887d3d5e67 sdd:001-csv-export BLOCKED  the reviewer recorded NEEDS_WORK (OV-9c887d3d5e67-1); 1 of 2 obligations verified SATISFIED; 2 of 2 requirement reviews VERIFIABLE
 bundle /home/you/projects/proofbound-agent-demo/release-1 (456aada51336..3114d958afbb): 0 of 1 claims verified (0 VALID, 0 UNREVIEWED); VERIFY.md, index.json, badge.svg
 proofbound: bundle: written, but not every claiming commit is VALID
 ```

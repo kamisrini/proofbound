@@ -42,8 +42,13 @@ O-5). The fail-open found while checking wording is fixed (`CI-tests-undo-failed
 never caught. Documentation and commercial pass done 2026-11-24 (DEMO.md tests caveat fixed; private
 landing page republished, video script rewritten, outreach and pilot changes laid as suggestion cards:
 see `~/projects/proofbound-commercial/README.md`). Next: the owner accepts or rejects those cards; the
-demo repository is still v0.3.1. Owner 2026-11-24: the agent demo should run with real agents; proposed
-(option 1, assumed, not yet confirmed) a `DEMO-AGENT-LIVE.md` beside the scripted page.
+demo repository is still v0.3.1. Owner 2026-11-24: keep the scripted agent demo and add a separate live one
+(`DEMO-AGENT-LIVE.md`, not written yet). The first live run (headless Claude Code, $0.26) found a HIGH
+defect: a verdict NEEDS_WORK with every promise SATISFIED (rejected out-of-area line or uncaught part)
+passed the PR check and got a VALID warranty. Fixed in `61ba190` (`CI-needs-work-blocks-h4r8wq`, spec
+`docs/plans/needs-work-blocks-spec.md`, review `needs-work-blocks-review-20261124` ACCEPTABLE, L1-L6
+recorded). Owner-approved next: the hook-gap fix (an agent may edit `.claude/settings.json` while a
+task is active), then the live demo page.
 `DEF-UI-BUNDLE-BROWSER-CHECK-001` (deferred by the owner);
 `DEF-UI-WORKSPACES-REQ-REVIEW-001`.
 
