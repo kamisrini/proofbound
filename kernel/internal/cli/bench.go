@@ -352,7 +352,7 @@ func benchSpec(ctx context.Context, root, sha string, area areaResult) []specTex
 		dir := path.Dir(scope)
 		names := strings.Split(strings.TrimSpace(gitOutput(ctx, root, "-c", "core.quotePath=false", "ls-tree", "--name-only", parent, "--", dir+"/")), "\n")
 		for _, name := range names {
-			if name == "" || !(strings.HasSuffix(name, ".md") || name == scope) || len(out) >= 8 {
+			if name == "" || !strings.HasSuffix(name, ".md") && name != scope || len(out) >= 8 {
 				continue
 			}
 			raw, err := gitBytes(ctx, root, "show", parent+":"+name)

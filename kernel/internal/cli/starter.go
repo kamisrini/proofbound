@@ -442,7 +442,7 @@ func readSealDraft(dir string) (string, draftFile, error) {
 // reviewSealWith seals; ran, when given, is the caller's fresh test run of the draft's commit, made
 // just before this call, and replaces the run seal would make itself.
 func reviewSealWith(ctx context.Context, root, dir string, ran *sealTestsRun, fresh func(context.Context, string) (draftFile, error), output io.Writer) error {
-	dir, edited, err := readSealDraft(dir)
+	_, edited, err := readSealDraft(dir)
 	if err != nil {
 		return err
 	}
