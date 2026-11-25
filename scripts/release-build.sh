@@ -65,5 +65,15 @@ for target in $targets; do
   echo "built $archive"
 done
 
-(cd "$outdir" && LC_ALL=C sha256sum proofbound_*.tar.gz | LC_ALL=C sort -k2 >SHA256SUMS)
+# The warranty verify page (docs/plans/ui-reviewer-spec.md §2.3): the warranty check compiled to
+# WebAssembly inside one self-contained HTML file. A release asset, never part of a bundle.
+if [[ -d $repo/kernel/cmd/proofbound-verify ]]; then
+  (cd "$repo/kernel" && CGO_ENABLED=0 GOOS=js GOARCH=wasm go build -trimpath -buildvcs=false \
+    -ldflags "-s -w -buildid=" -o "$stage/verify.wasm" ./cmd/proofbound-verify &&
+    go run ./cmd/proofbound-verify -wasm "$stage/verify.wasm" -exec "$(go env GOROOT)/lib/wasm/wasm_exec.js" \
+      -version "$version" -o "$outdir/proofbound-verify.html")
+  echo "built proofbound-verify.html"
+fi
+
+(cd "$outdir" && shopt -s nullglob && LC_ALL=C sha256sum proofbound_*.tar.gz proofbound-verify.htm[l] | LC_ALL=C sort -k2 >SHA256SUMS)
 echo "wrote $outdir/SHA256SUMS ($version)"

@@ -916,13 +916,22 @@ func runCommand(ctx context.Context, cmd command, args []string, root, databaseU
 		}
 		return initKit(ctx, root, args[1], owner, output)
 	case commandReviewSeal:
+		// The tests run before the record is opened (ui-reviewer-spec §1.1, review F2).
+		var ran *sealTestsRun
+		if _, edited, err := readSealDraft(args[2]); err == nil && sha40RE.MatchString(edited.Commit) {
+			res, err := draftTests(ctx, root, edited.Commit, output)
+			if err != nil {
+				return err
+			}
+			ran = &sealTestsRun{Commit: edited.Commit, Result: res}
+		}
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
 			return err
 		}
 		defer func() { resultErr = errors.Join(resultErr, closeStore(ledger)) }()
 		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
-		return reviewSeal(ctx, root, args[2], fresh, output)
+		return reviewSealWith(ctx, root, args[2], ran, fresh, output)
 	case commandKeysInit:
 		return keysInit(ctx, root, flagValue(args[2:], "--name"), output)
 	case commandUI:

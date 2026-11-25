@@ -4,6 +4,7 @@
     <nav class="tabs" aria-label="Workspaces">
       <a href="/audit"{{if eq .Active "audit"}} aria-current="page"{{end}}>Audit room</a>
       <a href="/now"{{if eq .Active "now"}} aria-current="page"{{end}}>Now</a>
+      <a href="/change"{{if eq .Active "change"}} aria-current="page"{{end}}>Changes</a>
       <a href="/review"{{if eq .Active "review"}} aria-current="page"{{end}}>Review bench</a>
       <a href="/promises"{{if eq .Active "promises"}} aria-current="page"{{end}}>Promise map</a>
       <a href="/agent"{{if eq .Active "agent"}} aria-current="page"{{end}}>Agent surface</a>

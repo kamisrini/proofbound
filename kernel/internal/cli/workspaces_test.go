@@ -216,7 +216,7 @@ func TestUISealFlow(t *testing.T) {
 		return map[string]draftFile{claim: truth}, nil
 	}
 	var sealed draftFile
-	s.seal = func(ctx context.Context, dir string, out io.Writer) error {
+	s.seal = func(ctx context.Context, dir string, _ *sealTestsRun, out io.Writer) error {
 		raw, err := os.ReadFile(filepath.Join(dir, "draft.json"))
 		if err != nil {
 			return err
@@ -251,7 +251,7 @@ func TestUISealFlow(t *testing.T) {
 	if code, _ := act("/act/review-preview", []reviewDecision{{Part: "verdict", Group: 0, Index: 0, ObligationID: "O-9", Outcome: "SATISFIED"}}); code != http.StatusUnprocessableEntity {
 		t.Errorf("a decision for another obligation was accepted: %d", code)
 	}
-	if code, out := act("/act/review-preview", full); code != 200 || len(out["files"].([]any)) != 3 {
+	if code, out := act("/act/review-preview", full); code != 200 || len(out["files"].([]any)) != 4 {
 		t.Errorf("preview: %d %v", code, out)
 	}
 	uiWrite(t, root, "unrelated.txt", "x\n")
@@ -272,7 +272,7 @@ func TestUISealFlow(t *testing.T) {
 	// A refused commit leaves nothing; then an ineligible reviewer is refused before anything is written.
 	uiWrite(t, root, ".git/hooks/commit-msg", "#!/bin/sh\nexit 1\n")
 	_ = os.Chmod(filepath.Join(root, ".git", "hooks", "commit-msg"), 0o755)
-	s.seal = func(ctx context.Context, dir string, out io.Writer) error {
+	s.seal = func(ctx context.Context, dir string, _ *sealTestsRun, out io.Writer) error {
 		uiWrite(t, root, "gates/ready-y.yaml", "y\n")
 		_, _ = io.WriteString(out, "wrote gates/ready-y.yaml\n")
 		return nil

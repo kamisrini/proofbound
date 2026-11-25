@@ -115,6 +115,19 @@
   {{end}}
 </section>
 
+{{if not .AsOf}}
+<section class="card issue" id="issue" aria-labelledby="issueh">
+  <div class="card-head"><h2 id="issueh">Issue the warranty</h2><span class="muted">One release for the whole period, only when every change is warranted</span></div>
+  {{if and .Actor.Name (not .Actor.Problem)}}
+  <p>Writes the warranty bundle into <code>docs/warranties/&lt;head&gt;/</code>, signed as <strong>{{.Actor.Name}}</strong> (key {{.Actor.Fingerprint}}), and commits only that folder. You see exactly what will be written before anything is.</p>
+  <div class="buttons"><button type="button" data-act="issue-preview">Check and preview</button></div>
+  <div class="issue-preview" hidden><pre></pre><div class="buttons"><button type="button" class="sign" data-act="issue-confirm">Issue and commit</button></div></div>
+  <p class="msg" role="status"></p>
+  <p class="note-small">A buyer checks it with <code>proofbound warranty verify</code>, <code>proofbound ui --bundle</code>, or the verify page published with each Proofbound release, using your key's fingerprint, which you send them by another channel.</p>
+  {{else}}<p class="muted">Read-only: {{.Actor.Problem}}</p>{{end}}
+</section>
+{{end}}
+
 <section class="card" aria-labelledby="who">
   <div class="card-head"><h2 id="who">Who did the work</h2><span class="muted">Agents and people as git records them (self-declared, not signed)</span></div>
   {{if .Actors}}

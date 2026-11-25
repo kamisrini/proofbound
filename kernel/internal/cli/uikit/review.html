@@ -7,14 +7,16 @@
 <link rel="stylesheet" href="/static/app.css">
 <script src="/static/app.js" defer></script>
 </head>
-<body data-base="{{.V.Report.Base}}"{{if .Commit}} data-commit="{{.Commit.Commit}}"{{end}}>
+<body data-base="{{.V.Report.Base}}"{{if .Commit}} data-commit="{{.Commit.Commit}}"{{end}}{{if .Job}}{{if .Job.Running}} data-job="running"{{end}}{{end}}>
 {{template "top" (dict "Active" "review" "V" .V)}}
 <main class="page">
 <section class="report-head">
   <p class="eyebrow">Reviewer · Review bench</p>
   <h1>{{len .Queue}} change(s) waiting for someone who did not write them.</h1>
-  {{if .V.Actor.Problem}}<p class="muted">You are read-only here: {{.V.Actor.Problem}}</p>{{end}}
+  {{if .Signer}}<p class="signer">You sign as <strong>{{.Signer}}</strong>. Compare the key with your <code>.pub</code> file under <code>.proofbound/keys/</code>.</p>{{end}}
+  {{if .V.Actor.Problem}}<p class="muted">You are read-only here: {{.V.Actor.Problem}}. To review with a reviewer's key, start the page with <code>PROOFBOUND_KEY=&lt;key file&gt; proofbound ui</code>.</p>{{end}}
   {{if .Hidden}}<p class="muted">{{len .Hidden}} hidden because nobody reviews their own work: {{join .Hidden}}.</p>{{end}}
+  {{if .Sealed}}<p class="ex-outcome {{if .Sealed.Pass}}closed{{else}}bad{{end}} sealed-result">Sealed <code>{{short .Sealed.Commit.Commit}}</code>. The check now reads: <strong>{{.Sealed.Text}}</strong>. <a href="/audit">Open the Audit room</a>.</p>{{end}}
 </section>
 
 <div class="bench">
@@ -24,8 +26,15 @@
   {{range .Queue}}
   <a class="q-item{{if $.Commit}}{{if eq .Commit.Commit $.Commit.Commit}} q-on{{end}}{{end}}" href="/review?commit={{.Commit.Commit}}">
     <code>{{short .Commit.Commit}}</code> {{.Commit.Subject}}
-    <span class="muted">{{.Promises}} promise(s) · {{.Commit.Author}}{{range .Commit.Agents}} · {{.}}{{end}}</span>
+    <span class="muted">{{.Promises}} promise(s){{if .OutOfArea}} · {{.OutOfArea}} outside the area{{end}}{{if .Tests}} · {{.Tests}}{{end}} · {{.Commit.Author}}{{range .Commit.Agents}} · {{.}}{{end}}</span>
   </a>
+  {{end}}
+  {{if .NeedsWork}}
+  <h2>Reviewed: needs work</h2>
+  <p class="muted">These left the queue. Their review said NEEDS_WORK, so the check blocks them until the author fixes the code in a new commit.</p>
+  {{range .NeedsWork}}
+  <p class="q-item"><code>{{short .Commit.Commit}}</code> {{.Commit.Subject}} <span class="muted">{{.Text}}</span></p>
+  {{end}}
   {{end}}
 </nav>
 
@@ -33,6 +42,12 @@
 {{if .Commit}}
   <div class="card-head"><h2>Review <code>{{short .Commit.Commit}}</code>: {{.Commit.Subject}}</h2>{{if .Saved}}<span class="tag tag-none">Draft loaded</span>{{end}}</div>
   {{if .Refusal}}<p class="ex-outcome bad">{{.Refusal}}</p>{{end}}
+  {{if .Spec}}
+  <details class="log spec">
+    <summary>The spec this commit claims ({{len .Spec}} file(s), as they stood before the commit)</summary>
+    {{range .Spec}}<p class="muted"><code>{{.Path}}</code>{{if .Changed}} <span class="tag tag-exception">this commit also changes it</span>{{end}}</p><pre>{{.Text}}</pre>{{end}}
+  </details>
+  {{end}}
   <form class="bench-form">
     {{range $gi, $v := .Draft.Verdicts}}
       {{range $oi, $o := $v.Obligations}}
@@ -68,13 +83,46 @@
       <label class="field">Reason (required to accept) <input name="f-a-{{$ai}}" value="{{$a.Reason}}" maxlength="500" autocomplete="off"></label>
     </fieldset>
     {{end}}
+
+    {{if .TestsInvalid}}
+    <section class="tests-box"><h3>Do the tests notice each part undone?</h3><p class="ex-outcome bad">The project's tests file is invalid: {{.TestsInvalid}}. Fix it before reviewing; there is nothing to run.</p></section>
+    {{else if .TestsDeclared}}
+    <section class="tests-box">
+      <h3>Do the tests notice each part undone?</h3>
+      {{with .Draft.Tests}}
+        {{if .Invalid}}<p class="ex-outcome bad">The project's tests file is invalid: {{.Invalid}}. Fix it before sealing; there is nothing to run.</p>
+        {{else}}
+        <p class="muted">Ran <code>{{.Run}}</code>: with nothing undone, {{.Baseline}}{{if .Hunks}}; undoing the whole change, {{.Whole}}{{end}}.</p>
+        {{range $ti, $h := .Hunks}}
+          {{if eq $h.Result "caught"}}<p class="muted">Caught: <code>{{$h.Path}}</code> {{$h.Lines}}</p>
+          {{else}}
+          <fieldset class="promise tests" data-part="tests" data-group="0" data-index="{{$ti}}" data-obligation="" data-path="{{$h.Path}}" data-lines="{{$h.Lines}}">
+            <legend><strong>Tests did not notice</strong> <code>{{$h.Path}}</code> {{$h.Lines}} <span class="muted">({{$h.Result}})</span></legend>
+            <p class="muted">Undoing this part, the tests still passed. Is it fine untested?</p>
+            <label class="choice"><input type="radio" name="t-{{$ti}}" value="accept"{{if eq $h.Decision "accept"}} checked{{end}}> Accept</label>
+            <label class="choice"><input type="radio" name="t-{{$ti}}" value="reject"{{if eq $h.Decision "reject"}} checked{{end}}> Reject (the review needs work)</label>
+            <label class="field">Reason (required to accept) <input name="f-t-{{$ti}}" value="{{$h.Reason}}" maxlength="500" autocomplete="off"></label>
+          </fieldset>
+          {{end}}
+        {{end}}
+        {{end}}
+      {{else}}
+        <p class="muted">Not run yet. Running them undoes each part of the change in a throwaway copy and runs the project's tests each time.</p>
+      {{end}}
+      <p class="warn">This runs the commit's own code, as you, with your files. Read the change first.</p>
+      <div class="buttons"><button type="button" class="secondary" data-act="review-tests"{{if .Refusal}} disabled data-refused{{end}}>{{if .Draft.Tests}}Run the tests again{{else}}Run the tests{{end}}</button></div>
+    </section>
+    {{end}}
+
     <div class="buttons">
-      <button type="button" class="secondary" data-act="review-draft"{{if .Refusal}} disabled{{end}}>Save draft</button>
-      <button type="button" data-act="review-preview"{{if .Refusal}} disabled{{end}}>Review what sealing writes</button>
+      <button type="button" class="secondary" data-act="review-draft"{{if .Refusal}} disabled data-refused{{end}}>Save draft</button>
+      <button type="button" data-act="review-preview"{{if .Refusal}} disabled data-refused{{end}}>Review what sealing writes</button>
     </div>
   </form>
+  <pre class="job-log" aria-live="polite"{{if not .Job}} hidden{{end}}>{{if .Job}}{{range .Job.Lines}}{{.}}
+{{end}}{{if .Job.Error}}{{.Job.Error}}{{end}}{{end}}</pre>
   <div class="preview" hidden>
-    <p>Sealing writes these files, signs each with your key, and commits only them. Nothing is written until you confirm.</p>
+    <p>Sealing writes these files, signs each with your key, and commits only them. Nothing is written until you confirm.{{if .TestsDeclared}} The tests run once more first, because a seal never trusts an earlier run.{{end}}</p>
     <pre></pre>
     <div class="buttons">
       <button type="button" class="sign" data-act="review-seal">Seal and sign</button>
@@ -82,9 +130,21 @@
     </div>
   </div>
   <p class="msg" role="status"></p>
+
+  {{with .Draft.Provenance}}
+  <details class="log prov" open>
+    <summary>Who wrote each line</summary>
+    {{range .Files}}<p><code>{{.Path}}</code>: {{range .Sessions}}{{.Lines}} by session {{short .Session}}; {{end}}{{len .Unrecorded}} with no recorded agent edit; {{.Common}} common</p>{{end}}
+    {{range .Warnings}}<p class="muted">{{.}}</p>{{end}}
+  </details>
+  {{end}}
+  {{if .ProvError}}<p class="muted">Who wrote each line: {{.ProvError}}</p>{{end}}
+
   <details class="log" open>
-    <summary>The change</summary>
-    <pre class="diff">{{.Diff}}</pre>
+    <summary>The change{{if .Lines}} · flagged lines are marked{{end}}</summary>
+    <pre class="diff">{{range .Lines}}<span class="dl{{if .Kind}} dl-{{.Kind}}{{end}}{{if .Flags}} dl-flag{{end}}">{{.Text}}{{range .Flags}}<span class="flag">{{.}}</span>{{end}}</span>
+{{end}}</pre>
+    {{if .FlaggedPast}}<p class="muted">Flagged lines past the end of this view: {{join .FlaggedPast}}</p>{{end}}
   </details>
 {{else}}
   <p class="empty">Choose a change from the queue. You see each promise beside the code that claims to keep it, record an outcome per promise, and seal the review here, signed with your key.</p>

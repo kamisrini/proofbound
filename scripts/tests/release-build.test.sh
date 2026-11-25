@@ -37,6 +37,9 @@ scripts/release-build.sh --allow-dirty v0.0.0-test "$tmp/b" >/dev/null
 cmp "$tmp/a/SHA256SUMS" "$tmp/b/SHA256SUMS" || { echo "release-build.test: SHA256SUMS differ" >&2; exit 1; }
 cmp "$tmp/a/proofbound_linux_amd64.tar.gz" "$tmp/b/proofbound_linux_amd64.tar.gz"
 (cd "$tmp/a" && sha256sum -c --quiet SHA256SUMS)
+# CLI-INV-79: the warranty verify page is built and listed (a silently skipped page must fail here).
+[[ -s $tmp/a/proofbound-verify.html ]] && grep -q ' proofbound-verify.html$' "$tmp/a/SHA256SUMS" ||
+  { echo "release-build.test: proofbound-verify.html missing or not in SHA256SUMS" >&2; exit 1; }
 entries=$(tar -tzf "$tmp/a/proofbound_linux_amd64.tar.gz" | tr '\n' ' ')
 [[ $entries == "LICENSE proofbound " ]] || { echo "release-build.test: entries '$entries'" >&2; exit 1; }
 mkdir "$tmp/x" && tar -xzf "$tmp/a/proofbound_linux_amd64.tar.gz" -C "$tmp/x"

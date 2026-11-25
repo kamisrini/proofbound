@@ -373,7 +373,7 @@ func TestUIAreaDecisions(t *testing.T) {
 		return map[string]draftFile{claim: truth}, nil
 	}
 	var sealed draftFile
-	s.seal = func(ctx context.Context, dir string, out io.Writer) error {
+	s.seal = func(ctx context.Context, dir string, _ *sealTestsRun, out io.Writer) error {
 		raw, err := os.ReadFile(filepath.Join(dir, "draft.json"))
 		if err != nil {
 			return err
@@ -462,7 +462,8 @@ func TestAreaReviewFindings(t *testing.T) {
 		uiCommit(t, root, "owner", "keys")
 		s := newUIServer(root, "", claim+"^", 4242)
 		s.compute = func(ctx context.Context, b string) (ledgerView, string, error) {
-			return ledgerView{Report: auditReport{Schema: auditSchema, Head: claim, Commits: []auditCommit{{Commit: claim, Author: "agent", Class: classClaimed}}, Exceptions: []auditException{}}}, "", nil
+			return ledgerView{Report: auditReport{Schema: auditSchema, Head: claim, Commits: []auditCommit{{Commit: claim, Author: "agent", Class: classClaimed}},
+				Controls: []auditControl{{ID: "C1", Evidence: []auditEvidence{{Commit: claim, Text: "NO REVIEW: x"}}}}, Exceptions: []auditException{}}}, "", nil
 		}
 		s.drafts = func(ctx context.Context, shas []string) (map[string]draftFile, error) {
 			return map[string]draftFile{claim: {Commit: claim, Reviews: []draftReview{}, Verdicts: []draftVerdict{{Obligations: []draftVerdictObligation{{ObligationID: "O-1"}}}}}}, nil

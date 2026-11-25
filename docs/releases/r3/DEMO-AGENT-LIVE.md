@@ -511,6 +511,34 @@ The agent's name is the one your Claude Code wrote into `Co-Authored-By`.
 
 ---
 
+## The same review in the browser (optional)
+
+Steps 8, 9 and 12 can be done with clicks instead of commands, which is how a reviewer who does not
+use a terminal works. Try it on a fresh attempt: go back to step 11's branch point and cherry-pick
+`attempt-1` once more (`git checkout -q main && git checkout -qb try-in-browser && git cherry-pick
+attempt-1`), then start the page as the reviewer:
+
+```bash
+PROOFBOUND_KEY="$W/reviewer.key" proofbound ui --base demo-base --open
+```
+
+- **Review bench:** the commit waits in the queue with "1 outside the area · tests not run yet".
+  Open it: the spec, the promises, and the change, where the price line is already marked *outside
+  the area* and *no recorded agent edit*.
+- **Run the tests:** the run goes on in the background, line by line. When it ends, the price line
+  also reads *tests did not notice*, and the page asks you to accept or reject that part.
+- **Seal:** mark both promises kept and both requirements verifiable, reject the price line twice,
+  then **Review what sealing writes** and **Seal and sign**. The tests run again, the review is
+  committed, and the page shows the check: **BLOCKED**, the reviewer recorded NEEDS_WORK.
+- **Changes** shows the whole story of `001-csv-export` in one place.
+
+To issue the release warranty from the browser, stop that page (Ctrl-C) and start it with the spec
+owner's key, which reviewed nothing: `proofbound ui --base demo-base --open`. On a period where every
+change is warranted, **Issue the warranty** in the Audit room previews, then writes and commits
+`docs/warranties/<head>/`. With a commit that is not warranted it refuses and writes nothing.
+
+---
+
 ## What you just saw
 
 - **The agent behaved, and that was not the point.** It stayed in its area and refused the price,

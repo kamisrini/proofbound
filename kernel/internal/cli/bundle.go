@@ -89,35 +89,81 @@ func warrantyBundle(ctx context.Context, root string, ledger *store.Store, base,
 	if dirty := strings.TrimSpace(gitOutput(ctx, root, "status", "--porcelain", "--", "gates", ".proofbound/keys")); dirty != "" {
 		return fmt.Errorf("bundle: gates/ or .proofbound/keys/ differ from HEAD; commit them first so a clean clone reproduces every state:\n%s", dirty)
 	}
-	keyPath, err := pbwarranty.KeyPath()
+	index, files, err := bundleCompute(ctx, root, ledger, base)
 	if err != nil {
 		return err
+	}
+	baseSHA, headSHA := index.Base, index.Head
+	if err := writeDirAtomically(dir, files); err != nil {
+		return err
+	}
+
+	valid, unreviewedCount := 0, 0
+	for _, e := range index.Entries {
+		var line string
+		switch e.State {
+		case bundleValid, bundleUnreviewed:
+			if e.State == bundleValid {
+				valid++
+			} else {
+				unreviewedCount++
+			}
+			line = fmt.Sprintf("warranty %s commit=%s claims=%s %s", filepath.Join(dir, e.File), e.Commit, printableUnit(e.Claims), e.State)
+			if len(e.ReviewersProven) > 0 {
+				line += " reviewers=" + strings.Join(e.ReviewersProven, ",")
+			}
+			if len(e.ReviewersMissing) > 0 {
+				line += " missing=" + printableUnit(strings.Join(e.ReviewersMissing, ","))
+			}
+		default:
+			line = fmt.Sprintf("not warranted %s %s %s  %s", e.Commit[:12], printableUnit(e.Claims), e.State, printableUnit(e.Reason))
+		}
+		if _, err := fmt.Fprintln(output, line); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(output, "bundle %s (%s..%s): %d of %d claims verified (%d VALID, %d UNREVIEWED); VERIFY.md, index.json, badge.svg\n",
+		dir, baseSHA[:12], headSHA[:12], valid, len(index.Entries), valid, unreviewedCount); err != nil {
+		return err
+	}
+	if valid != len(index.Entries) {
+		return errBundleIncomplete
+	}
+	return nil
+}
+
+// bundleCompute builds a bundle's index and files in memory, signed with the local key; nothing is
+// written (the Audit room's Issue refuses a partial release before writing; ui-reviewer-spec §2.2).
+func bundleCompute(ctx context.Context, root string, ledger *store.Store, base string) (bundleIndex, map[string][]byte, error) {
+	keyPath, err := pbwarranty.KeyPath()
+	if err != nil {
+		return bundleIndex{}, nil, err
 	}
 	key, err := pbwarranty.LoadKey(keyPath)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	baseSHA, err := resolveCommit(ctx, root, base)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	headSHA, err := resolveCommit(ctx, root, "HEAD")
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	lines, err := classifiedRange(ctx, root, ledger, base)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	all, err := commitsInRange(ctx, root, base)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	index := bundleIndex{Schema: bundleSchema, Unsigned: true, Note: bundleNote, Base: baseSHA, Head: headSHA,
 		ExporterKey: pbwarranty.Fingerprint(key.Public().(ed25519.PublicKey)), NonClaimingCommits: len(all) - len(lines), Entries: []bundleEntry{}}
 	listed, err := uncoveredCommits(ctx, root, base, lines)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	for _, l := range listed {
 		if l.state != checkWaived {
@@ -160,51 +206,16 @@ func warrantyBundle(ctx context.Context, root string, ledger *store.Store, base,
 	}
 	raw, err := json.Marshal(index)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	canonical, err := core.Canonicalize(raw)
 	if err != nil {
-		return err
+		return bundleIndex{}, nil, err
 	}
 	files["index.json"] = append(canonical, '\n')
 	files["VERIFY.md"] = []byte(verifyPage(index))
 	files["badge.svg"] = []byte(bundleBadge(index))
-	if err := writeDirAtomically(dir, files); err != nil {
-		return err
-	}
-
-	valid, unreviewedCount := 0, 0
-	for _, e := range index.Entries {
-		var line string
-		switch e.State {
-		case bundleValid, bundleUnreviewed:
-			if e.State == bundleValid {
-				valid++
-			} else {
-				unreviewedCount++
-			}
-			line = fmt.Sprintf("warranty %s commit=%s claims=%s %s", filepath.Join(dir, e.File), e.Commit, printableUnit(e.Claims), e.State)
-			if len(e.ReviewersProven) > 0 {
-				line += " reviewers=" + strings.Join(e.ReviewersProven, ",")
-			}
-			if len(e.ReviewersMissing) > 0 {
-				line += " missing=" + printableUnit(strings.Join(e.ReviewersMissing, ","))
-			}
-		default:
-			line = fmt.Sprintf("not warranted %s %s %s  %s", e.Commit[:12], printableUnit(e.Claims), e.State, printableUnit(e.Reason))
-		}
-		if _, err := fmt.Fprintln(output, line); err != nil {
-			return err
-		}
-	}
-	if _, err := fmt.Fprintf(output, "bundle %s (%s..%s): %d of %d claims verified (%d VALID, %d UNREVIEWED); VERIFY.md, index.json, badge.svg\n",
-		dir, baseSHA[:12], headSHA[:12], valid, len(index.Entries), valid, unreviewedCount); err != nil {
-		return err
-	}
-	if valid != len(index.Entries) {
-		return errBundleIncomplete
-	}
-	return nil
+	return index, files, nil
 }
 
 // writeDirAtomically writes files into a fresh sibling of dir and renames it into place, replacing at

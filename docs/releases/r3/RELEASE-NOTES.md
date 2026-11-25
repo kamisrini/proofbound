@@ -45,11 +45,24 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   - **Review bench** (reviewer): only the changes you may review (never your own, your agent's or
     your spec's); each promise beside the change; record an outcome per promise and **seal and sign
     the review in the browser**, writing and committing exactly what `proofbound review seal` writes.
+    The whole review, with no terminal: **Run the tests** (in the background, with progress; they
+    undo each part of the change), decide each part the tests did not notice, and see every added
+    line marked *outside the area*, *tests did not notice* or *no recorded agent edit*, beside the
+    spec it claims. Sealing runs the tests again. After sealing, the page shows the check result.
+  - **Changes**: each spec change as one flow, from the agent's commits to reviews, the check and
+    the warranty, with your one next step ("Review this", "Issue the warranty").
   - **Promise map** (spec owner): every promise with its state (proven, changed after proof, not
     kept, claimed but not reviewed, not claimed) and any reviewer's finding that the words are unclear.
   - **Agent surface**: every page as JSON, and `/agent/next` gives a coding agent its task's
     promises, what blocks it, whether it may act, and the next command. Agents read with the token in
     `.proofbound/ui.json`; only people act.
+- **Issue the warranty from the Audit room.** When every change of the period is warranted, one
+  click previews and then writes the bundle into `docs/warranties/<head>/` and commits it. A partial
+  release is refused, and a reviewer of a change cannot issue its warranty.
+- **Check a warranty with nothing installed.** The release carries `proofbound-verify.html`: open
+  it in a browser, type the vendor's key fingerprint (got by another channel, never from the bundle),
+  choose the warranty files. It runs Proofbound's own verification code in the page, offline, and
+  answers SIGNATURE ONLY or INVALID; `warranty verify --repo` remains the full check.
 - **Time rail.** Pick any commit of the period and the Audit room shows the audit exactly as it
   stood then, computed from a checkout of that commit with its own record (nothing later can leak
   in), and lists which controls and exceptions differ from now.

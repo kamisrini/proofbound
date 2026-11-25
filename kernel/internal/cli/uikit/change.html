@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Changes · {{.V.Repo}}</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body data-base="{{.V.Report.Base}}">
+{{template "top" (dict "Active" "change" "V" .V)}}
+<main class="page">
+<section class="report-head">
+  <p class="eyebrow">Changes · one spec, from the agent's work to the warranty</p>
+  {{if .One}}<h1>{{.One.Name}}</h1>{{else}}<h1>{{len .Changes}} change(s) in this period.</h1>{{end}}
+  {{template "period" .V}}
+</section>
+
+{{if .One}}
+{{with .One}}
+<section class="card flow">
+  <div class="card-head"><h2>Where it stands</h2>{{if .Action}}<a class="button" href="{{.Link}}">{{.Action}}</a>{{end}}</div>
+  <p>{{.Note}}</p>
+  <ol class="steps">
+    <li><strong>Spec</strong> {{range .Spec}}<code>{{.}}</code> {{else}}<span class="muted">no area declared</span>{{end}}</li>
+    {{range .Commits}}
+    <li><strong>Work</strong> <code>{{short .Commit.Commit}}</code> {{.Commit.Subject}} <span class="muted">· {{.Commit.Author}}</span>{{range .Commit.Agents}} <span class="tag tag-agent">{{.}}</span>{{end}}
+      <ol class="steps sub">
+        <li><strong>Review</strong> {{range $i, $r := .Reviewers}}{{if $i}}, {{end}}{{$r}}{{else}}<span class="muted">nobody yet</span>{{end}}</li>
+        <li><strong>Check</strong> {{if eq .State "PASS"}}<span class="tag tag-passed">PASS</span>{{else if eq .State "BLOCKED"}}<span class="tag tag-exception">BLOCKED</span>{{else}}<span class="tag tag-none">{{.State}}</span>{{end}} <span class="muted">{{.Gate}}</span></li>
+        <li><strong>Warranty</strong> {{if .Issued}}<span class="tag tag-passed">Issued</span> <code>{{.Issued}}</code>{{else if .Warranty}}<span class="muted">{{.Warranty}}</span>{{else}}<span class="muted">none</span>{{end}}</li>
+      </ol>
+    </li>
+    {{end}}
+  </ol>
+</section>
+{{end}}
+{{end}}
+
+<section class="card">
+  <div class="card-head"><h2>Every change</h2></div>
+  {{if .Changes}}
+  <div class="tablewrap"><table class="grid">
+    <thead><tr><th scope="col">Change</th><th scope="col" class="n">Commits</th><th scope="col">Where it stands</th><th scope="col">Your next step</th></tr></thead>
+    <tbody>{{range .Changes}}<tr>
+      <td><a href="/change?claim={{.Name}}"><code>{{.Name}}</code></a></td>
+      <td class="n">{{len .Commits}}</td>
+      <td>{{.Note}}</td>
+      <td>{{if .Action}}<a href="{{.Link}}">{{.Action}}</a>{{else}}<span class="muted">none</span>{{end}}</td>
+    </tr>{{end}}</tbody>
+  </table></div>
+  {{else}}<p class="empty">No commit in this period claims a spec.</p>{{end}}
+</section>
+</main>
+</body>
+</html>

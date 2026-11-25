@@ -403,10 +403,22 @@ func ledgerDraft(ctx context.Context, ledger *store.Store, sha string) (draftFil
 // reviewed commit's readiness gate. It validates everything, and re-parses each artifact with the
 // reviews connector's own parser, before writing anything (CLI-INV-19, CLI-INV-20).
 func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Context, string) (draftFile, error), output io.Writer) error {
+	return reviewSealWith(ctx, root, dir, nil, fresh, output)
+}
+
+// sealTestsRun is a test run made by the caller before the record was opened (ui-reviewer-spec §1.1,
+// review F2): the tests may take long, and nothing should hold the record meanwhile.
+type sealTestsRun struct {
+	Commit string
+	Result testsResult
+}
+
+// readSealDraft resolves a seal argument (the draft folder or its draft.json) and reads the draft.
+func readSealDraft(dir string) (string, draftFile, error) {
 	if !filepath.IsAbs(dir) {
 		wd, err := workingDirectory()
 		if err != nil {
-			return err
+			return dir, draftFile{}, err
 		}
 		dir = filepath.Join(wd, dir)
 	}
@@ -416,13 +428,23 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	}
 	raw, err := os.ReadFile(filepath.Join(dir, "draft.json"))
 	if err != nil {
-		return err
+		return dir, draftFile{}, err
 	}
 	var edited draftFile
 	decoder := json.NewDecoder(strings.NewReader(string(raw)))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&edited); err != nil {
-		return fmt.Errorf("draft.json: %w", err)
+		return dir, draftFile{}, fmt.Errorf("draft.json: %w", err)
+	}
+	return dir, edited, nil
+}
+
+// reviewSealWith seals; ran, when given, is the caller's fresh test run of the draft's commit, made
+// just before this call, and replaces the run seal would make itself.
+func reviewSealWith(ctx context.Context, root, dir string, ran *sealTestsRun, fresh func(context.Context, string) (draftFile, error), output io.Writer) error {
+	dir, edited, err := readSealDraft(dir)
+	if err != nil {
+		return err
 	}
 	reviewer := strings.TrimSpace(edited.DeclaredReviewer)
 	if reviewer == "" || strings.ContainsAny(reviewer, "\n\r") {
@@ -450,11 +472,18 @@ func reviewSeal(ctx context.Context, root, dir string, fresh func(context.Contex
 	if err != nil {
 		return err
 	}
-	ran, err := draftTests(ctx, root, draft.Commit, output)
-	if err != nil {
-		return err
+	var run testsResult
+	switch {
+	case ran == nil:
+		if run, err = draftTests(ctx, root, draft.Commit, output); err != nil {
+			return err
+		}
+	case ran.Commit != draft.Commit:
+		return errors.New("seal: the test run is for another commit; nothing written")
+	default:
+		run = ran.Result
 	}
-	tests, testsNeedWork, err := decideTests(ran, edited.Tests)
+	tests, testsNeedWork, err := decideTests(run, edited.Tests)
 	if err != nil {
 		return err
 	}
@@ -733,6 +762,9 @@ func mergeDecisions(truth, edited draftFile) (draftFile, error) {
 			truth.OutOfArea[i].Decision, truth.OutOfArea[i].Reason = d.Decision, d.Reason
 		}
 	}
+	// The test run is never in the record; the draft's run and its decisions are carried so the
+	// Review bench shows them (ui-reviewer-spec §1.1, review F1). Seal runs the tests again.
+	truth.Tests = edited.Tests
 	truth.DeclaredReviewer = edited.DeclaredReviewer
 	return truth, nil
 }

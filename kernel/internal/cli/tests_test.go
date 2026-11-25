@@ -416,15 +416,7 @@ func TestTestsReviewFindings(t *testing.T) {
 			t.Fatal("a whole change not caught did not need work")
 		}
 	})
-	t.Run("F3 the bench refuses commits whose project declares tests", func(t *testing.T) {
-		root, _, claim := testsRepo(t, true)
-		s := testUIServer(t, root, auditReport{})
-		body := `{"commit":"` + claim + `","decisions":[]}`
-		w := uiRequest(s, "POST", "/act/review-draft", "127.0.0.1:4242", "http://127.0.0.1:4242", s.token, body)
-		if w.Code != 422 || !strings.Contains(w.Body.String(), "declares its tests") {
-			t.Fatalf("%d %s", w.Code, w.Body.String())
-		}
-	})
+	// F3 (the bench dropped the tests on save) is now covered by bench_test.go::TestBenchTestsFlow.
 	t.Run("F4 a timeout stops every process the tests started", func(t *testing.T) {
 		dir := t.TempDir()
 		start := time.Now()

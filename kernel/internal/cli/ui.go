@@ -162,8 +162,18 @@ type uiServer struct {
 	compute func(ctx context.Context, base string) (ledgerView, string, error)
 	// drafts builds the ledger review drafts of commits (one store open); tests replace it.
 	drafts func(ctx context.Context, shas []string) (map[string]draftFile, error)
-	// seal runs `review seal` on a draft folder with an open store; tests replace it.
-	seal func(ctx context.Context, dir string, output io.Writer) error
+	// seal runs `review seal` on a draft folder with an open store, with the caller's fresh test run
+	// when given; tests replace it.
+	seal func(ctx context.Context, dir string, ran *sealTestsRun, output io.Writer) error
+	// runTests runs a commit's declared tests, reporting each run; tests replace it.
+	runTests func(ctx context.Context, sha string, say func(string)) (testsResult, error)
+	// jobs is the bench's one background job; life is the server's own context, cancelled when it
+	// stops, so a job outlives its request but not the server (ui-reviewer-spec §1.1, F6).
+	// issueCompute builds the release bundle in memory for Issue (R2.2); tests replace it.
+	issueCompute func(ctx context.Context, base string) (bundleIndex, map[string][]byte, error)
+	jobs         *benchJobs
+	life         context.Context
+	stopLife     context.CancelFunc
 	// asOf computes the audit of base..commit from a checkout of commit; tests replace it.
 	asOf    func(ctx context.Context, base, commit string) (ledgerView, string, error)
 	asOfMem map[string]ledgerView
@@ -326,6 +336,11 @@ func runUI(ctx context.Context, root, databaseURL string, args []string, output 
 			defer os.Remove(discovery)
 		}
 	}
+	// Stopping the server stops a running test job (its processes killed, its copy removed).
+	defer func() {
+		s.stopLife()
+		s.jobs.wg.Wait()
+	}()
 	server := &http.Server{Handler: s, ReadHeaderTimeout: 10 * time.Second}
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
@@ -390,14 +405,24 @@ func newUIServer(root, databaseURL, base string, port int) *uiServer {
 	s.asOf = func(ctx context.Context, base, commit string) (ledgerView, string, error) {
 		return asOfCompute(ctx, root, databaseURL, base, commit)
 	}
-	s.seal = func(ctx context.Context, dir string, output io.Writer) error {
+	s.seal = func(ctx context.Context, dir string, ran *sealTestsRun, output io.Writer) error {
 		ledger, err := openStore(ctx, root, databaseURL)
 		if err != nil {
 			return err
 		}
 		fresh := func(ctx context.Context, sha string) (draftFile, error) { return ledgerDraft(ctx, ledger, sha) }
-		return errors.Join(reviewSeal(ctx, root, dir, fresh, output), closeStore(ledger))
+		return errors.Join(reviewSealWith(ctx, root, dir, ran, fresh, output), closeStore(ledger))
 	}
+	s.runTests = func(ctx context.Context, sha string, say func(string)) (testsResult, error) {
+		parent := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--verify", "--quiet", sha+"^1"))
+		if cfg, found, err := readTestsConfig(ctx, root, parent); found && err == nil {
+			say(fmt.Sprintf("tests: running `%s` with each hunk of code undone (this runs the commit's own code)", printableUnit(cfg.Run)))
+		}
+		return commitTestsProgress(ctx, root, sha, say)
+	}
+	s.issueCompute = issueComputeDefault(root, databaseURL)
+	s.jobs = &benchJobs{}
+	s.life, s.stopLife = context.WithCancel(context.Background())
 	return s
 }
 
@@ -487,7 +512,13 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.serveAgentDoc(w, r)
 	case r.URL.Path == "/agent/next" && r.Method == http.MethodGet:
 		s.serveAgentNext(w, r)
-	case (r.URL.Path == "/act/review-draft" || r.URL.Path == "/act/review-preview" || r.URL.Path == "/act/review-seal") && r.Method == http.MethodPost:
+	case r.URL.Path == "/change" && r.Method == http.MethodGet:
+		s.serveChange(w, r)
+	case r.URL.Path == "/act/issue" && r.Method == http.MethodPost:
+		s.serveIssue(w, r)
+	case r.URL.Path == "/review/job" && r.Method == http.MethodGet:
+		s.serveJob(w, r)
+	case (r.URL.Path == "/act/review-draft" || r.URL.Path == "/act/review-preview" || r.URL.Path == "/act/review-tests" || r.URL.Path == "/act/review-seal") && r.Method == http.MethodPost:
 		s.serveReviewAct(w, r, strings.TrimPrefix(r.URL.Path, "/act/review-"))
 	case r.URL.Path == "/transcript" && r.Method == http.MethodGet:
 		s.serveTranscript(w, r)

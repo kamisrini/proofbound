@@ -91,6 +91,16 @@ func (s *uiServer) servePromises(w http.ResponseWriter, r *http.Request) {
 type benchItem struct {
 	Commit   auditCommit `json:"commit"`
 	Promises int         `json:"promises"`
+	// OutOfArea and Tests say what needs a decision (ui-reviewer-spec §1.5).
+	OutOfArea int    `json:"out_of_area"`
+	Tests     string `json:"tests,omitempty"`
+}
+
+// benchNote is a reviewed commit the gate blocks (§1.9), or the result of a seal (§1.8).
+type benchNote struct {
+	Commit auditCommit `json:"commit"`
+	Text   string      `json:"text"`
+	Pass   bool        `json:"pass"`
 }
 
 // reviewPage is the review bench (O-2): the queue, or one commit.
@@ -102,10 +112,21 @@ type reviewPage struct {
 	Commit  *auditCommit `json:"commit,omitempty"`
 	Draft   *draftFile   `json:"draft,omitempty"`
 	Saved   bool         `json:"saved_draft"`
-	Diff    string       `json:"-"`
 	Refusal string       `json:"refusal,omitempty"`
 	// Area says whether the commit's spec declares an area (change-area-spec.md §3).
 	Area string `json:"area,omitempty"`
+	// ui-reviewer-spec R1: who signs, the tests, the spec, the flagged change, the needs-work list,
+	// the result of a seal, and a job still running for this commit.
+	Signer        string      `json:"signer,omitempty"`
+	TestsDeclared bool        `json:"tests_declared"`
+	TestsInvalid  string      `json:"tests_invalid,omitempty"`
+	Spec          []specText  `json:"spec,omitempty"`
+	Lines         []diffLine  `json:"-"`
+	FlaggedPast   []string    `json:"flagged_past_cut,omitempty"`
+	ProvError     string      `json:"provenance_error,omitempty"`
+	NeedsWork     []benchNote `json:"needs_work"`
+	Sealed        *benchNote  `json:"sealed,omitempty"`
+	Job           *benchJob   `json:"job,omitempty"`
 }
 
 func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +159,26 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 		s.renderError(w, r, http.StatusInternalServerError, err)
 		return
 	}
-	p := reviewPage{V: v, Head: v.Report.Head, Queue: []benchItem{}, Hidden: []string{}}
+	p := reviewPage{V: v, Head: v.Report.Head, Queue: []benchItem{}, Hidden: []string{}, NeedsWork: []benchNote{}}
+	if v.Actor.Fingerprint != "" && v.Actor.Problem == "" {
+		p.Signer = v.Actor.Name + " (key " + v.Actor.Fingerprint + ")"
+	}
+	gateText := map[string]string{}
+	for _, c := range v.Report.Controls {
+		if c.ID == "C1" {
+			for _, e := range c.Evidence {
+				gateText[e.Commit] = e.Text
+			}
+		}
+	}
+	for _, c := range v.Report.Commits {
+		if t := gateText[c.Commit]; strings.HasPrefix(t, checkBlocked+":") && strings.Contains(t, "NEEDS_WORK") {
+			p.NeedsWork = append(p.NeedsWork, benchNote{Commit: c, Text: t})
+		}
+		if sealed := r.URL.Query().Get("sealed"); sealed != "" && sealed == c.Commit && gateText[c.Commit] != "" {
+			p.Sealed = &benchNote{Commit: c, Text: gateText[c.Commit], Pass: strings.HasPrefix(gateText[c.Commit], checkPass+":")}
+		}
+	}
 	for _, c := range v.Report.Commits {
 		d, ok := drafts[c.Commit]
 		if !waiting[c.Commit] || !ok {
@@ -154,7 +194,26 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 		for _, vd := range d.Verdicts {
 			n += len(vd.Obligations)
 		}
-		p.Queue = append(p.Queue, benchItem{Commit: c, Promises: n})
+		item := benchItem{Commit: c, Promises: n}
+		if area, err := commitArea(r.Context(), s.root, c.Commit); err == nil {
+			item.OutOfArea = len(area.Hunks)
+		}
+		if testsDeclared(r.Context(), s.root, c.Commit) {
+			item.Tests = "tests not run yet"
+			if local, has := localDraft(s.root, c.Commit); has && local.Tests != nil && local.Tests.Declared {
+				missed := 0
+				for _, h := range local.Tests.Hunks {
+					if h.Result != testsCaught {
+						missed++
+					}
+				}
+				item.Tests = fmt.Sprintf("tests run: %d part(s) not caught", missed)
+				if missed == 0 {
+					item.Tests = "tests run: every part caught"
+				}
+			}
+		}
+		p.Queue = append(p.Queue, item)
 	}
 	if sha := r.URL.Query().Get("commit"); sha != "" {
 		var found *auditCommit
@@ -179,23 +238,24 @@ func (s *uiServer) serveReview(w http.ResponseWriter, r *http.Request) {
 				d, p.Saved = merged, true
 			}
 		}
+		p.TestsDeclared = testsDeclared(r.Context(), s.root, sha)
+		p.TestsInvalid = testsConfigProblem(r.Context(), s.root, sha)
+		if prov, err := commitProvenance(r.Context(), s.root, sha); err == nil {
+			d.Provenance = &prov
+		} else {
+			p.ProvError = printableUnit(err.Error())
+		}
 		p.Commit, p.Draft = found, &d
 		if err := reviewerFor(v.Actor, *found, d); err != nil {
 			p.Refusal = err.Error()
 		}
-		p.Diff = commitDiff(r.Context(), s.root, sha)
+		p.Spec = benchSpec(r.Context(), s.root, sha, area)
+		p.Lines, p.FlaggedPast = benchDiff(r.Context(), s.root, sha, benchFlags(d))
+		if job, ok := s.jobs.snapshot(sha); ok {
+			p.Job = &job
+		}
 	}
 	s.renderPage(w, r, "review.html", p, p)
-}
-
-// commitDiff is the change a reviewer reads: stat and patch, at most 1,500 lines.
-func commitDiff(ctx context.Context, root, sha string) string {
-	out := gitOutput(ctx, root, "show", "--stat", "--patch", "--format=commit %H%nAuthor: %an%nDate:   %ad%n%n    %s%n", "--end-of-options", sha)
-	lines := strings.Split(out, "\n")
-	if len(lines) > 1500 {
-		lines = append(lines[:1500], fmt.Sprintf("… %d more lines; run `git show %s` to read the rest", len(lines)-1500, short(sha, 12)))
-	}
-	return printableText(strings.Join(lines, "\n"))
 }
 
 // printableText keeps newlines and tabs but replaces other control characters.
@@ -231,6 +291,11 @@ type reviewRequest struct {
 
 // applyDecisions copies the bench's choices onto the ledger draft and names the reviewer.
 func applyDecisions(d draftFile, reviewer string, decisions []reviewDecision) (draftFile, error) {
+	if d.Tests != nil {
+		t := *d.Tests
+		t.Hunks = append([]testsHunk{}, t.Hunks...)
+		d.Tests = &t
+	}
 	for _, dec := range decisions {
 		switch dec.Part {
 		case "review":
@@ -266,6 +331,21 @@ func applyDecisions(d draftFile, reviewer string, decisions []reviewDecision) (d
 				return d, err
 			}
 			a.Decision, a.Reason = dec.Outcome, dec.Finding
+		case "tests":
+			if d.Tests == nil || dec.Index < 0 || dec.Index >= len(d.Tests.Hunks) {
+				return d, errors.New("a decision names no tested part of this commit; run the tests first")
+			}
+			h := &d.Tests.Hunks[dec.Index]
+			if h.Path != dec.Path || h.Lines != dec.Lines {
+				return d, errors.New("the commit's test results changed; reload the page")
+			}
+			if h.Result == testsCaught {
+				return d, errors.New("a part the tests caught needs no decision")
+			}
+			if err := checkReasonOrEmpty(dec.Finding); err != nil {
+				return d, err
+			}
+			h.Decision, h.Reason = dec.Outcome, dec.Finding
 		default:
 			return d, errors.New("a decision has no part")
 		}
@@ -282,7 +362,7 @@ func checkReasonOrEmpty(s string) error {
 }
 
 // undecided lists the obligations without a valid outcome; seal would refuse them.
-func undecided(d draftFile) []string {
+func undecided(d draftFile, testsDeclared bool) []string {
 	var out []string
 	for _, r := range d.Reviews {
 		for _, o := range r.Obligations {
@@ -311,10 +391,30 @@ func undecided(d draftFile) []string {
 			out = append(out, "accept or reject "+printableUnit(a.Path)+" "+a.Lines+" (outside the area)?")
 		}
 	}
+	if testsDeclared {
+		switch t := d.Tests; {
+		case t == nil || !t.Declared:
+			out = append(out, "run the tests first")
+		case t.Invalid != "":
+			out = append(out, "fix "+testsConfigPath+": "+printableUnit(t.Invalid))
+		default:
+			for _, h := range t.Hunks {
+				switch {
+				case h.Result == testsCaught, h.Decision == "reject", h.Decision == "accept" && checkReason(h.Reason) == nil:
+				case h.Decision == "accept":
+					out = append(out, "why accept "+printableUnit(h.Path)+" "+h.Lines+"?")
+				default:
+					out = append(out, "accept or reject "+printableUnit(h.Path)+" "+h.Lines+" (the tests did not notice it undone)?")
+				}
+			}
+		}
+	}
 	return out
 }
 
-// serveReviewAct handles draft (save the local draft), preview (what sealing writes) and seal.
+// serveReviewAct handles draft (save the local draft), preview (what sealing writes), tests (run the
+// declared tests in the background) and seal (in the background when tests are declared: they run
+// first, with no lock held; ui-reviewer-spec §1.1).
 func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act string) {
 	var req reviewRequest
 	// Up to areaMaxTotal out-of-area decisions with 500-character reasons (review F4).
@@ -322,12 +422,6 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil || !sha40RE.MatchString(req.Commit) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
-		return
-	}
-	if testsDeclared(r.Context(), s.root, req.Commit) {
-		// The bench never runs a commit's tests inside a request, and saving a draft from it would
-		// drop the test decisions in draft.json (tests-can-fail review F3).
-		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "this project declares its tests in " + testsConfigPath + ": review this commit with `proofbound review draft " + req.Commit[:12] + "` and `proofbound review seal` in a terminal, where the tests run and each hunk they do not catch is decided"})
 		return
 	}
 	if !s.acquire(r.Context()) {
@@ -350,6 +444,12 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "that commit does not claim a spec in this period"})
 		return
 	}
+	// Only a commit waiting for review: a reviewed one's code is never run, nor its draft overwritten,
+	// from the bench (code review F2).
+	if !waitingForReview(v.Report, req.Commit) {
+		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "that commit is not waiting for review"})
+		return
+	}
 	drafts, err := s.drafts(r.Context(), []string{req.Commit})
 	truth, ok := drafts[req.Commit]
 	if err != nil || !ok {
@@ -364,32 +464,28 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": err.Error()})
 		return
 	}
+	// The test run is never in the record: it is carried from the local draft, and the request only
+	// decides its hunks (review F1).
+	declared := testsDeclared(r.Context(), s.root, req.Commit)
+	if local, has := localDraft(s.root, req.Commit); has && local.Commit == req.Commit {
+		truth.Tests = local.Tests
+	}
 	edited, err := applyDecisions(truth, v.Actor.Name, req.Decisions)
 	if err != nil {
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
 		return
 	}
 	dir := draftDir(s.root, req.Commit)
-	saveDraft := func() error {
-		body, err := json.MarshalIndent(edited, "", "  ")
-		if err != nil {
-			return err
-		}
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return err
-		}
-		return os.WriteFile(filepath.Join(dir, "draft.json"), append(body, '\n'), 0o644)
-	}
 	short12 := req.Commit[:12]
 	switch act {
 	case "draft":
-		if err := saveDraft(); err != nil {
+		if err := writeLocalDraft(s.root, req.Commit, edited); err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"saved": filepath.ToSlash(filepath.Join(".proofbound", "drafts", req.Commit, "draft.json"))})
 	case "preview":
-		if missing := undecided(edited); len(missing) > 0 {
+		if missing := undecided(edited, declared); len(missing) > 0 {
 			writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"error": "decide every promise first", "missing": missing})
 			return
 		}
@@ -403,35 +499,169 @@ func (s *uiServer) serveReviewAct(w http.ResponseWriter, r *http.Request, act st
 		if len(edited.OutOfArea) > 0 {
 			files = append(files, areaRecordPath(req.Commit)+" (signed)")
 		}
-		files = append(files, "gates/ready-"+short12+".yaml")
-		writeJSON(w, http.StatusOK, map[string]any{"reviewer": v.Actor.Name + " (key " + v.Actor.Fingerprint + ")", "files": files, "commit_message": "review " + short12})
-	case "seal":
-		if missing := undecided(edited); len(missing) > 0 {
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"error": "decide every promise first", "missing": missing})
+		if declared {
+			files = append(files, testsRecordPath(req.Commit)+" (signed)")
+		}
+		files = append(files, provRecordPath(req.Commit)+" (signed)", "gates/ready-"+short12+".yaml")
+		writeJSON(w, http.StatusOK, map[string]any{"reviewer": v.Actor.Name + " (key " + v.Actor.Fingerprint + ")", "files": files, "commit_message": "review " + short12, "warnings": sealWarnings(edited)})
+	case "tests":
+		if !declared {
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "this project declares no tests (" + testsConfigPath + ")"})
 			return
 		}
-		if err := saveDraft(); err != nil {
+		if why := testsConfigProblem(r.Context(), s.root, req.Commit); why != "" {
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": why})
+			return
+		}
+		if err := writeLocalDraft(s.root, req.Commit, edited); err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
-		var out bytes.Buffer
-		if err := s.seal(r.Context(), dir, &out); err != nil {
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
-			return
-		}
-		var written []string
-		for _, line := range strings.Split(out.String(), "\n") {
-			if rel, ok := strings.CutPrefix(line, "wrote "); ok {
-				written = append(written, rel)
+		sha := req.Commit
+		err := s.jobs.start(s.life, "tests", sha, func(ctx context.Context, say func(string)) (map[string]any, error) {
+			res, err := s.runTests(ctx, sha, say)
+			if err != nil {
+				return nil, err
 			}
-		}
-		committed, note, err := commitPaths(r.Context(), s.root, written, "review "+short12)
+			// The merge and write take the request gate, so a Save cannot land in between (F7).
+			select {
+			case s.gate <- struct{}{}:
+				defer s.release()
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+			d := edited
+			if local, has := localDraft(s.root, sha); has && local.Commit == sha {
+				d = local
+			}
+			kept := keepTestsDecisions(res, d.Tests)
+			d.Tests = &kept
+			if err := writeLocalDraft(s.root, sha, d); err != nil {
+				return nil, err
+			}
+			return map[string]any{"saved": true}, nil
+		})
 		if err != nil {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"committed": committed, "note": note, "files": written, "seal": printableText(out.String())})
+		writeJSON(w, http.StatusAccepted, map[string]any{"job": "tests"})
+	case "seal":
+		if missing := undecided(edited, declared); len(missing) > 0 {
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"error": "decide every promise first", "missing": missing})
+			return
+		}
+		if err := writeLocalDraft(s.root, req.Commit, edited); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		if !declared {
+			result, err := s.sealAndCommit(r.Context(), req.Commit, dir, nil)
+			if err != nil {
+				writeJSON(w, sealStatus(err), map[string]string{"error": err.Error()})
+				return
+			}
+			writeJSON(w, http.StatusOK, result)
+			return
+		}
+		// The decisions submitted with this click are sealed, even if the draft is saved again
+		// meanwhile: they are copied to a folder of the job's own.
+		snapshot, err := os.MkdirTemp("", "proofbound-seal-")
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		body, _ := json.MarshalIndent(edited, "", "  ")
+		if err := os.WriteFile(filepath.Join(snapshot, "draft.json"), append(body, '\n'), 0o644); err != nil {
+			_ = os.RemoveAll(snapshot)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		sha := req.Commit
+		err = s.jobs.start(s.life, "seal", sha, func(ctx context.Context, say func(string)) (map[string]any, error) {
+			defer os.RemoveAll(snapshot)
+			say("tests: running them again before sealing (a seal never trusts an earlier run)")
+			res, err := s.runTests(ctx, sha, say)
+			if err != nil {
+				return nil, err
+			}
+			return s.sealAndCommit(ctx, sha, snapshot, &sealTestsRun{Commit: sha, Result: res})
+		})
+		if err != nil {
+			_ = os.RemoveAll(snapshot)
+			writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusAccepted, map[string]any{"job": "seal"})
 	}
+}
+
+// errCommitRefused marks a seal whose files git would not commit (409).
+type errCommitRefused struct{ error }
+
+func sealStatus(err error) int {
+	var refused errCommitRefused
+	if errors.As(err, &refused) {
+		return http.StatusConflict
+	}
+	return http.StatusUnprocessableEntity
+}
+
+// sealAndCommit seals dir and commits exactly the written files. Without ran (no tests declared) it is
+// called under the request lock; with ran it takes the lock itself, after the tests.
+func (s *uiServer) sealAndCommit(ctx context.Context, sha, dir string, ran *sealTestsRun) (map[string]any, error) {
+	if ran != nil {
+		select {
+		case s.gate <- struct{}{}:
+			defer s.release()
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	// Once sealing starts it finishes, even if the server is stopping: a half-made commit would leave
+	// staged files behind (code review F8).
+	ctx = context.WithoutCancel(ctx)
+	var out bytes.Buffer
+	if err := s.seal(ctx, dir, ran, &out); err != nil {
+		return nil, err
+	}
+	var written []string
+	for _, line := range strings.Split(out.String(), "\n") {
+		if rel, ok := strings.CutPrefix(line, "wrote "); ok {
+			written = append(written, rel)
+		}
+	}
+	committed, note, err := commitPaths(ctx, s.root, written, "review "+sha[:12])
+	if err != nil {
+		return nil, errCommitRefused{err}
+	}
+	return map[string]any{"committed": committed, "note": note, "files": written, "seal": printableText(out.String())}, nil
+}
+
+// sealWarnings says, before sealing, what will make the review NEEDS_WORK whatever the promises say.
+func sealWarnings(d draftFile) []string {
+	var out []string
+	for _, a := range d.OutOfArea {
+		if a.Decision == "reject" {
+			out = append(out, "you reject "+printableUnit(a.Path)+" "+a.Lines+" (outside the area): the review will be NEEDS_WORK")
+		}
+	}
+	if t := d.Tests; t != nil && t.Declared {
+		switch {
+		case t.Baseline == testsUnreliable:
+			out = append(out, "the tests passed, then failed run again unchanged: the review will be NEEDS_WORK")
+		case t.Baseline != "" && t.Baseline != testsPass:
+			out = append(out, "the tests do not pass at this commit ("+t.Baseline+"): the review will be NEEDS_WORK")
+		case len(t.Hunks) > 0 && t.Whole != testsCaught:
+			out = append(out, "the tests did not catch the whole change undone: the review will be NEEDS_WORK")
+		}
+		for _, h := range t.Hunks {
+			if h.Result != testsCaught && h.Decision == "reject" {
+				out = append(out, "you reject "+printableUnit(h.Path)+" "+h.Lines+" (the tests did not notice it): the review will be NEEDS_WORK")
+			}
+		}
+	}
+	return out
 }
 
 // commitPaths commits exactly these new paths; on a git failure they are unstaged and removed, so a
@@ -445,7 +675,7 @@ func commitPaths(ctx context.Context, root string, rels []string, message string
 		for _, rel := range rels {
 			_ = os.Remove(filepath.Join(root, filepath.FromSlash(rel)))
 		}
-		return false, "", fmt.Errorf("not recorded: git could not commit the review: %s", out)
+		return false, "", fmt.Errorf("not recorded: git could not commit %s: %s", message, out)
 	}
 	if out, err := gitRun(ctx, root, append([]string{"add", "-f", "--"}, rels...)...); err != nil {
 		return undo(out)

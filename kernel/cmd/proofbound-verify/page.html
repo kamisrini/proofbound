@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proofbound warranty check</title>
+<style>
+:root { --ground: #F6F8FA; --surface: #fff; --ink: #1F2328; --muted: #59636E; --line: #D0D7DE; --pass: #1D6B45; --pass-bg: #E6F2EB; --disc: #7A5200; --disc-bg: #FBF2DE; --exc: #A3261D; --exc-bg: #FBEAE8; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --ground: #1A2029; --surface: #222A35; --ink: #EDF1F5; --muted: #A3AFBC; --line: #364352; --pass: #7FDDAC; --pass-bg: rgba(127,221,172,.14); --disc: #FFBE5C; --disc-bg: rgba(255,190,92,.14); --exc: #FF9585; --exc-bg: rgba(255,149,133,.14); color-scheme: dark; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+main { max-width: 52rem; margin: 0 auto; padding: 2rem 1rem; }
+h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: .5rem; padding: 1rem 1.25rem; margin: 1rem 0; }
+label { display: block; margin: .75rem 0 .25rem; font-weight: 600; }
+input[type=text] { font: 1rem ui-monospace, Menlo, Consolas, monospace; padding: .4rem .5rem; width: 14rem; max-width: 100%; border: 1px solid var(--line); border-radius: .3rem; background: var(--ground); color: var(--ink); }
+button { margin-top: 1rem; font: inherit; padding: .45rem 1rem; border-radius: .3rem; border: 1px solid var(--line); cursor: pointer; }
+.muted { color: var(--muted); }
+.row { border-top: 1px solid var(--line); padding: .6rem 0; }
+.tag { display: inline-block; padding: 0 .5rem; border-radius: .6rem; font-weight: 700; font-size: .85rem; }
+.ok { color: var(--pass); background: var(--pass-bg); } .bad { color: var(--exc); background: var(--exc-bg); } .info { color: var(--disc); background: var(--disc-bg); }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+<h1>Check a Proofbound warranty</h1>
+<p class="muted">Proofbound {{VERSION}}. This page runs entirely in your browser: nothing is uploaded, and it works offline.</p>
+
+<div class="card">
+  <label for="key">1. The trust key you were given</label>
+  <input id="key" type="text" maxlength="16" placeholder="16 characters" autocomplete="off" spellcheck="false">
+  <p class="muted">The vendor's signing key fingerprint, received by another channel: an email, a contract, a call. Never copy it from the bundle you are checking: a bundle cannot vouch for itself.</p>
+  <label for="files">2. The warranty files (<code>warranty-….json</code>)</label>
+  <input id="files" type="file" accept=".json,application/json" multiple>
+  <button id="go" type="button" disabled>Loading the checker…</button>
+</div>
+
+<div class="card" id="out" hidden></div>
+
+<div class="card">
+  <h2 style="font-size:1.1rem;margin:0">What the answer means</h2>
+  <p><span class="tag ok">SIGNATURE ONLY</span> The file was signed by the key you typed, nothing in it was changed, and it obeys the warranty rule: by its own account, every promise of the change was reviewed by someone other than its author and met. Only a check against the repository confirms that account.</p>
+  <p><span class="tag bad">INVALID</span> Something above failed. The reason says what.</p>
+  <p class="muted">What this page cannot check: that the commit and its reviews really exist in the source repository. For that, run <code>proofbound warranty verify &lt;file&gt; --repo &lt;clone&gt; --trust-key &lt;key&gt;</code>, or <code>proofbound ui --bundle &lt;folder&gt; --repo &lt;clone&gt;</code>, which can answer VALID.</p>
+</div>
+</main>
+
+<script>
+{{LOADER}}
+</script>
+<script id="wasm" type="application/octet-stream">{{WASM}}</script>
+<script>
+(function () {
+  "use strict";
+  var go = document.getElementById("go"), out = document.getElementById("out");
+  window.proofboundReady = function () { go.disabled = false; go.textContent = "Check"; };
+  function fail(text) { go.textContent = text; }
+  if (!("DecompressionStream" in window) || !window.WebAssembly) { fail("This browser is too old for this page"); return; }
+  var b64 = document.getElementById("wasm").textContent.trim(), raw = atob(b64), gz = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) { gz[i] = raw.charCodeAt(i); }
+  var runtime = new Go();
+  new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer()
+    .then(function (buf) { return WebAssembly.instantiate(buf, runtime.importObject); })
+    .then(function (r) { runtime.run(r.instance); })
+    .catch(function (e) { fail("The checker did not load: " + e); });
+
+  function line(parent, label, value) {
+    if (!value && value !== 0) { return; }
+    var p = document.createElement("div"); p.className = "muted";
+    p.textContent = label + ": "; var c = document.createElement("code"); c.textContent = String(value); p.appendChild(c);
+    parent.appendChild(p);
+  }
+  go.addEventListener("click", function () {
+    var key = document.getElementById("key").value, files = document.getElementById("files").files;
+    out.hidden = false; out.textContent = "";
+    if (!files.length) { out.textContent = "Choose at least one warranty file."; return; }
+    Array.prototype.forEach.call(files, function (file) {
+      file.arrayBuffer().catch(function (e) { return null; }).then(function (buf) {
+        if (!buf) { var bad = document.createElement("div"); bad.className = "row"; bad.textContent = file.name + ": could not be read"; out.appendChild(bad); return; }
+        var r = window.proofboundVerify(new Uint8Array(buf), key);
+        var row = document.createElement("div"); row.className = "row";
+        var head = document.createElement("div");
+        var tag = document.createElement("span"); tag.className = "tag " + (r.state === "SIGNATURE ONLY" ? "ok" : "bad"); tag.textContent = r.state;
+        var name = document.createElement("code"); name.textContent = " " + file.name;
+        head.appendChild(tag); head.appendChild(name); row.appendChild(head);
+        line(row, "Why", r.reason);
+        line(row, "Change", r.change);
+        line(row, "Commit", r.commit);
+        line(row, "Promises reviewed and met", r.obligations);
+        line(row, "Signed by key", r.key);
+        out.appendChild(row);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

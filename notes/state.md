@@ -6,6 +6,19 @@ As of: 2026-11-25
 
 ## Resume — 2026-11-25
 
+**Latest (2026-11-25 afternoon):** owner "lets do both r1 and r2": the reviewer's whole job in the
+browser (spec `docs/plans/ui-reviewer-spec.md` draft 2; spec review NEEDS_WORK 4 HIGH folded; R1 code
+review `ui-reviewer-r1-review-20261125` NEEDS_WORK, 5 MED fixed). R1: the Review bench runs a project's
+declared tests in a background job, takes test decisions, marks each line (area / tests / provenance),
+shows the spec, signer, needs-work list and the post-seal result (CLI-INV-75, 76; 47, 67 amended). R2:
+Changes page (CLI-INV-77), Issue the warranty from the Audit room (CLI-INV-78), `proofbound-verify.html`
+release asset: the warranty check compiled to WebAssembly, trust key typed by the reader (CLI-INV-79).
+Requirement: `BR-audit-room-ui` 0003 adds O-3..O-5 (not BR-ui-workspaces: its review is a dormant
+deferral). Tried on a copy of the live demo: BLOCKED/PASS/Issue/VALID all match the CLI. Next: R2 code
+review, requirement review, CI record, gate, commit, republish v0.3.2; owner opens the verify page in a
+real browser (not testable here: no node/browser). Owner holds: agent-reviewer-first flow (spec D4); a
+killed `proofbound` leaves its embedded Postgres running (seen 2026-11-25; fix after the demo).
+
 **Exact next action:** by the owner's standing rule (2026-11-23), every finished change is folded into
 v0.3.2 (republish) until Sunday 2026-11-29. Done since the release, all in v0.3.2: the warranty fix
 `0b9b66d`; the agent demo; **framework mapping** (`e7f2ff8`, CLI-INV-65); **tests that can fail**

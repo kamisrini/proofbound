@@ -123,7 +123,7 @@
         var d = { part: part, group: g, index: i, obligation_id: f.getAttribute("data-obligation"), outcome: picked ? picked.value : "" };
         var finding = f.querySelector("input[name^=f-]");
         if (finding && finding.value.trim()) { d.finding = finding.value.trim(); }
-        if (part === "area") { d.path = f.getAttribute("data-path"); d.lines = f.getAttribute("data-lines"); }
+        if (part === "area" || part === "tests") { d.path = f.getAttribute("data-path"); d.lines = f.getAttribute("data-lines"); }
         out.push(d);
       });
       return out;
@@ -140,18 +140,85 @@
     work.querySelector("[data-act=review-preview]").addEventListener("click", function () {
       send("review-preview").then(function (res) {
         if (res.error) { say(bmsg, res.error + (res.missing ? ": " + res.missing.join("; ") : ""), true); return; }
-        bpv.querySelector("pre").textContent = "Reviewer: " + res.reviewer + "\nFiles:\n  " + res.files.join("\n  ") + "\nCommit message: " + res.commit_message;
+        var text = "Reviewer: " + res.reviewer + "\nFiles:\n  " + res.files.join("\n  ") + "\nCommit message: " + res.commit_message;
+        if (res.warnings && res.warnings.length) { text += "\n\nBefore you seal:\n  " + res.warnings.join("\n  "); }
+        bpv.querySelector("pre").textContent = text;
         bpv.hidden = false; say(bmsg, "");
       });
     });
     work.querySelector("[data-act=review-back]").addEventListener("click", function () { bpv.hidden = true; });
+    // The bench's background job (ui-reviewer-spec §1.1): the tests, or a seal that runs them first.
+    // The page polls a read-only endpoint; closing the tab does not stop the job.
+    var jobLog = work.querySelector(".job-log");
+    var busy = function (on) { work.querySelectorAll("button[data-act]").forEach(function (b) { if (!b.hasAttribute("data-refused")) { b.disabled = on; } }); };
+    var follow = function () {
+      busy(true); jobLog.hidden = false;
+      var tick = function () {
+        fetch("/review/job?commit=" + encodeURIComponent(commit), { credentials: "same-origin" })
+          .then(function (r) { return r.json(); })
+          .then(function (job) {
+            if (job.none) { busy(false); return; }
+            jobLog.textContent = (job.lines || []).join("\n") + (job.error ? "\n" + job.error : "");
+            if (job.running) { window.setTimeout(tick, 1000); return; }
+            busy(false);
+            if (job.error) { say(bmsg, (job.kind === "seal" ? "Not sealed: " : "The tests did not finish: ") + job.error, true); return; }
+            if (job.kind === "seal") {
+              say(bmsg, "Sealed, signed and committed: " + job.result.files.join(", ") + ". Loading the check result.");
+              window.setTimeout(function () { window.location.href = "/review?sealed=" + encodeURIComponent(commit); }, 1200);
+            } else {
+              say(bmsg, "Tests finished. Reloading to show each part.");
+              window.setTimeout(function () { window.location.reload(); }, 800);
+            }
+          })
+          .catch(function () { window.setTimeout(tick, 2000); });
+      };
+      tick();
+    };
+    var runTests = work.querySelector("[data-act=review-tests]");
+    if (runTests) {
+      runTests.addEventListener("click", function () {
+        send("review-tests").then(function (res) {
+          if (res.error) { say(bmsg, res.error, true); return; }
+          say(bmsg, "Running the tests. You may leave this page; the run goes on.");
+          follow();
+        });
+      });
+    }
+    if (document.body.getAttribute("data-job") === "running") { follow(); }
     work.querySelector("[data-act=review-seal]").addEventListener("click", function (ev) {
       ev.target.disabled = true;
       send("review-seal").then(function (res) {
         ev.target.disabled = false;
-        if (res.error) { say(bmsg, res.error, true); return; }
-        say(bmsg, "Sealed, signed and committed: " + res.files.join(", ") + ". Reloading.");
-        window.setTimeout(function () { window.location.href = "/review"; }, 1200);
+        if (res.error) { say(bmsg, res.error + (res.missing ? ": " + res.missing.join("; ") : ""), true); return; }
+        if (res.job) { bpv.hidden = true; say(bmsg, "Running the tests again, then sealing."); follow(); return; }
+        say(bmsg, "Sealed, signed and committed: " + res.files.join(", ") + ". Loading the check result.");
+        window.setTimeout(function () { window.location.href = "/review?sealed=" + encodeURIComponent(commit); }, 1200);
+      });
+    });
+  }
+
+  // Issue the warranty (ui-reviewer-spec §2.2): preview first; the server refuses a partial release.
+  var issue = document.querySelector(".issue");
+  if (issue && issue.querySelector("[data-act=issue-preview]")) {
+    var ipv = issue.querySelector(".issue-preview"), imsg = issue.querySelector(".msg");
+    var issueSend = function (confirm) { return post("/act/issue", { base: base, confirm: confirm }); };
+    issue.querySelector("[data-act=issue-preview]").addEventListener("click", function () {
+      issueSend(false).then(function (res) {
+        ipv.hidden = true;
+        if (res.issued_already) { say(imsg, "Already issued at this point: " + res.issued_already + "."); return; }
+        if (res.error) { say(imsg, res.error + (res.not_warranted ? ":\n" + res.not_warranted.join("\n") : ""), true); return; }
+        ipv.querySelector("pre").textContent = "Signer: " + res.signer + "\nDescribes: " + res.describes + " (" + res.warranted + " change(s) warranted)\nFiles:\n  " + res.files.join("\n  ") + "\nCommit message: " + res.commit_message;
+        ipv.hidden = false; say(imsg, "");
+      });
+    });
+    issue.querySelector("[data-act=issue-confirm]").addEventListener("click", function (ev) {
+      ev.target.disabled = true;
+      issueSend(true).then(function (res) {
+        ev.target.disabled = false;
+        if (res.error) { say(imsg, res.error + (res.not_warranted ? ":\n" + res.not_warranted.join("\n") : ""), true); return; }
+        if (res.issued_already) { say(imsg, "Already issued at this point: " + res.issued_already + "."); return; }
+        ipv.hidden = true;
+        say(imsg, "Issued and committed: " + res.folder + ". It warrants the period up to " + res.describes.slice(0, 12) + ", the commit before this release commit. Send the buyer this folder and, separately, your key fingerprint.");
       });
     });
   }

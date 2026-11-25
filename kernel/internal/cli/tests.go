@@ -215,10 +215,12 @@ var testsRunner = func(ctx context.Context, dir, run string, timeout time.Durati
 
 // testsEnv is the caller's environment without git's repository variables, and with git's
 // repository search stopped above the copy, so the tests cannot find the reviewer's repository.
+// Proofbound's own variables and DATABASE_URL are dropped too: the commit's code must not learn the
+// reviewer's key path or reach the record (ui-reviewer-spec §1.1, review F7).
 func testsEnv(dir string) []string {
 	var env []string
 	for _, kv := range os.Environ() {
-		if !strings.HasPrefix(kv, "GIT_") {
+		if !strings.HasPrefix(kv, "GIT_") && !strings.HasPrefix(kv, "PROOFBOUND_") && !strings.HasPrefix(kv, "DATABASE_URL=") {
 			env = append(env, kv)
 		}
 	}
@@ -230,6 +232,17 @@ func testsEnv(dir string) []string {
 // commit's files with no .git, so the tests cannot ask git what was undone and nothing they leave
 // behind reaches the next run.
 func commitTests(ctx context.Context, root, sha string) (testsResult, error) {
+	return commitTestsProgress(ctx, root, sha, nil)
+}
+
+// commitTestsProgress is commitTests reporting each run as it ends, in the words review draft prints
+// (ui-reviewer-spec §1.1): the Review bench shows them while the tests run.
+func commitTestsProgress(ctx context.Context, root, sha string, progress func(string)) (testsResult, error) {
+	tell := func(format string, a ...any) {
+		if progress != nil {
+			progress(fmt.Sprintf(format, a...))
+		}
+	}
 	res := testsResult{Hunks: []testsHunk{}}
 	if len(commitClaims(ctx, root, sha)) == 0 {
 		return res, nil
@@ -290,6 +303,7 @@ func commitTests(ctx context.Context, root, sha string) (testsResult, error) {
 		return res, err
 	}
 	res.Baseline, res.Whole = first, testsNotRun
+	tell("tests: `%s` with nothing undone: %s", printableUnit(cfg.Run), first)
 	for _, u := range units {
 		h := testsHunk{Path: u.Path, Lines: u.Lines, Result: testsNotRun}
 		if first == testsPass && len(u.patch) > 0 {
@@ -299,6 +313,7 @@ func commitTests(ctx context.Context, root, sha string) (testsResult, error) {
 			}
 			h.Result = caughtWord(got)
 		}
+		tell("%s", testsHunkLine(h))
 		res.Hunks = append(res.Hunks, h)
 	}
 	if first != testsPass {
@@ -310,6 +325,11 @@ func commitTests(ctx context.Context, root, sha string) (testsResult, error) {
 			return res, err
 		}
 		res.Whole = caughtWord(got)
+		if res.Whole == testsUndoFailed {
+			tell("tests: could not undo the whole change")
+		} else {
+			tell("tests %s undoing the whole change", map[string]string{testsCaught: "caught", testsNotCaught: "did NOT catch"}[res.Whole])
+		}
 	}
 	again, err := attempt(nil)
 	if err != nil {
@@ -425,6 +445,19 @@ func draftTests(ctx context.Context, root, sha string, w io.Writer) (testsResult
 	return commitTests(ctx, root, sha)
 }
 
+// testsHunkLine is the line review draft prints for one hunk.
+func testsHunkLine(h testsHunk) string {
+	switch h.Result {
+	case testsCaught:
+		return fmt.Sprintf("tests caught undoing %s %s", printableUnit(h.Path), h.Lines)
+	case testsNotCaught:
+		return fmt.Sprintf("tests did NOT catch undoing %s %s", printableUnit(h.Path), h.Lines)
+	case testsUndoFailed:
+		return fmt.Sprintf("tests: could not undo %s %s", printableUnit(h.Path), h.Lines)
+	}
+	return fmt.Sprintf("tests not run for %s %s", printableUnit(h.Path), h.Lines)
+}
+
 // writeTestsLines prints what review draft found.
 func writeTestsLines(w io.Writer, res testsResult) error {
 	if !res.Declared {
@@ -443,18 +476,7 @@ func writeTestsLines(w io.Writer, res testsResult) error {
 		return p("tests: the commit changes no code outside the test paths\n")
 	}
 	for _, h := range res.Hunks {
-		var err error
-		switch h.Result {
-		case testsCaught:
-			err = p("tests caught undoing %s %s\n", printableUnit(h.Path), h.Lines)
-		case testsNotCaught:
-			err = p("tests did NOT catch undoing %s %s\n", printableUnit(h.Path), h.Lines)
-		case testsUndoFailed:
-			err = p("tests: could not undo %s %s\n", printableUnit(h.Path), h.Lines)
-		default:
-			err = p("tests not run for %s %s\n", printableUnit(h.Path), h.Lines)
-		}
-		if err != nil {
+		if err := p("%s\n", testsHunkLine(h)); err != nil {
 			return err
 		}
 	}
@@ -670,7 +692,8 @@ func testsControl(ctx context.Context, root, base string, rep *auditReport, exce
 	return c, nil
 }
 
-// testsDeclared is whether the commit's parent declares tests (the Review bench refuses to seal then).
+// testsDeclared is whether the commit's parent declares tests (then the Review bench runs them in a
+// background job before a seal; ui-reviewer-spec §1.1).
 func testsDeclared(ctx context.Context, root, sha string) bool {
 	parent := strings.TrimSpace(gitOutput(ctx, root, "rev-parse", "--verify", "--quiet", sha+"^1"))
 	_, found, _ := readTestsConfig(ctx, root, parent)
