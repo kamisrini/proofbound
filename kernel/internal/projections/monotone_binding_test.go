@@ -134,4 +134,30 @@ func TestBindingsAreMonotone(t *testing.T) {
 	if rows != 1 || verdicts == 0 {
 		t.Fatalf("binding rows=%d verdict rows=%d, want the binding kept and the verdict projected", rows, verdicts)
 	}
+
+	// P-INV-35 (docs/plans/needs-work-blocks-spec.md): every row carries its verdict's status, and a
+	// view from before the column is migrated in place on the next Apply, with no new event.
+	status := func(when string) {
+		t.Helper()
+		var wrong int
+		if err := ledger.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
+			return tx.QueryRow(ctx, `SELECT count(*) FROM obligation_verdicts_view WHERE verdict_id=$1 AND verdict_status IS DISTINCT FROM $2`, verdict.VerdictID, verdict.Status).Scan(&wrong)
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if wrong != 0 {
+			t.Fatalf("%s: %d verdict rows lack status %q", when, wrong, verdict.Status)
+		}
+	}
+	status("after the rebuild")
+	if err := ledger.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
+		_, err := tx.Exec(ctx, `ALTER TABLE obligation_verdicts_view DROP COLUMN verdict_status`)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := projector.Apply(ctx, ledger); err != nil {
+		t.Fatal(err)
+	}
+	status("after the in-place migration")
 }

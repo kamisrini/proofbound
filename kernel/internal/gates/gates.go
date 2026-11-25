@@ -296,12 +296,18 @@ func evaluateIntentRule(ctx context.Context, s *store.Store, d Definition) (Resu
 	if err != nil {
 		return result, err
 	}
-	if targets > 0 && satisfied == targets && reviewed == targets {
-		result.State = StatePass
-	} else {
-		result.State, result.WouldBlock = StateBlocked, true
+	// GATE-INV-17: a current verdict for the commit (the latest revision of each verdict id) whose
+	// status is NEEDS_WORK blocks it whatever the counts; an unknown status fails closed.
+	var needsWork string
+	var unknown int
+	err = s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
+		return tx.QueryRow(ctx, `SELECT COALESCE(string_agg(DISTINCT verdict_id, ', ' ORDER BY verdict_id) FILTER (WHERE verdict_status='NEEDS_WORK'),''), count(*) FILTER (WHERE verdict_status IS NULL OR verdict_status NOT IN ('ACCEPTABLE','NEEDS_WORK')) FROM obligation_verdicts_view WHERE commit_sha=$1`, d.ScopeCommit).Scan(&needsWork, &unknown)
+	})
+	if err != nil {
+		return result, err
 	}
-	result.Reason = readinessReason(targets, satisfied, reviewed)
+	result.State, result.Reason = readinessDecision(targets, satisfied, reviewed, needsWork, unknown)
+	result.WouldBlock = result.State == StateBlocked
 	return result, nil
 }
 
@@ -353,6 +359,22 @@ func evaluatePredicate(payload map[string]json.RawMessage, predicate Predicate) 
 // FilesystemGateDir is a small helper used by the CLI and keeps path handling
 // out of the evaluator. It is intentionally not part of the gate contract.
 func FilesystemGateDir(root string) fs.FS { return os.DirFS(filepath.Join(root, "gates")) }
+
+// readinessDecision is the readiness rule's verdict (GATE-INV-16, GATE-INV-17): PASS only when every
+// target obligation is verified SATISFIED and reviewed VERIFIABLE, no current verdict for the commit
+// is NEEDS_WORK (needsWork lists those verdict ids) and no verdict's status is unknown.
+func readinessDecision(targets, satisfied, reviewed int, needsWork string, unknown int) (State, string) {
+	reason := readinessReason(targets, satisfied, reviewed)
+	switch {
+	case needsWork != "":
+		return StateBlocked, "the reviewer recorded NEEDS_WORK (" + needsWork + "); " + reason
+	case unknown > 0:
+		return StateBlocked, "verdict status unknown; run proofbound rebuild; " + reason
+	case targets > 0 && satisfied == targets && reviewed == targets:
+		return StatePass, reason
+	}
+	return StateBlocked, reason
+}
 
 // readinessReason states the counts the readiness rule decided on (GATE-INV-16).
 func readinessReason(targets, satisfied, reviewed int) string {

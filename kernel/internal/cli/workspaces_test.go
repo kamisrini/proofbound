@@ -160,6 +160,12 @@ func TestAgentNext(t *testing.T) {
 	if got := strings.Join(dos, ","); got != "stop_and_ask_spec_owner,fix_code,hand_off_for_re_review,hand_off" {
 		t.Errorf("next = %s", got)
 	}
+	// GATE-INV-17: a reviewed commit BLOCKED by a NEEDS_WORK verdict is never "done", even when every
+	// promise is proven (review needs-work-blocks-review-20261124 M1).
+	blockedRep := auditReport{Head: rep.Head, Controls: []auditControl{{ID: "C1", Evidence: []auditEvidence{{Commit: claim, Text: "BLOCKED: the reviewer recorded NEEDS_WORK (OV-c-1); 1 of 1 obligations verified SATISFIED"}}}}}
+	if next := agentNext(blockedRep, promises, "sdd:001-x").Next; len(next) == 0 || next[len(next)-1].Do == "done" || !strings.Contains(next[0].Why+next[len(next)-1].Why, "NEEDS_WORK (OV-c-1)") {
+		t.Errorf("a BLOCKED commit: next = %+v", next)
+	}
 	if got := agentNext(rep, promises, "").Next[0].Do; got != "start_task" {
 		t.Errorf("no task: %s", got)
 	}

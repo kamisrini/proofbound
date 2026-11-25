@@ -183,7 +183,7 @@ func reportDrift(ctx context.Context, root string, ledger *store.Store, output i
 	names := map[string]string{}
 	statements := map[string]map[string][]string{}
 	err := ledger.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error {
-		rows, err := tx.Query(ctx, `SELECT verdict_id, commit_sha, intent_id, intent_artifact_sha256, max(seq) FROM obligation_verdicts_view WHERE intent_source='intent.sdd' GROUP BY 1,2,3,4 HAVING bool_and(outcome='SATISFIED')`)
+		rows, err := tx.Query(ctx, `SELECT verdict_id, commit_sha, intent_id, intent_artifact_sha256, max(seq) FROM obligation_verdicts_view WHERE intent_source='intent.sdd' GROUP BY 1,2,3,4 HAVING bool_and(outcome='SATISFIED' AND verdict_status='ACCEPTABLE')`)
 		if err != nil {
 			return err
 		}

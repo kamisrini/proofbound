@@ -189,7 +189,7 @@ func TestVerifyAgainstARepository(t *testing.T) {
 		"change intent status":  {func(b *Body) { b.ChangeIntent.Status = "proposed" }, "change intent differs"},
 		"unknown change name":   {func(b *Body) { b.ChangeName = "002-y" }, "spec at"},
 		"commit not in clone":   {func(b *Body) { b.Commit = strings.Repeat("a", 40); b.Verdicts[0].ReviewedCommit = b.Commit }, "not in clone"},
-		"verdict field differs": {func(b *Body) { b.Verdicts[0].Status = "NEEDS_WORK" }, "differs from the warranty"},
+		"verdict field differs": {func(b *Body) { b.Verdicts[0].Findings = []reviews.Finding{{FindingID: "F-1", Severity: "LOW"}} }, "differs from the warranty"},
 		"review field differs":  {func(b *Body) { b.Reviews[0].ReviewID = "RR-other-1" }, "differs from the warranty"},
 		"artifact missing":      {func(b *Body) { b.Reviews[0].ArtifactPath = "docs/verification/verdicts/RR-none.md" }, "not committed at HEAD"},
 	}

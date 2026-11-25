@@ -397,9 +397,14 @@ func agentNext(rep auditReport, promises []promiseChange, task string) agentAnsw
 	}
 	unreviewed := false
 	for _, cv := range ans.Commits {
-		if cv.State == checkNoReview {
+		switch cv.State {
+		case checkNoReview:
 			unreviewed = true
 			ans.Blocking = append(ans.Blocking, agentBlock{Kind: "needs_independent_review", Commit: cv.Commit, Who: "not the author, not an agent on it, not the spec owner", YouMay: false})
+		case checkBlocked:
+			// GATE-INV-17: a reviewed commit can be BLOCKED with every promise proven, when the reviewer
+			// recorded NEEDS_WORK (a rejected line outside the area or a part no test caught). Never "done".
+			ans.Next = append(ans.Next, agentStep{Do: "fix_code", Why: short(cv.Commit, 12) + " is BLOCKED: " + cv.Reason, Command: "commit a fix with the task active"})
 		}
 	}
 	for _, p := range ans.Change.Promises {

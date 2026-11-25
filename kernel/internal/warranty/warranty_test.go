@@ -38,9 +38,9 @@ func sampleBody() Body {
 		Requirements: []connectorintent.Requirement{{Schema: "proofbound.requirement.v1", RequirementID: "BR-x-aaaaaa", DeclaredOwner: "owner", ArtifactSHA256: reqDigest, Obligations: []connectorintent.Obligation{{ID: "O-A", Statement: "A."}, {ID: "O-B", Statement: "B."}}}},
 		Reviews: []reviews.RequirementReview{{ReviewID: "RR-1", Requirement: connectorintent.Reference{RecordID: "BR-x-aaaaaa", ArtifactSHA256: reqDigest}, DeclaredReviewer: "reviewer",
 			Outcomes: []reviews.RequirementReviewOutcome{{ObligationID: "O-A", Outcome: "VERIFIABLE"}, {ObligationID: "O-B", Outcome: "VERIFIABLE"}}}},
-		Verdicts: []reviews.ObligationVerdict{{VerdictID: "OV-1", DeclaredReviewer: "reviewer", ReviewedCommit: testCommit,
+		Verdicts: []reviews.ObligationVerdict{{VerdictID: "OV-1", Status: "ACCEPTABLE", DeclaredReviewer: "reviewer", ReviewedCommit: testCommit,
 			ChangeIntent: connectorintent.Reference{RecordID: "CI-add-x-bbbbbb", ArtifactSHA256: ciDigest},
-			Obligations: []reviews.ObligationOutcome{{RequirementID: "BR-x-aaaaaa", ArtifactSHA256: reqDigest, ObligationID: "O-A", Outcome: "SATISFIED"}, {RequirementID: "BR-x-aaaaaa", ArtifactSHA256: reqDigest, ObligationID: "O-B", Outcome: "SATISFIED"}}}},
+			Obligations:  []reviews.ObligationOutcome{{RequirementID: "BR-x-aaaaaa", ArtifactSHA256: reqDigest, ObligationID: "O-A", Outcome: "SATISFIED"}, {RequirementID: "BR-x-aaaaaa", ArtifactSHA256: reqDigest, ObligationID: "O-B", Outcome: "SATISFIED"}}}},
 	}
 }
 
@@ -108,18 +108,23 @@ func TestRuleRejectsReSignedForgeries(t *testing.T) {
 		t.Fatalf("calibration: the sample body fails the rule: %v", err)
 	}
 	cases := map[string]func(*Body){
-		"inconclusive":       func(b *Body) { b.Verdicts[0].Obligations[1].Outcome = "INCONCLUSIVE" },
-		"ambiguous":          func(b *Body) { b.Reviews[0].Outcomes[0].Outcome = "AMBIGUOUS" },
-		"missing outcome":    func(b *Body) { b.Verdicts[0].Obligations = b.Verdicts[0].Obligations[:1] },
-		"no review":          func(b *Body) { b.Reviews = nil },
-		"owner reviews":      func(b *Body) { b.Reviews[0].DeclaredReviewer = "owner" },
-		"owner verdict":      func(b *Body) { b.Verdicts[0].DeclaredReviewer = "owner" },
-		"other commit":       func(b *Body) { b.Verdicts[0].ReviewedCommit = strings.Repeat("f", 40) },
-		"other change rev":   func(b *Body) { b.Verdicts[0].ChangeIntent.ArtifactSHA256 = reqDigest },
-		"missing req":        func(b *Body) { b.Requirements = nil },
-		"untargeted req":     func(b *Body) { b.Requirements = append(b.Requirements, connectorintent.Requirement{RequirementID: "BR-y-cccccc"}) },
+		"inconclusive":     func(b *Body) { b.Verdicts[0].Obligations[1].Outcome = "INCONCLUSIVE" },
+		"ambiguous":        func(b *Body) { b.Reviews[0].Outcomes[0].Outcome = "AMBIGUOUS" },
+		"missing outcome":  func(b *Body) { b.Verdicts[0].Obligations = b.Verdicts[0].Obligations[:1] },
+		"no review":        func(b *Body) { b.Reviews = nil },
+		"owner reviews":    func(b *Body) { b.Reviews[0].DeclaredReviewer = "owner" },
+		"owner verdict":    func(b *Body) { b.Verdicts[0].DeclaredReviewer = "owner" },
+		"other commit":     func(b *Body) { b.Verdicts[0].ReviewedCommit = strings.Repeat("f", 40) },
+		"other change rev": func(b *Body) { b.Verdicts[0].ChangeIntent.ArtifactSHA256 = reqDigest },
+		"missing req":      func(b *Body) { b.Requirements = nil },
+		"untargeted req": func(b *Body) {
+			b.Requirements = append(b.Requirements, connectorintent.Requirement{RequirementID: "BR-y-cccccc"})
+		},
 		"obligation not req": func(b *Body) { b.ChangeIntent.Targets[0].ObligationIDs = []string{"O-A", "O-B", "O-C"} },
 		"bad commit":         func(b *Body) { b.Commit = "HEAD" },
+		// W-INV-3 amended (needs-work-blocks-spec.md): every obligation SATISFIED, but the reviewer
+		// recorded NEEDS_WORK (a rejected out-of-area line or uncaught part).
+		"needs work": func(b *Body) { b.Verdicts[0].Status = "NEEDS_WORK" },
 	}
 	for name, mutate := range cases {
 		b := sampleBody()

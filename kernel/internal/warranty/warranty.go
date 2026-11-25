@@ -266,6 +266,11 @@ func CheckRule(b Body) error {
 		if v.ChangeIntent.RecordID != ci.IntentID || v.ChangeIntent.ArtifactSHA256 != ci.ArtifactSHA256 {
 			return fmt.Errorf("verdict %s evaluates another change intent revision", v.VerdictID)
 		}
+		// W-INV-3 amended (needs-work-blocks-spec.md): a reviewer who recorded NEEDS_WORK did not
+		// accept the change, whatever its obligations' outcomes.
+		if v.Status != "ACCEPTABLE" {
+			return fmt.Errorf("verdict %s is %s, not ACCEPTABLE", v.VerdictID, v.Status)
+		}
 		for _, o := range v.Obligations {
 			k := key(o.RequirementID, o.ArtifactSHA256)
 			owner, ok := owners[k]

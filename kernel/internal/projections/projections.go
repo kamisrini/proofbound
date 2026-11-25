@@ -25,11 +25,11 @@ import (
 var ErrSnapshotMismatch = errors.New("projections: snapshots differ")
 
 var (
-	shaPattern         = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
-	ulidPattern        = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
-	hexPattern         = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	gitPattern         = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
-	emailPattern       = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
+	shaPattern   = regexp.MustCompile(`^[0-9a-f]{40}$|^[0-9a-f]{64}$`)
+	ulidPattern  = regexp.MustCompile(`^[0-7][0-9A-HJKMNP-TV-Z]{25}$`)
+	hexPattern   = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	gitPattern   = regexp.MustCompile(`^(?:[0-9a-f]{40}|[0-9a-f]{64})$`)
+	emailPattern = regexp.MustCompile(`^[^@\s]+@[^@\s]+$`)
 	// A decision citation ends in either suffix convention the /proofbound-decide skill mints: a
 	// random 6-char token ([a-z0-9]{6}) for a standing decision, or a YYYY-MM-DD date for a phase
 	// decision (e.g. VD-p5-intent-provenance-2026-09-10). The date form was previously rejected,
@@ -140,7 +140,9 @@ ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS verdict_id TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS status TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_path TEXT;
 ALTER TABLE reviews_view ADD COLUMN IF NOT EXISTS artifact_sha TEXT;
-ALTER TABLE commits_view ADD COLUMN IF NOT EXISTS intent_refs JSON;`
+ALTER TABLE commits_view ADD COLUMN IF NOT EXISTS intent_refs JSON;
+ALTER TABLE obligation_verdicts_view ADD COLUMN IF NOT EXISTS verdict_status TEXT;
+UPDATE obligation_verdicts_view ov SET verdict_status = e.payload->>'status' FROM events e WHERE ov.verdict_status IS NULL AND e.event_id::text = ov.event_id;`
 
 func (p *Projector) Ensure(ctx context.Context, s *store.Store) error {
 	return s.WithTx(ctx, func(ctx context.Context, tx *store.Tx) error { _, err := tx.Exec(ctx, ddl); return err })
@@ -558,7 +560,7 @@ func reduceObligationVerdict(ctx context.Context, tx *store.Tx, r store.Record, 
 			return errors.New("v2 verdict satisfied outcome resolved to no evidence")
 		}
 		evidence, _ := json.Marshal(evidenceIDs)
-		if _, err := tx.Exec(ctx, `INSERT INTO obligation_verdicts_view(verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT(verdict_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET outcome=EXCLUDED.outcome,evidence_event_ids=EXCLUDED.evidence_event_ids,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE obligation_verdicts_view.seq < EXCLUDED.seq`, v.VerdictID, v.ReviewedCommit, v.ChangeIntent.Source, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256, outcome.Source, outcome.RequirementID, outcome.ArtifactSHA256, outcome.ObligationID, outcome.Outcome, evidence, r.Event.ID.String(), r.Seq); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO obligation_verdicts_view(verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq,verdict_status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT(verdict_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id) DO UPDATE SET outcome=EXCLUDED.outcome,verdict_status=EXCLUDED.verdict_status,evidence_event_ids=EXCLUDED.evidence_event_ids,event_id=EXCLUDED.event_id,seq=EXCLUDED.seq WHERE obligation_verdicts_view.seq < EXCLUDED.seq`, v.VerdictID, v.ReviewedCommit, v.ChangeIntent.Source, v.ChangeIntent.RecordID, v.ChangeIntent.ArtifactSHA256, outcome.Source, outcome.RequirementID, outcome.ArtifactSHA256, outcome.ObligationID, outcome.Outcome, evidence, r.Event.ID.String(), r.Seq, v.Status); err != nil {
 			return err
 		}
 	}
@@ -906,7 +908,7 @@ func (p *Projector) Snapshot(ctx context.Context, s *store.Store) (Snapshot, err
 		"change_intents_view":          "SELECT source,intent_id,artifact_sha256,status,declared_sponsor,payload,event_id,seq FROM change_intents_view",
 		"intent_targets_view":          "SELECT intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,relation,event_id,seq FROM intent_targets_view",
 		"commit_intents_view":          "SELECT commit_sha,provider,intent_id,intent_artifact_sha256,event_id,seq FROM commit_intents_view",
-		"obligation_verdicts_view":     "SELECT verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq FROM obligation_verdicts_view",
+		"obligation_verdicts_view":     "SELECT verdict_id,commit_sha,intent_source,intent_id,intent_artifact_sha256,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,evidence_event_ids,event_id,seq,verdict_status FROM obligation_verdicts_view",
 		"requirement_reviews_view":     "SELECT review_id,requirement_source,requirement_id,requirement_artifact_sha256,obligation_id,outcome,finding,declared_reviewer,event_id,seq FROM requirement_reviews_view",
 	}
 	for name, q := range queries {
@@ -965,7 +967,7 @@ func readSnapshotRows(name string, rows snapshotRows) ([]map[string]any, error) 
 		case "commit_intents_view":
 			a = make([]any, 6)
 		case "obligation_verdicts_view":
-			a = make([]any, 13)
+			a = make([]any, 14)
 		default:
 			a = make([]any, 6)
 		}
