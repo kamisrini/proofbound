@@ -2,27 +2,34 @@
 
 > Durable resume state. Rewrite this file in place; do not create a second state file.
 
-As of: 2026-11-25
+As of: 2026-11-27
 
-## Resume — 2026-11-25
+## Resume — 2026-11-27
 
-**Exact next action:** nothing is in flight; `main` = `origin/main` = `d4f1e04`, v0.3.2 republished
-there and verified. By the owner's standing rule (2026-11-23) every finished change is folded into
-v0.3.2 until Sunday 2026-11-29 (launch 2026-11-30). Next is the owner's pick; before Sunday regardless:
-a final re-check of the docs (README, QUICKSTART, DEMO pages now mention the bench, the agent reviewer
-and the verify page).
+**Exact next action:** ask the owner whether to republish v0.3.2 with `f64b760` (the orphaned-Postgres
+fix is binary code; the docs commit `f4d6f0b` needs no release). Standing rule: fold finished changes
+into v0.3.2 until Sunday 2026-11-29, launch 2026-11-30. Republishing is outward-facing: owner's go first.
+`main` is ahead of `origin/main` by two commits, not pushed.
 
 **Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
-- `DEF-UI-BENCH-BROWSER-CHECK-001`: open `~/projects/proofbound-verify-try/proofbound-verify.html`
-  (key 9510b7cfe42f5475 → SIGNATURE ONLY; 0000000000000000 → INVALID) and the bench's Show in the
-  code links and sticky evidence column in a real browser (no browser here).
-- `DEF-UI-AGENT-REQ-ROUND6-001`: whether to run a sixth requirement round so BR-audit-room-ui 0008's
-  O-9A (the agent reviewer, reviewer's own wording) can go active.
-- `DEF-ORPHAN-EMBEDDED-PG-001`: a killed proofbound leaves its embedded Postgres on 55432 (owner: fix
-  after the demo).
-- Update the local binary: `curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`
-  (an owner UI was running `~/.local/bin/proofbound` from before R1). Dev build:
-  `~/projects/proofbound-dev-bin/proofbound` (deleted by the owner earlier; recreated for R3).
+- `DEF-UI-BENCH-BROWSER-CHECK-001` and `DEF-UI-BUNDLE-BROWSER-CHECK-001`: evidence gathered 2026-11-27
+  with Windows Chrome 158 headless, driven from WSL by a scratch chromedp harness (not committed; details
+  in the journal). Every check passed, each with a control that must fail. Rows left OPEN: closing them
+  is the owner's call (their unblock says "owner reports" or "a browser harness is added").
+- `DEF-UI-AGENT-REQ-ROUND6-001`: unchanged.
+- `DEF-FIRST-START-CRASH-001` (new): a kill during the very first start leaves a half-made ledger.
+- Update the local binary: `curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`.
+
+**2026-11-27 in brief** (details: `notes/journal/2026-11-27.md`):
+- `f4d6f0b` docs: README, the r3 start page and QUICKSTART now name the Review bench, the opt-in agent
+  reviewer, Issue the warranty and `proofbound-verify.html`.
+- Browser checks (no commit): verify page SIGNATURE ONLY / INVALID (wrong key) / INVALID (tampered);
+  bench Show in the code lands on the flagged line at 1400 and 1000 px; evidence column sticks at 12 px;
+  `ui --bundle` badge "verified in this browser", and "does NOT verify" when one signature digit changes.
+- `f64b760` fix(store): `Open` stops an orphan of its own data directory (store INV-28 amended; the SPEC
+  had promised adoption since the migration corpus and the store never had it).
+  `DEF-ORPHAN-EMBEDDED-PG-001` RESOLVED. Non-author review NEEDS_WORK, 2 MED fixed, LOWs in the row.
+  `make check` green.
 
 **2026-11-25 in brief** (details: `notes/journal/2026-11-25.md`):
 - Hook guard (`681195a`) and the live agent demo page (`93e3372`).
