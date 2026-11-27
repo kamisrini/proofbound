@@ -277,7 +277,7 @@ to scrutiny.
 $ git commit -m "add a greeting"      # code, no claim, no task
 proofbound: this commit changes code (src/hello.sh) but claims no spec.
   Run `proofbound task start <change>` and commit again: the claim is added for you.
-  Specs, docs, gates, review records and Markdown need no claim.
+  Specs, docs, gates, review records and other Markdown need no claim; a coding agent's instructions (CLAUDE.md, AGENTS.md, .claude/) do.
 $ proofbound task start 002-totals-row
 task sdd:002-totals-row: commits that change code now end with `Intent: sdd:002-totals-row`; `proofbound task stop` when done
 $ git commit -m "add a greeting"      # the same commit, with a task active

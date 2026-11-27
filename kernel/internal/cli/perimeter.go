@@ -64,6 +64,13 @@ func perimeterDecision(ctx context.Context, raw []byte) (bool, string) {
 	if !ok {
 		return true, ""
 	}
+	if trustConfigPath(rel) {
+		// CLI-INV-84: whatever the area says, and whatever the task file holds (fail closed).
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(taskFile))); !errors.Is(err, os.ErrNotExist) {
+			return false, fmt.Sprintf("proofbound: %s is Proofbound's trust configuration (keys, waivers, declared tests, the agent reviewer, gates, the pull-request check). An agent may not change it while a task is active. Ask the person running the task to change it.", rel)
+		}
+		return true, ""
+	}
 	if housekeepingPath(rel) {
 		return true, ""
 	}
@@ -92,6 +99,13 @@ func perimeterDecision(ctx context.Context, raw []byte) (bool, string) {
 	}
 	return false, fmt.Sprintf("proofbound: %s is outside the area the spec for %s allows (%s: %s). Do not edit it for this task. If the change truly needs it, stop and ask the spec owner to widen %s and commit that first; otherwise the reviewer must accept or reject every line outside the area (control C10).",
 		rel, claim, strings.Join(files, ", "), strings.Join(patterns, " "), areaFileName)
+}
+
+// trustConfigPath is Proofbound's own trust configuration in a repository (CLI-INV-84), compared
+// without regard to letter case: everything under .proofbound/ and gates/, and the pull-request check.
+func trustConfigPath(rel string) bool {
+	lower := strings.ToLower(rel)
+	return strings.HasPrefix(lower, ".proofbound/") || strings.HasPrefix(lower, "gates/") || lower == ".github/workflows/proofbound.yml"
 }
 
 // guardFiles hold the guard on an agent's own work: the hooks (and disableAllHooks) and the active

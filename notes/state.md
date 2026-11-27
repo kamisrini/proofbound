@@ -6,19 +6,27 @@ As of: 2026-11-27
 
 ## Resume — 2026-11-27
 
-**Exact next action:** nothing in flight. Owner said 2026-11-27 "yes push and close both": main pushed
-and v0.3.2 republished at the closeout commit with the orphaned-Postgres fix (see the journal for the
-verification). Standing rule: fold finished changes into v0.3.2 until Sunday 2026-11-29, launch
-2026-11-30.
+**Exact next action:** agent-instruction files fix committed locally (`CI-agent-instruction-files-q8v3n1`),
+NOT pushed and v0.3.2 NOT republished: ask the owner before pushing and republishing (fold into
+v0.3.2 until Sunday 2026-11-29, launch 2026-11-30). Owner is also choosing a domain (recommended
+getproofbound.com, optional proofbound.sh) and host (recommended Cloudflare Pages, direct upload from
+`~/projects/proofbound-commercial/gtm/`); nothing bought.
 
 **Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
 - `DEF-UI-BENCH-BROWSER-CHECK-001` and `DEF-UI-BUNDLE-BROWSER-CHECK-001`: RESOLVED 2026-11-27, closed by
   the owner on the headless-Chrome evidence (journal).
 - `DEF-UI-AGENT-REQ-ROUND6-001`: unchanged.
 - `DEF-FIRST-START-CRASH-001` (new): a kill during the very first start leaves a half-made ledger.
+- `DEF-KEY-ADDED-IN-RANGE-001` (new): a reviewer key added inside the pull request still counts.
+- `DEF-AGENT-FILES-LOWS-001` (new): the review LOWs F6-F8 (symlink/Windows trust paths, other agents' files).
 - Update the local binary: `curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`.
 
 **2026-11-27 in brief** (details: `notes/journal/2026-11-27.md`):
+- Agent instruction files are code (CLI-INV-83): `CLAUDE.md`, `AGENTS.md`, `.claude/**` (not the root
+  settings), `.cursor/**`, Copilot files need a claim or waiver; only the setup commit that first adds
+  the profile is exempt. The agent hook refuses `.proofbound/`, `gates/`, the workflow mid-task
+  (CLI-INV-84). BR-write-perimeter 0007 O-5 (proposed). Review NEEDS_WORK: 4 MED + F5 fixed, LOWs in
+  `DEF-AGENT-FILES-LOWS-001`. Landing page (private) headline and limits reworded, v10.
 - `f4d6f0b` docs: README, the r3 start page and QUICKSTART now name the Review bench, the opt-in agent
   reviewer, Issue the warranty and `proofbound-verify.html`.
 - Browser checks (no commit): verify page SIGNATURE ONLY / INVALID (wrong key) / INVALID (tampered);

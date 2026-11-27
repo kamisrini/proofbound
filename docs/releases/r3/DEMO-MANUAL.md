@@ -110,7 +110,7 @@ AGENTS.md
 | `.git/hooks/prepare-commit-msg` | Adds the claim for you while a `proofbound task` is active (step 3 shows the manual way) |
 | `.github/workflows/proofbound.yml` | The pull-request check, for when this project is on GitHub |
 
-This commit changes no code (only Proofbound's own files and Markdown), so it needs no claim. `base`
+This commit changes no code (only Proofbound's own files and Markdown), so it needs no claim. It is the setup commit, the one that adds the profile, so it may also add `AGENTS.md` and the reviewer agent; a later change to either needs a claim like code. `base`
 remembers this commit: later,
 the pull-request check compares everything after it, as if it were the base of a pull request.
 
@@ -133,7 +133,7 @@ git rm -q --cached hello.sh && rm hello.sh
 ```text
 proofbound: this commit changes code (hello.sh) but claims no spec.
   Run `proofbound task start <change>` and commit again: the claim is added for you.
-  Specs, docs, gates, review records and Markdown need no claim.
+  Specs, docs, gates, review records and other Markdown need no claim; a coding agent's instructions (CLAUDE.md, AGENTS.md, .claude/) do.
 ```
 
 **What just happened.** The hook `init` installed blocks a commit that changes code without claiming

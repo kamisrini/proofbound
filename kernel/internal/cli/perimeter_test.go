@@ -309,9 +309,10 @@ func TestPerimeterGuardsItsOwnFiles(t *testing.T) {
 		}
 		guarded(t, call(dir, "Write", filepath.Join(dir, ".claude/settings.json")), ".claude/settings.json", "(unreadable)")
 	})
-	t.Run("with no task, or another .claude file, allowed", func(t *testing.T) {
-		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, ".claude/commands/x.md"))); !ok {
-			t.Errorf("a command file was refused: %s", why)
+	t.Run("with no task allowed; another .claude file is judged by the area, not the guard", func(t *testing.T) {
+		// Amended 2026-11-27 (CLI-INV-83): a command file is an agent instruction file, so code.
+		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, ".claude/commands/x.md"))); ok || strings.Contains(why, "holds the guard") || !strings.Contains(why, "is outside the area") {
+			t.Errorf("a command file: ok=%v %q", ok, why)
 		}
 		if err := os.Remove(filepath.Join(root, taskFile)); err != nil {
 			t.Fatal(err)
@@ -321,6 +322,63 @@ func TestPerimeterGuardsItsOwnFiles(t *testing.T) {
 			if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, f))); !ok {
 				t.Errorf("%s refused with no task: %s", f, why)
 			}
+		}
+	})
+}
+
+// CLI-INV-84: while a task is active an agent may not change Proofbound's trust configuration, whatever
+// the area says; CLI-INV-83: an agent instruction file is judged against the area like code.
+func TestPerimeterRefusesTrustConfig(t *testing.T) {
+	t.Setenv("CLAUDE_PROJECT_DIR", "")
+	ctx := context.Background()
+	// Written out, not trustConfigPath, so a path dropped from the code fails here.
+	files := []string{".proofbound/keys/mallory.pub", ".proofbound/waivers/w.json", ".proofbound/tests.json", ".proofbound/agent-review.json",
+		".proofbound/sdd-profile.json", "gates/ready-abc.yaml", ".github/workflows/proofbound.yml", ".PROOFBOUND/Keys/m.pub"}
+	refused := func(t *testing.T, root, f string) {
+		t.Helper()
+		for _, tool := range []string{"Edit", "Write", "MultiEdit", "NotebookEdit"} {
+			ok, why := perimeterDecision(ctx, call(root, tool, filepath.Join(root, f)))
+			if ok || !strings.Contains(why, "proofbound: "+f+" is Proofbound's trust configuration") {
+				t.Errorf("%s %s: ok=%v %q", tool, f, ok, why)
+			}
+		}
+	}
+	root := perimeterRepo(t)
+	for _, f := range files {
+		refused(t, root, f)
+	}
+	t.Run("whatever the area or the task file says", func(t *testing.T) {
+		wide := perimeterRepo(t)
+		uiWrite(t, wide, "specs/001-a/scope.paths", "**\n")
+		uiCommit(t, wide, "owner", "widen")
+		uiWrite(t, wide, taskFile, "garbage\n")
+		for _, f := range files {
+			refused(t, wide, f)
+		}
+	})
+	t.Run("no task, no refusal", func(t *testing.T) {
+		if err := os.Remove(filepath.Join(root, taskFile)); err != nil {
+			t.Fatal(err)
+		}
+		defer uiWrite(t, root, taskFile, "sdd:001-a\n")
+		for _, f := range files {
+			if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, f))); !ok {
+				t.Errorf("%s refused with no task: %s", f, why)
+			}
+		}
+	})
+	t.Run("an agent instruction file is judged against the area", func(t *testing.T) {
+		for _, f := range []string{"CLAUDE.md", "AGENTS.md", "src/CLAUDE.md", ".claude/agents/r.md"} {
+			ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, f)))
+			if ok || !strings.Contains(why, f+" is outside the area the spec for sdd:001-a allows") {
+				t.Errorf("%s: ok=%v %q", f, ok, why)
+			}
+		}
+		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, "src/a/AGENTS.md"))); !ok {
+			t.Errorf("an AGENTS.md inside the area was refused: %s", why)
+		}
+		if ok, why := perimeterDecision(ctx, call(root, "Write", filepath.Join(root, "docs/n.md"))); !ok {
+			t.Errorf("docs stay housekeeping: %s", why)
 		}
 	})
 }

@@ -133,10 +133,39 @@ func currentTask(root string) (string, error) {
 // stagedCode is every staged path (index against HEAD, or against the empty tree before the first
 // commit) that housekeepingPath does not exempt.
 func stagedCode(ctx context.Context, root string) ([]string, error) {
+	raw, err := stagedDiff(ctx, root)
+	if err != nil {
+		return nil, err
+	}
+	var code []string
+	for _, p := range strings.Split(string(raw), "\x00") {
+		if p != "" && !housekeepingPath(p) {
+			code = append(code, p)
+		}
+	}
+	// The setup commit may carry the agent instruction files init writes (CLI-INV-83).
+	return withoutSetupFiles(code, func() bool {
+		added, err := stagedDiff(ctx, root, "--diff-filter=A", "--", profilePath)
+		return err == nil && strings.Trim(string(added), "\x00") != "" && !profileHistory(ctx, root, "HEAD")
+	}), nil
+}
+
+// stagedDiff lists the staged paths (index against HEAD, or against the empty tree before the first
+// commit), NUL-separated; extra holds more `git diff` options and, after "--", paths.
+func stagedDiff(ctx context.Context, root string, extra ...string) ([]byte, error) {
 	args := []string{"-C", root, "diff", "--cached", "--name-only", "--no-renames", "-z"}
+	var paths []string
+	for i, a := range extra {
+		if a == "--" {
+			paths = extra[i:]
+			break
+		}
+		args = append(args, a)
+	}
 	if gitOutput(ctx, root, "rev-parse", "--verify", "-q", "HEAD") == "" {
 		args = append(args, "4b825dc642cb6eb9a060e54bf8d69288fbee4904") // the empty tree
 	}
+	args = append(args, paths...)
 	cmd := exec.CommandContext(ctx, "git", args...)
 	// git runs hooks with GIT_INDEX_FILE naming the index it is about to commit (a temporary one for
 	// `commit -a` and `commit <path>`); dropping it, as repositoryGitEnv does, reads the wrong index.
@@ -150,13 +179,7 @@ func stagedCode(ctx context.Context, root string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("hook: cannot list staged paths: %s", strings.TrimSpace(stderr.String()))
 	}
-	var code []string
-	for _, p := range strings.Split(string(raw), "\x00") {
-		if p != "" && !housekeepingPath(p) {
-			code = append(code, p)
-		}
-	}
-	return code, nil
+	return raw, nil
 }
 
 func inMerge(ctx context.Context, root string) bool {
@@ -233,7 +256,7 @@ func runHook(ctx context.Context, root, hook, file, source string, output io.Wri
 	if len(shown) > 3 {
 		shown = shown[:3]
 	}
-	fmt.Fprintf(output, "proofbound: this commit changes code (%s) but claims no spec.\n  Run `proofbound task start <change>` and commit again: the claim is added for you.\n  Specs, docs, gates, review records and Markdown need no claim.\n", strings.Join(shown, ", "))
+	fmt.Fprintf(output, "proofbound: this commit changes code (%s) but claims no spec.\n  Run `proofbound task start <change>` and commit again: the claim is added for you.\n  Specs, docs, gates, review records and other Markdown need no claim; a coding agent's instructions (CLAUDE.md, AGENTS.md, .claude/) do.\n", strings.Join(shown, ", "))
 	for _, n := range notes {
 		fmt.Fprintf(output, "  %s\n", n)
 	}

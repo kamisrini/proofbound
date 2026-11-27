@@ -130,7 +130,8 @@ func testsUnits(ctx context.Context, root, sha string, cfg testsConfig) ([]tests
 		if status == "" {
 			break
 		}
-		if housekeepingPath(p) || inArea(cfg.Paths, p) {
+		// An agent instruction file is code (CLI-INV-83) but no test can notice it undone: not a unit.
+		if housekeepingPath(p) || agentInstructionPath(p) || inArea(cfg.Paths, p) {
 			continue
 		}
 		diff, err := gitBytes(ctx, root, "--literal-pathspecs", "diff", "-U0", "--no-renames", "--no-ext-diff", "--no-color", "--binary", from, sha, "--", p)

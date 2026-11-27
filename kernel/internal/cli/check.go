@@ -235,6 +235,7 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 				code = append(code, p)
 			}
 		}
+		code = withoutSetupFiles(code, func() bool { return setupCommit(ctx, root, sha) })
 		if len(code) == 0 {
 			continue
 		}
@@ -273,6 +274,9 @@ func uncoveredCommits(ctx context.Context, root, base string, claims []checkLine
 // `init` writes. Everything else is code. The pull-request workflow is exempt because the check cannot
 // guard its own workflow: GitHub runs the copy on the pull request's branch.
 func housekeepingPath(path string) bool {
+	if agentInstructionPath(path) {
+		return false // CLI-INV-83: what steers an agent is code, whatever its folder or suffix
+	}
 	for _, dir := range []string{"openspec/", "specs/", "gates/", ".proofbound/", "docs/"} {
 		if strings.HasPrefix(path, dir) {
 			return true
@@ -284,6 +288,52 @@ func housekeepingPath(path string) bool {
 	}
 	lower := strings.ToLower(path)
 	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
+}
+
+// agentInstructionPath reports whether path is a file a coding agent reads as its instructions or
+// configuration (CLI-INV-83), compared without regard to letter case: CLAUDE.md, CLAUDE.local.md,
+// AGENTS.md or GEMINI.md in any folder, anything under a .claude/ or .cursor/ folder at any depth,
+// .cursorrules, .github/copilot-instructions.md, or anything under .github/instructions/, except the
+// root hook settings (claudeSettingsPath), which stay housekeeping: CLI-INV-69 guards them from the
+// agent and C6 lists every change.
+func agentInstructionPath(path string) bool {
+	lower := strings.ToLower(path)
+	if lower == claudeSettingsPath {
+		return false
+	}
+	switch lower[strings.LastIndex(lower, "/")+1:] {
+	case "claude.md", "claude.local.md", "agents.md", "gemini.md":
+		return true
+	}
+	switch lower {
+	case ".cursorrules", ".github/copilot-instructions.md":
+		return true
+	}
+	for _, dir := range []string{".claude/", ".cursor/"} {
+		if strings.HasPrefix(lower, dir) || strings.Contains(lower, "/"+dir) {
+			return true
+		}
+	}
+	return strings.HasPrefix(lower, ".github/instructions/")
+}
+
+// profilePath is the file `init` creates; the commit adding it is the setup commit (CLI-INV-83).
+const profilePath = ".proofbound/sdd-profile.json"
+
+// setupCommit reports whether sha adds the profile against its first parent (a merge never does:
+// diff-tree prints nothing for a merge without -m, -c or --cc) and no earlier commit ever touched it,
+// so deleting and re-adding the profile never makes a second setup commit (review F5).
+func setupCommit(ctx context.Context, root, sha string) bool {
+	if strings.TrimSpace(gitOutput(ctx, root, "diff-tree", "-r", "--no-commit-id", "--name-only", "--no-renames", "--diff-filter=A", "--root", sha, "--", profilePath)) == "" {
+		return false
+	}
+	return !profileHistory(ctx, root, sha+"^")
+}
+
+// profileHistory reports whether any commit reachable from rev touched the profile ("" when rev does
+// not exist, as before the first commit or for a root commit's parent).
+func profileHistory(ctx context.Context, root, rev string) bool {
+	return strings.TrimSpace(gitOutput(ctx, root, "rev-list", "-1", rev, "--", profilePath)) != ""
 }
 
 func commitsInRange(ctx context.Context, root, base string) ([]string, error) {
@@ -405,4 +455,23 @@ func writeCheckMarkdown(w io.Writer, headline string, lines []checkLine, drift s
 // cell: no pipe, newline or backtick can break the table or open a code span (CLI-INV-26, CLI-INV-28).
 func mdCell(s string) string {
 	return strings.NewReplacer("|", `\|`, "\n", " ", "`", "'").Replace(printableUnit(s))
+}
+
+// withoutSetupFiles drops the agent instruction files from code when they belong to the setup commit,
+// asking setup only when code holds one (CLI-INV-83).
+func withoutSetupFiles(code []string, setup func() bool) []string {
+	agent := false
+	for _, p := range code {
+		agent = agent || agentInstructionPath(p)
+	}
+	if !agent || !setup() {
+		return code
+	}
+	var kept []string
+	for _, p := range code {
+		if !agentInstructionPath(p) {
+			kept = append(kept, p)
+		}
+	}
+	return kept
 }

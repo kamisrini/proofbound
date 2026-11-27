@@ -54,7 +54,7 @@ git commit -m "add proofbound"
 Before an agent writes code for a change, run `proofbound task start <change-or-feature-name>`:
 every commit that changes code then ends with `Intent: sdd:<name>` without anyone typing it, and a
 code commit with no claim is refused (`proofbound task stop` when the change is done). Commits that
-only touch specs, docs, `gates/`, review records or Markdown need no claim. Then have
+only touch specs, docs, `gates/`, review records or Markdown need no claim, except a coding agent's instructions (`CLAUDE.md`, `AGENTS.md`, `.claude/`), which count as code. Then have
 someone who is not the author review it (`proofbound review draft <commit>`, decide, `review seal`;
 or in the browser, `proofbound ui` and the **Review bench** tab, which runs the tests and seals there),
 and run `proofbound sync all`. The commit's gate turns **PASS** when every obligation is verified.

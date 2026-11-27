@@ -177,6 +177,13 @@ its spec and code reviewed by a non-author (Law 11 budget). Published by the own
   Commits that only touch specs, `gates/`, `.proofbound/`, `docs/`, Markdown, `.gitignore` or the
   Proofbound workflow still need no claim. **Some pull requests that passed on v0.3.1 will fail.**
   Make the check a required status check, or a red check can still be merged.
+- **A coding agent's instructions count as code (behaviour change, 2026-11-27).** `CLAUDE.md`,
+  `CLAUDE.local.md`, `AGENTS.md` and `GEMINI.md` in any folder, anything in a `.claude/` or `.cursor/`
+  folder (except the root `.claude/settings.json`), `.cursorrules` and Copilot's instruction files
+  now need a claim or a waiver like code; only the setup commit that first adds
+  `.proofbound/sdd-profile.json` is exempt. While a task is active, the agent hook also refuses an
+  agent's edit of `.proofbound/`, `gates/` or the Proofbound workflow, whatever the area says. Put
+  `.proofbound/keys/` and the workflow behind CODEOWNERS: `check` still lets them change unclaimed.
 - **`proofbound task start <change>`.** Run it once before writing code for a change: every commit
   that changes code then ends with `Intent: sdd:<change>` without anyone typing it. `proofbound task`
   shows the active task, `proofbound task stop` clears it. The change's spec folder must exist first.
