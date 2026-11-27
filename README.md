@@ -151,6 +151,18 @@ curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.s
 Then follow the [quickstart](docs/releases/mvp/QUICKSTART.md) to your first warranty. Current release:
 [v0.3.2](https://github.com/kamisrini/proofbound/releases/tag/v0.3.2).
 
+New in v0.3.2, in the browser (`proofbound ui`):
+- **Review bench:** a reviewer does the whole review with no terminal: runs the tests, decides each
+  untested part and each line outside the spec's area, then seals and signs.
+- **Agent reviewer, opt-in:** an agent answers beside each question first and the person decides. It
+  costs money, is off unless a person commits `.proofbound/agent-review.json` and starts
+  `proofbound ui --agent-review`, and never counts as a review.
+- **Issue the warranty** from the Audit room once every change is warranted.
+- **`proofbound-verify.html`**, attached to the release: a buyer checks a warranty offline in a
+  browser, with nothing installed.
+
+Details: [v0.3 release notes](docs/releases/r3/RELEASE-NOTES.md).
+
 ## Quick start (from source)
 
 ### Prerequisites

@@ -52,7 +52,11 @@ and warranty. It also sets up the pull-request check.
 | Add a reviewer's signature to an existing warranty | `proofbound warranty cosign` | [release notes](RELEASE-NOTES.md) |
 | Attach proof to a release: signed files, a verification page, an index, a badge | `proofbound warranty bundle <base>` | [release notes](RELEASE-NOTES.md) |
 | See which verified specs have since changed | `proofbound report drift` | [R2 demo](../r2/DEMO.md) |
-| Audit, review and track promises in a browser: Audit room, Now, Review bench, Promise map, Agent surface | `proofbound ui` | [manual, step 15](DEMO-MANUAL.md#step-15--the-audit-room-audit-the-release-in-a-browser-and-close-the-exception) |
+| Audit, review and track promises in a browser: Audit room, Now, Review bench, Changes, Promise map, Agent surface | `proofbound ui` | [manual, step 15](DEMO-MANUAL.md#step-15--the-audit-room-audit-the-release-in-a-browser-and-close-the-exception) |
+| Do the whole review in the browser, with no terminal: run the tests, decide each untested part and each line outside the area, then seal and sign | `proofbound ui`, then the **Review bench** tab | [manual, try it yourself](DEMO-MANUAL.md#try-it-yourself-review-the-totals-row) |
+| Have an agent review first and answer beside each question, while you decide (opt-in, costs money; it never counts as a review) | a person commits `.proofbound/agent-review.json`, then `proofbound ui --agent-review` or `proofbound review agent <commit> --agent-review` | [live agent demo, the review in the browser](DEMO-AGENT-LIVE.md#the-same-review-in-the-browser-optional) |
+| Issue the release's warranty once every change is warranted: preview, then write and commit the bundle | the Audit room's **Issue the warranty** | [release notes](RELEASE-NOTES.md) |
+| Let a buyer check a warranty with nothing installed: offline, in a browser, against a key fingerprint they got from you separately | `proofbound-verify.html`, attached to the [v0.3.2 release](https://github.com/kamisrini/proofbound/releases/tag/v0.3.2) | [release notes](RELEASE-NOTES.md) |
 | Make your declared key sign your git commits, so the Audit room proves who made each one | `proofbound keys git-sign` | [release notes](RELEASE-NOTES.md) |
 
 ## 4. See it work (demos)
@@ -78,7 +82,9 @@ Walkthroughs: [the full tour](DEMO.md), and the [R2 demo](../r2/DEMO.md) for the
 
 - [v0.3 release notes](RELEASE-NOTES.md): v0.3.0, the v0.3.1 fix (the pull-request check passes in
   CI) and v0.3.2 (the agent features: line-level scope, the write-time perimeter, tests that can fail,
-  session provenance, the Audit room and framework mapping; unclaimed code fails the check), behaviour
+  session provenance, the Audit room and framework mapping, the Review bench, the opt-in agent
+  reviewer, issuing the warranty from the browser, and `proofbound-verify.html`; unclaimed code fails
+  the check), behaviour
   changes, and caveats. Read the caveats before relying on a warranty.
 
 ## History: earlier releases

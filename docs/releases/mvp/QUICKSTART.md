@@ -55,7 +55,8 @@ Before an agent writes code for a change, run `proofbound task start <change-or-
 every commit that changes code then ends with `Intent: sdd:<name>` without anyone typing it, and a
 code commit with no claim is refused (`proofbound task stop` when the change is done). Commits that
 only touch specs, docs, `gates/`, review records or Markdown need no claim. Then have
-someone who is not the author review it (`proofbound review draft <commit>`, decide, `review seal`),
+someone who is not the author review it (`proofbound review draft <commit>`, decide, `review seal`;
+or in the browser, `proofbound ui` and the **Review bench** tab, which runs the tests and seals there),
 and run `proofbound sync all`. The commit's gate turns **PASS** when every obligation is verified.
 `proofbound warranty export <commit>` then writes a signed `warranty.json` that anyone can check
 with `proofbound warranty verify warranty.json --repo <clone>`.
@@ -119,7 +120,11 @@ writes one signed `warranty-<commit>.json` per verified commit since that tag, p
 telling a buyer how to check each file themselves), `index.json` and `badge.svg`
 (`![proofbound](dist/warranties/badge.svg)` in a README). The page, index and badge are unsigned
 conveniences and say so; the warranty files are the proof. Exit 3 means the bundle was written but some
-claiming commit is not VALID. Try it locally: `bash docs/releases/mvp/demo-share.sh`.
+claiming commit is not VALID. Try it locally: `bash docs/releases/mvp/demo-share.sh`. A buyer with
+nothing installed can check the warranty files in a browser with `proofbound-verify.html` from the
+[release page](https://github.com/kamisrini/proofbound/releases/tag/v0.3.2): it checks signatures
+offline against a key fingerprint they got from you separately (SIGNATURE ONLY or INVALID), and
+`warranty verify --repo` stays the full check.
 
 ## 6. See it run first (from a clone, on Linux or WSL)
 
