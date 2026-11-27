@@ -179,7 +179,7 @@ control: a comment edit survives.
 
 ## 6. Not decided here
 
-- Hosting the verify page on a public site (commercial, separate).
+- Hosting the verify page on a public site (separate).
 
 ## 7. Review and amendments (owner-visible)
 

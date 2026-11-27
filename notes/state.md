@@ -8,7 +8,7 @@ As of: 2026-11-27
 
 **Exact next action:** nothing in flight. `be23c7d` (agent instruction files are code; agents keep off
 the trust configuration) is pushed and v0.3.2 republished at it, verified from a fresh install
-(journal). Commercial follow-ups live in `~/projects/proofbound-commercial` only. Fold changes into
+(journal). Fold changes into
 v0.3.2 until Sunday 2026-11-29, launch 2026-11-30.
 
 **Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
@@ -50,15 +50,15 @@ v0.3.2 until Sunday 2026-11-29, launch 2026-11-30.
   a configured command is shown and needs confirmation). Live run: $0.08, 21 s, found the price line
   and a seal bug (fixed, regression test). Owner D4 decisions D-A..D-D taken as recommended.
 
-**Standing rules:** use kamisrini@yahoo.com; commercial material stays in
-`~/projects/proofbound-commercial`; never push `backup/pre-scrub-20261120`; never stage
+**Standing rules:** use kamisrini@yahoo.com; commercial material stays outside this
+repository; never push `backup/pre-scrub-20261120`; never stage
 `docs/plans/P5-intent-provenance-plan.md` or `kernel/cmd/p6dbprobe/`; token-spending features stay
 off by default; the demo repository stays local (`~/projects/proofbound-demo-build`); open deferrals
 stay dormant until the owner names them.
 
 **Earlier this week** (condensed; the journal has each day): 2026-11-24 write-time perimeter
 (`2e9a13f`), session provenance, tests that can fail (`205e557`), framework mapping (`e7f2ff8`),
-review outcomes by agent, documentation and commercial pass, the NEEDS_WORK-blocks fix (`61ba190`).
+review outcomes by agent, documentation pass, the NEEDS_WORK-blocks fix (`61ba190`).
 2026-11-23: line-level scope (`78803fd`), signed waivers (`5a73932`), `ui --bundle` (`48519f2`),
 signed-commit waiver policy (`670517a`); v0.3.2 published then the UI folded in.
 
@@ -114,8 +114,8 @@ signed-commit waiver policy (`670517a`); v0.3.2 published then the UI folded in.
   SHA256SUMS); public `install.sh` installs v0.3.2 (verified); live Action re-run in
   `kamisrini/proofbound-action-test` installed v0.3.2 and reported WARRANTED. Deferrals
   `DEF-RELEASE-V032-001`, `DEF-QUICKSTART-STALE-001`, `DEF-QUICKSTART-EMPTY-REPO-001`,
-  `DEF-INSTALL-PATH-SHADOW-001` RESOLVED. Landing page republished (card 05: fails the PR) and
-  committed in the private repo. Owner's `~/.local/bin/proofbound` upgraded to v0.3.2.
+  `DEF-INSTALL-PATH-SHADOW-001` RESOLVED.
+  Owner's `~/.local/bin/proofbound` upgraded to v0.3.2.
 - **Docs and demos updated for v0.3.2** (`b908ea5`, owner: "lets update all the docs, demo etc"): tour
   chapter 13 (hook refusal, `task start` stamping, `--no-verify` commit UNCOVERED), DEMO.md, DEMO-MANUAL,
   R2 DEMO usage, r3 README table; demo scripts put their own build on PATH for the hooks and drop the
@@ -133,14 +133,13 @@ signed-commit waiver policy (`670517a`); v0.3.2 published then the UI folded in.
   set the retired env var (harmless; owner: demos not to be fixed).
 - **Also 2026-11-22:** gap deferrals `DEF-NO-INTENT-SELF-WAIVER-001`, `DEF-CLAIMED-CODE-SCOPE-001`,
   `DEF-AGENT-NATIVE-INTENT-001` (minimal slice now built; rest open); `DEF-P7-REGENLOOP-001` now
-  requires an off-by-default opt-in flag for token-spending steps; landing page (private repo) gained
-  a problem section with five measurable metrics (uncommitted there); DEMO-MANUAL demo folder moved
+  requires an off-by-default opt-in flag for token-spending steps; DEMO-MANUAL demo folder moved
   under `~/projects`.
 
 ## Earlier — 2026-11-21
 
 **Vertical MVP is under way (`VD-vertical-mvp-first-ai3dhn`, owner "go" 2026-11-20): five steps in
-order — 1 installable, 2 PR check, 3 reviewer-signed warranty, 4 shareable proof, 5 commercial (kept private).
+order — 1 installable, 2 PR check, 3 reviewer-signed warranty, 4 shareable proof, 5 tracked outside this repository.
 Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbacah` →
 `BR-vertical-mvp-xc31gp` O-1..O-5 (one per step).
 
@@ -169,16 +168,14 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   (CLI-INV-28..30). Demo `docs/releases/mvp/demo-share.sh`. Spec r1 NEEDS_WORK (3 MED) → r2 ACCEPTABLE;
   code review ACCEPTABLE (4 LOW). Nothing published.
 
-- **Step 5 (commercial):** drafts exist, kept OUTSIDE this public repository by the owner's decision
-  (2026-11-20: commercial material and contact details stay private); not tracked here.
+- **Step 5:** tracked outside this repository by the owner's decision (2026-11-20).
 
 - **Claim-typo fix** (`043afd7`, `CI-mvp-claim-typo-r4n8xk`): a mistyped `Intent:` claim now fails
   `proofbound check` (UNBOUND) instead of reading as NO CLAIMS. Review ACCEPTABLE (3 LOW).
 - **v0.3.0 PUBLISHED 2026-11-20:** main pushed (`b783b61`), tag `v0.3.0`, GitHub release with 5
   archives + SHA256SUMS; `curl …/install.sh | sh` from GitHub installs v0.3.0 (verified). Before the push
-  the owner had commercial material kept private: 25 unpushed commits were rewritten (filter-branch) to
-  drop it; old history on local branch `backup/pre-scrub-20261120` (never push it); the material lives in
-  `~/projects/proofbound-commercial/` (local git, never pushed).
+  25 unpushed commits were rewritten (filter-branch) to drop material that stays outside this
+  repository; old history on local branch `backup/pre-scrub-20261120` (never push it).
 - **Live Action test FAILED (real finding):** private throwaway repo `kamisrini/proofbound-action-test`
   PR #1. Install step worked; `proofbound sync all` on the runner failed: `v2 verdict evidence … is
   dangling` — `DEF-VERDICT-EVIDENCE-PORTABILITY-001` (verdict evidence = per-ledger random event id). The
@@ -218,7 +215,7 @@ Deeper R3 organs are frozen until real users ask.** Chain: `BD-vertical-mvp-qbac
   `DEF-INSTALL-PATH-SHADOW-001`. The owner's old `~/bin/proofbound` was renamed `.old-20261114`.
 
 **Exact next action:** the owner continues the DEMO-MANUAL trial on v0.3.2 and adds gaps as
-deferrals. Fix new trial findings when asked. MVP step 5 (commercial) continues outside this
+deferrals. Fix new trial findings when asked. MVP step 5 continues outside this
 repository. Ask before starting other work.
 
 **Gate:** GREEN at `b908ea5` (2026-11-22). main is pushed (in sync with origin). Untracked

@@ -35,7 +35,7 @@ sidebar) is exactly that furniture. We design from the axioms instead:
 
 Owner, 2026-11-22: these five are the main users, and each gets a UI specialised for the function
 they perform. There are no external users yet, so each row is a hypothesis to test with the first
-design partners.
+users.
 
 One product, five **workspaces**. A workspace is a composition of the same primitives (promise,
 chain, moment, attention item) for one job, not a permission level: locally, anyone can open any
@@ -209,8 +209,8 @@ The hosted, multi-repository UI is the same lenses over many ledgers. What v1 mu
   repository's CI pushes, without holding anyone's database.
 - Browser-side signature checks mean a hosted page can be verified without trusting the host.
 - The JSON twin is the hosted API.
-Needs before it starts: real design partners asking, hosting, authentication, tenancy, and a
-decision record. Commercial terms stay out of this repository.
+Needs before it starts: real users asking, hosting, authentication, tenancy, and a
+decision record.
 
 ## 6. Not in v1 (reserved, so the layout has room)
 

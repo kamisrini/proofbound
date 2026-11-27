@@ -31,5 +31,5 @@ the time rail, the sample draw, the evidence-bundle viewer, and the other four w
 server becomes a signing service for its user, which is the main new risk; the spec states the threat
 model and the code review tests it.
 
-**Revisit when:** a design partner asks for hosted access, or U1 shows the Audit room answers the wrong
+**Revisit when:** a user asks for hosted access, or U1 shows the Audit room answers the wrong
 questions.
