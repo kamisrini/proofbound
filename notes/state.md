@@ -6,11 +6,10 @@ As of: 2026-11-27
 
 ## Resume — 2026-11-27
 
-**Exact next action:** agent-instruction files fix committed locally (`CI-agent-instruction-files-q8v3n1`),
-NOT pushed and v0.3.2 NOT republished: ask the owner before pushing and republishing (fold into
-v0.3.2 until Sunday 2026-11-29, launch 2026-11-30). Owner is also choosing a domain (recommended
-getproofbound.com, optional proofbound.sh) and host (recommended Cloudflare Pages, direct upload from
-`~/projects/proofbound-commercial/gtm/`); nothing bought.
+**Exact next action:** nothing in flight. `be23c7d` (agent instruction files are code; agents keep off
+the trust configuration) is pushed and v0.3.2 republished at it, verified from a fresh install
+(journal). Commercial follow-ups live in `~/projects/proofbound-commercial` only. Fold changes into
+v0.3.2 until Sunday 2026-11-29, launch 2026-11-30.
 
 **Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
 - `DEF-UI-BENCH-BROWSER-CHECK-001` and `DEF-UI-BUNDLE-BROWSER-CHECK-001`: RESOLVED 2026-11-27, closed by
@@ -26,7 +25,7 @@ getproofbound.com, optional proofbound.sh) and host (recommended Cloudflare Page
   settings), `.cursor/**`, Copilot files need a claim or waiver; only the setup commit that first adds
   the profile is exempt. The agent hook refuses `.proofbound/`, `gates/`, the workflow mid-task
   (CLI-INV-84). BR-write-perimeter 0007 O-5 (proposed). Review NEEDS_WORK: 4 MED + F5 fixed, LOWs in
-  `DEF-AGENT-FILES-LOWS-001`. Landing page (private) headline and limits reworded, v10.
+  `DEF-AGENT-FILES-LOWS-001`. Pushed; v0.3.2 republished at `be23c7d`.
 - `f4d6f0b` docs: README, the r3 start page and QUICKSTART now name the Review bench, the opt-in agent
   reviewer, Issue the warranty and `proofbound-verify.html`.
 - Browser checks (no commit): verify page SIGNATURE ONLY / INVALID (wrong key) / INVALID (tampered);
