@@ -652,7 +652,21 @@ never reused and never renumbered: it is cited from code comments, tests, and re
     between `fork()` and `exec()`, at a measured 4.2% under fork pressure (§ 4, F24), so both
     the probe and the start ride that window out before refusing. A port a foreign process
     genuinely holds never comes free, so the refusal is unchanged in substance — only in
-    patience.
+    patience. **AMENDED (2026-11-27, DEF-ORPHAN-EMBEDDED-PG-001):** the first half was never
+    implemented. This SPEC arrived with the migration corpus (`c8f5159`), `Open` was written
+    without adoption (`4d1cff2`), and the row below cited a lock-release test. A killed
+    `proofbound` (SIGKILL, or SIGPIPE from `| head`) therefore left its server on the port and
+    every later run failed with "process already listening". Implemented now as *stop, then
+    start*, not adopt: holding the ledger lock proves no live Proofbound owns this `DataDir`
+    (the lock is an OS file lock, released when its process dies), so a server still serving
+    it is an orphan. Before starting, `Open` reads the port from `<DataDir>/postmaster.pid`,
+    connects there with this ledger's identity, and runs `pg_ctl stop` only when the server
+    reports a `data_directory` that is this `DataDir` (`os.SameFile`). A pid file alone is
+    never trusted, because a dead postmaster's pid can be reused by an unrelated process. A
+    server serving any other directory is never stopped. The lock proves ownership only of the directory
+    it sits beside, so nothing is stopped unless the held lock is the one beside `DataDir`'s
+    symlink-resolved path: a live server reached through a symlinked data directory belongs to
+    whoever holds the real directory's lock.
 29. **INV-29 — Two roots coexist.** Two `Store`s on different Roots are open simultaneously,
     because the default port is derived from `DataDir` (§ 4, F10).
 
@@ -1509,6 +1523,7 @@ to an invariant about a different subject). P1 Task 9 adds the remaining mechani
 | INV-16 | The SQL scan reads EVERY non-test .go file in the package, in or out of this build — a build-excluded file still ships SQL, and reading everything is the only direction that cannot hide it | surface_test.go::TestSurface_NilAndClosedHandles |
 | INV-51 | A projection rollback runs on a context detached from the caller's, so it succeeds when the caller's context is what died | integration_test.go::TestStoreWithTxCommitRollbackAndStop |
 | INV-16 | The mutating-SQL scan judges a STATEMENT, folding concatenated literals and named consts (incl. consts that are themselves concatenations) | surface_test.go::TestSurface_NilAndClosedHandles |
+| INV-28 | A server orphaned by a killed process is stopped by the next Open, which then serves; it is recognized even with no identity marker; neither a live server reached through a symlinked data directory nor a server for ANOTHER data directory named by this one's postmaster.pid is ever stopped | orphan_test.go::TestOpen_StopsAnOrphanOfThisDataDir |
 | INV-52 | The embedded server's own output (initdb, pg_ctl, server log) goes to `<DataDir>.log`, beside the data directory, never to the process's stdout, which carries only the CLI's output; a start failure names that log | server_log_test.go::TestEmbeddedServerOutputGoesToLogFile |
 
 Some invariants own more than one row, and the count is deliberately NOT enumerated here: an enumeration is a hand-maintained copy of something the table already states, and every such copy in this project has gone stale (round-7 M12 found the suite duration in four homes with four values; a prose count of "five invariants own two rows" was wrong by the time it was read). `grep -c '^| INV-44 |' SPEC.md` is the answer. Where an invariant does own several rows, the extra rows

@@ -105,6 +105,10 @@ func Open(ctx context.Context, cfg Config) (*Store, error) {
 			_ = lock.close()
 			return nil, fmt.Errorf("%w: embedded identity: %v", ErrMigrate, err)
 		}
+		if err = stopOrphan(ctx, cfg, identity); err != nil {
+			_ = lock.close()
+			return nil, fmt.Errorf("%w: embedded postgres (server log: %s): %v", ErrMigrate, serverLogPath(cfg.DataDir), err)
+		}
 		port := embeddedPort(cfg.Port)
 		server = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().Logger(serverLog(cfg.DataDir)).Port(uint32(port)).DataPath(cfg.DataDir).RuntimePath(cfg.RuntimeDir).BinariesPath(cfg.BinariesDir).Username(identity.username).Password(identity.password).Database(identity.database))
 		if err = server.Start(); err != nil {
