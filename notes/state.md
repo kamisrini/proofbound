@@ -6,16 +6,14 @@ As of: 2026-11-27
 
 ## Resume — 2026-11-27
 
-**Exact next action:** ask the owner whether to republish v0.3.2 with `f64b760` (the orphaned-Postgres
-fix is binary code; the docs commit `f4d6f0b` needs no release). Standing rule: fold finished changes
-into v0.3.2 until Sunday 2026-11-29, launch 2026-11-30. Republishing is outward-facing: owner's go first.
-`main` is ahead of `origin/main` by two commits, not pushed.
+**Exact next action:** nothing in flight. Owner said 2026-11-27 "yes push and close both": main pushed
+and v0.3.2 republished at the closeout commit with the orphaned-Postgres fix (see the journal for the
+verification). Standing rule: fold finished changes into v0.3.2 until Sunday 2026-11-29, launch
+2026-11-30.
 
 **Immediate blockers:** none. **Owner pending (do not nag; the deferral rows hold them):**
-- `DEF-UI-BENCH-BROWSER-CHECK-001` and `DEF-UI-BUNDLE-BROWSER-CHECK-001`: evidence gathered 2026-11-27
-  with Windows Chrome 158 headless, driven from WSL by a scratch chromedp harness (not committed; details
-  in the journal). Every check passed, each with a control that must fail. Rows left OPEN: closing them
-  is the owner's call (their unblock says "owner reports" or "a browser harness is added").
+- `DEF-UI-BENCH-BROWSER-CHECK-001` and `DEF-UI-BUNDLE-BROWSER-CHECK-001`: RESOLVED 2026-11-27, closed by
+  the owner on the headless-Chrome evidence (journal).
 - `DEF-UI-AGENT-REQ-ROUND6-001`: unchanged.
 - `DEF-FIRST-START-CRASH-001` (new): a kill during the very first start leaves a half-made ledger.
 - Update the local binary: `curl -fsSL https://raw.githubusercontent.com/kamisrini/proofbound/main/install.sh | sh`.
